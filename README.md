@@ -5,7 +5,7 @@
 <p align="center"><b>Notices when a battery device goes quiet. Before you do.</b></p>
 
 <p align="center">
-  <a href="https://github.com/SH1FT-W/pulse/releases"><img src="https://img.shields.io/github/v/release/SH1FT-W/pulse?display_name=tag&color=6d5dfc&label=release" alt="Latest release"></a>
+  <a href="https://github.com/SH1FT-W/pulse/releases"><img src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fapi.github.com%2Frepos%2FSH1FT-W%2Fpulse%2Freleases%2Flatest&query=%24.tag_name&label=release&color=6d5dfc" alt="Latest release"></a>
   <a href="https://github.com/SH1FT-W/pulse/actions/workflows/ci.yml"><img src="https://github.com/SH1FT-W/pulse/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="https://github.com/SH1FT-W/pulse/actions/workflows/hassfest.yml"><img src="https://github.com/SH1FT-W/pulse/actions/workflows/hassfest.yml/badge.svg" alt="Hassfest"></a>
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-custom%20repository-41bdf5" alt="HACS custom repository"></a>
