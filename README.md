@@ -48,9 +48,14 @@ battery and no airtime.
 
 ## Installation
 
-1. HACS → *Integrations* → ⋮ → *Custom repositories*. Add `https://github.com/SH1FT-W/pulse` as type *Integration*.
+[![Open in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=SH1FT-W&repository=pulse&category=integration)
+[![Add integration](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=pulse)
+
+1. Click **Open in HACS** above, or add `https://github.com/SH1FT-W/pulse` by hand under HACS → *Integrations* → ⋮ →
+   *Custom repositories* (type *Integration*).
 2. Install **Pulse** and restart Home Assistant (2026.9 or newer).
-3. *Settings → Devices & services → Add integration → Pulse*. One click. Pulse finds your battery devices itself.
+3. Click **Add integration** above, or go to *Settings → Devices & services → Add integration → Pulse*. One click.
+   Pulse finds your battery devices itself.
 4. Open **Pulse** in the sidebar. Admins can change everything, other users see the panel read only.
 
 Pulse monitors every device that has a battery sensor (`device_class: battery`), including devices that only

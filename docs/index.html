@@ -170,6 +170,9 @@ section.tint { background: var(--bg-2); }
 .repo { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; max-width: 760px; margin: 28px auto 0; padding: 10px 10px 10px 18px; background: var(--card); border: 1px solid var(--line); border-radius: 999px; box-shadow: var(--shadow); }
 .repo code { font-family: var(--mono); font-size: 14px; color: var(--ink); flex: 1; overflow-wrap: anywhere; text-align: left; }
 .copy { margin-left: auto; }
+.my { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin: 36px 0 0; }
+.my img { display: inline-block; height: 40px; width: auto; }
+.my + .meta { margin-top: 18px; }
 
 /* Footer */
 footer { padding: 48px 0 64px; border-top: 1px solid var(--line); font-size: 14px; color: var(--ink-3); }
@@ -229,14 +232,18 @@ html[lang="de"] .en, html[lang="en"] .de { display: none !important; }
       <h1><span class="en">Every sensor<br>has a <span class="grad">rhythm.</span></span><span class="de">Jeder Sensor<br>hat einen <span class="grad">Takt.</span></span></h1>
       <p class="lead"><span class="en">Pulse learns how often each battery device reports and <strong>notices when one goes quiet</strong>. It only listens, never polls. No battery wasted, no automation left guessing.</span><span class="de">Pulse lernt, wie oft sich jedes Batteriegerät meldet, und <strong>merkt, wenn eines verstummt</strong>. Es hört nur zu und fragt nie ab. Keine Batterie verschwendet, keine Automation im Blindflug.</span></p>
       <div class="cta">
-        <a class="btn" href="#install"><span class="en">Install with HACS</span><span class="de">Mit HACS installieren</span></a>
+        <a class="btn" href="https://my.home-assistant.io/redirect/hacs_repository/?owner=SH1FT-W&amp;repository=pulse&amp;category=integration"><span class="en">Open in HACS</span><span class="de">In HACS öffnen</span></a>
         <a class="btn ghost" href="https://github.com/SH1FT-W/pulse#readme"><span class="en">Read the docs</span><span class="de">Zur Dokumentation</span></a>
       </div>
       <p class="meta"><span id="pulse-version">Version 1.0.0</span> &middot; <span class="en">Home Assistant 2026.9 or newer &middot; Free and open source</span><span class="de">Home Assistant 2026.9 oder neuer &middot; Kostenlos und quelloffen</span></p>
       <div class="hero-shot shot lg">
-        <picture>
+        <picture class="en">
           <source media="(prefers-color-scheme: dark)" srcset="images/overview-dark.png">
           <img src="images/overview-light.png" width="2560" height="1280" alt="The Pulse overview: a headline saying 7 of 10 devices are in rhythm, and one rhythm strip per device. A silent aquarium thermometer breaks off into a red dashed line.">
+        </picture>
+        <picture class="de">
+          <source media="(prefers-color-scheme: dark)" srcset="images/de/overview-dark.png">
+          <img src="images/de/overview-light.png" width="2560" height="1280" alt="Die Pulse-Übersicht: eine Schlagzeile mit 7 von 10 Geräten schlagen im Takt und eine Rhythmusleiste je Gerät. Ein stilles Aquarium-Thermometer bricht in eine rot gestrichelte Linie ab.">
         </picture>
       </div>
     </div>
@@ -253,7 +260,8 @@ html[lang="de"] .en, html[lang="en"] .de { display: none !important; }
           <p class="lead"><span class="en">Pulse looks at the one thing that never lies: <strong>how often the device talks.</strong></span><span class="de">Pulse schaut auf das Einzige, was nie lügt: <strong>wie oft das Gerät sich meldet.</strong></span></p>
         </div>
         <div class="shot">
-          <img src="images/detail.png" width="1040" height="1360" loading="lazy" alt="Device detail: the headline Silent for 5 days, the buttons Battery replaced and Remind tomorrow, and a heartbeat calendar with one row per day where the silent days are red dashed lines.">
+          <img class="en" src="images/detail.png" width="1040" height="1360" loading="lazy" alt="Device detail: the headline Silent for 5 days, the buttons Battery replaced and Remind tomorrow, and a heartbeat calendar with one row per day where the silent days are red dashed lines.">
+          <img class="de" src="images/de/detail.png" width="1040" height="1360" loading="lazy" alt="Gerätedetail: die Schlagzeile Still seit 5 Tagen, die Knöpfe Batterie gewechselt und Morgen erinnern und ein Herzschlag-Kalender mit einer Zeile je Tag, stille Tage als rot gestrichelte Linien.">
         </div>
       </div>
       <div class="facts">
@@ -308,7 +316,8 @@ html[lang="de"] .en, html[lang="en"] .de { display: none !important; }
           </ul>
         </div>
         <div class="shot">
-          <img src="images/notifications.png" width="2560" height="1520" loading="lazy" alt="Notification settings: recipients, the levels Failed, Check and Battery with Right away or Daily, times for the daily summary and quiet hours, critical alerts, only when someone is home.">
+          <img class="en" src="images/notifications.png" width="2560" height="1520" loading="lazy" alt="Notification settings: recipients, the levels Failed, Check and Battery with Right away or Daily, times for the daily summary and quiet hours, critical alerts, only when someone is home.">
+          <img class="de" src="images/de/notifications.png" width="2560" height="1520" loading="lazy" alt="Mitteilungs-Einstellungen: Empfänger, die Stufen Ausgefallen, Prüfen und Batterie mit Sofort oder Täglich, Zeiten für Zusammenfassung und Ruhezeit, kritische Mitteilungen, erst beim Heimkommen.">
         </div>
       </div>
     </div>
@@ -324,11 +333,11 @@ html[lang="de"] .en, html[lang="en"] .de { display: none !important; }
       </div>
       <div class="duo">
         <figure>
-          <div class="shot"><img src="images/welcome.png" width="1160" height="1566" loading="lazy" alt="The welcome sheet: Pulse listens. Knows every rhythm, only listens, tells you in time, and a switch for Zigbee signs of life."></div>
+          <div class="shot"><img class="en" src="images/welcome.png" width="1160" height="1566" loading="lazy" alt="The welcome sheet: Pulse listens. Knows every rhythm, only listens, tells you in time, and a switch for Zigbee signs of life."><img class="de" src="images/de/welcome.png" width="1160" height="1571" loading="lazy" alt="Das Willkommen-Blatt: Pulse hört zu. Kennt jeden Takt, hört nur zu, sagt rechtzeitig Bescheid, und ein Schalter für Zigbee-Lebenszeichen."></div>
           <figcaption class="cap"><span class="en">The welcome sheet, with the one switch that matters.</span><span class="de">Das Willkommen-Blatt, mit dem einen Schalter, der zählt.</span></figcaption>
         </figure>
         <figure class="phone">
-          <div class="shot"><img src="images/iphone-dark.png" width="780" height="1688" loading="lazy" alt="Pulse on an iPhone in dark mode: the headline, the rhythm strips glowing in the dark, failed devices first."></div>
+          <div class="shot"><img class="en" src="images/iphone-dark.png" width="780" height="1688" loading="lazy" alt="Pulse on an iPhone in dark mode: the headline, the rhythm strips glowing in the dark, failed devices first."><img class="de" src="images/de/iphone-dark.png" width="780" height="1688" loading="lazy" alt="Pulse auf einem iPhone im Dunkelmodus: die Schlagzeile, die Rhythmusleisten leuchten im Dunkeln, ausgefallene Geräte zuerst."></div>
           <figcaption class="cap"><span class="en">On the phone the strips glow in the dark.</span><span class="de">Am Handy leuchten die Leisten im Dunkeln.</span></figcaption>
         </figure>
       </div>
@@ -340,6 +349,8 @@ html[lang="de"] .en, html[lang="en"] .de { display: none !important; }
     <div class="wrap center">
       <p class="eyebrow"><span class="en">Installation</span><span class="de">Installation</span></p>
       <h2><span class="en">Three minutes.<br>Then it just listens.</span><span class="de">Drei Minuten.<br>Dann hört es einfach zu.</span></h2>
+      <p class="my"><a href="https://my.home-assistant.io/redirect/hacs_repository/?owner=SH1FT-W&amp;repository=pulse&amp;category=integration"><img src="https://my.home-assistant.io/badges/hacs_repository.svg" alt="Open your Home Assistant instance and open the Pulse repository in HACS." width="240" height="40"></a> <a href="https://my.home-assistant.io/redirect/config_flow_start/?domain=pulse"><img src="https://my.home-assistant.io/badges/config_flow_start.svg" alt="Open your Home Assistant instance and start setting up Pulse." width="240" height="40"></a></p>
+      <p class="meta"><span class="en">Or by hand:</span><span class="de">Oder von Hand:</span></p>
       <div class="repo">
         <code id="repo-url">https://github.com/SH1FT-W/pulse</code>
         <button class="btn small copy" type="button" data-copy="repo-url"><span class="en">Copy</span><span class="de">Kopieren</span></button>
