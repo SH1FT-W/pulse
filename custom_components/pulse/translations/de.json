@@ -1,0 +1,101 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Pulse",
+        "description": "Pulse hat {count} Geräte mit Batterie gefunden. Es hört nur zu, was sie ohnehin senden, und fragt sie nie ab – das kostet keine Batterie. Alles Weitere stellst du im Pulse-Panel ein."
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "Pulse ist schon eingerichtet."
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "problem": {
+        "name": "Pulse-Problem"
+      }
+    },
+    "sensor": {
+      "status": {
+        "name": "Pulse-Status",
+        "state": {
+          "ok": "Gut",
+          "learning": "Lernt",
+          "watch": "Beobachten",
+          "check": "Prüfen",
+          "failed": "Ausgefallen"
+        }
+      },
+      "last_report": {
+        "name": "Zuletzt gemeldet"
+      },
+      "problems": {
+        "name": "Probleme",
+        "unit_of_measurement": "Geräte"
+      },
+      "monitored": {
+        "name": "Überwachte Geräte",
+        "unit_of_measurement": "Geräte"
+      }
+    }
+  },
+  "issues": {
+    "device_failed": {
+      "title": "{name} antwortet nicht",
+      "description": "{reason}\n\nMeist ist die Batterie leer. Nach dem Wechsel in Pulse (Seitenleiste) „Batterie gewechselt“ wählen oder warten, bis sich das Gerät wieder meldet. Dann verschwindet dieser Hinweis von selbst."
+    }
+  },
+  "exceptions": {
+    "not_loaded": {
+      "message": "Pulse ist nicht eingerichtet."
+    },
+    "unknown_device": {
+      "message": "Dieses Gerät überwacht Pulse nicht."
+    }
+  },
+  "services": {
+    "mark_replaced": {
+      "name": "Batterie gewechselt",
+      "description": "Trägt einen Batteriewechsel für ein Gerät ein.",
+      "fields": {
+        "device_id": {
+          "name": "Gerät",
+          "description": "Das Gerät mit der neuen Batterie."
+        }
+      }
+    },
+    "snooze": {
+      "name": "Erinnerung verschieben",
+      "description": "Für eine Weile keine Mitteilungen zu einem Gerät.",
+      "fields": {
+        "device_id": {
+          "name": "Gerät",
+          "description": "Das Gerät."
+        },
+        "hours": {
+          "name": "Stunden",
+          "description": "Wie lange Ruhe sein soll. 0 hebt eine Verschiebung auf."
+        }
+      }
+    },
+    "ignore": {
+      "name": "Gerät ignorieren",
+      "description": "Pulse überwacht ein Gerät nicht mehr (oder wieder).",
+      "fields": {
+        "device_id": {
+          "name": "Gerät",
+          "description": "Das Gerät."
+        },
+        "ignored": {
+          "name": "Ignorieren",
+          "description": "Aus = wieder überwachen."
+        }
+      }
+    },
+    "send_test": {
+      "name": "Testmitteilung senden",
+      "description": "Schickt eine Testmitteilung an alle Pulse-Empfänger."
+    }
+  }
+}

@@ -1,0 +1,16 @@
+restart_bridge:
+replace_battery:
+  fields:
+    name:
+      required: true
+      selector:
+        text:
+set_silent:
+  fields:
+    name:
+      required: true
+      selector:
+        text:
+    silent:
+      selector:
+        boolean:

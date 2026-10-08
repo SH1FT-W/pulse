@@ -1,0 +1,28 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "problem": { "default": "mdi:pulse" }
+    },
+    "sensor": {
+      "status": {
+        "default": "mdi:pulse",
+        "state": {
+          "ok": "mdi:pulse",
+          "learning": "mdi:school-outline",
+          "watch": "mdi:eye-outline",
+          "check": "mdi:alert-circle-outline",
+          "failed": "mdi:heart-broken"
+        }
+      },
+      "last_report": { "default": "mdi:clock-check-outline" },
+      "problems": { "default": "mdi:heart-broken-outline" },
+      "monitored": { "default": "mdi:battery-heart-variant" }
+    }
+  },
+  "services": {
+    "mark_replaced": { "service": "mdi:battery-sync" },
+    "snooze": { "service": "mdi:bell-sleep" },
+    "ignore": { "service": "mdi:eye-off" },
+    "send_test": { "service": "mdi:bell-ring-outline" }
+  }
+}

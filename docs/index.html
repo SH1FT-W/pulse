@@ -1,0 +1,409 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pulse for Home Assistant</title>
+<script src="https://sh1ft-w.github.io/bar.js" data-project="pulse" defer></script>
+<meta name="description" content="Pulse is a Home Assistant integration that notices when a battery device goes quiet. It learns the rhythm of every sensor, never polls, and tells you before an automation fails.">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#FAFAFC" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0E0D14" media="(prefers-color-scheme: dark)">
+<meta property="og:title" content="Pulse for Home Assistant">
+<meta property="og:description" content="Notices when a battery device goes quiet. Before you do.">
+<meta property="og:image" content="https://sh1ft-w.github.io/pulse/images/overview-light.png">
+<link rel="icon" href="images/logo.png">
+<style>
+:root {
+  --bg: #FAFAFC;
+  --bg-2: #F2F1F7;
+  --card: #FFFFFF;
+  --ink: #141320;
+  --ink-2: #4E4C5E;
+  --ink-3: rgba(20,19,32,0.5);
+  --accent: #6D5DFC;
+  --accent-2: #A78BFA;
+  --accent-ink: #5A4AE6;
+  --accent-tint: rgba(109,93,252,0.1);
+  --on-accent: #FFFFFF;
+  --bad: #D64545;
+  --warn: #D18A1C;
+  --line: rgba(20,19,32,0.1);
+  --chip: rgba(20,19,32,0.06);
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --shadow: 0 1px 2px rgba(20,19,32,0.05), 0 14px 34px -16px rgba(20,19,32,0.2);
+  --shadow-lg: 0 2px 6px rgba(20,19,32,0.05), 0 44px 90px -30px rgba(40,30,90,0.35);
+  --nav: rgba(250,250,252,0.78);
+  --radius: 28px;
+  --radius-lg: 36px;
+  --gutter: clamp(16px, 5vw, 48px);
+  --max: 1180px;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0E0D14;
+    --bg-2: #15131E;
+    --card: #1A1826;
+    --ink: #F3F1FA;
+    --ink-2: rgba(226,222,240,0.8);
+    --ink-3: rgba(226,222,240,0.5);
+    --accent: #8B7CFF;
+    --accent-2: #B8A8FF;
+    --accent-ink: #B8A8FF;
+    --accent-tint: rgba(139,124,255,0.14);
+    --on-accent: #0E0D14;
+    --bad: #FF6B6B;
+    --warn: #F0B35A;
+    --line: rgba(226,222,240,0.1);
+    --chip: rgba(226,222,240,0.08);
+    --shadow: 0 14px 34px -16px rgba(0,0,0,0.6);
+    --shadow-lg: 0 44px 90px -30px rgba(0,0,0,0.75), 0 0 80px -20px rgba(139,124,255,0.25);
+    --nav: rgba(14,13,20,0.78);
+  }
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; scroll-padding-top: 72px; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font: 400 17px/1.55 -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased; overflow-x: hidden;
+}
+img { display: block; max-width: 100%; height: auto; }
+a { color: var(--accent-ink); text-decoration: none; }
+a:hover { text-decoration: underline; text-underline-offset: 3px; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 8px; }
+.wrap { max-width: var(--max); margin: 0 auto; padding: 0 var(--gutter); }
+
+/* Navigation */
+.nav { position: sticky; top: var(--sh1ftw-offset, 0px); z-index: 10; background: var(--nav); backdrop-filter: blur(18px) saturate(1.2); -webkit-backdrop-filter: blur(18px) saturate(1.2); border-bottom: 1px solid var(--line); }
+.nav .wrap { display: flex; align-items: center; gap: 24px; height: 60px; }
+.brand { display: flex; align-items: center; gap: 10px; color: var(--ink); font-weight: 700; font-size: 18px; letter-spacing: -0.02em; }
+.brand:hover { text-decoration: none; }
+.brand img { width: 28px; height: 28px; border-radius: 8px; }
+.nav-links { display: flex; gap: 24px; margin-left: auto; font-size: 14px; font-weight: 500; }
+.nav-links a { color: var(--ink-2); }
+.nav-links a:hover { color: var(--ink); text-decoration: none; }
+.lang { flex: none; display: inline-flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; }
+.lang button { font: inherit; font-size: 12px; font-weight: 600; border: 0; background: none; color: var(--ink-2); padding: 4px 10px; cursor: pointer; }
+.lang button.on { background: var(--ink); color: var(--bg); }
+
+/* Buttons */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 46px; padding: 0 24px; border-radius: 999px; font-family: inherit; font-size: 15px; font-weight: 600; line-height: 1; background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #fff; border: 0; cursor: pointer; box-shadow: 0 12px 28px -12px rgba(109,93,252,0.6); transition: transform .2s ease, filter .2s ease; }
+.btn:hover { text-decoration: none; filter: brightness(1.06); transform: translateY(-1px); }
+.btn.ghost { background: var(--card); color: var(--ink); box-shadow: var(--shadow); }
+.btn.small { height: 36px; padding: 0 16px; font-size: 14px; }
+
+/* Type */
+.eyebrow { font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent-ink); margin: 0 0 18px; }
+h1, h2, h3 { margin: 0; color: var(--ink); font-weight: 800; }
+h1 { font-size: clamp(46px, 8.2vw, 100px); line-height: 0.98; letter-spacing: -0.045em; }
+h2 { font-size: clamp(34px, 5.2vw, 62px); line-height: 1.02; letter-spacing: -0.04em; }
+h3 { font-size: 21px; line-height: 1.25; letter-spacing: -0.02em; font-weight: 700; }
+.grad { background: linear-gradient(135deg, var(--accent), var(--accent-2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.lead { font-size: clamp(19px, 2.1vw, 24px); line-height: 1.45; color: var(--ink-2); letter-spacing: -0.012em; margin: 24px 0 0; }
+.lead strong { color: var(--ink); font-weight: 600; }
+p { margin: 0; }
+.muted { color: var(--ink-2); }
+.center { text-align: center; }
+.center .lead { margin-left: auto; margin-right: auto; max-width: 680px; }
+.mono { font-family: var(--mono); font-size: 0.92em; }
+
+/* Sections */
+section { padding: clamp(76px, 10vw, 132px) 0; }
+section.tint { background: var(--bg-2); }
+.head { margin-bottom: clamp(40px, 6vw, 68px); }
+
+/* Image frames */
+.shot { border-radius: var(--radius); overflow: hidden; background: var(--card); box-shadow: var(--shadow-lg); border: 1px solid var(--line); }
+.shot.lg { border-radius: var(--radius-lg); }
+.shot img { width: 100%; }
+.cap { margin-top: 18px; font-size: 15px; color: var(--ink-3); text-align: center; }
+
+/* Hero */
+.hero { padding: clamp(72px, 11vw, 136px) 0 clamp(64px, 9vw, 120px); text-align: center; position: relative; }
+.hero::before { content: ""; position: absolute; inset: 0 0 auto; height: 520px; background: radial-gradient(60% 60% at 50% 0%, var(--accent-tint), transparent 70%); pointer-events: none; }
+.hero .wrap { position: relative; }
+.hero .lead { max-width: 640px; margin-left: auto; margin-right: auto; }
+.cta { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: 36px; }
+.meta { margin-top: 20px; font-size: 14px; color: var(--ink-3); }
+.hero-shot { margin-top: clamp(52px, 8vw, 92px); }
+
+/* Facts */
+.facts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: clamp(52px, 7vw, 84px); }
+.fact { background: var(--card); border-radius: var(--radius); padding: 30px 28px; box-shadow: var(--shadow); border: 1px solid var(--line); }
+.fact b { display: block; font-size: clamp(40px, 5vw, 56px); line-height: 1; font-weight: 800; letter-spacing: -0.045em; color: var(--accent-ink); }
+.fact span { display: block; margin-top: 12px; color: var(--ink-2); font-size: 16px; line-height: 1.45; }
+
+/* Split */
+.split { display: grid; grid-template-columns: 1fr 1.25fr; gap: clamp(40px, 6vw, 88px); align-items: center; }
+.split.flip { grid-template-columns: 1.25fr 1fr; }
+.split.flip > :first-child { order: 2; }
+.split .shot img { width: 100%; }
+
+/* Status list */
+.status { list-style: none; padding: 0; margin: 32px 0 0; display: grid; gap: 10px; }
+.status li { display: grid; grid-template-columns: 110px 1fr; gap: 14px; align-items: baseline; padding: 14px 18px; background: var(--card); border-radius: 18px; border: 1px solid var(--line); box-shadow: var(--shadow); }
+.status b { font-weight: 700; }
+.status .ok { color: var(--accent-ink); }
+.status .warn { color: var(--warn); }
+.status .bad { color: var(--bad); }
+.status span { color: var(--ink-2); font-size: 15px; }
+
+/* Bullets */
+.points { list-style: none; padding: 0; margin: 28px 0 0; display: grid; gap: 14px; }
+.points li { padding-left: 30px; position: relative; color: var(--ink-2); }
+.points li::before { content: ""; position: absolute; left: 0; top: 0.5em; width: 16px; height: 3px; border-radius: 2px; background: linear-gradient(90deg, var(--accent), var(--accent-2)); }
+.points b { color: var(--ink); font-weight: 600; }
+
+/* Duo */
+.duo { display: grid; grid-template-columns: 1.4fr 1fr; gap: 24px; align-items: start; }
+.duo figure { margin: 0; }
+.duo .phone { max-width: 320px; margin: 0 auto; }
+
+/* Install */
+.steps { counter-reset: s; list-style: none; padding: 0; margin: 36px 0 0; display: grid; gap: 14px; max-width: 760px; margin-left: auto; margin-right: auto; }
+.steps li { counter-increment: s; display: grid; grid-template-columns: 44px 1fr; gap: 16px; align-items: start; background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 18px 20px; box-shadow: var(--shadow); text-align: left; }
+.steps li::before { content: counter(s, decimal-leading-zero); font-family: var(--mono); font-weight: 600; color: var(--accent-ink); font-size: 15px; padding-top: 3px; }
+.steps b { display: block; font-weight: 600; margin-bottom: 2px; }
+.steps span { color: var(--ink-2); font-size: 15px; }
+.repo { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; max-width: 760px; margin: 28px auto 0; padding: 10px 10px 10px 18px; background: var(--card); border: 1px solid var(--line); border-radius: 999px; box-shadow: var(--shadow); }
+.repo code { font-family: var(--mono); font-size: 14px; color: var(--ink); flex: 1; overflow-wrap: anywhere; text-align: left; }
+.copy { margin-left: auto; }
+
+/* Footer */
+footer { padding: 48px 0 64px; border-top: 1px solid var(--line); font-size: 14px; color: var(--ink-3); }
+footer .wrap { display: flex; flex-wrap: wrap; gap: 12px 28px; align-items: center; }
+footer a { color: var(--ink-2); }
+
+@media (max-width: 900px) {
+  .split, .split.flip { grid-template-columns: 1fr; }
+  .split.flip > :first-child { order: 0; }
+  .facts { grid-template-columns: 1fr; }
+  .duo { grid-template-columns: 1fr; }
+  .nav-links .opt { display: none; }
+}
+@media (max-width: 640px) {
+  .nav .wrap { gap: 12px; }
+  .status li { grid-template-columns: 1fr; gap: 4px; }
+  .repo { border-radius: 24px; }
+  .repo code { flex-basis: 100%; }
+}
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .btn { transition: none; } }
+
+/* Zweisprachig: Browsersprache entscheidet, Schalter oben rechts merkt sich die Wahl */
+html[lang="de"] .en, html[lang="en"] .de { display: none !important; }
+</style>
+<script>
+  (function () {
+    var saved = null;
+    try { saved = localStorage.getItem("sh1ftw-lang"); } catch (e) {}
+    var pref = saved || ((navigator.languages && navigator.languages[0]) || navigator.language || "en");
+    document.documentElement.lang = /^de/i.test(pref) ? "de" : "en";
+  })();
+</script>
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap">
+    <a class="brand" href="#top"><img src="images/logo.png" alt="" width="28" height="28">Pulse</a>
+    <nav class="nav-links" aria-label="Sections">
+      <a class="opt" href="#how"><span class="en">How it decides</span><span class="de">So entscheidet es</span></a>
+      <a class="opt" href="#notify"><span class="en">Notifications</span><span class="de">Mitteilungen</span></a>
+      <a class="opt" href="#zigbee">Zigbee</a>
+      <a href="https://github.com/SH1FT-W/pulse">GitHub</a>
+    </nav>
+    <a class="btn small" href="#install"><span class="en">Install</span><span class="de">Installieren</span></a>
+    <div class="lang" role="group" aria-label="Language">
+      <button type="button" data-l="de">DE</button><button type="button" data-l="en">EN</button>
+    </div>
+  </div>
+</header>
+
+<main id="top">
+  <!-- Hero -->
+  <section class="hero">
+    <div class="wrap">
+      <p class="eyebrow"><span class="en">For Home Assistant</span><span class="de">Für Home Assistant</span></p>
+      <h1><span class="en">Every sensor<br>has a <span class="grad">rhythm.</span></span><span class="de">Jeder Sensor<br>hat einen <span class="grad">Takt.</span></span></h1>
+      <p class="lead"><span class="en">Pulse learns how often each battery device reports and <strong>notices when one goes quiet</strong>. It only listens, never polls. No battery wasted, no automation left guessing.</span><span class="de">Pulse lernt, wie oft sich jedes Batteriegerät meldet, und <strong>merkt, wenn eines verstummt</strong>. Es hört nur zu und fragt nie ab. Keine Batterie verschwendet, keine Automation im Blindflug.</span></p>
+      <div class="cta">
+        <a class="btn" href="#install"><span class="en">Install with HACS</span><span class="de">Mit HACS installieren</span></a>
+        <a class="btn ghost" href="https://github.com/SH1FT-W/pulse#readme"><span class="en">Read the docs</span><span class="de">Zur Dokumentation</span></a>
+      </div>
+      <p class="meta"><span id="pulse-version">Version 1.0.0</span> &middot; <span class="en">Home Assistant 2026.9 or newer &middot; Free and open source</span><span class="de">Home Assistant 2026.9 oder neuer &middot; Kostenlos und quelloffen</span></p>
+      <div class="hero-shot shot lg">
+        <picture>
+          <source media="(prefers-color-scheme: dark)" srcset="images/overview-dark.png">
+          <img src="images/overview-light.png" width="2560" height="1280" alt="The Pulse overview: a headline saying 7 of 10 devices are in rhythm, and one rhythm strip per device. A silent aquarium thermometer breaks off into a red dashed line.">
+        </picture>
+      </div>
+    </div>
+  </section>
+
+  <!-- Why -->
+  <section class="tint" id="why">
+    <div class="wrap">
+      <div class="split">
+        <div>
+          <p class="eyebrow"><span class="en">The problem</span><span class="de">Das Problem</span></p>
+          <h2><span class="en">The battery said 94 %.<br>The door said nothing.</span><span class="de">Die Batterie sagte 94 %.<br>Die Tür sagte nichts.</span></h2>
+          <p class="lead"><span class="en">When a sensor dies, Home Assistant keeps showing the last state it heard. The door stays "closed", the leak sensor stays "dry", the battery stays at 94 %. Nobody notices until an automation misfires a week later.</span><span class="de">Stirbt ein Sensor, zeigt Home Assistant einfach weiter den letzten Zustand. Die Tür bleibt „geschlossen“, der Lecksensor „trocken“, die Batterie bei 94 %. Es fällt erst auf, wenn eine Woche später eine Automation danebengreift.</span></p>
+          <p class="lead"><span class="en">Pulse looks at the one thing that never lies: <strong>how often the device talks.</strong></span><span class="de">Pulse schaut auf das Einzige, was nie lügt: <strong>wie oft das Gerät sich meldet.</strong></span></p>
+        </div>
+        <div class="shot">
+          <img src="images/detail.png" width="1040" height="1360" loading="lazy" alt="Device detail: the headline Silent for 5 days, the buttons Battery replaced and Remind tomorrow, and a heartbeat calendar with one row per day where the silent days are red dashed lines.">
+        </div>
+      </div>
+      <div class="facts">
+        <div class="fact"><b>0</b><span class="en">polls. Pulse never asks a device anything, so it costs no battery and no airtime.</span><span class="de">Abfragen. Pulse fragt nie ein Gerät, kostet also keine Batterie und keinen Funkverkehr.</span></div>
+        <div class="fact"><b>10</b><span class="en">days of recorder history are read on the first start. No learning week.</span><span class="de">Tage Verlauf liest Pulse beim ersten Start. Keine Lernwoche.</span></div>
+        <div class="fact"><b>1</b><span class="en">click to set up. Pulse finds every device with a battery sensor itself.</span><span class="de">Klick zur Einrichtung. Pulse findet jedes Gerät mit Batteriesensor selbst.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How it decides -->
+  <section id="how">
+    <div class="wrap">
+      <div class="head center">
+        <p class="eyebrow"><span class="en">How it decides</span><span class="de">So entscheidet es</span></p>
+        <h2><span class="en">Four words.<br>Always with a reason.</span><span class="de">Vier Worte.<br>Immer mit Begründung.</span></h2>
+        <p class="lead"><span class="en">From the gaps between reports Pulse learns a typical gap and a longest normal gap for every device. The current silence is compared with both. Important devices such as locks, leak and smoke sensors get tighter limits.</span><span class="de">Aus den Abständen zwischen den Meldungen lernt Pulse je Gerät einen typischen und einen längsten normalen Abstand. Die aktuelle Stille wird mit beiden verglichen. Wichtige Geräte wie Schlösser, Leck- und Rauchmelder bekommen engere Grenzen.</span></p>
+      </div>
+      <div class="split flip">
+        <div>
+          <ul class="status">
+            <li><b class="ok"><span class="en">Good</span><span class="de">Gut</span></b><span class="en">Reporting as usual, about every 30 minutes.</span><span class="de">Meldet sich wie gewohnt, etwa alle 30 Minuten.</span></li>
+            <li><b class="warn"><span class="en">Watch</span><span class="de">Beobachten</span></b><span class="en">A bit late. 2.5 × the typical gap, or the battery is at 20 %.</span><span class="de">Etwas spät. 2,5 × der typische Abstand, oder die Batterie ist bei 20 %.</span></li>
+            <li><b class="warn"><span class="en">Check</span><span class="de">Prüfen</span></b><span class="en">Unusually quiet. 4 × the typical gap, unreachable for 20 minutes, or the partner device keeps firing while this one stays silent.</span><span class="de">Ungewöhnlich still. 4 × der typische Abstand, 20 Minuten nicht erreichbar, oder das Partnergerät meldet sich weiter und dieses nicht.</span></li>
+            <li><b class="bad"><span class="en">Failed</span><span class="de">Ausgefallen</span></b><span class="en">Silent far too long. 8 × the typical gap or unreachable for 2 hours. Shows up under Repairs.</span><span class="de">Viel zu lange still. 8 × der typische Abstand oder 2 Stunden nicht erreichbar. Erscheint unter Reparaturen.</span></li>
+          </ul>
+        </div>
+        <div>
+          <ul class="points">
+            <li><b><span class="en">Restart echoes don't count.</span><span class="de">Neustart-Echos zählen nicht.</span></b> <span class="en">Values that Zigbee2MQTT or Home Assistant replay after a restart are never taken as a sign of life.</span><span class="de">Werte, die Zigbee2MQTT oder Home Assistant nach einem Neustart erneut schicken, gelten nie als Lebenszeichen.</span></li>
+            <li><b><span class="en">Cross-check.</span><span class="de">Gegenprobe.</span></b> <span class="en">Pair a lock with its door contact. If the lock keeps reporting and the contact doesn't, Pulse notices early.</span><span class="de">Schloss und Türkontakt als Partner: meldet sich das Schloss weiter und der Kontakt nicht, merkt Pulse es früh.</span></li>
+            <li><b><span class="en">Battery changes.</span><span class="de">Batteriewechsel.</span></b> <span class="en">Detected from a voltage or level jump or a Zigbee re-join, with a history per device. NiMH rechargeables are exempt from percentage rules because their percentage says nothing.</span><span class="de">Erkannt am Spannungs- oder Füllstandssprung oder einer Zigbee-Neuanmeldung, mit Historie je Gerät. NiMH-Akkus sind von Prozentregeln ausgenommen, ihr Prozentwert sagt nichts.</span></li>
+            <li><b><span class="en">Honest about gaps.</span><span class="de">Ehrlich bei Lücken.</span></b> <span class="en">Times when Home Assistant wasn't running are hatched, not shown as silence.</span><span class="de">Zeiten, in denen Home Assistant nicht lief, werden schraffiert, nicht als Stille gezeigt.</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Notifications -->
+  <section class="tint" id="notify">
+    <div class="wrap">
+      <div class="split">
+        <div>
+          <p class="eyebrow"><span class="en">Notifications</span><span class="de">Mitteilungen</span></p>
+          <h2><span class="en">Tells you once.<br>At a good time.</span><span class="de">Sagt es einmal.<br>Zur passenden Zeit.</span></h2>
+          <p class="lead"><span class="en">Straight to the Companion app. Failures right away, the rest in one daily summary, with quiet hours and "only when someone is home". Never the same message twice.</span><span class="de">Direkt in die Companion-App. Ausfälle sofort, der Rest in einer täglichen Zusammenfassung, mit Ruhezeit und „erst beim Heimkommen“. Nie dieselbe Mitteilung zweimal.</span></p>
+          <ul class="points">
+            <li><b><span class="en">Critical alerts</span><span class="de">Kritische Mitteilungen</span></b> <span class="en">break through Do Not Disturb when an important device fails.</span><span class="de">durchbrechen „Nicht stören“, wenn ein wichtiges Gerät ausfällt.</span></li>
+            <li><b><span class="en">Buttons</span><span class="de">Knöpfe</span></b> <span class="en">in the notification: Battery replaced, Remind tomorrow.</span><span class="de">in der Mitteilung: Batterie gewechselt, Morgen erinnern.</span></li>
+            <li><b><span class="en">One message for an outage.</span><span class="de">Eine Mitteilung bei Ausfall.</span></b> <span class="en">If a hub or bridge takes many devices down at once, you get one message naming them, not forty.</span><span class="de">Reißt eine Bridge viele Geräte auf einmal mit, kommt eine Mitteilung mit den Namen, nicht vierzig.</span></li>
+          </ul>
+        </div>
+        <div class="shot">
+          <img src="images/notifications.png" width="2560" height="1520" loading="lazy" alt="Notification settings: recipients, the levels Failed, Check and Battery with Right away or Daily, times for the daily summary and quiet hours, critical alerts, only when someone is home.">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Zigbee + phone -->
+  <section id="zigbee">
+    <div class="wrap">
+      <div class="head center">
+        <p class="eyebrow">Zigbee2MQTT</p>
+        <h2><span class="en">One switch.<br>Every heartbeat.</span><span class="de">Ein Schalter.<br>Jeder Herzschlag.</span></h2>
+        <p class="lead"><span class="en">Many sensors only send when a value changes. With one switch Pulse turns on <span class="mono">last_seen</span> and availability in Zigbee2MQTT, so it also sees the reports that changed nothing. Battery devices send nothing extra.</span><span class="de">Viele Sensoren senden nur, wenn sich ein Wert ändert. Mit einem Schalter aktiviert Pulse <span class="mono">last_seen</span> und Verfügbarkeit in Zigbee2MQTT und sieht so auch die Meldungen, die nichts geändert haben. Batteriegeräte senden nichts zusätzlich.</span></p>
+      </div>
+      <div class="duo">
+        <figure>
+          <div class="shot"><img src="images/welcome.png" width="1160" height="1566" loading="lazy" alt="The welcome sheet: Pulse listens. Knows every rhythm, only listens, tells you in time, and a switch for Zigbee signs of life."></div>
+          <figcaption class="cap"><span class="en">The welcome sheet, with the one switch that matters.</span><span class="de">Das Willkommen-Blatt, mit dem einen Schalter, der zählt.</span></figcaption>
+        </figure>
+        <figure class="phone">
+          <div class="shot"><img src="images/iphone-dark.png" width="780" height="1688" loading="lazy" alt="Pulse on an iPhone in dark mode: the headline, the rhythm strips glowing in the dark, failed devices first."></div>
+          <figcaption class="cap"><span class="en">On the phone the strips glow in the dark.</span><span class="de">Am Handy leuchten die Leisten im Dunkeln.</span></figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- Install -->
+  <section class="tint" id="install">
+    <div class="wrap center">
+      <p class="eyebrow"><span class="en">Installation</span><span class="de">Installation</span></p>
+      <h2><span class="en">Three minutes.<br>Then it just listens.</span><span class="de">Drei Minuten.<br>Dann hört es einfach zu.</span></h2>
+      <div class="repo">
+        <code id="repo-url">https://github.com/SH1FT-W/pulse</code>
+        <button class="btn small copy" type="button" data-copy="repo-url"><span class="en">Copy</span><span class="de">Kopieren</span></button>
+      </div>
+      <ol class="steps">
+        <li><div><b><span class="en">Add the repository to HACS</span><span class="de">Repository in HACS eintragen</span></b><span class="en">HACS → Integrations → ⋮ → Custom repositories. Paste the address above, type <i>Integration</i>.</span><span class="de">HACS → Integrationen → ⋮ → Benutzerdefinierte Repositories. Adresse oben einfügen, Typ <i>Integration</i>.</span></div></li>
+        <li><div><b><span class="en">Install Pulse and restart</span><span class="de">Pulse installieren und neu starten</span></b><span class="en">Home Assistant 2026.9 or newer.</span><span class="de">Home Assistant 2026.9 oder neuer.</span></div></li>
+        <li><div><b><span class="en">Add the integration</span><span class="de">Integration hinzufügen</span></b><span class="en">Settings → Devices &amp; services → Add integration → Pulse. One click, Pulse finds your battery devices itself.</span><span class="de">Einstellungen → Geräte &amp; Dienste → Integration hinzufügen → Pulse. Ein Klick, Pulse findet deine Batteriegeräte selbst.</span></div></li>
+        <li><div><b><span class="en">Open Pulse in the sidebar</span><span class="de">Pulse in der Seitenleiste öffnen</span></b><span class="en">Admins can change everything, other users see the panel read only. Flip the Zigbee switch if you use Zigbee2MQTT.</span><span class="de">Admins können alles ändern, andere Nutzer sehen das Panel nur lesend. Mit Zigbee2MQTT den Zigbee-Schalter umlegen.</span></div></li>
+      </ol>
+      <p class="meta" style="margin-top:28px"><span class="en">Everything runs inside your Home Assistant. Nothing leaves your network.</span><span class="de">Alles läuft in deinem Home Assistant. Nichts verlässt dein Netzwerk.</span></p>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>Pulse &middot; Apache 2.0</span>
+    <a href="https://github.com/SH1FT-W/pulse">GitHub</a>
+    <a href="https://github.com/SH1FT-W/pulse/issues"><span class="en">Issues</span><span class="de">Fehler melden</span></a>
+    <a href="https://github.com/SH1FT-W/pulse/releases">Releases</a>
+    <a href="https://sh1ft-w.github.io/">SH1FT-W</a>
+  </div>
+</footer>
+
+<script>
+document.querySelectorAll('[data-copy]').forEach(function (b) {
+  var label = b.innerHTML;
+  b.addEventListener('click', function () {
+    var t = document.getElementById(b.dataset.copy).textContent;
+    (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(function () {
+      b.innerHTML = '<span class="en">Copied</span><span class="de">Kopiert</span>';
+      setTimeout(function () { b.innerHTML = label; }, 1600);
+    }, function () {});
+  });
+});
+</script>
+<script>
+  (function () {
+    var titles = { en: "Pulse for Home Assistant", de: "Pulse für Home Assistant" };
+    function apply(l) {
+      document.documentElement.lang = l;
+      document.title = titles[l];
+      document.querySelectorAll(".lang button").forEach(function (b) { b.classList.toggle("on", b.dataset.l === l); });
+    }
+    document.querySelectorAll(".lang button").forEach(function (b) {
+      b.addEventListener("click", function () {
+        try { localStorage.setItem("sh1ftw-lang", b.dataset.l); } catch (e) {}
+        apply(b.dataset.l);
+      });
+    });
+    apply(document.documentElement.lang);
+  })();
+</script>
+<script>
+  // Version line follows the latest GitHub release; the text above is the fallback.
+  fetch('https://api.github.com/repos/SH1FT-W/pulse/releases/latest')
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (j) {
+      var v = j && String(j.tag_name || '').replace(/^v/, '');
+      var el = document.getElementById('pulse-version');
+      if (v && el) el.textContent = 'Version ' + v;
+    })
+    .catch(function () {});
+</script>
+</body>
+</html>

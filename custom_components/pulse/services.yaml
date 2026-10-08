@@ -1,0 +1,36 @@
+mark_replaced:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          entity:
+            - integration: pulse
+snooze:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          entity:
+            - integration: pulse
+    hours:
+      default: 24
+      selector:
+        number:
+          min: 0
+          max: 336
+          unit_of_measurement: h
+ignore:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          entity:
+            - integration: pulse
+    ignored:
+      default: true
+      selector:
+        boolean:
+send_test:

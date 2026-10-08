@@ -1,0 +1,70 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  python:
+    name: Integration (pytest + ruff + mypy)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
+        with:
+          enable-cache: true
+          cache-dependency-glob: requirements_test.txt
+      - name: Install
+        run: |
+          uv venv --python 3.14
+          uv pip install -r requirements_test.txt
+      - name: Lint
+        run: uvx ruff@0.16.9 check . && uvx ruff@0.16.9 format --check .
+      - name: Types
+        # mypy aus uvx, Home Assistant aus der Projekt-venv (Konfiguration: mypy.ini)
+        run: uvx mypy@2.3.1 --python-executable .venv/bin/python
+      - name: Test
+        # Abdeckungs-Grenze knapp unter dem Stand (1.0: 96 %) – sinkt sie, fehlen Tests
+        run: .venv/bin/python -m pytest -q --cov=custom_components/pulse --cov-report=term --cov-fail-under=95
+
+  panel:
+    name: Panel (typecheck, test, lint, build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+      - run: corepack enable
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: "22"
+          cache: yarn
+          cache-dependency-path: frontend/yarn.lock
+      - run: yarn install --immutable
+      - run: yarn typecheck
+      - name: Test
+        run: yarn test
+      - run: yarn check
+      - run: yarn build
+      - name: Built panel is committed and up to date
+        working-directory: .
+        run: |
+          git status --porcelain -- custom_components/pulse/www
+          test -z "$(git status --porcelain -- custom_components/pulse/www)"

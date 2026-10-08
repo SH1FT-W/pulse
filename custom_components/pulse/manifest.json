@@ -1,0 +1,28 @@
+{
+  "domain": "pulse",
+  "name": "Pulse",
+  "after_dependencies": [
+    "frontend",
+    "panel_custom",
+    "mqtt",
+    "recorder",
+    "mobile_app",
+    "notify",
+    "person"
+  ],
+  "codeowners": [
+    "@SH1FT-W"
+  ],
+  "config_flow": true,
+  "dependencies": [
+    "http",
+    "websocket_api"
+  ],
+  "documentation": "https://github.com/SH1FT-W/pulse",
+  "integration_type": "service",
+  "iot_class": "calculated",
+  "issue_tracker": "https://github.com/SH1FT-W/pulse/issues",
+  "requirements": [],
+  "single_config_entry": true,
+  "version": "1.0.0"
+}

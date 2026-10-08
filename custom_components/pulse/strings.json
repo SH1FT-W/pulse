@@ -1,0 +1,101 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Pulse",
+        "description": "Pulse found {count} battery-powered devices. It only listens to what they send anyway and never queries them, so it costs no battery. Everything else is set up in the Pulse panel."
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "Pulse is already set up."
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "problem": {
+        "name": "Pulse problem"
+      }
+    },
+    "sensor": {
+      "status": {
+        "name": "Pulse status",
+        "state": {
+          "ok": "Good",
+          "learning": "Learning",
+          "watch": "Watch",
+          "check": "Check",
+          "failed": "Failed"
+        }
+      },
+      "last_report": {
+        "name": "Last report"
+      },
+      "problems": {
+        "name": "Problems",
+        "unit_of_measurement": "devices"
+      },
+      "monitored": {
+        "name": "Monitored devices",
+        "unit_of_measurement": "devices"
+      }
+    }
+  },
+  "issues": {
+    "device_failed": {
+      "title": "{name} isn't responding",
+      "description": "{reason}\n\nUsually the battery is empty. After replacing it, choose “Battery replaced” in Pulse (sidebar) or wait until the device reports again. This notice then disappears by itself."
+    }
+  },
+  "exceptions": {
+    "not_loaded": {
+      "message": "Pulse is not set up."
+    },
+    "unknown_device": {
+      "message": "Pulse doesn't monitor this device."
+    }
+  },
+  "services": {
+    "mark_replaced": {
+      "name": "Battery replaced",
+      "description": "Records a battery change for a device.",
+      "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "The device whose battery was replaced."
+        }
+      }
+    },
+    "snooze": {
+      "name": "Postpone reminder",
+      "description": "No notifications for a device for a while.",
+      "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "The device."
+        },
+        "hours": {
+          "name": "Hours",
+          "description": "How long to stay quiet. 0 cancels a postponement."
+        }
+      }
+    },
+    "ignore": {
+      "name": "Ignore device",
+      "description": "Pulse stops monitoring a device (or resumes).",
+      "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "The device."
+        },
+        "ignored": {
+          "name": "Ignore",
+          "description": "Off resumes monitoring."
+        }
+      }
+    },
+    "send_test": {
+      "name": "Send test notification",
+      "description": "Sends a test notification to all Pulse recipients."
+    }
+  }
+}
