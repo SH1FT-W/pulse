@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.0.1 – 2026-10-13
+
+Checked against the Home Assistant Integration Quality Scale (self-assessed: Platinum, see
+`custom_components/pulse/quality_scale.yaml`).
+
+- **Download diagnostics** under *Settings → Devices & services → Pulse*: the state of every monitored device,
+  Zigbee2MQTT and the settings, without device names, recipients or persons.
+- README: known limitations, troubleshooting and removal.
+- Platforms declare `PARALLEL_UPDATES`; type checking is now `mypy --strict`.
+
 ## 1.0.0 – 2026-10-08
 
 First version: passive monitoring of battery devices, rhythm learning from history, Zigbee2MQTT signs of life,

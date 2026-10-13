@@ -8,6 +8,7 @@
   <a href="https://github.com/SH1FT-W/pulse/releases"><img src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fapi.github.com%2Frepos%2FSH1FT-W%2Fpulse%2Freleases%2Flatest&query=%24.tag_name&label=release&color=6d5dfc" alt="Latest release"></a>
   <a href="https://github.com/SH1FT-W/pulse/actions/workflows/ci.yml"><img src="https://github.com/SH1FT-W/pulse/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="https://github.com/SH1FT-W/pulse/actions/workflows/hassfest.yml"><img src="https://github.com/SH1FT-W/pulse/actions/workflows/hassfest.yml/badge.svg" alt="Hassfest"></a>
+  <a href="custom_components/pulse/quality_scale.yaml"><img src="https://img.shields.io/badge/quality%20scale-platinum%20(self--assessed)-6d5dfc" alt="Integration Quality Scale: Platinum, self-assessed"></a>
   <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-custom%20repository-41bdf5" alt="HACS custom repository"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-lightgrey" alt="Apache 2.0"></a>
 </p>
@@ -171,6 +172,48 @@ actions:
     data:
       flash: long
 ```
+
+## Known limitations
+
+- **Only devices with a battery entity.** Pulse finds devices through `device_class: battery` (a percentage or a
+  "battery low" switch). Devices without one are not monitored.
+- **Quiet by design is hard to tell from dead.** A device that only reports when something happens, with no
+  periodic battery report, has no rhythm. Pulse learns the longest normal gap, but a door that is rarely opened
+  stays in *Learning* or *Watch* longer.
+- **Stuck values are not silence.** A sensor that keeps reporting the same wrong value counts as alive. Pulse
+  watches whether a device talks, not whether what it says is right.
+- **Zigbee2MQTT `last_seen` in payloads.** If the bridge option was once on and is now off, Zigbee2MQTT keeps
+  sending a frozen timestamp. Pulse ignores `last_seen` unless the option is on.
+- **History needs the recorder.** Entities excluded from the recorder start in *Learning* after every install.
+- **Notifications only through the Companion app** (`notify.mobile_app_*`). For anything else, use the
+  `pulse_device_status_changed` event in an automation.
+- **NiMH rechargeables** never get a battery warning from their percentage, only from silence.
+
+## Troubleshooting
+
+- **A device is missing.** Check that it has a battery entity, that the entity is enabled, and that the device is
+  not a phone, vacuum, mower or a device with power or energy sensors (skipped on purpose).
+- **A device shows *Failed* although it works.** Open it in the panel: the reason says what Pulse saw. If it
+  reports rarely, wait a few days for the rhythm to settle, mark it as important or not, or ignore it.
+- **No notifications.** Use *Send test notification* in the panel (or `pulse.send_test`) and check the recipients
+  and the levels.
+- **Diagnostics.** *Settings → Devices & services → Pulse → ⋮ → Download diagnostics* gives the state of every
+  monitored device without names, recipients or persons. Attach it to an issue.
+- **Debug logging:**
+
+  ```yaml
+  logger:
+    logs:
+      custom_components.pulse: debug
+  ```
+
+## Removal
+
+1. *Settings → Devices & services → Pulse → ⋮ → Delete*. This removes the panel, the Pulse entities on your
+   devices, open repairs and the stored data (`.storage/pulse.devices`).
+2. If you turned on Zigbee signs of life, `last_seen` and availability stay on in Zigbee2MQTT. Switch them off in
+   Zigbee2MQTT under *Settings → Advanced* and *Settings → Availability* if you don't want them.
+3. Remove Pulse in HACS and restart Home Assistant.
 
 ## Privacy
 

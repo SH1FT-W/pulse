@@ -16,6 +16,9 @@ from .entity import PulseDeviceEntity
 if TYPE_CHECKING:
     from . import PulseConfigEntry
 
+# Pulse schickt die Werte selbst (kein Abfragen), Entitäten schreiben ohne Wartezeit
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: PulseConfigEntry, async_add_entities: AddConfigEntryEntitiesCallback

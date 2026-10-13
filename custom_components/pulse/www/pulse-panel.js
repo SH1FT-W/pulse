@@ -5148,7 +5148,7 @@ function Qn() {
 	let e = Zn();
 	if (!e) return null;
 	try {
-		return yn(e, "1.0.0", mn.length > 0);
+		return yn(e, "1.0.1", mn.length > 0);
 	} catch {
 		return null;
 	}
@@ -5335,7 +5335,7 @@ var er = class extends N {
 		this.welcome = null;
 		let e = Zn();
 		try {
-			e && bn(e, "1.0.0");
+			e && bn(e, "1.0.1");
 		} catch {}
 	}
 	zigbeeOffer(e) {
@@ -5485,7 +5485,7 @@ var er = class extends N {
 		}}
       >
         ${this.renderHead()} ${this.renderContent()}
-        <p class="version muted">${R(t, "version", { version: "1.0.0" })}</p>
+        <p class="version muted">${R(t, "version", { version: "1.0.1" })}</p>
         ${e ? E`<pulse-device-sheet
                   .open=${n !== null}
                   .device=${n}
@@ -5510,7 +5510,7 @@ var er = class extends N {
                 <pulse-welcome
                   .mode=${this.welcome}
                   .language=${t}
-                  .version=${"1.0.0"}
+                  .version=${"1.0.1"}
                   .zigbee=${this.zigbeeOffer(e)}
                   @closed=${() => this.welcomeDone()}
                   @enable-z2m=${() => {

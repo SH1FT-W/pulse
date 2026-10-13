@@ -1,0 +1,98 @@
+# Integration Quality Scale, selbst geprüft (Pulse ist keine Core-Integration, die Stufe ist nicht offiziell).
+# Regeln: https://developers.home-assistant.io/docs/core/integration-quality-scale/rules
+rules:
+  # Bronze
+  action-setup: done
+  appropriate-polling:
+    status: exempt
+    comment: Pulse polls nothing. It listens to state events and MQTT and evaluates once a minute in memory.
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency:
+    status: exempt
+    comment: No external requirements.
+  docs-actions: done
+  docs-triggers:
+    status: exempt
+    comment: No device triggers. The events are documented under "Entities, events and actions".
+  docs-conditions:
+    status: exempt
+    comment: No conditions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure:
+    status: exempt
+    comment: No device or service to connect to; the flow only counts the battery devices found.
+  test-before-setup:
+    status: exempt
+    comment: No connection. Zigbee2MQTT is optional and retried every five minutes when MQTT is not ready.
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions: done
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: No options flow; all settings live in the panel and are described in the README.
+  docs-installation-parameters:
+    status: exempt
+    comment: The config flow has no fields.
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow:
+    status: exempt
+    comment: No credentials.
+  test-coverage: done
+
+  # Gold
+  devices:
+    status: done
+    comment: Per-device entities attach to the monitored device of its own integration; overall entities to a service device "Pulse".
+  diagnostics: done
+  discovery-update-info:
+    status: exempt
+    comment: Not a network device.
+  discovery:
+    status: exempt
+    comment: Not a network device. Battery devices are found automatically after setup.
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices: done
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default:
+    status: exempt
+    comment: Every entity is used by the panel or by automations; none is noisy.
+  entity-translations: done
+  exception-translations: done
+  icon-translations: done
+  reconfiguration-flow:
+    status: exempt
+    comment: Nothing to reconfigure in the entry; settings are changed in the panel.
+  repair-issues: done
+  stale-devices:
+    status: done
+    comment: A monitored device that disappears takes its Pulse entities and stored data with it.
+
+  # Platinum
+  async-dependency:
+    status: exempt
+    comment: No external library.
+  inject-websession:
+    status: exempt
+    comment: No HTTP requests.
+  strict-typing: done
