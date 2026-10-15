@@ -29,7 +29,7 @@ var e = globalThis, t = e.ShadowRoot && (e.ShadyCSS === void 0 || e.ShadyCSS.nat
 	let t = "";
 	for (let n of e.cssRules) t += n.cssText;
 	return a(t);
-})(e) : e, { is: l, defineProperty: u, getOwnPropertyDescriptor: d, getOwnPropertyNames: f, getOwnPropertySymbols: p, getPrototypeOf: m } = Object, h = globalThis, g = h.trustedTypes, ee = g ? g.emptyScript : "", te = h.reactiveElementPolyfillSupport, _ = (e, t) => e, ne = {
+})(e) : e, { is: l, defineProperty: u, getOwnPropertyDescriptor: d, getOwnPropertyNames: f, getOwnPropertySymbols: p, getPrototypeOf: m } = Object, h = globalThis, g = h.trustedTypes, ee = g ? g.emptyScript : "", te = h.reactiveElementPolyfillSupport, _ = (e, t) => e, v = {
 	toAttribute(e, t) {
 		switch (t) {
 			case Boolean:
@@ -58,23 +58,23 @@ var e = globalThis, t = e.ShadowRoot && (e.ShadyCSS === void 0 || e.ShadyCSS.nat
 		}
 		return n;
 	}
-}, re = (e, t) => !l(e, t), ie = {
+}, ne = (e, t) => !l(e, t), re = {
 	attribute: !0,
 	type: String,
-	converter: ne,
+	converter: v,
 	reflect: !1,
 	useDefault: !1,
-	hasChanged: re
+	hasChanged: ne
 };
 Symbol.metadata ??= Symbol("metadata"), h.litPropertyMetadata ??= /* @__PURE__ */ new WeakMap();
-var v = class extends HTMLElement {
+var y = class extends HTMLElement {
 	static addInitializer(e) {
 		this._$Ei(), (this.l ??= []).push(e);
 	}
 	static get observedAttributes() {
 		return this.finalize(), this._$Eh && [...this._$Eh.keys()];
 	}
-	static createProperty(e, t = ie) {
+	static createProperty(e, t = re) {
 		if (t.state && (t.attribute = !1), this._$Ei(), this.prototype.hasOwnProperty(e) && ((t = Object.create(t)).wrapped = !0), this.elementProperties.set(e, t), !t.noAccessor) {
 			let n = Symbol(), r = this.getPropertyDescriptor(e, n, t);
 			r !== void 0 && u(this.prototype, e, r);
@@ -100,7 +100,7 @@ var v = class extends HTMLElement {
 		};
 	}
 	static getPropertyOptions(e) {
-		return this.elementProperties.get(e) ?? ie;
+		return this.elementProperties.get(e) ?? re;
 	}
 	static _$Ei() {
 		if (this.hasOwnProperty(_("elementProperties"))) return;
@@ -171,14 +171,14 @@ var v = class extends HTMLElement {
 	_$ET(e, t) {
 		let n = this.constructor.elementProperties.get(e), r = this.constructor._$Eu(e, n);
 		if (r !== void 0 && !0 === n.reflect) {
-			let i = (n.converter?.toAttribute === void 0 ? ne : n.converter).toAttribute(t, n.type);
+			let i = (n.converter?.toAttribute === void 0 ? v : n.converter).toAttribute(t, n.type);
 			this._$Em = e, i == null ? this.removeAttribute(r) : this.setAttribute(r, i), this._$Em = null;
 		}
 	}
 	_$AK(e, t) {
 		let n = this.constructor, r = n._$Eh.get(e);
 		if (r !== void 0 && this._$Em !== r) {
-			let e = n.getPropertyOptions(r), i = typeof e.converter == "function" ? { fromAttribute: e.converter } : e.converter?.fromAttribute === void 0 ? ne : e.converter;
+			let e = n.getPropertyOptions(r), i = typeof e.converter == "function" ? { fromAttribute: e.converter } : e.converter?.fromAttribute === void 0 ? v : e.converter;
 			this._$Em = r;
 			let a = i.fromAttribute(t, e.type);
 			this[r] = a ?? this._$Ej?.get(r) ?? a, this._$Em = null;
@@ -187,7 +187,7 @@ var v = class extends HTMLElement {
 	requestUpdate(e, t, n, r = !1, i) {
 		if (e !== void 0) {
 			let a = this.constructor;
-			if (!1 === r && (i = this[e]), n ??= a.getPropertyOptions(e), !((n.hasChanged ?? re)(i, t) || n.useDefault && n.reflect && i === this._$Ej?.get(e) && !this.hasAttribute(a._$Eu(e, n)))) return;
+			if (!1 === r && (i = this[e]), n ??= a.getPropertyOptions(e), !((n.hasChanged ?? ne)(i, t) || n.useDefault && n.reflect && i === this._$Ej?.get(e) && !this.hasAttribute(a._$Eu(e, n)))) return;
 			this.C(e, t, n);
 		}
 		!1 === this.isUpdatePending && (this._$ES = this._$EP());
@@ -251,10 +251,10 @@ var v = class extends HTMLElement {
 	updated(e) {}
 	firstUpdated(e) {}
 };
-v.elementStyles = [], v.shadowRootOptions = { mode: "open" }, v[_("elementProperties")] = /* @__PURE__ */ new Map(), v[_("finalized")] = /* @__PURE__ */ new Map(), te?.({ ReactiveElement: v }), (h.reactiveElementVersions ??= []).push("2.1.2");
+y.elementStyles = [], y.shadowRootOptions = { mode: "open" }, y[_("elementProperties")] = /* @__PURE__ */ new Map(), y[_("finalized")] = /* @__PURE__ */ new Map(), te?.({ ReactiveElement: y }), (h.reactiveElementVersions ??= []).push("2.1.2");
 //#endregion
 //#region node_modules/lit-html/lit-html.js
-var ae = globalThis, oe = (e) => e, y = ae.trustedTypes, se = y ? y.createPolicy("lit-html", { createHTML: (e) => e }) : void 0, ce = "$lit$", b = `lit$${Math.random().toFixed(9).slice(2)}$`, le = "?" + b, ue = `<${le}>`, x = document, S = () => x.createComment(""), C = (e) => e === null || typeof e != "object" && typeof e != "function", de = Array.isArray, fe = (e) => de(e) || typeof e?.[Symbol.iterator] == "function", pe = "[ 	\n\f\r]", w = /<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g, me = /-->/g, he = />/g, T = RegExp(`>|${pe}(?:([^\\s"'>=/]+)(${pe}*=${pe}*(?:[^ \t\n\f\r"'\`<>=]|("|')|))|$)`, "g"), ge = /'/g, _e = /"/g, ve = /^(?:script|style|textarea|title)$/i, ye = (e) => (t, ...n) => ({
+var ie = globalThis, ae = (e) => e, oe = ie.trustedTypes, se = oe ? oe.createPolicy("lit-html", { createHTML: (e) => e }) : void 0, ce = "$lit$", b = `lit$${Math.random().toFixed(9).slice(2)}$`, le = "?" + b, ue = `<${le}>`, x = document, S = () => x.createComment(""), C = (e) => e === null || typeof e != "object" && typeof e != "function", de = Array.isArray, fe = (e) => de(e) || typeof e?.[Symbol.iterator] == "function", pe = "[ 	\n\f\r]", w = /<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g, me = /-->/g, he = />/g, T = RegExp(`>|${pe}(?:([^\\s"'>=/]+)(${pe}*=${pe}*(?:[^ \t\n\f\r"'\`<>=]|("|')|))|$)`, "g"), ge = /'/g, _e = /"/g, ve = /^(?:script|style|textarea|title)$/i, ye = (e) => (t, ...n) => ({
 	_$litType$: e,
 	strings: t,
 	values: n
@@ -299,7 +299,7 @@ var Se = (e, t) => {
 				if (ve.test(i.tagName)) {
 					let e = i.textContent.split(b), t = e.length - 1;
 					if (t > 0) {
-						i.textContent = y ? y.emptyScript : "";
+						i.textContent = oe ? oe.emptyScript : "";
 						for (let n = 0; n < t; n++) i.append(e[n], S()), A.nextNode(), c.push({
 							type: 2,
 							index: ++a
@@ -409,8 +409,8 @@ var we = class {
 	}
 	_$AR(e = this._$AA.nextSibling, t) {
 		for (this._$AP?.(!1, !0, t); e !== this._$AB;) {
-			let t = oe(e).nextSibling;
-			oe(e).remove(), e = t;
+			let t = ae(e).nextSibling;
+			ae(e).remove(), e = t;
 		}
 	}
 	setConnected(e) {
@@ -489,8 +489,8 @@ var we = class {
 	U: Oe,
 	B: Ee,
 	F: ke
-}, je = ae.litHtmlPolyfillSupport;
-je?.(Ce, Te), (ae.litHtmlVersions ??= []).push("3.3.3");
+}, je = ie.litHtmlPolyfillSupport;
+je?.(Ce, Te), (ie.litHtmlVersions ??= []).push("3.3.3");
 var Me = (e, t, n) => {
 	let r = n?.renderBefore ?? t, i = r._$litPart$;
 	if (i === void 0) {
@@ -498,7 +498,7 @@ var Me = (e, t, n) => {
 		r._$litPart$ = i = new Te(t.insertBefore(S(), e), e, void 0, n ?? {});
 	}
 	return i._$AI(e), i;
-}, Ne = globalThis, N = class extends v {
+}, Ne = globalThis, N = class extends y {
 	constructor() {
 		super(...arguments), this.renderOptions = { host: this }, this._$Do = void 0;
 	}
@@ -553,22 +553,22 @@ function Le(e) {
 	let t = e.target;
 	return t instanceof HTMLSelectElement || t instanceof HTMLInputElement ? t.value : "";
 }
-function L(e) {
+function Re(e) {
 	let t = Reflect.get(Object(Reflect.get(e, "detail")), "item"), n = Reflect.get(Object(t), "value");
 	return typeof n == "string" ? n : null;
 }
-var Re = "pointer", ze = !1;
-function Be() {
-	ze || (ze = !0, window.addEventListener("pointerdown", () => Re = "pointer", !0), window.addEventListener("keydown", () => Re = "keyboard", !0));
-}
+var ze = "pointer", Be = !1;
 function Ve() {
+	Be || (Be = !0, window.addEventListener("pointerdown", () => ze = "pointer", !0), window.addEventListener("keydown", () => ze = "keyboard", !0));
+}
+function He() {
 	let e = document.activeElement;
 	for (; e?.shadowRoot?.activeElement;) e = e.shadowRoot.activeElement;
 	return e;
 }
-function He() {
-	Re === "pointer" && window.setTimeout(() => {
-		let e = Ve();
+function Ue() {
+	ze === "pointer" && window.setTimeout(() => {
+		let e = He();
 		e instanceof HTMLElement && e.blur();
 		let t = document.activeElement;
 		t instanceof HTMLElement && t.tagName !== "BODY" && t.blur();
@@ -576,7 +576,7 @@ function He() {
 }
 //#endregion
 //#region src/strings-de.ts
-var Ue = {
+var We = {
 	title: "Pulse",
 	subtitle: "Merkt, wenn ein Batteriesensor still wird – hört nur zu und kostet keine Batterie.",
 	tab_overview: "Übersicht",
@@ -586,12 +586,12 @@ var Ue = {
 	more: "Mehr",
 	loading: "Pulse lädt …",
 	not_loaded: "Pulse ist noch nicht eingerichtet. Füge die Integration unter Einstellungen → Geräte & Dienste hinzu.",
-	status_ok: "Gut",
+	status_ok: "Im Takt",
 	status_learning: "Lernt",
-	status_watch: "Beobachten",
+	status_watch: "Im Blick",
 	status_check: "Prüfen",
 	status_failed: "Ausgefallen",
-	ignored: "Ignoriert",
+	ignored: "Nicht überwacht",
 	batteries: "Batterien",
 	nothing_due: "Nichts fällig",
 	last_change: "Zuletzt gewechselt",
@@ -607,7 +607,7 @@ var Ue = {
 	later_done: "Pulse erinnert dich morgen",
 	snoozed_until: "Erinnert {when}",
 	details: "Details",
-	ignore: "Nicht überwachen",
+	ignore: "Nicht überwacht",
 	ignore_hint: "Pulse lässt dieses Gerät in Ruhe.",
 	ignored_done: "{name} wird nicht mehr überwacht",
 	resume: "Wieder überwachen",
@@ -765,7 +765,7 @@ var Ue = {
 	welcome_head1: "Pulse",
 	welcome_head2: "hört zu.",
 	welcome_lead: "Jedes Batteriegerät hat einen Takt. Pulse kennt ihn – und merkt, wenn er aussetzt.",
-	ignored_count: "{count} ignoriert",
+	ignored_count: "{count} nicht überwacht",
 	show_list: "Liste zeigen",
 	device_settings: "Einstellungen",
 	no_data_legend: "Keine Daten – Pulse lief nicht",
@@ -773,8 +773,8 @@ var Ue = {
 	set_head: "Pulse meldet sich um {time}.",
 	set_quiet: "Ruhe {start}–{end}.",
 	set_no_quiet: "Ohne Ruhezeit.",
-	set_failed: "Ausfälle",
-	set_check: "Auffälliges",
+	set_failed: "Ausgefallene Geräte",
+	set_check: "„Prüfen“",
 	set_battery: "Batterien",
 	set_group: "{names} {level}",
 	set_level_now: "sofort",
@@ -795,11 +795,11 @@ var Ue = {
 	z2m_base_hint: "Basisthema in MQTT, Standard ist zigbee2mqtt. Nur ändern, wenn dein Zigbee2MQTT ein anderes nutzt.",
 	z2m_base_invalid: "Ungültiges Thema: nicht leer, ohne # und +, ohne Schrägstrich am Anfang oder Ende.",
 	on: "An",
-	advanced: "Erweitert",
+	advanced: "Basis-Thema",
 	snooze_cancel: "Erinnerung aufheben",
 	snooze_cancelled: "Erinnerung aufgehoben",
 	read_only: "Ändern können nur Admins.",
-	levels_hint: "Ausgefallen: viel länger still als sonst oder nicht erreichbar. Prüfen: auffällig still oder Batterie unter 10 %. Beobachten bleibt im Panel.",
+	levels_hint: "Ausgefallen: viel länger still als sonst oder nicht erreichbar. Prüfen: auffällig still oder Batterie unter 10 %. „Im Blick“ bleibt im Panel.",
 	recipients_hint: "Neue Handys kommen automatisch dazu, bis du hier etwas änderst.",
 	recovered_hint: "Auch erkannte Batteriewechsel.",
 	arrive_hint: "Mitteilungen warten, bis jemand der Gewählten zu Hause ist. Gilt für alle Empfänger.",
@@ -814,8 +814,70 @@ var Ue = {
 	sent_waiting: "{name} wartet auf die erste Meldung nach dem Batteriewechsel.",
 	day_line_summary: "{time} Zusammenfassung",
 	day_line_quiet: "Ruhe {start} bis {end}",
-	day_line_no_quiet: "Ohne Ruhezeit"
-}, We = {
+	day_line_no_quiet: "Ohne Ruhezeit",
+	hero_need1: "{count} Geräte",
+	hero_need1_one: "Ein Gerät",
+	hero_need: "brauchen dich.",
+	hero_need_one: "braucht dich.",
+	hero_sub: "{ok} von {total} im Takt.",
+	sent_strays_since: "{name} meldet sich seit {day} kaum noch, zuletzt {last}.",
+	sent_strays_for: "{name} meldet sich seit {span} kaum noch, zuletzt {last}.",
+	sent_startup: "{name} hat sich seit dem Neustart noch nicht gemeldet.",
+	sent_radio_only: "{name} funkt, schickt aber keine Werte.",
+	sent_battery_missing: "{name} meldet keinen Batteriestand mehr.",
+	flag_strays: "Seit {span} kaum noch",
+	status_cloud: "Cloud still",
+	dh_strays: "Seit {span} kaum noch.",
+	dh_cloud: "Cloud antwortet nicht.",
+	dh_startup: "Seit dem Neustart noch keine Meldung.",
+	dh_radio_only: "Funkt ohne Werte.",
+	dh_battery_missing: "Batteriestand fehlt.",
+	forecast_too_short: "Für eine Vorhersage noch zu kurz beobachtet",
+	forecast_flat: "Prozent ändert sich kaum – noch keine Vorhersage",
+	forecast_coarse: "Meldet nur grobe Stufen – keine Vorhersage",
+	forecast_untrusted: "Akku-Prozent sagt zu wenig – keine Vorhersage",
+	forecast_noisy: "Werte schwanken zu stark – keine Vorhersage",
+	forecast_days: "Hält nur noch wenige Tage",
+	forecast_weeks: "Hält noch ca. {lo}–{hi} Wochen",
+	forecast_months: "Hält noch ca. {lo}–{hi} Monate",
+	forecast_years: "Hält noch ca. {lo}–{hi} Jahre",
+	due_line: "In den nächsten 8 Wochen fällig: {items}",
+	battery_due_many: "{count} bald fällig",
+	battery_due_one: "1 bald fällig",
+	cloud_outage_one: "{name}-Cloud antwortet nicht – 1 Gerät betroffen",
+	cloud_outage_many: "{name}-Cloud antwortet nicht – {count} Geräte betroffen",
+	cloud_device: "Cloud-Gerät",
+	important_badge: "Wichtig",
+	mark_important: "Als wichtig markieren",
+	unmark_important: "Nicht mehr wichtig",
+	important_devices: "Wichtige Geräte",
+	filter_important: "Wichtig",
+	filter_battery: "Batterie",
+	ignore_action: "Nicht mehr überwachen",
+	no_devices: "Noch keine Batteriegeräte gefunden.",
+	connection_lost: "Verbindung unterbrochen – Pulse zeigt den letzten Stand und verbindet sich neu.",
+	heartbeat_failed: "Der Herzschlag ließ sich nicht laden.",
+	reload: "Neu laden",
+	search_label: "Geräte durchsuchen",
+	health_title: "Funk-Zähler",
+	health_hint: "Erkennt Geräte, die funken, aber keine Werte mehr schicken.",
+	health_confirm_title: "Funk-Zähler einschalten?",
+	health_confirm_text: "Pulse schaltet in Zigbee2MQTT die Health-Prüfung ein. Zigbee2MQTT zählt dann mit, wie oft jedes Gerät funkt – so erkennt Pulse Geräte, die zwar noch funken, aber keine Werte mehr schicken.",
+	health_confirm_side: "Batteriegeräte senden dadurch nichts zusätzlich. Zurückstellen kannst du das jederzeit in Zigbee2MQTT unter Einstellungen.",
+	partner_suggest: "Vorschlag: {name}",
+	partner_suggest_why: "oft gemeinsam aktiv",
+	partner_accept: "Übernehmen",
+	partner_dismiss: "Verwerfen",
+	new_forecast_title: "Batterie-Vorhersage",
+	new_forecast_text: "Im Gerät steht, wie lange die Batterie ungefähr noch hält. Die Übersicht zeigt, welche Batterien in den nächsten Wochen fällig sind.",
+	new_hero_title: "Probleme zuerst",
+	new_hero_text: "Braucht ein Gerät dich, steht das jetzt groß oben. Wichtige Geräte tragen einen Stern.",
+	new_radio_title: "Funkt ohne Werte",
+	new_radio_text: "Mit dem Funk-Zähler von Zigbee2MQTT merkt Pulse, wenn ein Gerät noch funkt, aber nichts mehr misst.",
+	new_cloud_title: "Ruhig bei Cloud-Ausfällen",
+	new_cloud_text: "Antwortet eine Cloud nicht, gibt es einen Sammelhinweis statt vieler Alarme. Dazu schlägt Pulse passende Partnergeräte vor.",
+	due_untyped: "Typ offen: {names}"
+}, Ge = {
 	title: "Pulse",
 	subtitle: "Notices when a battery sensor goes quiet – it only listens and costs no battery.",
 	tab_overview: "Overview",
@@ -825,12 +887,12 @@ var Ue = {
 	more: "More",
 	loading: "Loading Pulse …",
 	not_loaded: "Pulse is not set up yet. Add the integration under Settings → Devices & services.",
-	status_ok: "Good",
+	status_ok: "In rhythm",
 	status_learning: "Learning",
-	status_watch: "Watch",
+	status_watch: "Watching",
 	status_check: "Check",
 	status_failed: "Failed",
-	ignored: "Ignored",
+	ignored: "Not monitored",
 	batteries: "Batteries",
 	nothing_due: "Nothing due",
 	last_change: "Last change",
@@ -847,7 +909,7 @@ var Ue = {
 	later_done: "Pulse will remind you tomorrow",
 	snoozed_until: "Reminds {when}",
 	details: "Details",
-	ignore: "Don't monitor",
+	ignore: "Not monitored",
 	ignore_hint: "Pulse leaves this device alone.",
 	ignored_done: "{name} is no longer monitored",
 	resume: "Monitor again",
@@ -976,7 +1038,7 @@ var Ue = {
 	yesterday: "yesterday",
 	flag_silent: "Silent for {span}",
 	group_need: "Needs you",
-	group_watch: "Keeping an eye on",
+	group_watch: "Watching",
 	group_rhythm: "In rhythm",
 	group_learning: "Learning",
 	monitor_head: "{count} devices · 7 days",
@@ -1004,7 +1066,7 @@ var Ue = {
 	welcome_head1: "Pulse",
 	welcome_head2: "listens.",
 	welcome_lead: "Every battery device has a rhythm. Pulse knows it – and notices when it skips.",
-	ignored_count: "{count} ignored",
+	ignored_count: "{count} not monitored",
 	show_list: "Show list",
 	device_settings: "Settings",
 	no_data_legend: "No data – Pulse wasn’t running",
@@ -1012,8 +1074,8 @@ var Ue = {
 	set_head: "Pulse checks in at {time}.",
 	set_quiet: "Quiet {start}–{end}.",
 	set_no_quiet: "No quiet hours.",
-	set_failed: "failures",
-	set_check: "anomalies",
+	set_failed: "failed devices",
+	set_check: "“Check”",
 	set_battery: "batteries",
 	set_group: "{names} {level}",
 	set_level_now: "right away",
@@ -1034,11 +1096,11 @@ var Ue = {
 	z2m_base_hint: "MQTT base topic, default is zigbee2mqtt. Only change it if your Zigbee2MQTT uses a different one.",
 	z2m_base_invalid: "Invalid topic: not empty, no # or +, no slash at the start or end.",
 	on: "On",
-	advanced: "Advanced",
+	advanced: "Base topic",
 	snooze_cancel: "Cancel reminder",
 	snooze_cancelled: "Reminder cancelled",
 	read_only: "Only admins can make changes.",
-	levels_hint: "Failed: silent much longer than usual or unreachable. Check: unusually quiet or battery below 10%. Watch stays in the panel.",
+	levels_hint: "Failed: silent much longer than usual or unreachable. Check: unusually quiet or battery below 10%. “Watching” stays in the panel.",
 	recipients_hint: "New phones are added automatically until you change something here.",
 	recovered_hint: "Also detected battery changes.",
 	arrive_hint: "Notifications wait until one of the selected people is home. Applies to all recipients.",
@@ -1053,16 +1115,78 @@ var Ue = {
 	sent_waiting: "{name} is waiting for its first report after the battery change.",
 	day_line_summary: "Summary {time}",
 	day_line_quiet: "Quiet {start} to {end}",
-	day_line_no_quiet: "No quiet hours"
+	day_line_no_quiet: "No quiet hours",
+	hero_need1: "{count} devices",
+	hero_need1_one: "One device",
+	hero_need: "need you.",
+	hero_need_one: "needs you.",
+	hero_sub: "{ok} of {total} in rhythm.",
+	sent_strays_since: "{name} has barely checked in since {day}, last {last}.",
+	sent_strays_for: "{name} has barely checked in for {span}, last {last}.",
+	sent_startup: "{name} hasn’t checked in since the restart.",
+	sent_radio_only: "{name} is on the air but sends no values.",
+	sent_battery_missing: "{name} no longer reports its battery.",
+	flag_strays: "Barely any for {span}",
+	status_cloud: "Cloud silent",
+	dh_strays: "Barely any for {span}.",
+	dh_cloud: "Cloud not responding.",
+	dh_startup: "No report since the restart.",
+	dh_radio_only: "On the air, no values.",
+	dh_battery_missing: "Battery level missing.",
+	forecast_too_short: "Not observed long enough for a forecast",
+	forecast_flat: "Percentage barely changes – no forecast yet",
+	forecast_coarse: "Reports only coarse steps – no forecast",
+	forecast_untrusted: "Rechargeable percentage says too little – no forecast",
+	forecast_noisy: "Values fluctuate too much – no forecast",
+	forecast_days: "Only a few days left",
+	forecast_weeks: "Lasts about {lo}–{hi} more weeks",
+	forecast_months: "Lasts about {lo}–{hi} more months",
+	forecast_years: "Lasts about {lo}–{hi} more years",
+	due_line: "Due in the next 8 weeks: {items}",
+	battery_due_many: "{count} due soon",
+	battery_due_one: "1 due soon",
+	cloud_outage_one: "{name} cloud not responding – 1 device affected",
+	cloud_outage_many: "{name} cloud not responding – {count} devices affected",
+	cloud_device: "Cloud device",
+	important_badge: "Important",
+	mark_important: "Mark as important",
+	unmark_important: "No longer important",
+	important_devices: "Important devices",
+	filter_important: "Important",
+	filter_battery: "Battery",
+	ignore_action: "Stop monitoring",
+	no_devices: "No battery devices found yet.",
+	connection_lost: "Connection lost – Pulse shows the last state and is reconnecting.",
+	heartbeat_failed: "The heartbeat could not be loaded.",
+	reload: "Reload",
+	search_label: "Search devices",
+	health_title: "Radio counter",
+	health_hint: "Spots devices that are on the air but no longer send values.",
+	health_confirm_title: "Turn on the radio counter?",
+	health_confirm_text: "Pulse turns on the health check in Zigbee2MQTT. Zigbee2MQTT then counts how often each device transmits – so Pulse can spot devices that are still on the air but no longer send values.",
+	health_confirm_side: "Battery devices don’t send anything extra. You can turn it off any time in Zigbee2MQTT under Settings.",
+	partner_suggest: "Suggestion: {name}",
+	partner_suggest_why: "often active together",
+	partner_accept: "Use",
+	partner_dismiss: "Dismiss",
+	new_forecast_title: "Battery forecast",
+	new_forecast_text: "Each device shows roughly how long its battery will last. The overview lists which batteries are due in the coming weeks.",
+	new_hero_title: "Problems first",
+	new_hero_text: "When a device needs you, the headline says so. Important devices carry a star.",
+	new_radio_title: "On the air, no values",
+	new_radio_text: "With the Zigbee2MQTT radio counter, Pulse notices when a device still transmits but no longer measures anything.",
+	new_cloud_title: "Calm during cloud outages",
+	new_cloud_text: "If a cloud stops responding, you get one summary instead of many alerts. Pulse also suggests matching partner devices.",
+	due_untyped: "type unknown: {names}"
 };
 //#endregion
 //#region src/strings.ts
-function R(e, t, n = {}) {
-	return (e.startsWith("de") ? Ue : We)[t].replace(/\{(\w+)\}/g, (e, t) => t in n ? String(n[t]) : e);
+function L(e, t, n = {}) {
+	return (e.startsWith("de") ? We : Ge)[t].replace(/\{(\w+)\}/g, (e, t) => t in n ? String(n[t]) : e);
 }
 //#endregion
 //#region src/logic.ts
-function z(e) {
+function R(e) {
 	let t = null;
 	return (...n) => {
 		if (t !== null && t.args.length === n.length && t.args.every((e, t) => Object.is(e, n[t]))) return t.value;
@@ -1073,20 +1197,23 @@ function z(e) {
 		}, r;
 	};
 }
-var B = {
+var z = {
 	ok: 0,
 	learning: 0,
 	watch: 1,
 	check: 2,
 	failed: 3
 };
-function V(e) {
+function B(e) {
 	return e === "failed" ? "crit" : e === "check" || e === "watch" ? "warn" : e === "learning" ? "muted" : "ok";
 }
-function H(e) {
-	return e.ignored ? "muted" : V(e.status);
+function V(e) {
+	return e.ignored || H(e) ? "muted" : B(e.status);
 }
-function Ge(e) {
+function H(e) {
+	return !e.ignored && e.reason_key === "cloud_outage";
+}
+function Ke(e) {
 	return {
 		ok: "status_ok",
 		learning: "status_learning",
@@ -1098,10 +1225,10 @@ function Ge(e) {
 function U(e) {
 	return e.filter((e) => !e.ignored);
 }
-function Ke(e) {
-	return U(e).filter((e) => B[e.status] >= 2).sort((e, t) => B[t.status] - B[e.status] || e.name.localeCompare(t.name));
+function qe(e) {
+	return U(e).filter((e) => z[e.status] >= 2 && !H(e)).sort((e, t) => z[t.status] - z[e.status] || e.name.localeCompare(t.name));
 }
-function qe(e, t) {
+function Je(e, t) {
 	let n = /* @__PURE__ */ new Map();
 	for (let r of U(e)) {
 		let e = r.area ?? t, i = n.get(e) ?? [];
@@ -1112,27 +1239,27 @@ function qe(e, t) {
 		devices: t.sort((e, t) => e.name.localeCompare(t.name))
 	}));
 }
-function Je(e, t, n) {
-	if (t === null) return R(e, "unknown");
+function Ye(e, t, n) {
+	if (t === null) return L(e, "unknown");
 	let r = Math.max(0, n - t);
-	if (r < 60) return R(e, "just_now");
-	if (r < 3600) return R(e, "minutes_ago", { n: Math.round(r / 60) });
-	if (r < 86400) return R(e, "hours_ago", { n: Math.round(r / 3600) });
+	if (r < 60) return L(e, "just_now");
+	if (r < 3600) return L(e, "minutes_ago", { n: Math.round(r / 60) });
+	if (r < 86400) return L(e, "hours_ago", { n: Math.round(r / 3600) });
 	let i = Math.round(r / 86400);
-	return i === 1 ? R(e, "day_ago") : R(e, "days_ago", { n: i });
+	return i === 1 ? L(e, "day_ago") : L(e, "days_ago", { n: i });
 }
-function Ye(e, t) {
-	return t === null ? R(e, "unknown") : t < 3600 ? R(e, "every_minutes", { n: Math.max(1, Math.round(t / 60)) }) : t < 172800 ? R(e, "every_hours", { n: Math.round(t / 3600) }) : R(e, "every_days", { n: Math.round(t / 86400) });
+function Xe(e, t) {
+	return t === null ? L(e, "unknown") : t < 3600 ? L(e, "every_minutes", { n: Math.max(1, Math.round(t / 60)) }) : t < 172800 ? L(e, "every_hours", { n: Math.round(t / 3600) }) : L(e, "every_days", { n: Math.round(t / 86400) });
 }
-function Xe(e) {
+function Ze(e) {
 	let t = e.filter((e) => e !== null && e > 0).sort((e, t) => e - t);
 	if (!t.length) return e.map((e) => e === null ? null : 0);
 	let n = t[Math.min(t.length - 1, Math.floor(t.length * .9))] ?? 1;
 	return e.map((e) => e === null ? null : Math.min(1, e / n));
 }
-var Ze = /* @__PURE__ */ new Map();
-function Qe(e) {
-	let t = e ?? "", n = Ze.get(t);
+var Qe = /* @__PURE__ */ new Map();
+function $e(e) {
+	let t = e ?? "", n = Qe.get(t);
 	if (n) return n;
 	let r = new Intl.DateTimeFormat("en-US", {
 		year: "numeric",
@@ -1143,27 +1270,27 @@ function Qe(e) {
 		hourCycle: "h23",
 		...W(e)
 	});
-	return Ze.set(t, r), r;
+	return Qe.set(t, r), r;
 }
-var $e = /* @__PURE__ */ new Map();
-function et(e) {
+var et = /* @__PURE__ */ new Map();
+function tt(e) {
 	if (!e) return;
-	let t = $e.get(e);
+	let t = et.get(e);
 	if (t === void 0) {
 		try {
 			new Intl.DateTimeFormat("en-US", { timeZone: e }), t = !0;
 		} catch {
 			t = !1;
 		}
-		$e.set(e, t);
+		et.set(e, t);
 	}
 	return t ? e : void 0;
 }
 function W(e) {
-	let t = et(e);
+	let t = tt(e);
 	return t ? { timeZone: t } : {};
 }
-function tt(e, t) {
+function nt(e, t) {
 	let n = {
 		year: 1970,
 		month: 1,
@@ -1171,18 +1298,18 @@ function tt(e, t) {
 		hour: 0,
 		minute: 0
 	};
-	for (let r of Qe(t).formatToParts(/* @__PURE__ */ new Date(e * 1e3))) {
+	for (let r of $e(t).formatToParts(/* @__PURE__ */ new Date(e * 1e3))) {
 		let e = Number(r.value);
 		r.type === "year" ? n.year = e : r.type === "month" ? n.month = e : r.type === "day" ? n.day = e : r.type === "hour" ? n.hour = e % 24 : r.type === "minute" && (n.minute = e);
 	}
 	return n;
 }
-function nt(e, t) {
-	let n = tt(e, t);
+function G(e, t) {
+	let n = nt(e, t);
 	return Date.UTC(n.year, n.month - 1, n.day) / 864e5;
 }
 function rt(e, t) {
-	let n = tt(e, t);
+	let n = nt(e, t);
 	return n.hour + n.minute / 60;
 }
 function it(e) {
@@ -1196,7 +1323,7 @@ function ot(e, t, n) {
 		weekday: "short",
 		...W(n)
 	}), i = Math.max(0, t.length - 1);
-	return Array.from({ length: i }, (n, a) => a === i - 1 ? R(e, "today") : r.format(/* @__PURE__ */ new Date(((t[a] ?? 0) + (t[a + 1] ?? 0)) / 2 * 1e3)));
+	return Array.from({ length: i }, (n, a) => a === i - 1 ? L(e, "today") : r.format(/* @__PURE__ */ new Date(((t[a] ?? 0) + (t[a + 1] ?? 0)) / 2 * 1e3)));
 }
 function st(e) {
 	return `repeat(${Math.max(1, e.length - 1)}, minmax(0, 1fr))`;
@@ -1247,20 +1374,24 @@ function ft(e) {
 	if (e === "12" || e === "am_pm") return "12";
 	if (e === "24") return "24";
 }
-function pt(e, t, n, r) {
+function pt(e, t, n, r, i) {
+	let a = Math.abs(G(n, r) - G(t, r)), o = a === 0 ? {} : a < 6 ? { weekday: "short" } : {
+		day: "2-digit",
+		month: "2-digit"
+	}, s = i ? { hourCycle: i === "12" ? "h12" : "h23" } : {};
 	return new Intl.DateTimeFormat(e, {
-		weekday: "short",
+		...o,
 		hour: "numeric",
 		minute: "2-digit",
-		...r ? { hourCycle: r === "12" ? "h12" : "h23" } : {},
-		...W(n)
+		...s,
+		...W(r)
 	}).format(/* @__PURE__ */ new Date(t * 1e3));
 }
 function mt(e, t) {
-	return Math.abs(t) >= 1e3 ? R(e, "unit_volt", { value: new Intl.NumberFormat(e, {
+	return Math.abs(t) >= 1e3 ? L(e, "unit_volt", { value: new Intl.NumberFormat(e, {
 		minimumFractionDigits: 2,
 		maximumFractionDigits: 2
-	}).format(t / 1e3) }) : R(e, "unit_millivolt", { value: Math.round(t) });
+	}).format(t / 1e3) }) : L(e, "unit_millivolt", { value: Math.round(t) });
 }
 function ht(e) {
 	let t = e.trim();
@@ -1289,8 +1420,8 @@ function yt(e, t, n, r) {
 	return t === "none" ? [{
 		area: "",
 		devices: [...e].sort((e, t) => e.name.localeCompare(t.name))
-	}] : t === "area" ? qe(e, r) : vt.map((t) => ({
-		area: R(n, Ge(t)),
+	}] : t === "area" ? Je(e, r) : vt.map((t) => ({
+		area: L(n, Ke(t)),
 		devices: U(e).filter((e) => e.status === t).sort((e, t) => e.name.localeCompare(t.name))
 	})).filter((e) => e.devices.length > 0);
 }
@@ -1313,14 +1444,20 @@ function xt(e) {
 function St(e, t) {
 	return e > 120 || e > 24 && t > .5;
 }
-function Ct(e, t) {
-	return t === null ? e : t === "ignored" ? e.filter((e) => e.ignored) : U(e).filter((e) => e.status === t);
+function Ct(e, t = []) {
+	return U(e).filter((e) => t.includes(e.id) || e.battery.flag && e.battery.low || z[e.status] >= 1 && (e.reason_key ?? "").startsWith("battery")).sort((e, t) => e.name.localeCompare(t.name));
 }
-function wt(e, t, n, r) {
-	let i = nt(n, r) - nt(t, r);
-	if (i === 0) return R(e, "today_cap");
-	if (i === 1) return R(e, "yesterday_cap");
-	let a = tt(t, r).year === tt(n, r).year;
+function wt(e, t, n = []) {
+	return t === null ? e : t === "ignored" ? e.filter((e) => e.ignored) : t === "important" ? U(e).filter((e) => e.critical) : t === "battery" ? Ct(e, n) : U(e).filter((e) => e.status === t);
+}
+function Tt(e) {
+	return U(e).filter((e) => e.critical).length;
+}
+function Et(e, t, n, r) {
+	let i = G(n, r) - G(t, r);
+	if (i === 0) return L(e, "today_cap");
+	if (i === 1) return L(e, "yesterday_cap");
+	let a = nt(t, r).year === nt(n, r).year;
 	return new Intl.DateTimeFormat(e, {
 		day: "numeric",
 		month: "short",
@@ -1328,167 +1465,193 @@ function wt(e, t, n, r) {
 		...W(r)
 	}).format(/* @__PURE__ */ new Date(t * 1e3));
 }
-function Tt(e) {
-	return !e.ignored && B[e.status] >= 2;
+function Dt(e) {
+	return !e.ignored && z[e.status] >= 2;
 }
-function Et(e, t) {
+var Ot = /* @__PURE__ */ new Set(["battery_low", "battery_low_flag"]);
+function kt(e) {
+	let t = e.battery, n = t.flag && t.low || t.trusted && t.level !== null && t.level <= 20;
+	return Ot.has(e.reason_key ?? "") || n;
+}
+function At(e, t) {
+	return t === e.critical_auto ? null : t;
+}
+function jt(e, t) {
 	return t.length ? {
-		label: R(e, t.length === 1 ? "battery_low_one" : "battery_low_many", { count: t.length }),
+		label: L(e, t.length === 1 ? "battery_low_one" : "battery_low_many", { count: t.length }),
 		value: t.join(", "),
 		tone: "warn"
 	} : {
-		label: R(e, "battery_none_low"),
+		label: L(e, "battery_none_low"),
 		value: "",
 		tone: "ok"
 	};
 }
-function Dt(e) {
+function Mt(e) {
 	return e?.is_admin === !0;
 }
-function G(e) {
+function Nt(e) {
 	return e.silence_from === void 0 ? e.last_activity : e.silence_from;
 }
-function Ot(e) {
+function Pt(e) {
+	return typeof e.silence_start == "number" ? e.silence_start : Nt(e);
+}
+function Ft(e) {
+	return typeof e.strays == "number" && e.strays > 0 ? e.strays : 0;
+}
+function It(e) {
 	return !e.ignored && e.reason_key === "waiting_first";
 }
-var kt = /* @__PURE__ */ new Set([
+var Lt = /* @__PURE__ */ new Set([
 	"silent",
 	"silent_new",
 	"unavailable",
-	"partner"
-]), At = /* @__PURE__ */ new Set(["silent", "silent_new"]);
-function jt(e, t) {
+	"partner",
+	"radio_only"
+]), Rt = /* @__PURE__ */ new Set(["silent", "silent_new"]);
+function zt(e, t) {
 	let n = Math.max(0, t);
-	if (n < 3600) return R(e, "span_minutes", { n: Math.max(1, Math.round(n / 60)) });
-	if (n < 86400) {
+	if (Math.round(n / 60) < 60) return L(e, "span_minutes", { n: Math.max(1, Math.round(n / 60)) });
+	if (Math.round(n / 3600) < 48) {
 		let t = Math.round(n / 3600);
-		return t <= 1 ? R(e, "span_hour") : R(e, "span_hours", { n: t });
+		return t <= 1 ? L(e, "span_hour") : L(e, "span_hours", { n: t });
 	}
-	let r = Math.floor(n / 86400);
-	return r <= 1 ? R(e, "span_day") : R(e, "span_days", { n: r });
+	let r = Math.round(n / 86400);
+	return r <= 1 ? L(e, "span_day") : L(e, "span_days", { n: r });
 }
-function Mt(e, t, n, r) {
-	let i = nt(n, r) - nt(t, r);
-	return i === 1 ? R(e, "yesterday") : i >= 2 && i <= 6 ? new Intl.DateTimeFormat(e, {
+function Bt(e, t, n, r) {
+	let i = G(n, r) - G(t, r);
+	return i === 1 ? L(e, "yesterday") : i >= 2 && i <= 6 ? new Intl.DateTimeFormat(e, {
 		weekday: "long",
 		...W(r)
 	}).format(/* @__PURE__ */ new Date(t * 1e3)) : null;
 }
 function K(e) {
-	return !e.ignored && B[e.status] >= 1 && G(e) !== null && At.has(e.reason_key ?? "");
+	return !e.ignored && z[e.status] >= 1 && Pt(e) !== null && Rt.has(e.reason_key ?? "");
 }
-function Nt(e) {
-	return B[e.status] >= 1 && kt.has(e.reason_key ?? "");
+function Vt(e) {
+	return z[e.status] >= 1 && Lt.has(e.reason_key ?? "");
 }
-function Pt(e, t) {
+function Ht(e, t, n, r = "") {
+	return {
+		line1: e,
+		line1Short: e,
+		line2: t,
+		line2Short: t,
+		tone: n,
+		sub: r
+	};
+}
+function Ut(e, t) {
 	let n = U(t), r = n.filter((e) => e.status !== "learning");
-	if (!n.length) {
-		let t = R(e, "hero_none1"), n = R(e, "hero_none2");
-		return {
-			line1: t,
-			line1Short: t,
-			line2: n,
-			line2Short: n
-		};
-	}
-	if (!r.length) {
-		let t = R(e, "hero_learn1"), n = R(e, "hero_learn2");
-		return {
-			line1: t,
-			line1Short: t,
-			line2: n,
-			line2Short: n
-		};
-	}
-	let i = r.filter(Nt).length, a = r.length - i;
+	if (!n.length) return Ht(L(e, "hero_none1"), L(e, "hero_none2"), "accent");
+	if (!r.length) return Ht(L(e, "hero_learn1"), L(e, "hero_learn2"), "accent");
+	let i = r.filter(Vt).length, a = r.length - i, o = qe(r), s = o.some((e) => e.status === "failed") ? "crit" : "warn";
 	if (r.length === 1) {
-		let t = R(e, "hero_one"), n = R(e, i ? "hero_beat_off" : "hero_beat_one");
-		return {
-			line1: t,
-			line1Short: t,
-			line2: n,
-			line2Short: n
-		};
+		let t = L(e, "hero_one");
+		return o.length ? Ht(t, L(e, "hero_need_one"), s) : Ht(t, L(e, i ? "hero_beat_off" : "hero_beat_one"), i ? "plain" : "accent");
 	}
-	let o = R(e, "hero_beat"), s = R(e, "hero_beat_short");
+	let c = L(e, "hero_sub", {
+		ok: a,
+		total: r.length
+	});
+	if (o.length) {
+		let t = o.length === 1;
+		return Ht(t ? L(e, "hero_need1_one") : L(e, "hero_need1", { count: o.length }), L(e, t ? "hero_need_one" : "hero_need"), s, c);
+	}
+	let l = L(e, "hero_beat"), u = L(e, "hero_beat_short");
 	if (!i) {
-		let t = R(e, "hero_all", { count: r.length });
+		let t = L(e, "hero_all", { count: r.length });
 		return {
 			line1: t,
 			line1Short: t,
-			line2: o,
-			line2Short: s
+			line2: l,
+			line2Short: u,
+			tone: "accent",
+			sub: ""
 		};
 	}
 	return {
-		line1: R(e, "hero_some", {
+		line1: L(e, "hero_some", {
 			ok: a,
 			total: r.length
 		}),
-		line1Short: R(e, "hero_some_short", {
+		line1Short: L(e, "hero_some_short", {
 			ok: a,
 			total: r.length
 		}),
-		line2: o,
-		line2Short: s
+		line2: l,
+		line2Short: u,
+		tone: "plain",
+		sub: ""
 	};
 }
-var Ft = "\0";
+var Wt = "\0";
 function q(e, t, n, r) {
-	let [i = "", a = ""] = R(e, t, {
+	let [i = "", a = ""] = L(e, t, {
 		...r,
-		name: Ft
-	}).split(Ft);
+		name: Wt
+	}).split(Wt);
 	return {
 		before: i,
 		name: n.name,
 		after: a,
-		tone: V(n.status)
+		tone: B(n.status)
 	};
 }
-function It(e, t, n, r) {
-	let i = U(t).filter((e) => B[e.status] >= 1).sort((e, t) => B[t.status] - B[e.status] || e.name.localeCompare(t.name)), a = U(t), o = a.filter((e) => e.status === "learning").length, s = o ? Lt(e, o) : "";
+function Gt(e, t, n, r) {
+	let i = U(t).filter((e) => z[e.status] >= 1 && !H(e)).sort((e, t) => z[t.status] - z[e.status] || e.name.localeCompare(t.name)), a = U(t), o = a.filter((e) => e.status === "learning").length, s = o ? Kt(e, o) : "";
 	if (!i.length) return {
 		mentions: [],
 		more: 0,
-		text: o > 0 && o === a.length ? R(e, "sent_learning") : [o < a.length ? R(e, "sent_all_good") : "", s].filter(Boolean).join(" ")
+		text: o > 0 && o === a.length ? L(e, "sent_learning") : [o < a.length ? L(e, "sent_all_good") : "", s].filter(Boolean).join(" ")
 	};
 	let c = i.slice(0, 2).map((t) => {
-		let i = t.reason_key ?? "", a = G(t);
-		if (At.has(i) && a !== null) {
-			let i = Mt(e, a, n, r);
-			return i ? q(e, "sent_silent_since", t, { day: i }) : q(e, "sent_silent_for", t, { span: jt(e, n - a) });
+		let i = t.reason_key ?? "", a = Pt(t);
+		if (Rt.has(i) && a !== null && Ft(t) > 0) {
+			let i = Bt(e, a, n, r), o = Ye(e, t.last_activity, n).replace(/\.$/, "");
+			return i ? q(e, "sent_strays_since", t, {
+				day: i,
+				last: o
+			}) : q(e, "sent_strays_for", t, {
+				span: zt(e, n - a),
+				last: o
+			});
 		}
-		return i === "waiting_first" ? q(e, "sent_waiting", t, {}) : i === "battery_low" ? q(e, "sent_battery_low", t, {}) : i === "battery_soon" ? q(e, "sent_battery", t, {}) : i === "unavailable" ? q(e, "sent_unavailable", t, {}) : i === "partner" ? q(e, "sent_partner", t, { partner: t.partner_name ?? "" }) : q(e, "sent_other", t, { reason: t.reason });
+		if (Rt.has(i) && a !== null) {
+			let i = Bt(e, a, n, r);
+			return i ? q(e, "sent_silent_since", t, { day: i }) : q(e, "sent_silent_for", t, { span: zt(e, n - a) });
+		}
+		return i === "waiting_first" ? q(e, "sent_waiting", t, {}) : i === "battery_low" ? q(e, "sent_battery_low", t, {}) : i === "battery_soon" ? q(e, "sent_battery", t, {}) : i === "unavailable" ? q(e, "sent_unavailable", t, {}) : i === "startup_waiting" ? q(e, "sent_startup", t, {}) : i === "radio_only" ? q(e, "sent_radio_only", t, {}) : i === "battery_missing" ? q(e, "sent_battery_missing", t, {}) : i === "partner" ? q(e, "sent_partner", t, { partner: t.partner_name ?? "" }) : q(e, "sent_other", t, { reason: t.reason });
 	}), l = i.length - c.length;
 	return {
 		mentions: c,
 		more: l,
-		text: [l ? R(e, "sent_more", { count: l }) : "", s].filter(Boolean).join(" ")
+		text: [l ? L(e, "sent_more", { count: l }) : "", s].filter(Boolean).join(" ")
 	};
 }
-function Lt(e, t) {
-	return t === 1 ? R(e, "learning_one") : R(e, "learning_many", { count: t });
+function Kt(e, t) {
+	return t === 1 ? L(e, "learning_one") : L(e, "learning_many", { count: t });
 }
-var Rt = {
+var qt = {
 	need: "group_need",
 	watch: "group_watch",
 	rhythm: "group_rhythm",
 	learning: "group_learning"
 };
-function zt(e) {
-	return Rt[e];
+function Jt(e) {
+	return qt[e];
 }
-function Bt(e) {
+function Yt(e) {
 	let t = U(e), n = (e, t) => e.name.localeCompare(t.name);
 	return [
 		{
 			key: "need",
-			devices: Ke(t)
+			devices: qe(t)
 		},
 		{
 			key: "watch",
-			devices: t.filter((e) => e.status === "watch").sort(n)
+			devices: t.filter((e) => e.status === "watch" || H(e)).sort(n)
 		},
 		{
 			key: "rhythm",
@@ -1500,42 +1663,46 @@ function Bt(e) {
 		}
 	].filter((e) => e.devices.length > 0);
 }
-function Vt(e, t, n) {
-	let r = G(t);
-	return !K(t) || r === null ? null : R(e, "flag_silent", { span: jt(e, n - r) });
+function Xt(e, t, n) {
+	let r = Pt(t);
+	return !K(t) || r === null ? null : L(e, Ft(t) ? "flag_strays" : "flag_silent", { span: zt(e, n - r) });
 }
-function Ht(e, t, n) {
-	return t.ignored ? "" : Vt(e, t, n) || (Ot(t) ? R(e, "pill_waiting") : t.status === "learning" ? R(e, "pill_learning") : "");
+function Zt(e, t, n) {
+	return t.ignored ? "" : Xt(e, t, n) || (It(t) ? L(e, "pill_waiting") : t.status === "learning" ? L(e, "pill_learning") : "");
 }
-function Ut(e, t, n) {
+function Qt(e, t, n) {
 	if (t.ignored) return {
-		text: R(e, "ignored"),
+		text: L(e, "ignored"),
 		tone: "muted"
 	};
-	if (Ot(t)) return {
-		text: R(e, "status_waiting"),
+	if (H(t)) return {
+		text: L(e, "status_cloud"),
+		tone: "muted"
+	};
+	if (It(t)) return {
+		text: L(e, "status_waiting"),
 		tone: "warn"
 	};
 	let r = t.battery.level;
 	if (t.status === "watch" && t.reason_key?.startsWith("battery") && r !== null) return {
-		text: R(e, "status_battery", { level: Math.round(r) }),
+		text: L(e, "status_battery", { level: Math.round(r) }),
 		tone: "warn"
 	};
-	if (B[t.status] >= 1) return {
-		text: R(e, Ge(t.status)),
-		tone: V(t.status)
+	if (z[t.status] >= 1) return {
+		text: L(e, Ke(t.status)),
+		tone: B(t.status)
 	};
 	if (t.status === "learning") return {
-		text: R(e, "status_learning"),
+		text: L(e, "status_learning"),
 		tone: "muted"
 	};
 	let i = t.battery.replaced.at(-1);
 	return i !== void 0 && n - i < 172800 ? {
-		text: R(e, "new_battery"),
+		text: L(e, "new_battery"),
 		tone: "ok"
 	} : null;
 }
-function Wt(e, t) {
+function $t(e, t) {
 	if (t <= 0 || e.length <= t) return e;
 	let n = Math.ceil(e.length / t), r = [];
 	for (let t = 0; t < e.length; t += n) {
@@ -1544,86 +1711,98 @@ function Wt(e, t) {
 	}
 	return r;
 }
-function Gt(e) {
+function en(e) {
 	let [t = "0", n = "0"] = e.split(":");
 	return Number(t) + Number(n) / 60;
 }
-function Kt(e, t) {
-	let n = Gt(e), r = Gt(t);
+function tn(e, t) {
+	let n = en(e), r = en(t);
 	return n === r ? [] : n < r ? [[n, r]] : [[0, r], [n, 24]];
 }
-function qt(e, t, n) {
+function nn(e, t, n) {
 	if (t.ignored) return {
-		text: R(e, "dh_ignored"),
+		text: L(e, "dh_ignored"),
 		tone: "muted"
 	};
-	let r = t.reason_key ?? "", i = G(t);
+	let r = t.reason_key ?? "", i = Pt(t);
 	return K(t) && i !== null ? {
-		text: B[t.status] >= 2 ? R(e, "dh_silent", { span: jt(e, n - i) }) : R(e, "dh_watch"),
-		tone: V(t.status)
-	} : Ot(t) ? {
-		text: R(e, "dh_waiting"),
+		text: z[t.status] >= 2 ? L(e, Ft(t) ? "dh_strays" : "dh_silent", { span: zt(e, n - i) }) : L(e, "dh_watch"),
+		tone: B(t.status)
+	} : H(t) ? {
+		text: L(e, "dh_cloud"),
+		tone: "muted"
+	} : It(t) ? {
+		text: L(e, "dh_waiting"),
 		tone: "warn"
+	} : r === "startup_waiting" ? {
+		text: L(e, "dh_startup"),
+		tone: "warn"
+	} : r === "radio_only" ? {
+		text: L(e, "dh_radio_only"),
+		tone: B(t.status)
+	} : r === "battery_missing" ? {
+		text: L(e, "dh_battery_missing"),
+		tone: B(t.status)
 	} : r === "unavailable" ? {
-		text: R(e, "dh_unavailable"),
-		tone: V(t.status)
+		text: L(e, "dh_unavailable"),
+		tone: B(t.status)
 	} : r === "partner" ? {
-		text: R(e, "dh_partner"),
-		tone: V(t.status)
+		text: L(e, "dh_partner"),
+		tone: B(t.status)
 	} : r.startsWith("battery") && t.battery.level !== null ? {
-		text: R(e, "dh_battery", { level: Math.round(t.battery.level) }),
-		tone: V(t.status)
+		text: L(e, "dh_battery", { level: Math.round(t.battery.level) }),
+		tone: B(t.status)
 	} : t.status === "learning" ? {
-		text: R(e, "dh_learning"),
+		text: L(e, "dh_learning"),
 		tone: "muted"
 	} : {
-		text: R(e, "dh_ok"),
+		text: L(e, "dh_ok"),
 		tone: "accent"
 	};
 }
-function Jt(e, t, n, r) {
-	return K(t) && t.typical !== null && t.last_activity !== null ? R(e, "detail_every", {
-		every: Ye(e, t.typical).replace(/\.$/, ""),
-		when: pt(e, t.last_activity, n, r)
-	}) : t.status === "learning" && !t.ignored ? R(e, "learning_hint") : t.reason;
+function rn(e, t, n, r, i) {
+	return K(t) && t.typical !== null && t.last_activity !== null ? L(e, "detail_every", {
+		every: Xe(e, t.typical).replace(/\.$/, ""),
+		when: pt(e, t.last_activity, n, r, i)
+	}) : t.status === "learning" && !t.ignored ? L(e, "learning_hint") : t.reason;
 }
-function Yt(e, t, n) {
-	return K(t) && !Nt(n) ? R(e, "partner_quiet", {
+function an(e, t, n) {
+	return K(t) && !Vt(n) ? L(e, "partner_quiet", {
 		partner: n.name,
 		name: t.name
-	}) : !Nt(t) && !Nt(n) ? R(e, "partner_both") : "";
+	}) : !Vt(t) && !Vt(n) ? L(e, "partner_both") : "";
 }
-function Xt(e) {
+function on(e) {
 	return Array.isArray(e) && e.length === 2 && typeof e[0] == "number" && typeof e[1] == "number";
 }
-function Zt(e) {
-	return Array.isArray(e) ? e.filter(Xt) : [];
+function sn(e) {
+	return Array.isArray(e) ? e.filter(on) : [];
 }
-function Qt(e, t) {
+function cn(e, t) {
 	return t.length < 2 ? [] : e.map(([e, n]) => [lt(e, t), lt(n, t)]).filter(([e, t]) => t > e);
 }
-function $t(e) {
+function ln(e) {
 	return Array.isArray(e) && e.every((e) => e === null || typeof e == "number");
 }
-function en(e) {
-	return Array.isArray(e) && e.every($t);
+function un(e) {
+	return Array.isArray(e) && e.every(ln);
 }
-function tn(e) {
+function dn(e) {
 	if (typeof e != "object" || !e) return null;
 	let t = Reflect.get(e, "start"), n = Reflect.get(e, "days"), r = Reflect.get(e, "bin_minutes"), i = Reflect.get(e, "devices");
 	if (typeof t != "number" || typeof n != "number" || typeof r != "number" || r <= 0 || typeof i != "object" || !i) return null;
 	let a = {};
-	for (let [e, t] of Object.entries(i)) en(t) && (a[e] = t);
+	for (let [e, t] of Object.entries(i)) un(t) && (a[e] = t);
 	return {
 		start: t,
 		days: n,
 		binMinutes: r,
 		dayStarts: at(Reflect.get(e, "day_starts"), t, n),
 		devices: a,
-		noData: Zt(Reflect.get(e, "no_data"))
+		noData: sn(Reflect.get(e, "no_data"))
 	};
 }
-function nn(e, t, n) {
+function fn(e, t, n) {
 	let r = n * 60, i = [];
 	return t <= 0 || e.forEach((e, n) => {
 		e && i.push({
@@ -1632,13 +1811,17 @@ function nn(e, t, n) {
 		});
 	}), i;
 }
-function rn(e) {
+function pn(e) {
 	return e >= 3 ? 22 : e === 2 ? 18 : 12;
 }
-var an = 2;
-function on(e, t) {
-	let n = G(e);
+var mn = 2;
+function hn(e, t) {
+	let n = Nt(e);
 	if (!K(e) || n === null || t.length < 2) return -1;
+	if (typeof e.silence_start == "number") {
+		let n = ct(e.silence_start, t);
+		return n < 0 ? 0 : n + 1;
+	}
 	let r = t.length - 1, i = ((t[r] ?? 0) - (t[0] ?? 0)) / (r * 12), a = ct(n, t);
 	if (a < 0) return 0;
 	let o = [];
@@ -1646,15 +1829,15 @@ function on(e, t) {
 		e && t <= a && o.push(t);
 	});
 	let s = Math.max(3, Math.ceil(3 * (e.typical ?? 0) / i));
-	for (let e = o.length - 2; e >= 0 && o.length - 1 - e <= an; e--) {
+	for (let e = o.length - 2; e >= 0 && o.length - 1 - e <= mn; e--) {
 		let t = o[e], n = o[e + 1];
 		if (t === void 0 || n === void 0) break;
 		if (n - t - 1 >= s) return t + 1;
 	}
 	return a + 1;
 }
-function sn(e, t, n, r) {
-	let i = G(e);
+function gn(e, t, n, r) {
+	let i = Nt(e);
 	if (!K(e) || i === null) return -1;
 	let a = r * 60, o = -1;
 	return t.forEach((e, t) => {
@@ -1664,50 +1847,102 @@ function sn(e, t, n, r) {
 		});
 	}), Math.max(i, o);
 }
-var cn = {
+var _n = {
 	now: "set_level_now",
 	daily: "set_level_daily",
 	off: "set_level_off"
 };
-function ln(e, t) {
+function vn(e, t) {
 	let n = t.quiet;
-	return [R(e, "day_line_summary", { time: t.summary_time }), n.enabled ? R(e, "day_line_quiet", {
+	return [L(e, "day_line_summary", { time: t.summary_time }), n.enabled ? L(e, "day_line_quiet", {
 		start: n.start,
 		end: n.end
-	}) : R(e, "day_line_no_quiet")].join(" · ");
+	}) : L(e, "day_line_no_quiet")].join(" · ");
 }
-function un(e) {
+function yn(e) {
 	let t = Reflect.get(e.arrive_home, "persons");
 	if (Array.isArray(t)) return t.filter((e) => typeof e == "string");
 	let n = Reflect.get(e.arrive_home, "person");
 	return typeof n == "string" ? [n] : [];
 }
-function dn(e, t, n) {
-	let r = t.quiet, i = {
+function bn(e, t) {
+	let n = t.quiet, r = {
 		failed: "set_failed",
 		check: "set_check",
 		battery: "set_battery"
-	}, a = /* @__PURE__ */ new Map();
+	}, i = /* @__PURE__ */ new Map();
 	for (let n of [
 		"failed",
 		"check",
 		"battery"
 	]) {
-		let r = t.levels[n];
-		a.set(r, [...a.get(r) ?? [], R(e, i[n])]);
+		let a = t.levels[n];
+		i.set(a, [...i.get(a) ?? [], L(e, r[n])]);
 	}
-	let o = new Intl.ListFormat(e, { type: "conjunction" }), s = [...a].map(([t, n]) => R(e, "set_group", {
-		names: o.format(n),
-		level: R(e, cn[t])
-	})).join(", "), c = `${s.charAt(0).toUpperCase()}${s.slice(1)}.`;
+	let a = new Intl.ListFormat(e, { type: "conjunction" }), o = [...i].map(([t, n]) => L(e, "set_group", {
+		names: a.format(n),
+		level: L(e, _n[t])
+	})).join(", "), s = `${o.charAt(0).toUpperCase()}${o.slice(1)}.`;
 	return {
-		line1: R(e, "set_head", { time: t.summary_time }),
-		line2: r.enabled ? R(e, "set_quiet", {
-			start: r.start,
-			end: r.end
-		}) : R(e, "set_no_quiet"),
-		sub: [n ? `${n}.` : "", c].filter(Boolean).join(" ")
+		line1: L(e, "set_head", { time: t.summary_time }),
+		line2: n.enabled ? L(e, "set_quiet", {
+			start: n.start,
+			end: n.end
+		}) : L(e, "set_no_quiet"),
+		sub: s
 	};
+}
+function xn(e, t, n) {
+	let r = t > e ? [[e, t]] : [];
+	for (let [e, t] of n) r = r.flatMap(([n, r]) => {
+		if (t <= n || e >= r) return [[n, r]];
+		let i = [];
+		return e > n && i.push([n, e]), t < r && i.push([t, r]), i;
+	});
+	return r;
+}
+var Sn = {
+	too_short: "forecast_too_short",
+	flat: "forecast_flat",
+	coarse: "forecast_coarse",
+	untrusted: "forecast_untrusted",
+	noisy: "forecast_noisy"
+};
+function Cn(e, t, n) {
+	if (!t) return n && n in Sn ? L(e, Sn[n]) : "";
+	let r = Math.max(0, Math.min(t.days_min, t.days_max)), i = Math.max(t.days_min, t.days_max);
+	if (i <= 10) return L(e, "forecast_days");
+	let a = (e) => {
+		let t = Math.max(1, Math.floor(r / e));
+		return {
+			lo: t,
+			hi: Math.max(t + 1, Math.ceil(i / e))
+		};
+	};
+	return i <= 70 ? L(e, "forecast_weeks", a(7)) : i <= 540 ? L(e, "forecast_months", a(30.44)) : L(e, "forecast_years", a(365.25));
+}
+function wn(e, t) {
+	if (!t?.length) return "";
+	let n = /* @__PURE__ */ new Map(), r = [];
+	for (let e of t) e.type ? n.set(e.type, (n.get(e.type) ?? 0) + Math.max(1, e.count ?? 1)) : r.push(e.name);
+	let i = [...n.entries()].sort(([e, t], [n, r]) => r - t || e.localeCompare(n)).map(([t, n]) => L(e, "battery_count_type", {
+		count: n,
+		type: t
+	}));
+	return r.length && i.push(L(e, "due_untyped", { names: r.join(", ") })), L(e, "due_line", { items: i.join(", ") });
+}
+function Tn(e) {
+	let t = e.replaceAll("_", " ").trim();
+	return t ? `${t.charAt(0).toUpperCase()}${t.slice(1)}` : e;
+}
+function En(e, t) {
+	return (t ?? []).filter((e) => e.count > 0).map((t) => L(e, t.count === 1 ? "cloud_outage_one" : "cloud_outage_many", {
+		name: Tn(t.integration),
+		count: t.count
+	}));
+}
+function Dn(e) {
+	return e.partner || e.ignored ? [] : (e.partner_suggestions ?? []).slice(0, 1);
 }
 //#endregion
 //#region src/styles.ts
@@ -1981,7 +2216,7 @@ var J = o`
   .t-muted {
     color: var(--pu-muted);
   }
-`, fn = o`
+`, On = o`
   .axis,
   .rowgrid {
     display: grid;
@@ -2016,27 +2251,52 @@ var J = o`
     text-transform: uppercase;
     color: var(--pu-muted);
   }
+  .grp .count::before {
+    content: '· ';
+  }
   .nm {
     display: flex;
     align-items: center;
     gap: var(--pu-sp-12);
     min-width: 0;
   }
-  .nm ha-icon {
+  .nm > ha-icon {
     flex: none;
     color: var(--pu-muted);
     --mdc-icon-size: 20px;
   }
   /* Name immer in Textfarbe – die Statusfarbe steht höchstens am Symbol */
-  .nm ha-icon.t-crit {
+  .nm > ha-icon.t-crit {
     color: var(--pu-crit-text);
   }
-  .nm ha-icon.t-warn {
+  .nm > ha-icon.t-warn {
     color: var(--pu-warn-text);
+  }
+  /* Name (+ Stern) und Raum: nebeneinander, auf dem Handy untereinander */
+  .who {
+    display: flex;
+    align-items: center;
+    gap: var(--pu-sp-12);
+    min-width: 0;
+  }
+  .title {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--pu-sp-4);
+    flex: 0 0 auto;
+    min-width: 0;
+    max-width: 100%;
+  }
+  /* Wichtiges Gerät: kleiner Stern in Akzentfarbe hinter dem Namen */
+  .star {
+    display: inline-flex;
+    flex: none;
+    color: var(--pu-accent);
+    --mdc-icon-size: 14px;
   }
   /* Erst weicht der Raum, dann der Name */
   .nm b {
-    flex: 0 0 auto;
+    flex: 0 1 auto;
     max-width: 100%;
     min-width: 0;
     font-size: var(--pu-fs-15);
@@ -2046,13 +2306,17 @@ var J = o`
     overflow: hidden;
     text-overflow: ellipsis;
   }
+  /* Lange Raumnamen zweizeilig statt abgeschnitten */
   .room {
     flex: 0 100 auto;
     min-width: 0;
     overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    hyphens: auto;
     font-size: var(--pu-fs-13);
+    line-height: 1.25;
     color: var(--pu-faint);
   }
   .st {
@@ -2088,16 +2352,27 @@ var J = o`
     .rowgrid {
       grid-template-columns: minmax(0, 1fr) auto;
       gap: var(--pu-sp-8) var(--pu-sp-12);
-      padding: var(--pu-sp-12) 0 10px;
+      padding: var(--pu-sp-12) 0 18px;
     }
     .rowgrid pulse-rhythm {
       grid-column: 1 / -1;
       grid-row: 2;
       --rhythm-height: 22px;
     }
-    .nm ha-icon,
-    .room {
+    .nm > ha-icon {
       display: none;
+    }
+    /* Raum klein unter dem Namen */
+    .who {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 2px;
+    }
+    .room {
+      display: block;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      max-width: 100%;
     }
     .nm b {
       white-space: normal;
@@ -2112,7 +2387,7 @@ var J = o`
       content: none;
     }
   }
-`, pn = [
+`, kn = [
 	{
 		icon: "mdi:chart-timeline-variant",
 		title: "welcome_rhythm_title",
@@ -2128,7 +2403,28 @@ var J = o`
 		title: "welcome_notify_title",
 		text: "welcome_notify_text"
 	}
-], mn = [], hn = "https://github.com/SH1FT-W/pulse/blob/main/CHANGELOG.md";
+], An = [
+	{
+		icon: "mdi:battery-clock-outline",
+		title: "new_forecast_title",
+		text: "new_forecast_text"
+	},
+	{
+		icon: "mdi:alert-circle-outline",
+		title: "new_hero_title",
+		text: "new_hero_text"
+	},
+	{
+		icon: "mdi:access-point",
+		title: "new_radio_title",
+		text: "new_radio_text"
+	},
+	{
+		icon: "mdi:cloud-off-outline",
+		title: "new_cloud_title",
+		text: "new_cloud_text"
+	}
+], jn = "https://github.com/SH1FT-W/pulse/blob/main/CHANGELOG.md";
 I("pulse-welcome", class extends N {
 	static {
 		this.properties = {
@@ -2158,8 +2454,8 @@ I("pulse-welcome", class extends N {
 			(e.key === "Enter" || e.key === " ") && (e.preventDefault(), n());
 		}}
     >
-      <span><b>${R(e, "welcome_zigbee_title")}</b><small>${R(e, "welcome_zigbee_text")}</small></span>
-      ${t ? E`<span class="on"><ha-icon icon="mdi:check-circle"></ha-icon>${R(e, "zigbee_active")}</span>` : E`<ha-switch tabindex="-1" aria-hidden="true"></ha-switch>`}
+      <span><b>${L(e, "welcome_zigbee_title")}</b><small>${L(e, "welcome_zigbee_text")}</small></span>
+      ${t ? E`<span class="on"><ha-icon icon="mdi:check-circle"></ha-icon>${L(e, "zigbee_active")}</span>` : E`<ha-switch tabindex="-1" aria-hidden="true"></ha-switch>`}
     </div>`;
 	}
 	renderEcg() {
@@ -2202,25 +2498,25 @@ I("pulse-welcome", class extends N {
 	}
 	render() {
 		if (!this.mode) return k;
-		let e = this.language, t = this.mode === "welcome", n = t ? pn : mn;
+		let e = this.language, t = this.mode === "welcome", n = t ? kn : An;
 		return E`<ha-dialog open @closed=${() => this.close()}>
       <div class="sheet">
         <div class="glow" aria-hidden="true"></div>
         ${this.renderEcg()}
-        ${t ? E`<h2>${R(e, "welcome_head1")}<br /><span class="grad">${R(e, "welcome_head2")}</span></h2>
-                <p class="lead">${R(e, "welcome_lead")}</p>` : E`<h2 class="news">${R(e, "whats_new_title", { version: this.version })}</h2>`}
+        ${t ? E`<h2>${L(e, "welcome_head1")}<br /><span class="grad">${L(e, "welcome_head2")}</span></h2>
+                <p class="lead">${L(e, "welcome_lead")}</p>` : E`<h2 class="news">${L(e, "whats_new_title", { version: this.version })}</h2>`}
         <ol>
           ${n.map((t, n) => E`<li>
               <em class="mono">${String(n + 1).padStart(2, "0")}</em>
-              <span><b>${R(e, t.title)}.</b> ${R(e, t.text)}</span>
+              <span><b>${L(e, t.title)}.</b> ${L(e, t.text)}</span>
             </li>`)}
         </ol>
       </div>
       <!-- Fester Fuß: Schalter und „Weiter“ bleiben immer sichtbar, der Text darüber scrollt -->
       <div slot="footer" class="foot">
         ${t && this.zigbee !== "none" ? this.renderZigbee() : k}
-        <button class="go" type="button" @click=${() => this.close()}>${R(e, "continue")}</button>
-        ${t ? k : E`<a class="all" href=${hn} target="_blank" rel="noreferrer">${R(e, "whats_new_all")}</a>`}
+        <button class="go" type="button" @click=${() => this.close()}>${L(e, "continue")}</button>
+        ${t ? k : E`<a class="all" href=${jn} target="_blank" rel="noreferrer">${L(e, "whats_new_all")}</a>`}
       </div>
     </ha-dialog>`;
 	}
@@ -2414,17 +2710,17 @@ I("pulse-welcome", class extends N {
 });
 //#endregion
 //#region src/welcome.ts
-var gn = "pulse.seenVersion", _n = "", vn = "pulse.welcome";
-function yn(e, t, n = !0) {
-	let r = e.getItem(gn);
-	return r === t ? null : r === _n ? "welcome" : r !== null || e.getItem(vn) !== null ? n ? "whatsNew" : (bn(e, t), null) : (e.setItem(gn, _n), "welcome");
+var Mn = "pulse.seenVersion", Nn = "", Pn = "pulse.welcome";
+function Fn(e, t, n = !0) {
+	let r = e.getItem(Mn);
+	return r === t ? null : r === Nn ? "welcome" : r !== null || e.getItem(Pn) !== null ? n ? "whatsNew" : (In(e, t), null) : (e.setItem(Mn, Nn), "welcome");
 }
-function bn(e, t) {
-	e.setItem(gn, t);
+function In(e, t) {
+	e.setItem(Mn, t);
 }
 //#endregion
 //#region src/pulse-heartbeat.ts
-var xn = 1e3, Sn = 24, Cn = [
+var Ln = 1e3, Rn = 24, zn = [
 	3,
 	6,
 	9,
@@ -2433,7 +2729,7 @@ var xn = 1e3, Sn = 24, Cn = [
 	18,
 	21
 ];
-function wn(e) {
+function Bn(e) {
 	return e.reduce((e, t) => e + t.reduce((e, t) => e + (t ?? 0), 0), 0);
 }
 I("pulse-heartbeat", class extends N {
@@ -2467,18 +2763,15 @@ I("pulse-heartbeat", class extends N {
 	willUpdate(e) {
 		if (!e.has("bins")) return;
 		let t = e.get("bins");
-		Array.isArray(t) && t.length === this.bins.length && wn(this.bins) > wn(t) && (this.beating = !0);
+		Array.isArray(t) && t.length === this.bins.length && Bn(this.bins) > Bn(t) && (this.beating = !0);
 	}
 	row(e, t, n) {
-		let r = n - t, i = (e) => `${(e / r * 100).toFixed(2)}%`, a = (e) => (e / r * xn).toFixed(1), o = ut(t, n, Cn, this.timeZone).map((e) => {
-			let t = (e * xn).toFixed(1);
+		let r = n - t, i = (e) => `${(e / r * 100).toFixed(2)}%`, a = (e) => (e / r * Ln).toFixed(1), o = ut(t, n, zn, this.timeZone).map((e) => {
+			let t = (e * Ln).toFixed(1);
 			return D`<line class="grid" x1=${t} x2=${t} y1="3" y2=${21}></line>`;
 		}), s = k;
-		if (this.silentSince > 0 && this.silentSince < n && this.now > t) {
-			let e = Math.max(this.silentSince, t) - t, r = Math.min(this.now, n) - t;
-			r > e && (s = D`<line class="silent" x1=${a(e)} x2=${a(r)} y1=${Sn / 2} y2=${Sn / 2}></line>`);
-		}
-		let c = nn(this.bins[e] ?? [], r, this.binMinutes).map((e) => E`<i class="tk" style=${`left: ${(e.at * 100).toFixed(2)}%; height: ${rn(e.count)}px`}></i>`), l = this.noData.map(([e, r]) => [Math.max(e, t), Math.min(r, n)]).filter(([e, t]) => t > e).map(([e, n]) => E`<span class="gap" style=${`left: ${i(e - t)}; width: ${i(n - e)}`}></span>`), u = this.now >= t && this.now < n, d = u ? E`<span
+		this.silentSince > 0 && this.silentSince < n && this.now > t && (s = xn(Math.max(this.silentSince, t) - t, Math.min(this.now, n) - t, this.noData.map(([e, n]) => [e - t, n - t])).map(([e, t]) => D`<line class="silent" x1=${a(e)} x2=${a(t)} y1=${Rn / 2} y2=${Rn / 2}></line>`));
+		let c = fn(this.bins[e] ?? [], r, this.binMinutes).map((e) => E`<i class="tk" style=${`left: ${(e.at * 100).toFixed(2)}%; height: ${pn(e.count)}px`}></i>`), l = this.noData.map(([e, r]) => [Math.max(e, t), Math.min(r, n)]).filter(([e, t]) => t > e).map(([e, n]) => E`<span class="gap" style=${`left: ${i(e - t)}; width: ${i(n - e)}`}></span>`), u = this.now >= t && this.now < n, d = u ? E`<span
           class=${[
 			"now",
 			this.silentSince > 0 ? "silent" : "",
@@ -2496,15 +2789,15 @@ I("pulse-heartbeat", class extends N {
       <span class=${u ? "mono today" : "mono"}>${f}</span>
       <div class="track">
         ${l}
-        <svg viewBox="0 0 ${xn} ${Sn}" preserveAspectRatio="none" aria-hidden="true">${o}${s}</svg>
+        <svg viewBox="0 0 ${Ln} ${Rn}" preserveAspectRatio="none" aria-hidden="true">${o}${s}</svg>
         <div class="ticks">${c}</div>
         ${d}
       </div>
     </div>`;
 	}
 	render() {
-		let e = Math.max(0, this.dayStarts.length - 1), t = wn(this.bins), n = Array.from({ length: e }, (e, t) => this.row(t, this.dayStarts[t] ?? 0, this.dayStarts[t + 1] ?? 0));
-		return E`<div class="cal" role="img" aria-label=${R(this.language, "heartbeat_aria", {
+		let e = Math.max(0, this.dayStarts.length - 1), t = Bn(this.bins), n = Array.from({ length: e }, (e, t) => this.row(t, this.dayStarts[t] ?? 0, this.dayStarts[t + 1] ?? 0));
+		return E`<div class="cal" role="img" aria-label=${L(this.language, "heartbeat_aria", {
 			count: t,
 			days: e
 		})}>
@@ -2642,10 +2935,10 @@ I("pulse-heartbeat", class extends N {
 });
 //#endregion
 //#region src/pulse-sheet.ts
-var Tn = "(pointer: coarse), (max-width: 600px)", En = 6, Z = 0, Dn = "";
-function On(e) {
+var Vn = "(pointer: coarse), (max-width: 600px)", Hn = 6, Un = 0, Wn = "";
+function Gn(e) {
 	let t = document.documentElement;
-	e ? (Z === 0 && (Dn = t.style.overflow, t.style.overflow = "hidden"), Z += 1) : Z > 0 && (--Z, Z === 0 && (t.style.overflow = Dn));
+	e ? (Un === 0 && (Wn = t.style.overflow, t.style.overflow = "hidden"), Un += 1) : Un > 0 && (--Un, Un === 0 && (t.style.overflow = Wn));
 }
 I("pulse-sheet", class extends N {
 	static {
@@ -2664,7 +2957,7 @@ I("pulse-sheet", class extends N {
 		};
 	}
 	setLocked(e) {
-		e !== this.locked && (this.locked = e, On(e));
+		e !== this.locked && (this.locked = e, Gn(e));
 	}
 	disconnectedCallback() {
 		super.disconnectedCallback(), this.setLocked(!1);
@@ -2696,14 +2989,14 @@ I("pulse-sheet", class extends N {
 		e && (e.style.transition = "", e.style.transform = ""), this.open &&= !1, this.dispatchEvent(new CustomEvent("closed"));
 	}
 	onClick(e) {
-		e.target === this.dialog && this.dialog?.close();
+		e.target === this.dialog && !this.noClose && this.dialog?.close();
 	}
 	onWheel(e) {
 		let t = this.body;
 		t !== null && e.composedPath().includes(t) || e.preventDefault();
 	}
 	sheetMode() {
-		return window.matchMedia(Tn).matches;
+		return window.matchMedia(Vn).matches;
 	}
 	onPointerDown(e) {
 		this.sheetMode() && e.button === 0 && (this.drag = {
@@ -2719,7 +3012,7 @@ I("pulse-sheet", class extends N {
 		if (!t || t.id !== e.pointerId || !n) return;
 		let r = e.clientY - t.startY;
 		if (!t.active) {
-			if (Math.abs(r) < En) return;
+			if (Math.abs(r) < Hn) return;
 			t.active = !0;
 			let i = e.currentTarget;
 			i instanceof HTMLElement && i.setPointerCapture(e.pointerId), n.style.transition = "none";
@@ -2752,7 +3045,7 @@ I("pulse-sheet", class extends N {
           <div class="grab" aria-hidden="true"></div>
           <header>
             <h2>${this.heading}</h2>
-            ${this.noClose ? k : E`<ha-icon-button .label=${R(this.language, "close")} @click=${() => this.dialog?.close()}>
+            ${this.noClose ? k : E`<ha-icon-button .label=${L(this.language, "close")} @click=${() => this.dialog?.close()}>
                   <ha-icon icon="mdi:close"></ha-icon>
                 </ha-icon-button>`}
           </header>
@@ -2930,7 +3223,7 @@ I("pulse-sheet", class extends N {
 });
 //#endregion
 //#region src/pulse-picker.ts
-var kn = 12;
+var Kn = 12;
 I("pulse-picker", class extends N {
 	static {
 		this.properties = {
@@ -2991,7 +3284,7 @@ I("pulse-picker", class extends N {
       </pulse-sheet>`;
 	}
 	render() {
-		return this.options.length > kn ? this.renderSheet() : E`<ha-dropdown placement="bottom-end" @wa-select=${(e) => this.pick(L(e))}>
+		return this.options.length > Kn ? this.renderSheet() : E`<ha-dropdown placement="bottom-end" @wa-select=${(e) => this.pick(Re(e))}>
       ${this.trigger(!0)}
       ${this.options.map((e) => E`<ha-dropdown-item .value=${e.value}>
           <ha-icon
@@ -3069,8 +3362,8 @@ I("pulse-picker", class extends N {
 });
 //#endregion
 //#region src/pulse-rhythm.ts
-var An = 480, jn = 1e3, Q = 26;
-function Mn(e) {
+var qn = 480, Z = 1e3, Q = 26;
+function Jn(e) {
 	return e.reduce((e, t) => e + (t ?? 0), 0);
 }
 I("pulse-rhythm", class extends N {
@@ -3101,7 +3394,7 @@ I("pulse-rhythm", class extends N {
 	}
 	connectedCallback() {
 		super.connectedCallback(), this.observer = new ResizeObserver((e) => {
-			let t = e[0]?.contentRect.width ?? 0, n = t > 0 && t < An;
+			let t = e[0]?.contentRect.width ?? 0, n = t > 0 && t < qn;
 			n !== this.narrow && (this.narrow = n), Math.abs(t - this.width) >= 8 && (this.width = t);
 		}), this.observer.observe(this);
 	}
@@ -3111,16 +3404,16 @@ I("pulse-rhythm", class extends N {
 	willUpdate(e) {
 		if (!e.has("buckets")) return;
 		let t = e.get("buckets");
-		Array.isArray(t) && t.length === this.buckets.length ? Mn(this.buckets) > Mn(t) && (this.growAt = this.buckets.findLastIndex((e) => (e ?? 0) > 0)) : this.growAt = -1;
+		Array.isArray(t) && t.length === this.buckets.length ? Jn(this.buckets) > Jn(t) && (this.growAt = this.buckets.findLastIndex((e) => (e ?? 0) > 0)) : this.growAt = -1;
 	}
 	render() {
-		let e = this.narrow && this.buckets.length > 48 ? 2 : 1, t = e > 1 ? Wt(this.buckets, Math.ceil(this.buckets.length / 2)) : this.buckets, n = t.length || 1, r = this.silentFrom >= 0 ? Math.ceil(this.silentFrom / e) : -1, i = Xe(t), a = jn / n, o = a * .56, s = i.indexOf(null), c = s < 0 ? n : s, l = this.tone === "warn" || this.tone === "crit", u = this.growAt >= 0 ? Math.floor(this.growAt / e) : -1, d = -1;
+		let e = this.narrow && this.buckets.length > 48 ? 2 : 1, t = e > 1 ? $t(this.buckets, Math.ceil(this.buckets.length / 2)) : this.buckets, n = t.length || 1, r = this.silentFrom >= 0 ? Math.ceil(this.silentFrom / e) : -1, i = Ze(t), a = Z / n, o = a * .56, s = i.indexOf(null), c = s < 0 ? n : s, l = this.tone === "warn" || this.tone === "crit", u = this.growAt >= 0 ? Math.floor(this.growAt / e) : -1, d = -1;
 		if (l && r >= 0) for (let e = 0; e < Math.min(r, n); e++) (i[e] ?? 0) > 0 && (d = e);
 		let f = l && r < 0 && c > 0 ? c - 1 : -1, p = (e) => {
 			let t = (e + .5) / n;
 			return this.gaps.some(([e, n]) => t >= e && t <= n);
 		}, m = [], h = [];
-		i.forEach((e, t) => {
+		if (i.forEach((e, t) => {
 			if (e === null || t === f || r >= 0 && t >= r && e === 0 || e === 0 && p(t)) return;
 			let n = (t * a + (a - o) / 2).toFixed(1);
 			if (e === 0) {
@@ -3133,12 +3426,12 @@ I("pulse-rhythm", class extends N {
 				t === u ? "grow" : ""
 			].join(" ")} x=${n} y=${((Q - i) / 2).toFixed(1)} width=${o.toFixed(1)} height=${i.toFixed(1)} rx=${(o / 2).toFixed(1)}></rect>`;
 			(s ? h : m).push(c);
-		}), f >= 0 && h.push(D`<rect class="mark" x=${(f * a + (a - o) / 2).toFixed(1)} y="1" width=${o.toFixed(1)} height=${24} rx=${(o / 2).toFixed(1)}></rect>`), r >= 0 && r < c && h.push(D`<line class="silent" x1=${(r * a).toFixed(1)} x2=${(c * a).toFixed(1)} y1=${Q / 2} y2=${Q / 2}></line>`);
+		}), f >= 0 && h.push(D`<rect class="mark" x=${(f * a + (a - o) / 2).toFixed(1)} y="1" width=${o.toFixed(1)} height=${24} rx=${(o / 2).toFixed(1)}></rect>`), r >= 0 && r < c) for (let [e, t] of xn(r / n, c / n, this.gaps)) h.push(D`<line class="silent" x1=${(e * Z).toFixed(1)} x2=${(t * Z).toFixed(1)} y1=${Q / 2} y2=${Q / 2}></line>`);
 		let g = Array.from({ length: Math.max(0, this.days - 1) }, (e, t) => {
-			let n = ((t + 1) / this.days * jn).toFixed(1);
+			let n = ((t + 1) / this.days * Z).toFixed(1);
 			return D`<line class="day" x1=${n} x2=${n} y1="1" y2=${25}></line>`;
 		});
-		return E`${this.gaps.map(([e, t]) => E`<span class="gap" style=${`left: ${(e * 100).toFixed(2)}%; width: ${((t - e) * 100).toFixed(2)}%`}></span>`)}<svg class="base" viewBox="0 0 ${jn} ${Q}" preserveAspectRatio="none" aria-hidden="true">${g}${m}</svg><svg class="hot" viewBox="0 0 ${jn} ${Q}" preserveAspectRatio="none" aria-hidden="true">${h}</svg>${this.renderFlag(r, c, n, (e) => `${(e / n * 100).toFixed(2)}%`)}`;
+		return E`${this.gaps.map(([e, t]) => E`<span class="gap" style=${`left: ${(e * 100).toFixed(2)}%; width: ${((t - e) * 100).toFixed(2)}%`}></span>`)}<svg class="base" viewBox="0 0 ${Z} ${Q}" preserveAspectRatio="none" aria-hidden="true">${g}${m}</svg><svg class="hot" viewBox="0 0 ${Z} ${Q}" preserveAspectRatio="none" aria-hidden="true">${h}</svg>${this.renderFlag(r, c, n, (e) => `${(e / n * 100).toFixed(2)}%`)}`;
 	}
 	renderFlag(e, t, n, r) {
 		return this.flag ? e >= 0 ? (t - e) / n * this.width < 140 ? k : E`<span class="flag-area" style=${`left: max(0px, min(${r(e)}, calc(${r(t)} - 176px))); right: calc(100% - ${r(t)})`}>
@@ -3270,16 +3563,16 @@ I("pulse-rhythm", class extends N {
 });
 //#endregion
 //#region src/pulse-device-sheet.ts
-function Nn(e) {
-	return V(e.status) === "warn" ? "warn" : "crit";
+function Yn(e) {
+	return B(e.status) === "warn" ? "warn" : "crit";
 }
-function Pn(e) {
-	return e.ignored ? "muted" : V(e.status) === "ok" ? "ok" : "neutral";
+function Xn(e) {
+	return e.ignored ? "muted" : B(e.status) === "ok" ? "ok" : "neutral";
 }
-var Fn = Array.from({ length: 12 }, (e, t) => ({
+var Zn = Array.from({ length: 12 }, (e, t) => ({
 	value: String(t + 1),
 	label: String(t + 1)
-})), In = {
+})), Qn = {
 	nimh: "chem_nimh",
 	alkaline: "chem_alkaline",
 	lithium: "chem_lithium"
@@ -3304,11 +3597,12 @@ I("pulse-device-sheet", class extends N {
 			noData: { attribute: !1 },
 			open: { type: Boolean },
 			readonly: { type: Boolean },
-			settingsOpen: { state: !0 }
+			settingsOpen: { state: !0 },
+			beatError: { state: !0 }
 		};
 	}
 	constructor() {
-		super(), this.gapsOf = z(Qt), this.beatKey = "", this.device = null, this.devices = [], this.language = "en", this.now = 0, this.stripStart = 0, this.stripDays = 7, this.dayStarts = [], this.timeZone = void 0, this.timeFormat = void 0, this.bucketHours = 2, this.fetchHeartbeat = null, this.beat = null, this.batteryTypes = [], this.chemistries = [], this.noData = [], this.open = !1, this.readonly = !1, this.settingsOpen = !1;
+		super(), this.gapsOf = R(cn), this.beatKey = "", this.device = null, this.devices = [], this.language = "en", this.now = 0, this.stripStart = 0, this.stripDays = 7, this.dayStarts = [], this.timeZone = void 0, this.timeFormat = void 0, this.bucketHours = 2, this.fetchHeartbeat = null, this.beat = null, this.batteryTypes = [], this.chemistries = [], this.noData = [], this.open = !1, this.readonly = !1, this.settingsOpen = !1, this.beatError = !1;
 	}
 	willUpdate(e) {
 		if (!e.has("device") && !e.has("open") && !e.has("stripStart")) return;
@@ -3318,12 +3612,20 @@ I("pulse-device-sheet", class extends N {
 			return;
 		}
 		let n = `${t.id}|${t.last_activity ?? ""}|${this.dayStarts[0] ?? this.stripStart}`;
-		n !== this.beatKey && ((!this.beat || !(t.id in this.beat.devices)) && (this.beat = null), this.beatKey = n, this.loadBeat(t.id, n));
+		n !== this.beatKey && ((!this.beat || !(t.id in this.beat.devices)) && (this.beat = null), this.beatKey = n, this.beatError = !1, this.loadBeat(t.id, n));
 	}
 	async loadBeat(e, t) {
 		if (!this.fetchHeartbeat) return;
-		let n = tn(await this.fetchHeartbeat([e]));
-		t === this.beatKey && n && (this.beat = n);
+		let n = null;
+		try {
+			n = dn(await this.fetchHeartbeat([e]));
+		} catch {
+			n = null;
+		}
+		t === this.beatKey && (n ? this.beat = n : this.beat || (this.beatError = !0));
+	}
+	reloadBeat(e) {
+		this.beatError = !1, this.loadBeat(e, this.beatKey);
 	}
 	fire(e, t) {
 		this.dispatchEvent(new CustomEvent(e, {
@@ -3360,7 +3662,7 @@ I("pulse-device-sheet", class extends N {
 	switchRow(e, t, n, r) {
 		return this.readonly ? E`<div class="row">
         <span class="label">${e}<small>${t}</small></span>
-        <span class="value">${R(this.language, n ? "on" : "off")}</span>
+        <span class="value">${L(this.language, n ? "on" : "off")}</span>
       </div>` : E`<div
       class="row tappable"
       role="switch"
@@ -3376,34 +3678,35 @@ I("pulse-device-sheet", class extends N {
     </div>`;
 	}
 	renderBody(e) {
-		let t = this.language, n = e.battery, r = e.snooze_until !== null && e.snooze_until > this.now, i = n.flag ? R(t, n.low ? "battery_flag_low" : "battery_flag_ok") : n.level === null ? R(t, "unknown") : R(t, "unit_percent", { value: Math.round(n.level) }), a = n.type ? (n.count ?? 1) > 1 ? R(t, "battery_count_type", {
+		let t = this.language, n = e.battery, r = e.snooze_until !== null && e.snooze_until > this.now, i = n.flag ? L(t, n.low ? "battery_flag_low" : "battery_flag_ok") : n.level === null ? L(t, "unknown") : L(t, "unit_percent", { value: Math.round(n.level) }), a = n.type ? (n.count ?? 1) > 1 ? L(t, "battery_count_type", {
 			count: n.count ?? 1,
 			type: n.type
-		}) : n.type : R(t, "unknown"), o = this.timeZone, s = qt(t, e, this.now), c = e.partner ? this.devices.find((t) => t.id === e.partner) ?? null : null, l = n.replaced.at(-1), u = this.beat, d = u?.devices[e.id] ?? null, f = u?.noData ?? this.noData, p = this.gapsOf(f, this.dayStarts), m = Math.max(1, this.dayStarts.length - 1), h = (e) => E`<pulse-rhythm .buckets=${e.strip} tone=${H(e)} ?learning=${e.status === "learning" && !e.ignored} .gaps=${p} .days=${m} .silentFrom=${on(e, this.dayStarts)}></pulse-rhythm>`, g = c ? Yt(t, e, c) : "", ee = [e.area, e.model].filter(Boolean).join(" · ");
+		}) : n.type : L(t, "unknown"), o = this.timeZone, s = nn(t, e, this.now), c = e.partner ? this.devices.find((t) => t.id === e.partner) ?? null : null, l = n.replaced.at(-1), u = this.beat, d = u?.devices[e.id] ?? null, f = u?.noData ?? this.noData, p = this.gapsOf(f, this.dayStarts), m = Math.max(1, this.dayStarts.length - 1), h = (e) => E`<pulse-rhythm .buckets=${e.strip} tone=${V(e)} ?learning=${e.status === "learning" && !e.ignored} .gaps=${p} .days=${m} .silentFrom=${hn(e, this.dayStarts)}></pulse-rhythm>`, g = c ? an(t, e, c) : "", ee = [e.area, e.model].filter(Boolean).join(" · "), te = Cn(t, n.forecast, n.forecast_reason === "untrusted" && !n.trusted ? null : n.forecast_reason), _ = (n) => E`<button class=${n ? "pbtn primary" : "pbtn"} type="button" @click=${() => this.fire("replaced", { id: e.id })}>
+        <ha-icon icon="mdi:battery-sync-outline"></ha-icon>${L(t, "replaced")}
+      </button>`, v = (n) => r && e.snooze_until !== null ? E`<span class="snoozed">
+            <span class="muted small">${L(t, "snoozed_until", { when: pt(t, e.snooze_until, this.now, o, this.timeFormat) })}</span>
+            <button class="pbtn" type="button" @click=${() => this.fire("snooze-cancel", { id: e.id })}>${L(t, "snooze_cancel")}</button>
+          </span>` : E`<button class=${n ? "pbtn primary" : "pbtn"} type="button" @click=${() => this.fire("later", { id: e.id })}>
+            <ha-icon icon="mdi:bell-sleep-outline"></ha-icon>${L(t, "later")}
+          </button>`, ne = kt(e);
 		return E`
       <header class="hero">
-        ${ee ? E`<p class="dname"><ha-icon .icon=${e.icon}></ha-icon><span>${ee}</span></p>` : k}
+        ${ee || e.cloud ? E`<p class="dname"><ha-icon .icon=${e.icon}></ha-icon><span>${ee}</span>${e.cloud ? E`<span class="chip-cloud"><ha-icon icon="mdi:cloud-outline"></ha-icon>${L(t, "cloud_device")}</span>` : k}</p>` : k}
         <h3 class=${`dhl ${s.tone === "accent" ? "grad" : `t-${s.tone}`}`}>${s.text}</h3>
-        <p class="dtx">${Jt(t, e, o, this.timeFormat)}</p>
+        <p class="dtx">${rn(t, e, this.now, o, this.timeFormat)}</p>
       </header>
 
-      ${this.readonly ? E`<p class="ro muted small"><ha-icon icon="mdi:lock-outline"></ha-icon>${R(t, "read_only")}</p>` : k}
-      ${Tt(e) && !this.readonly ? E`<div class="buttons">
-              <button class="pbtn primary" type="button" @click=${() => this.fire("replaced", { id: e.id })}>
-                <ha-icon icon="mdi:battery-sync-outline"></ha-icon>${R(t, "replaced")}
-              </button>
-              ${r && e.snooze_until !== null ? E`<span class="snoozed">
-                      <span class="muted small">${R(t, "snoozed_until", { when: pt(t, e.snooze_until, o, this.timeFormat) })}</span>
-                      <button class="pbtn" type="button" @click=${() => this.fire("snooze-cancel", { id: e.id })}>${R(t, "snooze_cancel")}</button>
-                    </span>` : E`<button class="pbtn" type="button" @click=${() => this.fire("later", { id: e.id })}>${R(t, "later")}</button>`}
+      ${this.readonly ? E`<p class="ro muted small"><ha-icon icon="mdi:lock-outline"></ha-icon>${L(t, "read_only")}</p>` : k}
+      ${Dt(e) && !this.readonly ? E`<div class="buttons">
+              ${ne ? E`${_(!0)}${v(!1)}` : E`${v(!r)}${_(!1)}`}
             </div>` : k}
 
       <section class="cal">
         <div class="hd">
-          <span class="cap">${R(t, "heartbeat_title")}</span>
+          <span class="cap">${L(t, "heartbeat_title")}</span>
           <span class="legend">
-            <span>${R(t, "heartbeat_legend")}</span>
-            ${p.length ? E`<span class="lg-gap"><i aria-hidden="true"></i>${R(t, "no_data_legend")}</span>` : k}
+            <span>${L(t, "heartbeat_legend")}</span>
+            ${p.length ? E`<span class="lg-gap"><i aria-hidden="true"></i>${L(t, "no_data_legend")}</span>` : k}
           </span>
         </div>
         ${d && u ? E`<pulse-heartbeat
@@ -3412,17 +3715,20 @@ I("pulse-device-sheet", class extends N {
                 .binMinutes=${u.binMinutes}
                 .timeZone=${o}
                 .now=${this.now}
-                .silentSince=${sn(e, d, u.dayStarts, u.binMinutes)}
+                .silentSince=${gn(e, d, u.dayStarts, u.binMinutes)}
                 .noData=${f}
-                silence=${Nn(e)}
+                silence=${Yn(e)}
                 .language=${t}
-                tone=${Pn(e)}
-              ></pulse-heartbeat>` : E`<div class="cal-wait"><pulse-rhythm .buckets=${e.strip} tone=${H(e)} ?learning=${e.status === "learning" && !e.ignored} .gaps=${p} .days=${m} .silentFrom=${on(e, this.dayStarts)} .flag=${Ht(t, e, this.now)}></pulse-rhythm>
+                tone=${Xn(e)}
+              ></pulse-heartbeat>` : this.beatError ? E`<div class="cal-err">
+                  <span class="muted">${L(t, "heartbeat_failed")}</span>
+                  <button class="pbtn" type="button" @click=${() => this.reloadBeat(e.id)}>${L(t, "reload")}</button>
+                </div>` : E`<div class="cal-wait"><pulse-rhythm .buckets=${e.strip} tone=${V(e)} ?learning=${e.status === "learning" && !e.ignored} .gaps=${p} .days=${m} .silentFrom=${hn(e, this.dayStarts)} .flag=${Zt(t, e, this.now)}></pulse-rhythm>
                 <div class="axis muted" aria-hidden="true" style=${`grid-template-columns: ${st(this.dayStarts)}`}>${ot(t, this.dayStarts, o).map((e) => E`<span>${e}</span>`)}</div></div>`}
       </section>
 
       ${c ? E`<section class="pair">
-              <span class="cap">${R(t, "with_partner")}</span>
+              <span class="cap">${L(t, "with_partner")}</span>
               <div class="l"><span>${c.name}</span>${h(c)}</div>
               <div class="l"><span>${e.name}</span>${h(e)}</div>
               ${g ? E`<p>${g}</p>` : k}
@@ -3430,82 +3736,104 @@ I("pulse-device-sheet", class extends N {
 
       <section class="stats">
         <div>
-          <span>${R(t, "battery")}</span>
+          <span>${L(t, "battery")}</span>
           <b class=${n.trusted ? "" : "faint"}>${i}</b>
-          ${n.trusted ? k : E`<small>${R(t, "stat_rechargeable")}</small>`}
+          ${n.trusted ? k : E`<small>${L(t, "stat_rechargeable")}</small>`}
         </div>
-        <div><span>${R(t, "battery_type")}</span><b>${a}</b></div>
-        <div><span>${R(t, "stat_changed")}</span><b>${l === void 0 ? R(t, "unknown") : wt(t, l, this.now, o)}</b></div>
+        <div><span>${L(t, "battery_type")}</span><b>${a}</b></div>
+        <div><span>${L(t, "stat_changed")}</span><b>${l === void 0 ? L(t, "unknown") : Et(t, l, this.now, o)}</b></div>
       </section>
+      ${te ? E`<p class=${n.forecast ? "fc" : "fc muted"}><ha-icon icon=${n.forecast ? "mdi:battery-clock-outline" : "mdi:battery-unknown"}></ha-icon><span>${te}</span></p>` : k}
+
+      ${this.renderSuggestions(e)}
+
+      <div class="list quick">
+        ${Dt(e) || this.readonly ? k : E`<button class="row action" type="button" @click=${() => this.fire("replaced", { id: e.id })}>
+                <span class="label">${L(t, "replaced_now")}</span>
+              </button>`}
+        ${this.switchRow(L(t, "important"), L(t, "important_hint"), e.critical, (t) => this.change({ critical: At(e, t) }))}
+      </div>
 
       <details class="more" ?open=${this.settingsOpen} @toggle=${(e) => {
 			let t = e.currentTarget;
 			t instanceof HTMLDetailsElement && (this.settingsOpen = t.open);
 		}}>
         <summary>
-          <span>${R(t, "device_settings")}</span>
+          <span>${L(t, "device_settings")}</span>
           <ha-icon icon="mdi:chevron-down"></ha-icon>
         </summary>
         ${this.renderSettings(e)}
       </details>
     `;
 	}
+	renderSuggestions(e) {
+		let t = this.language, n = this.readonly ? [] : Dn(e);
+		return n.length ? E`<section class="suggest">
+      <span class="cap">${L(t, "partner")}</span>
+      ${n.map((n) => E`<div class="sg">
+          <span class="sg-t"><b>${L(t, "partner_suggest", { name: n.name })}</b><small>${L(t, "partner_suggest_why")}</small></span>
+          <span class="sg-b">
+            <button class="pbtn" type="button" @click=${() => this.fire("partner-dismiss", {
+			id: e.id,
+			partner: n.id
+		})}>${L(t, "partner_dismiss")}</button>
+            <button class="pbtn primary" type="button" @click=${() => this.change({ partner: n.id })}>${L(t, "partner_accept")}</button>
+          </span>
+        </div>`)}
+    </section>` : k;
+	}
 	renderSettings(e) {
 		let t = this.language, n = e.battery, r = [{
 			value: "",
-			label: R(t, "type_unknown")
+			label: L(t, "type_unknown")
 		}, ...this.batteryTypes.map((e) => ({
 			value: e,
 			label: e
 		}))], i = [{
 			value: "",
-			label: R(t, "chem_unknown")
+			label: L(t, "chem_unknown")
 		}, ...this.chemistries.map((e) => ({
 			value: e,
-			label: R(t, In[e] ?? "chem_unknown")
+			label: L(t, Qn[e] ?? "chem_unknown")
 		}))], a = [{
 			value: "",
-			label: R(t, "partner_none")
+			label: L(t, "partner_none")
 		}, ...gt(this.devices, e).map((e) => ({
 			value: e.id,
 			label: e.name
 		}))];
 		return E`<div class="settings">
       <section class="section">
-        <h4 class="section-title">${R(t, "battery")}</h4>
+        <h4 class="section-title">${L(t, "battery")}</h4>
         <div class="list">
-          ${this.picker(R(t, "battery_type"), n.type ?? "", r, (e) => this.change({ battery_type: e || null }))}
-          ${this.picker(R(t, "battery_count"), String(n.count ?? 1), Fn, (e) => this.change({ battery_count: Number(e) }))}
-          ${this.picker(R(t, "chemistry"), n.chemistry ?? "", i, (e) => this.change({ chemistry: e || null }), n.trusted ? void 0 : R(t, "level_unreliable"))}
-          ${n.voltage === null ? k : E`<div class="row"><span class="label">${R(t, "voltage")}</span><span class="value">${mt(t, n.voltage)}</span></div>`}
+          ${this.picker(L(t, "battery_type"), n.type ?? "", r, (e) => this.change({ battery_type: e || null }))}
+          ${this.picker(L(t, "battery_count"), String(n.count ?? 1), Zn, (e) => this.change({ battery_count: Number(e) }))}
+          ${this.picker(L(t, "chemistry"), n.chemistry ?? "", i, (e) => this.change({ chemistry: e || null }), n.trusted ? void 0 : L(t, "level_unreliable"))}
+          ${n.voltage === null ? k : E`<div class="row"><span class="label">${L(t, "voltage")}</span><span class="value">${mt(t, n.voltage)}</span></div>`}
         </div>
       </section>
 
       <section class="section">
-        <h4 class="section-title">${R(t, "replaced_history")}</h4>
+        <h4 class="section-title">${L(t, "replaced_history")}</h4>
         <div class="list">
-          ${Tt(e) || this.readonly ? k : E`<button class="row action" type="button" @click=${() => this.fire("replaced", { id: e.id })}>
-                  <span class="label">${R(t, "replaced_now")}</span>
-                </button>`}
-          ${n.replaced.length ? [...n.replaced].reverse().slice(0, 3).map((e) => E`<div class="row"><span class="label">${dt(t, e, this.timeZone)}</span><span class="value">${Je(t, e, this.now)}</span></div>`) : E`<div class="row"><span class="label muted">${R(t, "never_replaced")}</span></div>`}
+          ${n.replaced.length ? [...n.replaced].reverse().slice(0, 3).map((e) => E`<div class="row"><span class="label">${dt(t, e, this.timeZone)}</span><span class="value">${Ye(t, e, this.now)}</span></div>`) : E`<div class="row"><span class="label muted">${L(t, "never_replaced")}</span></div>`}
         </div>
       </section>
 
       <section class="section">
-        <h4 class="section-title">${R(t, "partner")}</h4>
+        <h4 class="section-title">${L(t, "partner")}</h4>
         <div class="list">
-          ${this.picker(R(t, "partner"), e.partner ?? "", a, (e) => this.change({ partner: e || null }))}
+          ${this.picker(L(t, "partner"), e.partner ?? "", a, (e) => this.change({ partner: e || null }))}
         </div>
-        <p class="section-foot">${R(t, "partner_hint")}</p>
+        <p class="section-foot">${L(t, "partner_hint")}</p>
       </section>
 
       <section class="section">
-        <h4 class="section-title">${R(t, "monitoring")}</h4>
+        <h4 class="section-title">${L(t, "monitoring")}</h4>
         <div class="list">
-          ${this.switchRow(R(t, "important"), R(t, "important_hint"), e.critical, (t) => this.change({ critical: t === e.critical_auto ? null : t }))}
-          ${this.switchRow(R(t, "ignore"), R(t, "ignore_hint"), e.ignored, (e) => this.change({ ignored: e }))}
+          ${this.switchRow(L(t, "ignore"), L(t, "ignore_hint"), e.ignored, (e) => this.change({ ignored: e }))}
           ${this.readonly ? k : E`<button class="row action" type="button" @click=${() => F(`/config/devices/device/${e.id}`)}>
-                  <span class="label">${R(t, "open_device")}</span>
+                  <span class="label">${L(t, "open_device")}</span>
                   <ha-icon class="chev" icon="mdi:chevron-right"></ha-icon>
                 </button>`}
         </div>
@@ -3631,6 +3959,72 @@ I("pulse-device-sheet", class extends N {
       .cal-wait {
         display: grid;
         gap: 6px;
+      }
+      .cal-err {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px 12px;
+        min-height: 64px;
+        font-size: var(--pu-fs-15);
+      }
+      .chip-cloud {
+        display: inline-flex;
+        flex: none;
+        align-items: center;
+        gap: 4px;
+        padding: 1px 8px;
+        border-radius: var(--pu-r-full);
+        background: var(--pu-fill);
+        font-size: 12px;
+        --mdc-icon-size: 14px;
+      }
+      /* Laufzeit-Vorhersage unter den Batterie-Kennzahlen */
+      .fc {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        margin: -12px 0 0;
+        font-size: var(--pu-fs-15);
+        line-height: 1.4;
+        --mdc-icon-size: 18px;
+      }
+      .fc ha-icon {
+        flex: none;
+        margin-top: 1px;
+        color: var(--pu-muted);
+      }
+      .fc.muted {
+        font-size: var(--pu-fs-13);
+      }
+      .suggest {
+        display: grid;
+        gap: 8px;
+        padding-top: 14px;
+        border-top: 1px solid var(--pu-line);
+      }
+      .sg {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px 12px;
+      }
+      .sg-t {
+        display: grid;
+        min-width: 0;
+      }
+      .sg-t small {
+        font-size: var(--pu-fs-13);
+        color: var(--pu-muted);
+      }
+      .sg-b {
+        display: flex;
+        gap: 8px;
+      }
+      .quick {
+        --pu-card: transparent;
       }
       .axis {
         display: grid;
@@ -3800,7 +4194,7 @@ I("pulse-device-sheet", class extends N {
 });
 //#endregion
 //#region src/pulse-devices.ts
-var Ln = {
+var $n = {
 	area: "group_area",
 	status: "group_status",
 	none: "group_none"
@@ -3820,13 +4214,14 @@ I("pulse-devices", class extends N {
 			noData: { attribute: !1 },
 			groupBy: { type: String },
 			filter: { attribute: !1 },
+			dueIds: { attribute: !1 },
 			readonly: { type: Boolean },
 			query: { state: !0 },
 			collapsed: { state: !0 }
 		};
 	}
 	constructor() {
-		super(), this.gapsOf = z(Qt), this.gaps = [], this.devices = [], this.language = "en", this.now = 0, this.start = 0, this.days = 7, this.dayStarts = [], this.timeZone = void 0, this.timeFormat = void 0, this.bucketHours = 2, this.noData = [], this.groupBy = "area", this.filter = null, this.readonly = !1, this.query = "", this.collapsed = /* @__PURE__ */ new Set();
+		super(), this.gapsOf = R(cn), this.gaps = [], this.devices = [], this.language = "en", this.now = 0, this.start = 0, this.days = 7, this.dayStarts = [], this.timeZone = void 0, this.timeFormat = void 0, this.bucketHours = 2, this.noData = [], this.groupBy = "area", this.filter = null, this.dueIds = [], this.readonly = !1, this.query = "", this.collapsed = /* @__PURE__ */ new Set();
 	}
 	fire(e, t) {
 		this.dispatchEvent(new CustomEvent(e, {
@@ -3843,39 +4238,53 @@ I("pulse-devices", class extends N {
 		(e === "area" || e === "status" || e === "none") && (this.groupBy = e, this.collapsed = /* @__PURE__ */ new Set(), this.fire("group-change", { group: e }));
 	}
 	onMenu(e, t) {
-		let n = L(t);
-		n === "details" ? this.fire("open", { id: e.id }) : n === "replaced" ? this.fire("replaced", { id: e.id }) : n === "later" ? this.fire("later", { id: e.id }) : n === "ignore" && this.fire("device-change", {
+		let n = Re(t);
+		n === "details" ? this.fire("open", { id: e.id }) : n === "replaced" ? this.fire("replaced", { id: e.id }) : n === "later" ? this.fire("later", { id: e.id }) : n === "important" ? this.fire("device-change", {
+			id: e.id,
+			changes: { critical: At(e, !e.critical) }
+		}) : n === "ignore" && this.fire("device-change", {
 			id: e.id,
 			changes: { ignored: !e.ignored }
 		});
 	}
+	filterName(e) {
+		let t = this.language;
+		return e === "ignored" ? L(t, "ignored") : e === "important" ? L(t, "filter_important") : e === "battery" ? L(t, "filter_battery") : L(t, Ke(e));
+	}
+	emptyText() {
+		let e = this.language;
+		return this.devices.length ? this.query.trim() ? L(e, "no_results", { query: this.query }) : L(e, "filter_empty") : L(e, "no_devices");
+	}
 	renderRow(e) {
-		let t = this.language, n = Ut(t, e, this.now), r = K(e) && e.last_activity !== null ? pt(t, e.last_activity, this.timeZone, this.timeFormat) : Je(t, e.last_activity, this.now), i = e.ignored ? "ok" : V(e.status), a = this.readonly ? k : E`<span class="menu"><ha-dropdown placement="bottom-end" @wa-select=${(t) => this.onMenu(e, t)}>
-          <ha-icon-button slot="trigger" .label=${R(t, "more_for", { name: e.name })}>
+		let t = this.language, n = Qt(t, e, this.now), r = K(e) && e.last_activity !== null ? pt(t, e.last_activity, this.now, this.timeZone, this.timeFormat) : Ye(t, e.last_activity, this.now), i = e.ignored ? "ok" : V(e), a = this.readonly ? k : E`<span class="menu"><ha-dropdown placement="bottom-end" @wa-select=${(t) => this.onMenu(e, t)}>
+          <ha-icon-button slot="trigger" .label=${L(t, "more_for", { name: e.name })}>
             <ha-icon icon="mdi:dots-vertical"></ha-icon>
           </ha-icon-button>
-          <ha-dropdown-item value="details"><ha-icon slot="icon" icon="mdi:information-outline"></ha-icon>${R(t, "details")}</ha-dropdown-item>
-          <ha-dropdown-item value="replaced"><ha-icon slot="icon" icon="mdi:battery-sync-outline"></ha-icon>${R(t, "replaced")}</ha-dropdown-item>
-          <ha-dropdown-item value="later"><ha-icon slot="icon" icon="mdi:bell-sleep-outline"></ha-icon>${R(t, "later")}</ha-dropdown-item>
+          <ha-dropdown-item value="details"><ha-icon slot="icon" icon="mdi:information-outline"></ha-icon>${L(t, "details")}</ha-dropdown-item>
+          <ha-dropdown-item value="replaced"><ha-icon slot="icon" icon="mdi:battery-sync-outline"></ha-icon>${L(t, "replaced")}</ha-dropdown-item>
+          ${Dt(e) ? E`<ha-dropdown-item value="later"><ha-icon slot="icon" icon="mdi:bell-sleep-outline"></ha-icon>${L(t, "later")}</ha-dropdown-item>` : k}
+          ${e.ignored ? k : E`<ha-dropdown-item value="important"><ha-icon slot="icon" icon=${e.critical ? "mdi:star-off-outline" : "mdi:star-outline"}></ha-icon>${L(t, e.critical ? "unmark_important" : "mark_important")}</ha-dropdown-item>`}
           <ha-dropdown-item value="ignore">
-            <ha-icon slot="icon" icon=${e.ignored ? "mdi:eye-outline" : "mdi:eye-off-outline"}></ha-icon>${R(t, e.ignored ? "resume" : "ignore")}
+            <ha-icon slot="icon" icon=${e.ignored ? "mdi:eye-outline" : "mdi:eye-off-outline"}></ha-icon>${L(t, e.ignored ? "resume" : "ignore_action")}
           </ha-dropdown-item>
         </ha-dropdown></span>`;
 		return E`<div class="mrow">
       <button class="main rowgrid" type="button" @click=${() => this.fire("open", { id: e.id })}>
         <span class="nm">
           <ha-icon class=${`t-${i}`} .icon=${e.icon}></ha-icon>
-          <b>${e.name}</b>
-          ${this.groupBy !== "area" && e.area ? E`<span class="room">${e.area}</span>` : k}
+          <span class="who">
+            <span class="title"><b>${e.name}</b>${e.critical && !e.ignored ? E`<span class="star" role="img" aria-label=${L(t, "important_badge")} title=${L(t, "important_badge")}><ha-icon icon="mdi:star"></ha-icon></span>` : k}</span>
+            ${this.groupBy !== "area" && e.area ? E`<span class="room">${e.area}</span>` : k}
+          </span>
         </span>
         <pulse-rhythm
           .buckets=${e.strip}
-          tone=${H(e)}
+          tone=${V(e)}
           ?learning=${e.status === "learning" && !e.ignored}
           .gaps=${this.gaps}
           .days=${Math.max(1, this.dayStarts.length - 1)}
-          .silentFrom=${on(e, this.dayStarts)}
-          .flag=${Ht(t, e, this.now)}
+          .silentFrom=${hn(e, this.dayStarts)}
+          .flag=${Zt(t, e, this.now)}
         ></pulse-rhythm>
         <span class="st">
           ${n ? E`<b class=${`t-${n.tone}`}>${n.text}</b><span class="sep"> · </span>` : k}<span class="num time">${r}</span>
@@ -3885,14 +4294,14 @@ I("pulse-devices", class extends N {
     </div>`;
 	}
 	render() {
-		let e = this.language, t = _t(Ct(this.devices, this.filter), this.query), n = this.groupBy === "area", r = t.filter((e) => !e.ignored), i = t.filter((e) => e.ignored), a = yt(r, this.groupBy, e, R(e, "no_area"));
+		let e = this.language, t = _t(wt(this.devices, this.filter, this.dueIds), this.query), n = this.groupBy === "area", r = t.filter((e) => !e.ignored), i = t.filter((e) => e.ignored), a = yt(r, this.groupBy, e, L(e, "no_area"));
 		this.gaps = this.gapsOf(this.noData, this.dayStarts);
 		let o = ot(e, this.dayStarts, this.timeZone);
 		i.length && a.push({
-			area: R(e, "ignored"),
+			area: L(e, "ignored"),
 			devices: i
 		});
-		let s = this.filter ? R(e, "filter_label", { what: R(e, this.filter === "ignored" ? "ignored" : Ge(this.filter)) }) : "";
+		let s = this.filter ? L(e, "filter_label", { what: this.filterName(this.filter) }) : "";
 		return E`<div class=${[
 			"monitor",
 			n ? "by-area" : "",
@@ -3904,16 +4313,17 @@ I("pulse-devices", class extends N {
           <input
             id="search"
             type="search"
+            aria-label=${L(e, "search_label")}
             .value=${this.query}
-            placeholder=${this.devices.length === 1 ? R(e, "search_one") : R(e, "search", { count: this.devices.length })}
+            placeholder=${this.devices.length === 1 ? L(e, "search_one") : L(e, "search", { count: this.devices.length })}
             @input=${(e) => {
 			this.query = Le(e);
 		}}
           />
         </label>
-        <ha-dropdown placement="bottom-end" @wa-select=${(e) => this.setGroup(L(e) ?? "")}>
+        <ha-dropdown placement="bottom-end" @wa-select=${(e) => this.setGroup(Re(e) ?? "")}>
           <button slot="trigger" class="chip" type="button">
-            ${R(e, "group_by", { what: R(e, Ln[this.groupBy]) })}
+            ${L(e, "group_by", { what: L(e, $n[this.groupBy]) })}
             <ha-icon icon="mdi:menu-down"></ha-icon>
           </button>
           ${[
@@ -3922,18 +4332,18 @@ I("pulse-devices", class extends N {
 			"none"
 		].map((t) => E`<ha-dropdown-item value=${t}>
               <ha-icon slot="icon" class=${t === this.groupBy ? "check" : "check hidden"} icon="mdi:check"></ha-icon>
-              ${R(e, Ln[t])}
+              ${L(e, $n[t])}
             </ha-dropdown-item>`)}
         </ha-dropdown>
-        ${s ? E`<button class="chip filter" type="button" @click=${() => this.fire("filter-clear", {})} aria-label=${`${s}, ${R(e, "filter_clear")}`}>
+        ${s ? E`<button class="chip filter" type="button" @click=${() => this.fire("filter-clear", {})} aria-label=${`${s}, ${L(e, "filter_clear")}`}>
                 ${s}
                 <ha-icon icon="mdi:close"></ha-icon>
               </button>` : k}
       </div>
       <div class="axis" aria-hidden="true">
-        <span>${t.length === 1 ? R(e, "monitor_head_one") : R(e, "monitor_head", { count: t.length })}</span>
+        <span>${t.length === 1 ? L(e, "monitor_head_one") : L(e, "monitor_head", { count: t.length })}</span>
         <div class="days mono" style=${`grid-template-columns: ${st(this.dayStarts)}`}>${o.map((e) => E`<span>${e.replace(".", "")}</span>`)}</div>
-        <span class="right">${R(e, "col_last")}</span>
+        <span class="right">${L(e, "col_last")}</span>
       </div>
       ${t.length ? a.map((e) => {
 			let t = this.collapsed.has(e.area);
@@ -3941,7 +4351,7 @@ I("pulse-devices", class extends N {
               <ha-icon icon=${t ? "mdi:chevron-right" : "mdi:chevron-down"}></ha-icon>
               <span>${e.area}</span><span class="count">${e.devices.length}</span>
             </button>` : k}${t ? k : e.devices.map((e) => this.renderRow(e))}`;
-		}) : E`<p class="empty muted">${this.query.trim() ? R(e, "no_results", { query: this.query }) : R(e, "filter_empty")}</p>`}
+		}) : E`<p class="empty muted">${this.emptyText()}</p>`}
     </div>`;
 	}
 	static {
@@ -3949,7 +4359,7 @@ I("pulse-devices", class extends N {
 			J,
 			Y,
 			X,
-			fn,
+			On,
 			o`
       :host {
         display: block;
@@ -4119,7 +4529,7 @@ I("pulse-devices", class extends N {
           align-items: start;
         }
         .main.rowgrid {
-          padding-right: 0;
+          padding: var(--pu-sp-12) 0 18px;
         }
         .menu {
           margin-top: 4px;
@@ -4131,7 +4541,7 @@ I("pulse-devices", class extends N {
 });
 //#endregion
 //#region src/pulse-dayband.ts
-var Rn = (e) => `${(e / 24 * 100).toFixed(2)}%`;
+var er = (e) => `${(e / 24 * 100).toFixed(2)}%`;
 I("pulse-dayband", class extends N {
 	static {
 		this.properties = {
@@ -4146,17 +4556,17 @@ I("pulse-dayband", class extends N {
 		super(), this.language = "en", this.now = 0, this.recipients = "", this.timeZone = void 0;
 	}
 	render() {
-		let e = this.language, t = this.settings, n = rt(this.now, this.timeZone), r = Gt(t.summary_time), i = t.quiet.enabled ? Kt(t.quiet.start, t.quiet.end) : [], a = ln(e, t);
+		let e = this.language, t = this.settings, n = rt(this.now, this.timeZone), r = en(t.summary_time), i = t.quiet.enabled ? tn(t.quiet.start, t.quiet.end) : [], a = vn(e, t);
 		return E`<div class="top">
-        <span class="cap">${R(e, "day_title")}</span>
+        <span class="cap">${L(e, "day_title")}</span>
         <span class="to">${this.recipients}</span>
       </div>
       <p class="line">${a}</p>
-      <div class="band" role="img" aria-label=${`${R(e, "day_title")}: ${a}`}>
+      <div class="band" role="img" aria-label=${`${L(e, "day_title")}: ${a}`}>
         <div class="track" aria-hidden="true">
-          ${i.map(([e, t]) => E`<span class="quiet" style=${`left: ${Rn(e)}; width: ${Rn(t - e)}`}></span>`)}
-          <span class="nowline" style=${`left: ${Rn(n)}`}></span>
-          <span class="dot" style=${`left: ${Rn(r)}`}></span>
+          ${i.map(([e, t]) => E`<span class="quiet" style=${`left: ${er(e)}; width: ${er(t - e)}`}></span>`)}
+          <span class="nowline" style=${`left: ${er(n)}`}></span>
+          <span class="dot" style=${`left: ${er(r)}`}></span>
         </div>
         <div class="hours mono" aria-hidden="true">
           ${[
@@ -4165,7 +4575,7 @@ I("pulse-dayband", class extends N {
 			12,
 			18,
 			24
-		].map((t) => E`<span>${R(e, "hour_label", { h: t })}</span>`)}
+		].map((t) => E`<span>${L(e, "hour_label", { h: t })}</span>`)}
         </div>
       </div>`;
 	}
@@ -4252,18 +4662,18 @@ I("pulse-dayband", class extends N {
 });
 //#endregion
 //#region src/pulse-overview.ts
-var zn = "pulse.closedRooms";
-function Bn() {
+var tr = "pulse.closedRooms";
+function nr() {
 	try {
-		let e = JSON.parse(window.localStorage.getItem(zn) ?? "[]");
+		let e = JSON.parse(window.localStorage.getItem(tr) ?? "[]");
 		return new Set(Array.isArray(e) ? e.filter((e) => typeof e == "string") : []);
 	} catch {
 		return /* @__PURE__ */ new Set();
 	}
 }
-function Vn(e) {
+function rr(e) {
 	try {
-		window.localStorage.setItem(zn, JSON.stringify([...e]));
+		window.localStorage.setItem(tr, JSON.stringify([...e]));
 	} catch {}
 }
 I("pulse-overview", class extends N {
@@ -4282,7 +4692,7 @@ I("pulse-overview", class extends N {
 		};
 	}
 	constructor() {
-		super(), this.gapsOf = z(Qt), this.gaps = [], this.language = "en", this.now = 0, this.recipients = "", this.timeZone = void 0, this.timeFormat = void 0, this.dayStarts = [], this.noData = [], this.readonly = !1, this.closed = Bn();
+		super(), this.gapsOf = R(cn), this.gaps = [], this.language = "en", this.now = 0, this.recipients = "", this.timeZone = void 0, this.timeFormat = void 0, this.dayStarts = [], this.noData = [], this.readonly = !1, this.closed = nr();
 	}
 	fire(e, t = {}) {
 		this.dispatchEvent(new CustomEvent(e, {
@@ -4296,24 +4706,26 @@ I("pulse-overview", class extends N {
 	}
 	toggleRoom(e) {
 		let t = new Set(this.closed);
-		t.has(e) ? t.delete(e) : t.add(e), this.closed = t, Vn(t);
+		t.has(e) ? t.delete(e) : t.add(e), this.closed = t, rr(t);
 	}
 	renderRow(e) {
-		let t = this.language, n = Ut(t, e, this.now), r = K(e) && e.last_activity !== null ? pt(t, e.last_activity, this.timeZone, this.timeFormat) : Je(t, e.last_activity, this.now);
+		let t = this.language, n = Qt(t, e, this.now), r = K(e) && e.last_activity !== null ? pt(t, e.last_activity, this.now, this.timeZone, this.timeFormat) : Ye(t, e.last_activity, this.now);
 		return E`<button class="mrow rowgrid" type="button" @click=${() => this.fire("open", { id: e.id })}>
       <span class="nm">
-        <ha-icon class=${`t-${e.ignored ? "ok" : V(e.status)}`} .icon=${e.icon}></ha-icon>
-        <b>${e.name}</b>
-        ${e.area ? E`<span class="room">${e.area}</span>` : k}
+        <ha-icon class=${`t-${e.ignored ? "ok" : V(e)}`} .icon=${e.icon}></ha-icon>
+        <span class="who">
+          <span class="title"><b>${e.name}</b>${e.critical && !e.ignored ? E`<span class="star" role="img" aria-label=${L(t, "important_badge")} title=${L(t, "important_badge")}><ha-icon icon="mdi:star"></ha-icon></span>` : k}</span>
+          ${e.area ? E`<span class="room">${e.area}</span>` : k}
+        </span>
       </span>
       <pulse-rhythm
         .buckets=${e.strip}
-        tone=${H(e)}
+        tone=${V(e)}
         ?learning=${e.status === "learning" && !e.ignored}
         .gaps=${this.gaps}
         .days=${Math.max(1, this.dayStarts.length - 1)}
-        .silentFrom=${on(e, this.dayStarts)}
-        .flag=${Ht(t, e, this.now)}
+        .silentFrom=${hn(e, this.dayStarts)}
+        .flag=${Zt(t, e, this.now)}
       ></pulse-rhythm>
       <span class="st">
         ${n ? E`<b class=${`t-${n.tone}`}>${n.text}</b><span class="sep"> · </span>` : k}<span class="num time">${r}</span>
@@ -4322,9 +4734,9 @@ I("pulse-overview", class extends N {
 	}
 	renderSection(e, t) {
 		let n = this.language, r = E`<div class="grp">
-      <span>${R(n, zt(e))}</span><span class="count">${t.length}</span>
+      <span>${L(n, Jt(e))}</span><span class="count">${t.length}</span>
     </div>`;
-		return e !== "rhythm" || t.length <= 12 ? E`${r}${t.map((e) => this.renderRow(e))}` : E`${r}${qe(t, R(n, "no_area")).map((e) => {
+		return e !== "rhythm" || t.length <= 12 ? E`${r}${t.map((e) => this.renderRow(e))}` : E`${r}${Je(t, L(n, "no_area")).map((e) => {
 			let t = this.closed.has(e.area);
 			return E`<button class="room-head" type="button" aria-expanded=${t ? "false" : "true"} @click=${() => this.toggleRoom(e.area)}>
           <ha-icon icon=${t ? "mdi:chevron-right" : "mdi:chevron-down"}></ha-icon>
@@ -4334,11 +4746,11 @@ I("pulse-overview", class extends N {
 		})}`;
 	}
 	renderZigbee() {
-		let e = this.language, t = this.snapshot.z2m, n = E`<span class="cap">${R(e, "welcome_zigbee_title")}</span>`;
+		let e = this.language, t = this.snapshot.z2m, n = E`<span class="cap">${L(e, "welcome_zigbee_title")}</span>`;
 		if (!t.present) return k;
-		if (t.last_seen && t.availability) return E`<div class="fact zig">${n}<b class="t-ok on"><ha-icon icon="mdi:check-circle"></ha-icon>${R(e, "zigbee_active")}</b><span class="sub">${R(e, "zigbee_devices")}: ${t.devices}</span></div>`;
+		if (t.last_seen && t.availability) return E`<div class="fact zig">${n}<b class="t-ok on"><ha-icon icon="mdi:check-circle"></ha-icon>${L(e, "zigbee_active")}</b><span class="sub">${L(e, "zigbee_devices")}: ${t.devices}</span></div>`;
 		let r = t.requested_at !== null && this.now - t.requested_at < 120;
-		return this.readonly ? E`<div class="fact zig">${n}<b>${r ? R(e, "zigbee_requested") : R(e, "off")}</b><span class="sub">${R(e, "zigbee_hint")}</span></div>` : E`<div
+		return this.readonly ? E`<div class="fact zig">${n}<b>${r ? L(e, "zigbee_requested") : L(e, "off")}</b><span class="sub">${L(e, "zigbee_hint")}</span></div>` : E`<div
       class="fact zig tappable"
       role="switch"
       aria-checked="false"
@@ -4350,50 +4762,60 @@ I("pulse-overview", class extends N {
     >
       ${n}
       <span class="line">
-        <b>${r ? R(e, "zigbee_requested") : R(e, "off")}</b>
+        <b>${r ? L(e, "zigbee_requested") : L(e, "off")}</b>
         ${r ? k : E`<ha-switch tabindex="-1" aria-hidden="true"></ha-switch>`}
       </span>
-      <span class="sub">${R(e, "zigbee_hint")}</span>
+      <span class="sub">${L(e, "zigbee_hint")}</span>
     </div>`;
 	}
+	renderBattery() {
+		let e = this.language, t = this.snapshot, n = t.summary.due_batteries, r = jt(e, t.summary.low_batteries ?? []), i = t.summary.low_batteries ?? [], a = n === void 0 ? t.summary.next_battery ?? "" : wn(e, n.filter((e) => !i.includes(e.name))), o = r.tone === "ok" && n?.length ? L(e, n.length === 1 ? "battery_due_one" : "battery_due_many", { count: n.length }) : r.label, s = Ct(t.devices, (n ?? []).map((e) => e.id)), c = E`<span class="cap">${L(e, "batteries")}</span>
+      <b class=${r.tone === "warn" ? "t-warn" : ""}>${o}</b>
+      ${r.value ? E`<span class="sub">${r.value}</span>` : k}
+      <span class="sub">${a || (r.value ? "" : L(e, "nothing_due"))}</span>`;
+		return s.length ? E`<button class="fact tappable" type="button" @click=${() => {
+			let [e] = s;
+			s.length === 1 && e ? this.fire("open", { id: e.id }) : this.show("battery");
+		}}>${c}</button>` : E`<div class="fact">${c}</div>`;
+	}
 	renderFacts() {
-		let e = this.language, t = this.snapshot, n = Et(e, t.summary.low_batteries ?? []), r = t.summary.next_battery, i = xt(t.devices), a = t.devices.filter((e) => e.ignored).length;
+		let e = this.language, t = this.snapshot, n = xt(t.devices), r = t.devices.filter((e) => e.ignored).length;
 		return E`<section class="facts">
-      <div class="fact">
-        <span class="cap">${R(e, "batteries")}</span>
-        <b class=${n.tone === "warn" ? "t-warn" : ""}>${n.label}</b>
-        <span class="sub">${[n.value, r].filter(Boolean).join(" · ") || R(e, "nothing_due")}</span>
-      </div>
-      ${i ? E`<button class="fact tappable" type="button" @click=${() => this.fire("open", { id: i.device.id })}>
-              <span class="cap">${R(e, "last_change")}</span>
-              <b>${wt(e, i.at, this.now, this.timeZone)}</b>
-              <span class="sub">${i.device.name}</span>
-            </button>` : E`<div class="fact"><span class="cap">${R(e, "last_change")}</span><b>${R(e, "unknown")}</b><span class="sub">${R(e, "never_replaced")}</span></div>`}
+      ${this.renderBattery()}
+      ${n ? E`<button class="fact tappable" type="button" @click=${() => this.fire("open", { id: n.device.id })}>
+              <span class="cap">${L(e, "last_change")}</span>
+              <b>${Et(e, n.at, this.now, this.timeZone)}</b>
+              <span class="sub">${n.device.name}</span>
+            </button>` : E`<div class="fact"><span class="cap">${L(e, "last_change")}</span><b>${L(e, "unknown")}</b><span class="sub">${L(e, "never_replaced")}</span></div>`}
       ${this.renderZigbee()}
-      ${a ? E`<button class="fact tappable" type="button" @click=${() => this.show("ignored")}>
-              <span class="cap">${R(e, "ignored")}</span>
-              <b>${R(e, "ignored_count", { count: a })}</b>
-              <span class="sub">${R(e, "show_list")}</span>
+      ${r ? E`<button class="fact tappable" type="button" @click=${() => this.show("ignored")}>
+              <span class="cap">${L(e, "ignored")}</span>
+              <b>${L(e, "ignored_count", { count: r })}</b>
+              <span class="sub">${L(e, "show_list")}</span>
             </button>` : k}
     </section>`;
 	}
 	render() {
-		let e = this.language, t = this.snapshot, n = Pt(e, t.devices), r = It(e, t.devices, this.now, this.timeZone), i = Bt(t.devices);
+		let e = this.language, t = this.snapshot, n = Ut(e, t.devices), r = En(e, t.summary.cloud_outages), i = {
+			accent: "grad",
+			warn: "t-warn",
+			crit: "t-crit",
+			plain: ""
+		}[n.tone], a = Gt(e, t.devices, this.now, this.timeZone), o = Yt(t.devices);
 		this.gaps = this.gapsOf(this.noData, this.dayStarts);
-		let a = t.devices.filter((e) => !e.ignored).length, o = a === 1 ? R(e, "monitor_head_one") : R(e, "monitor_head", { count: a }), s = new Intl.DateTimeFormat(e, {
-			weekday: "short",
-			...this.timeZone ? { timeZone: this.timeZone } : {}
-		}).format(/* @__PURE__ */ new Date(this.now * 1e3)), c = ot(e, this.dayStarts, this.timeZone).map((e, t, n) => t === n.length - 1 ? s : e);
+		let s = t.devices.filter((e) => !e.ignored).length, c = s === 1 ? L(e, "monitor_head_one") : L(e, "monitor_head", { count: s }), l = ot(e, this.dayStarts, this.timeZone);
 		return E`<div class="page">
       <section class="hero">
         <div class="words">
           <h2 class="hl">
             <span class="long">${n.line1}</span><span class="short">${n.line1Short}</span><br />
-            <span class="grad long">${n.line2}</span><span class="grad short">${n.line2Short}</span>
+            <span class=${`l2 long ${i}`}>${n.line2}</span><span class=${`l2 short ${i}`}>${n.line2Short}</span>
           </h2>
           <p class="hsub">
-            ${r.mentions.map((e) => E`${e.before}<b class=${`t-${e.tone}`}>${e.name}</b>${e.after} `)}${r.text}
+            ${n.sub ? E`<span class="ok-line">${n.sub}</span>` : k}
+            ${a.mentions.map((e) => E`${e.before}<b class=${`t-${e.tone}`}>${e.name}</b>${e.after} `)}${a.text}
           </p>
+          ${r.map((e) => E`<p class="cloud"><ha-icon icon="mdi:cloud-off-outline"></ha-icon><span>${e}</span></p>`)}
         </div>
         ${this.readonly ? E`<pulse-dayband
                 .settings=${t.settings}
@@ -4417,13 +4839,13 @@ I("pulse-overview", class extends N {
               ></pulse-dayband>`}
       </section>
 
-      <section class="monitor" aria-label=${o}>
+      <section class="monitor" aria-label=${c}>
         <div class="axis">
-          <span>${o}</span>
-          <div class="days mono" style=${`grid-template-columns: ${st(this.dayStarts)}`}>${c.map((e) => E`<span>${e.replace(".", "")}</span>`)}</div>
-          <span class="right">${R(e, "col_last")}</span>
+          <span>${c}</span>
+          <div class="days mono" style=${`grid-template-columns: ${st(this.dayStarts)}`}>${l.map((e) => E`<span>${e.replace(".", "")}</span>`)}</div>
+          <span class="right">${L(e, "col_last")}</span>
         </div>
-        ${i.map((e) => this.renderSection(e.key, e.devices))}
+        ${o.map((e) => this.renderSection(e.key, e.devices))}
       </section>
 
       ${this.renderFacts()}
@@ -4434,7 +4856,7 @@ I("pulse-overview", class extends N {
 			J,
 			Y,
 			X,
-			fn,
+			On,
 			o`
       :host {
         display: block;
@@ -4475,6 +4897,29 @@ I("pulse-overview", class extends N {
       .hsub b.t-ok {
         color: var(--pu-ink);
       }
+      /* „2 von 10 im Takt.“ – eigene Zeile über den Sätzen */
+      .ok-line {
+        display: block;
+        margin-bottom: var(--pu-sp-4);
+        color: var(--pu-ink);
+        font-weight: 600;
+      }
+      /* Ruhiger Sammelhinweis bei Cloud-Ausfall: grau, kein Alarm */
+      .cloud {
+        display: flex;
+        align-items: flex-start;
+        gap: var(--pu-sp-8);
+        margin: var(--pu-sp-12) 0 0;
+        max-width: 46ch;
+        font-size: var(--pu-fs-15);
+        line-height: 1.4;
+        color: var(--pu-muted);
+        --mdc-icon-size: 18px;
+      }
+      .cloud ha-icon {
+        flex: none;
+        margin-top: 1px;
+      }
       pulse-dayband.tappable {
         cursor: pointer;
         -webkit-tap-highlight-color: transparent;
@@ -4488,9 +4933,6 @@ I("pulse-overview", class extends N {
       .monitor {
         margin-top: var(--pu-sp-32);
         border-top: 1px solid var(--pu-line);
-      }
-      .grp .count::before {
-        content: '· ';
       }
       .mrow {
         width: 100%;
@@ -4583,12 +5025,18 @@ I("pulse-overview", class extends N {
         font-weight: 700;
         letter-spacing: -0.01em;
       }
+      /* Hinweise höchstens zweizeilig statt abgeschnitten */
       .fact .sub {
         font-size: var(--pu-fs-13);
+        line-height: 1.35;
         color: var(--pu-muted);
         overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+      }
+      .fact .sub:empty {
+        display: none;
       }
       .fact .line {
         display: flex;
@@ -4652,6 +5100,10 @@ I("pulse-overview", class extends N {
         .hsub {
           font-size: var(--pu-fs-15);
         }
+        /* Luft unter jeder Zeile (die Leiste klebt sonst an der nächsten) */
+        .mrow.rowgrid {
+          padding: var(--pu-sp-12) 0 18px;
+        }
         .fact {
           border-inline-start: 0;
           padding-inline: 0;
@@ -4668,7 +5120,7 @@ I("pulse-overview", class extends N {
           border-inline-start: 0;
         }
         .fact.zig .sub {
-          white-space: normal;
+          -webkit-line-clamp: 3;
         }
         .fact.zig ~ .fact {
           padding-inline-start: 0;
@@ -4778,10 +5230,10 @@ var $ = {
 	BOOLEAN_ATTRIBUTE: 4,
 	EVENT: 5,
 	ELEMENT: 6
-}, Hn = (e) => (...t) => ({
+}, ir = (e) => (...t) => ({
 	_$litDirective$: e,
 	values: t
-}), Un = class {
+}), ar = class {
 	constructor(e) {}
 	get _$AU() {
 		return this._$AM._$AU;
@@ -4795,10 +5247,10 @@ var $ = {
 	update(e, t) {
 		return this.render(...t);
 	}
-}, { I: Wn } = Ae, Gn = (e) => e.strings === void 0, Kn = {}, qn = (e, t = Kn) => e._$AH = t, Jn = Hn(class extends Un {
+}, { I: or } = Ae, sr = (e) => e.strings === void 0, cr = {}, lr = (e, t = cr) => e._$AH = t, ur = ir(class extends ar {
 	constructor(e) {
 		if (super(e), e.type !== $.PROPERTY && e.type !== $.ATTRIBUTE && e.type !== $.BOOLEAN_ATTRIBUTE) throw Error("The `live` directive is not allowed on child or event bindings");
-		if (!Gn(e)) throw Error("`live` bindings can only contain a single expression");
+		if (!sr(e)) throw Error("`live` bindings can only contain a single expression");
 	}
 	render(e) {
 		return e;
@@ -4811,7 +5263,7 @@ var $ = {
 		} else if (e.type === $.BOOLEAN_ATTRIBUTE) {
 			if (!!t === n.hasAttribute(r)) return O;
 		} else if (e.type === $.ATTRIBUTE && n.getAttribute(r) === t + "") return O;
-		return qn(e), t;
+		return lr(e), t;
 	}
 });
 I("pulse-settings", class extends N {
@@ -4835,18 +5287,30 @@ I("pulse-settings", class extends N {
 			composed: !0
 		}));
 	}
-	fire(e) {
+	fire(e, t = {}) {
 		this.dispatchEvent(new CustomEvent(e, {
+			detail: t,
 			bubbles: !0,
 			composed: !0
 		}));
+	}
+	linkRow(e, t, n) {
+		return E`<button class="row link" type="button" @click=${n}>
+      <span class="label">${e}</span>
+      <span class="value">${t}</span>
+      <ha-icon class="chev" icon="mdi:chevron-right"></ha-icon>
+    </button>`;
+	}
+	z2mOptionRow(e, t, n, r, i) {
+		let a = this.language, o = E`<span class="label">${L(a, e)}<small>${L(a, t)}</small></span>`;
+		return n ? E`<div class="row">${o}<span class="value t-ok on"><ha-icon icon="mdi:check-circle"></ha-icon>${L(a, "zigbee_active")}</span></div>` : typeof r == "number" && this.now - r < 120 ? E`<div class="row">${o}<span class="value">${L(a, "zigbee_requested")}</span></div>` : this.toggleRow(o, !1, () => this.fire(i));
 	}
 	onZ2mBase(e) {
 		let t = e.target;
 		if (!(t instanceof HTMLInputElement)) return;
 		let n = this.snapshot.settings.z2m_base, r = ht(t.value);
 		if (r === null) {
-			P(this, R(this.language, "z2m_base_invalid")), t.value = n;
+			P(this, L(this.language, "z2m_base_invalid")), t.value = n;
 			return;
 		}
 		t.value = r, r !== n && this.save({ z2m_base: r });
@@ -4865,17 +5329,17 @@ I("pulse-settings", class extends N {
 		}));
 	}
 	togglePerson(e, t) {
-		let n = un(this.snapshot.settings), r = t ? [.../* @__PURE__ */ new Set([...n, e])] : n.filter((t) => t !== e);
+		let n = yn(this.snapshot.settings), r = t ? [.../* @__PURE__ */ new Set([...n, e])] : n.filter((t) => t !== e);
 		this.save({ arrive_home: { persons: r } });
 	}
 	pickerRow(e, t, n, r, i) {
 		let a = this.language;
 		return E`<div class=${i ? "row has-icon" : "row"}>
       ${i ? E`<ha-icon class=${`ico ${i.tone}`} icon=${i.icon}></ha-icon>` : k}
-      <span class="label">${R(a, e)}</span>
+      <span class="label">${L(a, e)}</span>
       <pulse-picker
         .language=${a}
-        .label=${R(a, e)}
+        .label=${L(a, e)}
         .value=${t}
         .options=${n}
         @change=${(e) => r(e.detail.value)}
@@ -4899,26 +5363,26 @@ I("pulse-settings", class extends N {
 	}
 	switchRow(e, t, n, r) {
 		let i = this.language;
-		return this.toggleRow(E`<span class="label">${R(i, e)}${r ? E`<small>${R(i, r)}</small>` : k}</span>`, t, n);
+		return this.toggleRow(E`<span class="label">${L(i, e)}${r ? E`<small>${L(i, r)}</small>` : k}</span>`, t, n);
 	}
 	render() {
 		let e = this.language, t = this.snapshot, n = t.settings, r = n.targets ?? t.targets, i = [
 			{
 				value: "now",
-				label: R(e, "level_now")
+				label: L(e, "level_now")
 			},
 			{
 				value: "daily",
-				label: R(e, "level_daily")
+				label: L(e, "level_daily")
 			},
 			{
 				value: "off",
-				label: R(e, "level_off")
+				label: L(e, "level_off")
 			}
 		], a = (e, t, r, a) => this.pickerRow(t, n.levels[e], i, (t) => this.save({ levels: { [e]: t } }), {
 			icon: r,
 			tone: a
-		}), o = un(n), s = dn(e, n, this.recipients);
+		}), o = yn(n), s = bn(e, n), c = Tt(t.devices), l = t.z2m;
 		return E`
       <section class="hero">
         <div class="words">
@@ -4937,58 +5401,63 @@ I("pulse-settings", class extends N {
       <div class="cols">
 
       <section class="section">
-        <h3 class="section-title">${R(e, "recipients")}</h3>
+        <h3 class="section-title">${L(e, "recipients")}</h3>
         <div class="list">
           ${t.targets.length ? t.targets.map((e) => this.toggleRow(E`<ha-icon class="ico" icon="mdi:cellphone"></ha-icon>
-                      <span class=${this.names[e] ? "label" : "label capname"}>${this.targetLabel(e)}</span>`, r.includes(e), (t) => this.toggleTarget(e, t), !0)) : E`<div class="row"><span class="label muted">${R(e, "recipients_none")}</span></div>`}
+                      <span class=${this.names[e] ? "label" : "label capname"}>${this.targetLabel(e)}</span>`, r.includes(e), (t) => this.toggleTarget(e, t), !0)) : E`<div class="row"><span class="label muted">${L(e, "recipients_none")}</span></div>`}
         </div>
-        ${t.targets.length ? E`<p class="section-foot">${R(e, "recipients_hint")}</p>` : k}
+        ${t.targets.length ? E`<p class="section-foot">${L(e, "recipients_hint")}</p>` : k}
       </section>
 
       <section class="section">
-        <h3 class="section-title">${R(e, "when")}</h3>
+        <h3 class="section-title">${L(e, "when")}</h3>
         <div class="list">
           ${a("failed", "level_failed", "mdi:heart-broken-outline", "t-crit")}
           ${a("check", "level_check", "mdi:alert-circle-outline", "t-warn")}
           ${a("battery", "level_battery", "mdi:battery-low", "")}
         </div>
-        <p class="section-foot">${R(e, "levels_hint")}</p>
+        <p class="section-foot">${L(e, "levels_hint")}</p>
       </section>
 
       <section class="section">
-        <h3 class="section-title">${R(e, "times")}</h3>
+        <h3 class="section-title">${L(e, "times")}</h3>
         <div class="list">
           ${this.pickerRow("summary_time", n.summary_time, this.times(n.summary_time), (e) => this.save({ summary_time: e }))}
           ${this.switchRow("quiet", n.quiet.enabled, (e) => this.save({ quiet: { enabled: e } }))}
           ${n.quiet.enabled ? E`${this.pickerRow("quiet_from", n.quiet.start, this.times(n.quiet.start), (e) => this.save({ quiet: { start: e } }))}
                 ${this.pickerRow("quiet_to", n.quiet.end, this.times(n.quiet.end), (e) => this.save({ quiet: { end: e } }))}` : k}
         </div>
-        ${n.quiet.enabled ? E`<p class="section-foot">${R(e, "quiet_hint")}</p>` : k}
+        ${n.quiet.enabled ? E`<p class="section-foot">${L(e, "quiet_hint")}</p>` : k}
       </section>
 
       <section class="section">
-        <h3 class="section-title">${R(e, "special")}</h3>
+        <h3 class="section-title">${L(e, "special")}</h3>
         <div class="list">
           ${this.switchRow("critical", n.critical_alerts, (e) => this.save({ critical_alerts: e }), "critical_hint")}
+          ${this.linkRow(L(e, "important_devices"), String(c), () => this.fire("show-devices", { filter: "important" }))}
           ${this.switchRow("arrive", n.arrive_home.enabled, (e) => this.save({ arrive_home: {
 			enabled: e,
 			persons: o.length || !e ? o : t.persons.slice(0, 1)
 		} }), "arrive_hint")}
           ${n.arrive_home.enabled ? t.persons.length ? t.persons.map((e) => this.toggleRow(E`<ha-icon class="ico" icon="mdi:account-outline"></ha-icon>
-                        <span class="label">${this.names[e] ?? e}</span>`, o.includes(e), (t) => this.togglePerson(e, t), !0)) : E`<div class="row"><span class="label muted">${R(e, "persons_none")}</span></div>` : k}
+                        <span class="label">${this.names[e] ?? e}</span>`, o.includes(e), (t) => this.togglePerson(e, t), !0)) : E`<div class="row"><span class="label muted">${L(e, "persons_none")}</span></div>` : k}
           ${this.switchRow("recovered", n.recovered, (e) => this.save({ recovered: e }), "recovered_hint")}
         </div>
       </section>
 
       <section class="section">
-        <h3 class="section-title">${R(e, "zigbee")}</h3>
+        <h3 class="section-title">${L(e, "zigbee")}</h3>
+        ${l.present ? E`<div class="list z2m">
+                ${this.z2mOptionRow("welcome_zigbee_title", "zigbee_hint", l.last_seen && l.availability, l.requested_at, "enable-z2m")}
+                ${this.z2mOptionRow("health_title", "health_hint", l.health === !0, l.health_requested_at, "enable-z2m-health")}
+              </div>` : k}
         <details class="list adv">
           <summary class="row">
-            <span class="label">${R(e, "advanced")}</span>
+            <span class="label">${L(e, "advanced")}</span>
             <ha-icon class="chev" icon="mdi:chevron-down"></ha-icon>
           </summary>
           <label class="row">
-            <span class="label">${R(e, "z2m_base")}</span>
+            <span class="label">${L(e, "z2m_base")}</span>
             <input
               class="text"
               type="text"
@@ -4996,22 +5465,22 @@ I("pulse-settings", class extends N {
               autocomplete="off"
               autocapitalize="off"
               placeholder="zigbee2mqtt"
-              .value=${Jn(n.z2m_base)}
+              .value=${ur(n.z2m_base)}
               @change=${(e) => this.onZ2mBase(e)}
               @keydown=${(e) => {
 			e.key === "Enter" && e.currentTarget instanceof HTMLInputElement && e.currentTarget.blur();
 		}}
             />
           </label>
-          <p class="row adv-hint">${R(e, "z2m_base_hint")}</p>
+          <p class="row adv-hint">${L(e, "z2m_base_hint")}</p>
         </details>
       </section>
 
       <section class="section">
-        <h3 class="section-title">${R(e, "try_it")}</h3>
+        <h3 class="section-title">${L(e, "try_it")}</h3>
         <div class="list">
-          <button class="row action" type="button" @click=${() => this.fire("test")}>${R(e, "test")}</button>
-          <button class="row action" type="button" @click=${() => this.fire("summary")}>${R(e, "summary_now")}</button>
+          <button class="row action" type="button" @click=${() => this.fire("test")}>${L(e, "test")}</button>
+          <button class="row action" type="button" @click=${() => this.fire("summary")}>${L(e, "summary_now")}</button>
         </div>
       </section>
       </div>
@@ -5063,6 +5532,18 @@ I("pulse-settings", class extends N {
       .section {
         break-inside: avoid;
         margin-bottom: 28px;
+      }
+      .z2m {
+        margin-bottom: var(--pu-sp-12);
+      }
+      .on {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--pu-sp-4);
+        --mdc-icon-size: 18px;
+      }
+      .row .value.t-ok {
+        color: var(--pu-ok-text);
       }
       .capname {
         text-transform: capitalize;
@@ -5136,24 +5617,24 @@ I("pulse-settings", class extends N {
 });
 //#endregion
 //#region src/pulse-panel.ts
-var Yn = 2e3, Xn = 6e4;
-function Zn() {
+var dr = 2e3, fr = 6e4;
+function pr() {
 	try {
 		return window.localStorage;
 	} catch {
 		return null;
 	}
 }
-function Qn() {
-	let e = Zn();
+function mr() {
+	let e = pr();
 	if (!e) return null;
 	try {
-		return yn(e, "1.0.1", mn.length > 0);
+		return Fn(e, "1.1.0", An.length > 0);
 	} catch {
 		return null;
 	}
 }
-function $n(e) {
+function hr(e) {
 	return [
 		e.language,
 		e.themes?.darkMode,
@@ -5164,7 +5645,7 @@ function $n(e) {
 		e.user?.is_admin
 	].join("|");
 }
-var er = class extends N {
+var gr = class extends N {
 	static {
 		this.properties = {
 			hass: { attribute: !1 },
@@ -5177,46 +5658,40 @@ var er = class extends N {
 			error: { state: !0 },
 			groupBy: { state: !0 },
 			filter: { state: !0 },
-			confirmZigbee: { state: !0 }
+			confirmZigbee: { state: !0 },
+			confirmHealth: { state: !0 }
 		};
 	}
 	constructor() {
-		super(), this.unsub = null, this.retryDelay = Yn, this.namesCache = {
+		super(), this.unsub = null, this.retryDelay = dr, this.namesCache = {
 			key: "{}",
 			value: {}
-		}, this.spans = z((e) => Zt(e)), this.watched = z((e) => U(e)), this.dayStarts = z((e) => it(e)), this.onMenuHidden = (e) => {
+		}, this.spans = R((e) => sn(e)), this.watched = R((e) => U(e)), this.dayStarts = R((e) => it(e)), this.onMenuHidden = (e) => {
 			let t = e.composedPath()[0];
-			t instanceof HTMLElement && t.localName.endsWith("dropdown") && He();
-		}, this.deepLink = "", this.subscribedLanguage = "", this.fetchHeartbeat = async (e) => {
-			if (!this.hass) return null;
-			try {
-				return await this.hass.callWS({
-					type: "pulse/heartbeat",
-					device_ids: e
-				});
-			} catch {
-				return null;
-			}
-		}, this.narrow = !1, this.snapshot = null, this.now = Date.now() / 1e3, this.openId = null, this.welcome = Qn(), this.error = null, this.groupBy = "area", this.filter = null, this.confirmZigbee = !1;
+			t instanceof HTMLElement && t.localName.endsWith("dropdown") && Ue();
+		}, this.deepLink = "", this.subscribedLanguage = "", this.fetchHeartbeat = async (e) => this.hass ? await this.hass.callWS({
+			type: "pulse/heartbeat",
+			device_ids: e
+		}) : null, this.dueIds = R((e) => (e.summary.due_batteries ?? []).map((e) => e.id)), this.narrow = !1, this.snapshot = null, this.now = Date.now() / 1e3, this.openId = null, this.welcome = mr(), this.error = null, this.groupBy = "area", this.filter = null, this.confirmZigbee = !1, this.confirmHealth = !1;
 	}
 	get language() {
 		return this.hass?.language ?? "en";
 	}
 	get timeZone() {
-		return et(this.hass?.config?.time_zone);
+		return tt(this.hass?.config?.time_zone);
 	}
 	get timeFormat() {
 		return ft(this.hass?.locale?.time_format);
 	}
 	get readonly() {
-		return !Dt(this.hass?.user);
+		return !Mt(this.hass?.user);
 	}
 	get view() {
 		let e = this.route?.path ?? "";
 		return e.startsWith("/settings") ? this.readonly ? "overview" : "settings" : e.startsWith("/devices") ? "devices" : "overview";
 	}
 	connectedCallback() {
-		super.connectedCallback(), Be(), this.addEventListener("wa-after-hide", this.onMenuHidden), this.openDeepLink(), this.now = Date.now() / 1e3, this.clock = window.setInterval(() => {
+		super.connectedCallback(), Ve(), this.addEventListener("wa-after-hide", this.onMenuHidden), this.openDeepLink(), this.now = Date.now() / 1e3, this.clock = window.setInterval(() => {
 			this.now = Date.now() / 1e3;
 		}, 3e4), this.ensureSubscribed();
 	}
@@ -5239,7 +5714,7 @@ var er = class extends N {
 		let t = e.get("hass");
 		if (!t || !this.hass) return !0;
 		let n = this.namesCache.value;
-		return $n(t) !== $n(this.hass) || this.names() !== n;
+		return hr(t) !== hr(this.hass) || this.names() !== n;
 	}
 	updated() {
 		this.toggleAttribute("dark", this.hass?.themes?.darkMode === !0);
@@ -5251,7 +5726,7 @@ var er = class extends N {
 		if (!this.hass) return;
 		this.subscribedLanguage = this.hass.language;
 		let e = this.hass.connection.subscribeMessage((e) => {
-			this.snapshot = e, this.now = Date.now() / 1e3, this.error = null, this.retryDelay = Yn;
+			this.snapshot = e, this.now = Date.now() / 1e3, this.error = null, this.retryDelay = dr;
 		}, {
 			type: "pulse/subscribe",
 			language: this.hass.language
@@ -5259,7 +5734,7 @@ var er = class extends N {
 		this.unsub = e, e.catch((t) => {
 			if (this.unsub !== e || (this.unsub = null, this.error = Ie(t), !this.isConnected)) return;
 			let n = this.retryDelay;
-			this.retryDelay = Math.min(n * 2, Xn), this.retryTimer = window.setTimeout(() => {
+			this.retryDelay = Math.min(n * 2, fr), this.retryTimer = window.setTimeout(() => {
 				this.retryTimer = void 0, this.ensureSubscribed();
 			}, n);
 		});
@@ -5286,8 +5761,8 @@ var er = class extends N {
 			type: "pulse/device",
 			device_id: e,
 			...t
-		}), t.ignored === !0 && n && (this.openId = null, P(this, R(this.language, "ignored_done", { name: n.name }), {
-			text: R(this.language, "undo"),
+		}), t.ignored === !0 && n && (this.openId = null, P(this, L(this.language, "ignored_done", { name: n.name }), {
+			text: L(this.language, "undo"),
 			action: () => void this.call({
 				type: "pulse/device",
 				device_id: e,
@@ -5300,8 +5775,8 @@ var er = class extends N {
 		await this.call({
 			type: "pulse/replaced",
 			device_id: e
-		}) !== void 0 && (this.openId = null, P(this, R(t, "replaced_done"), {
-			text: R(t, "undo"),
+		}) !== void 0 && (this.openId = null, P(this, L(t, "replaced_done"), {
+			text: L(t, "undo"),
 			action: () => void this.onUndoReplaced(e)
 		}));
 	}
@@ -5312,30 +5787,40 @@ var er = class extends N {
 		});
 		if (n === void 0) return;
 		let r = Reflect.get(Object(n), "undone") === !0;
-		P(this, R(t, r ? "replaced_undone" : "replaced_undo_failed"));
+		P(this, L(t, r ? "replaced_undone" : "replaced_undo_failed"));
 	}
 	async onConfirmZigbee() {
-		this.confirmZigbee = !1, await this.call({ type: "pulse/enable_z2m" }, R(this.language, "zigbee_sent"));
+		this.confirmZigbee = !1, await this.call({ type: "pulse/enable_z2m" }, L(this.language, "zigbee_sent"));
+	}
+	async onConfirmHealth() {
+		this.confirmHealth = !1, await this.call({ type: "pulse/enable_z2m_health" }, L(this.language, "zigbee_sent"));
+	}
+	onPartnerDismiss(e, t) {
+		this.readonly || this.call({
+			type: "pulse/partner_suggestion_dismiss",
+			device_id: e,
+			partner_id: t
+		});
 	}
 	async onTest() {
 		let e = await this.call({ type: "pulse/test" });
 		if (e === void 0) return;
 		let t = Reflect.get(Object(e), "targets"), n = Array.isArray(t) ? t.length : 0;
-		P(this, n ? R(this.language, "test_done", { count: n }) : R(this.language, "test_none"));
+		P(this, n ? L(this.language, "test_done", { count: n }) : L(this.language, "test_none"));
 	}
 	async onSummary() {
 		let e = await this.call({ type: "pulse/summary" });
-		e !== void 0 && P(this, R(this.language, Reflect.get(Object(e), "sent") ? "summary_sent" : "summary_empty"));
+		e !== void 0 && P(this, L(this.language, Reflect.get(Object(e), "sent") ? "summary_sent" : "summary_empty"));
 	}
 	onMenu(e) {
-		let t = L(e);
+		let t = Re(e);
 		t === "summary" && !this.readonly ? this.onSummary() : t === "welcome" ? this.welcome = "welcome" : t === "integration" && F("/config/integrations/integration/pulse");
 	}
 	welcomeDone() {
 		this.welcome = null;
-		let e = Zn();
+		let e = pr();
 		try {
-			e && bn(e, "1.0.1");
+			e && In(e, "1.1.0");
 		} catch {}
 	}
 	zigbeeOffer(e) {
@@ -5359,34 +5844,34 @@ var er = class extends N {
 	}
 	recipients(e, t) {
 		let n = this.language, r = (e.settings.targets ?? e.targets).filter((t) => e.targets.includes(t));
-		if (!r.length) return R(n, "day_nobody");
+		if (!r.length) return L(n, "day_nobody");
 		let i = r.slice(0, 2).map((e) => t[e] ?? e.replace(/^mobile_app_/, "").replaceAll("_", " ")).join(", ");
-		return R(n, "day_to", { names: r.length > 2 ? `${i} +${r.length - 2}` : i });
+		return L(n, "day_to", { names: r.length > 2 ? `${i} +${r.length - 2}` : i });
 	}
 	renderHead() {
 		let e = this.language, t = [
 			{
 				value: "overview",
-				label: R(e, "tab_overview")
+				label: L(e, "tab_overview")
 			},
 			{
 				value: "devices",
-				label: R(e, "tab_devices")
+				label: L(e, "tab_devices")
 			},
 			...this.readonly ? [] : [{
 				value: "settings",
-				label: R(e, "tab_notify")
+				label: L(e, "tab_notify")
 			}]
 		];
 		return E`<header class="head">
-      <div class="brand" title=${R(e, "subtitle")}>
+      <div class="brand" title=${L(e, "subtitle")}>
         <pulse-mark flat></pulse-mark>
-        <span>${R(e, "title")}</span>
+        <span>${L(e, "title")}</span>
       </div>
       <pulse-segmented
         .options=${t}
         .value=${this.view}
-        .label=${R(e, "title")}
+        .label=${L(e, "title")}
         @change=${(e) => {
 			let t = e.detail.value;
 			(t === "overview" || t === "devices" || t === "settings") && this.go(t);
@@ -5409,6 +5894,9 @@ var er = class extends N {
 		})}
         @test=${() => void this.onTest()}
         @summary=${() => void this.onSummary()}
+        @show-devices=${(e) => {
+			this.filter = e.detail.filter, this.go("devices");
+		}}
       ></pulse-settings>` : this.view === "devices" ? E`<pulse-devices
         .devices=${e.devices}
         .language=${t}
@@ -5423,6 +5911,7 @@ var er = class extends N {
         .readonly=${this.readonly}
         .groupBy=${this.groupBy}
         .filter=${this.filter}
+        .dueIds=${this.dueIds(e)}
         @group-change=${(e) => {
 			this.groupBy = e.detail.group;
 		}}
@@ -5446,22 +5935,22 @@ var er = class extends N {
     ></pulse-overview>`;
 	}
 	renderContent() {
-		let e = this.language, t = this.snapshot;
-		return this.error ? E`<ha-alert alert-type="error">${this.error}</ha-alert>` : t ? t.loaded === !1 ? E`<ha-alert alert-type="info">${R(e, "not_loaded")}</ha-alert>` : this.renderView(t) : E`<p class="muted center">${R(e, "loading")}</p>`;
+		let e = this.language, t = this.snapshot, n = this.error ? E`<ha-alert alert-type="warning" title=${this.error}>${L(e, "connection_lost")}</ha-alert>` : k;
+		return t ? t.loaded === !1 ? E`${n}<ha-alert alert-type="info">${L(e, "not_loaded")}</ha-alert>` : E`${n}${this.renderView(t)}` : this.error ? n : E`<p class="muted center">${L(e, "loading")}</p>`;
 	}
 	render() {
 		let e = this.loaded(), t = this.language, n = e?.devices.find((e) => e.id === this.openId) ?? null;
 		return E`
       <div class="toolbar">
         ${Fe(this.hass, this.narrow) ? E`<ha-menu-button .hass=${this.hass} .narrow=${this.narrow}></ha-menu-button>` : k}
-        <div class="toolbar-title">${R(t, "title")}</div>
+        <div class="toolbar-title">${L(t, "title")}</div>
         <ha-dropdown placement="bottom-end" @wa-select=${(e) => this.onMenu(e)}>
-          <ha-icon-button slot="trigger" .label=${R(t, "more")}>
+          <ha-icon-button slot="trigger" .label=${L(t, "more")}>
             <ha-icon icon="mdi:dots-vertical"></ha-icon>
           </ha-icon-button>
-          ${this.readonly ? k : E`<ha-dropdown-item value="summary"><ha-icon slot="icon" icon="mdi:text-box-outline"></ha-icon>${R(t, "summary_now")}</ha-dropdown-item>`}
-          <ha-dropdown-item value="welcome"><ha-icon slot="icon" icon="mdi:hand-wave-outline"></ha-icon>${R(t, "show_welcome")}</ha-dropdown-item>
-          ${this.readonly ? k : E`<ha-dropdown-item value="integration"><ha-icon slot="icon" icon="mdi:cog-outline"></ha-icon>${R(t, "open_integration")}</ha-dropdown-item>`}
+          ${this.readonly || this.view === "settings" ? k : E`<ha-dropdown-item value="summary"><ha-icon slot="icon" icon="mdi:text-box-outline"></ha-icon>${L(t, "summary_now")}</ha-dropdown-item>`}
+          <ha-dropdown-item value="welcome"><ha-icon slot="icon" icon="mdi:hand-wave-outline"></ha-icon>${L(t, "show_welcome")}</ha-dropdown-item>
+          ${this.readonly ? k : E`<ha-dropdown-item value="integration"><ha-icon slot="icon" icon="mdi:cog-outline"></ha-icon>${L(t, "open_integration")}</ha-dropdown-item>`}
         </ha-dropdown>
       </div>
       <main
@@ -5473,19 +5962,23 @@ var er = class extends N {
 			type: "pulse/snooze",
 			device_id: e.detail.id,
 			hours: 24
-		}, R(t, "later_done"))}
+		}, L(t, "later_done"))}
         @snooze-cancel=${(e) => void this.call({
 			type: "pulse/snooze",
 			device_id: e.detail.id,
 			hours: 0
-		}, R(t, "snooze_cancelled"))}
+		}, L(t, "snooze_cancelled"))}
         @device-change=${(e) => this.onDeviceChange(e.detail.id, e.detail.changes)}
         @enable-z2m=${() => {
 			this.readonly || (this.confirmZigbee = !0);
 		}}
+        @enable-z2m-health=${() => {
+			this.readonly || (this.confirmHealth = !0);
+		}}
+        @partner-dismiss=${(e) => this.onPartnerDismiss(e.detail.id, e.detail.partner)}
       >
         ${this.renderHead()} ${this.renderContent()}
-        <p class="version muted">${R(t, "version", { version: "1.0.1" })}</p>
+        <p class="version muted">${L(t, "version", { version: "1.1.0" })}</p>
         ${e ? E`<pulse-device-sheet
                   .open=${n !== null}
                   .device=${n}
@@ -5510,7 +6003,7 @@ var er = class extends N {
                 <pulse-welcome
                   .mode=${this.welcome}
                   .language=${t}
-                  .version=${"1.0.1"}
+                  .version=${"1.1.0"}
                   .zigbee=${this.zigbeeOffer(e)}
                   @closed=${() => this.welcomeDone()}
                   @enable-z2m=${() => {
@@ -5520,19 +6013,37 @@ var er = class extends N {
                 <pulse-sheet
                   no-close
                   .open=${this.confirmZigbee}
-                  .heading=${R(t, "zigbee_confirm_title")}
+                  .heading=${L(t, "zigbee_confirm_title")}
                   .language=${t}
                   @closed=${() => {
 			this.confirmZigbee = !1;
 		}}
                 >
-                  <p class="confirm-text">${R(t, "zigbee_confirm_text")}</p>
-                  <p class="confirm-text">${R(t, "zigbee_confirm_side")}</p>
+                  <p class="confirm-text">${L(t, "zigbee_confirm_text")}</p>
+                  <p class="confirm-text">${L(t, "zigbee_confirm_side")}</p>
                   <button slot="footer" class="pbtn" type="button" @click=${() => {
 			this.confirmZigbee = !1;
-		}}>${R(t, "cancel")}</button>
+		}}>${L(t, "cancel")}</button>
                   <button slot="footer" class="pbtn primary" type="button" @click=${() => void this.onConfirmZigbee()}>
-                    ${R(t, "zigbee_confirm_go")}
+                    ${L(t, "zigbee_confirm_go")}
+                  </button>
+                </pulse-sheet>
+                <pulse-sheet
+                  no-close
+                  .open=${this.confirmHealth}
+                  .heading=${L(t, "health_confirm_title")}
+                  .language=${t}
+                  @closed=${() => {
+			this.confirmHealth = !1;
+		}}
+                >
+                  <p class="confirm-text">${L(t, "health_confirm_text")}</p>
+                  <p class="confirm-text">${L(t, "health_confirm_side")}</p>
+                  <button slot="footer" class="pbtn" type="button" @click=${() => {
+			this.confirmHealth = !1;
+		}}>${L(t, "cancel")}</button>
+                  <button slot="footer" class="pbtn primary" type="button" @click=${() => void this.onConfirmHealth()}>
+                    ${L(t, "zigbee_confirm_go")}
                   </button>
                 </pulse-sheet>` : k}
       </main>
@@ -5676,6 +6187,6 @@ var er = class extends N {
 		];
 	}
 };
-I("pulse-panel", er);
+I("pulse-panel", gr);
 //#endregion
-export { er as PulsePanel };
+export { gr as PulsePanel };

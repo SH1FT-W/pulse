@@ -235,15 +235,15 @@ html[lang="de"] .en, html[lang="en"] .de { display: none !important; }
         <a class="btn" href="https://my.home-assistant.io/redirect/hacs_repository/?owner=SH1FT-W&amp;repository=pulse&amp;category=integration"><span class="en">Open in HACS</span><span class="de">In HACS öffnen</span></a>
         <a class="btn ghost" href="https://github.com/SH1FT-W/pulse#readme"><span class="en">Read the docs</span><span class="de">Zur Dokumentation</span></a>
       </div>
-      <p class="meta"><span id="pulse-version">Version 1.0.0</span> &middot; <span class="en">Home Assistant 2026.9 or newer &middot; Free and open source</span><span class="de">Home Assistant 2026.9 oder neuer &middot; Kostenlos und quelloffen</span></p>
+      <p class="meta"><span id="pulse-version">Version 1.1.0</span> &middot; <span class="en">Home Assistant 2026.9 or newer &middot; Free and open source</span><span class="de">Home Assistant 2026.9 oder neuer &middot; Kostenlos und quelloffen</span></p>
       <div class="hero-shot shot lg">
         <picture class="en">
           <source media="(prefers-color-scheme: dark)" srcset="images/overview-dark.png">
-          <img src="images/overview-light.png" width="2560" height="1280" alt="The Pulse overview: a headline saying 7 of 10 devices are in rhythm, and one rhythm strip per device. A silent aquarium thermometer breaks off into a red dashed line.">
+          <img src="images/overview-light.png" width="2560" height="1280" alt="The Pulse overview: a headline saying 3 devices need you, 7 of 10 in rhythm below it, and one rhythm strip per device. A silent aquarium thermometer breaks off into a red dashed line.">
         </picture>
         <picture class="de">
           <source media="(prefers-color-scheme: dark)" srcset="images/de/overview-dark.png">
-          <img src="images/de/overview-light.png" width="2560" height="1280" alt="Die Pulse-Übersicht: eine Schlagzeile mit 7 von 10 Geräten schlagen im Takt und eine Rhythmusleiste je Gerät. Ein stilles Aquarium-Thermometer bricht in eine rot gestrichelte Linie ab.">
+          <img src="images/de/overview-light.png" width="2560" height="1280" alt="Die Pulse-Übersicht: eine Schlagzeile mit 3 Geräte brauchen dich, darunter 7 von 10 im Takt, und eine Rhythmusleiste je Gerät. Ein stilles Aquarium-Thermometer bricht in eine rot gestrichelte Linie ab.">
         </picture>
       </div>
     </div>
@@ -260,8 +260,8 @@ html[lang="de"] .en, html[lang="en"] .de { display: none !important; }
           <p class="lead"><span class="en">Pulse looks at the one thing that never lies: <strong>how often the device talks.</strong></span><span class="de">Pulse schaut auf das Einzige, was nie lügt: <strong>wie oft das Gerät sich meldet.</strong></span></p>
         </div>
         <div class="shot">
-          <img class="en" src="images/detail.png" width="1040" height="1360" loading="lazy" alt="Device detail: the headline Silent for 5 days, the buttons Battery replaced and Remind tomorrow, and a heartbeat calendar with one row per day where the silent days are red dashed lines.">
-          <img class="de" src="images/de/detail.png" width="1040" height="1360" loading="lazy" alt="Gerätedetail: die Schlagzeile Still seit 5 Tagen, die Knöpfe Batterie gewechselt und Morgen erinnern und ein Herzschlag-Kalender mit einer Zeile je Tag, stille Tage als rot gestrichelte Linien.">
+          <img class="en" src="images/detail.png" width="1040" height="1584" loading="lazy" alt="Device detail: the headline Silent for 5 days, the buttons Remind tomorrow and Battery replaced, a heartbeat calendar with one row per day where the silent days are red dashed lines, and the battery with its forecast status.">
+          <img class="de" src="images/de/detail.png" width="1040" height="1584" loading="lazy" alt="Gerätedetail: die Schlagzeile Still seit 5 Tagen, die Knöpfe Morgen erinnern und Batterie gewechselt, ein Herzschlag-Kalender mit einer Zeile je Tag, stille Tage als rot gestrichelte Linien, und die Batterie mit dem Stand der Vorhersage.">
         </div>
       </div>
       <div class="facts">
@@ -292,9 +292,11 @@ html[lang="de"] .en, html[lang="en"] .de { display: none !important; }
         <div>
           <ul class="points">
             <li><b><span class="en">Restart echoes don't count.</span><span class="de">Neustart-Echos zählen nicht.</span></b> <span class="en">Values that Zigbee2MQTT or Home Assistant replay after a restart are never taken as a sign of life.</span><span class="de">Werte, die Zigbee2MQTT oder Home Assistant nach einem Neustart erneut schicken, gelten nie als Lebenszeichen.</span></li>
-            <li><b><span class="en">Cross-check.</span><span class="de">Gegenprobe.</span></b> <span class="en">Pair a lock with its door contact. If the lock keeps reporting and the contact doesn't, Pulse notices early.</span><span class="de">Schloss und Türkontakt als Partner: meldet sich das Schloss weiter und der Kontakt nicht, merkt Pulse es früh.</span></li>
+            <li><b><span class="en">Cross-check.</span><span class="de">Gegenprobe.</span></b> <span class="en">Pair a lock with its door contact. If the lock keeps reporting and the contact doesn't, Pulse notices early. Pulse also suggests partners that are often active together.</span><span class="de">Schloss und Türkontakt als Partner: meldet sich das Schloss weiter und der Kontakt nicht, merkt Pulse es früh. Geräte, die oft gemeinsam aktiv sind, schlägt Pulse selbst als Partner vor.</span></li>
             <li><b><span class="en">Battery changes.</span><span class="de">Batteriewechsel.</span></b> <span class="en">Detected from a voltage or level jump or a Zigbee re-join, with a history per device. NiMH rechargeables are exempt from percentage rules because their percentage says nothing.</span><span class="de">Erkannt am Spannungs- oder Füllstandssprung oder einer Zigbee-Neuanmeldung, mit Historie je Gerät. NiMH-Akkus sind von Prozentregeln ausgenommen, ihr Prozentwert sagt nichts.</span></li>
-            <li><b><span class="en">Honest about gaps.</span><span class="de">Ehrlich bei Lücken.</span></b> <span class="en">Times when Home Assistant wasn't running are hatched, not shown as silence.</span><span class="de">Zeiten, in denen Home Assistant nicht lief, werden schraffiert, nicht als Stille gezeigt.</span></li>
+            <li><b><span class="en">Honest about gaps.</span><span class="de">Ehrlich bei Lücken.</span></b> <span class="en">Times when Home Assistant wasn't running are hatched and never count as silence.</span><span class="de">Zeiten, in denen Home Assistant nicht lief, werden schraffiert und zählen nie als Stille.</span></li>
+            <li><b><span class="en">Battery forecast.</span><span class="de">Batterie-Vorhersage.</span></b> <span class="en">From the long-term statistics Pulse estimates a rough range such as "about 2 to 5 months" and lists the batteries due in the next eight weeks. Coarse or unreliable levels get no forecast.</span><span class="de">Aus der Langzeitstatistik schätzt Pulse einen groben Bereich wie „etwa 2 bis 5 Monate“ und listet die Batterien, die in den nächsten acht Wochen fällig werden. Grobe oder unzuverlässige Werte bekommen keine Vorhersage.</span></li>
+            <li><b><span class="en">Cloud outages stay calm.</span><span class="de">Cloud-Ausfälle bleiben ruhig.</span></b> <span class="en">When several devices of one cloud integration go quiet together, Pulse sends one calm message instead of an alarm per device.</span><span class="de">Verstummen mehrere Geräte einer Cloud-Integration gemeinsam, schickt Pulse eine ruhige Mitteilung statt eines Alarms je Gerät.</span></li>
           </ul>
         </div>
       </div>
@@ -313,6 +315,7 @@ html[lang="de"] .en, html[lang="en"] .de { display: none !important; }
             <li><b><span class="en">Critical alerts</span><span class="de">Kritische Mitteilungen</span></b> <span class="en">break through Do Not Disturb when an important device fails.</span><span class="de">durchbrechen „Nicht stören“, wenn ein wichtiges Gerät ausfällt.</span></li>
             <li><b><span class="en">Buttons</span><span class="de">Knöpfe</span></b> <span class="en">in the notification: Battery replaced, Remind tomorrow.</span><span class="de">in der Mitteilung: Batterie gewechselt, Morgen erinnern.</span></li>
             <li><b><span class="en">One message for an outage.</span><span class="de">Eine Mitteilung bei Ausfall.</span></b> <span class="en">If a hub or bridge takes many devices down at once, you get one message naming them, not forty.</span><span class="de">Reißt eine Bridge viele Geräte auf einmal mit, kommt eine Mitteilung mit den Namen, nicht vierzig.</span></li>
+            <li><b><span class="en">Batteries to buy</span><span class="de">Batterien zum Kaufen</span></b> <span class="en">in the daily summary, from the forecast.</span><span class="de">in der täglichen Zusammenfassung, aus der Vorhersage.</span></li>
           </ul>
         </div>
         <div class="shot">
@@ -329,11 +332,11 @@ html[lang="de"] .en, html[lang="en"] .de { display: none !important; }
       <div class="head center">
         <p class="eyebrow">Zigbee2MQTT</p>
         <h2><span class="en">One switch.<br>Every heartbeat.</span><span class="de">Ein Schalter.<br>Jeder Herzschlag.</span></h2>
-        <p class="lead"><span class="en">Many sensors only send when a value changes. With one switch Pulse turns on <span class="mono">last_seen</span> and availability in Zigbee2MQTT, so it also sees the reports that changed nothing. Battery devices send nothing extra.</span><span class="de">Viele Sensoren senden nur, wenn sich ein Wert ändert. Mit einem Schalter aktiviert Pulse <span class="mono">last_seen</span> und Verfügbarkeit in Zigbee2MQTT und sieht so auch die Meldungen, die nichts geändert haben. Batteriegeräte senden nichts zusätzlich.</span></p>
+        <p class="lead"><span class="en">Many sensors only send when a value changes. With one switch Pulse turns on <span class="mono">last_seen</span> and availability in Zigbee2MQTT, so it also sees the reports that changed nothing. A second switch turns on the health check, so Pulse spots devices that still talk to the network but no longer send values. Both only after you confirm. Battery devices send nothing extra.</span><span class="de">Viele Sensoren senden nur, wenn sich ein Wert ändert. Mit einem Schalter aktiviert Pulse <span class="mono">last_seen</span> und Verfügbarkeit in Zigbee2MQTT und sieht so auch die Meldungen, die nichts geändert haben. Ein zweiter Schalter aktiviert den Funk-Zähler: Pulse erkennt dann Geräte, die noch funken, aber keine Werte mehr schicken. Beides erst nach deiner Bestätigung. Batteriegeräte senden nichts zusätzlich.</span></p>
       </div>
       <div class="duo">
         <figure>
-          <div class="shot"><img class="en" src="images/welcome.png" width="1160" height="1566" loading="lazy" alt="The welcome sheet: Pulse listens. Knows every rhythm, only listens, tells you in time, and a switch for Zigbee signs of life."><img class="de" src="images/de/welcome.png" width="1160" height="1571" loading="lazy" alt="Das Willkommen-Blatt: Pulse hört zu. Kennt jeden Takt, hört nur zu, sagt rechtzeitig Bescheid, und ein Schalter für Zigbee-Lebenszeichen."></div>
+          <div class="shot"><img class="en" src="images/welcome.png" width="1160" height="1568" loading="lazy" alt="The welcome sheet: Pulse listens. Knows every rhythm, only listens, tells you in time, and a switch for Zigbee signs of life."><img class="de" src="images/de/welcome.png" width="1160" height="1572" loading="lazy" alt="Das Willkommen-Blatt: Pulse hört zu. Kennt jeden Takt, hört nur zu, sagt rechtzeitig Bescheid, und ein Schalter für Zigbee-Lebenszeichen."></div>
           <figcaption class="cap"><span class="en">The welcome sheet, with the one switch that matters.</span><span class="de">Das Willkommen-Blatt, mit dem einen Schalter, der zählt.</span></figcaption>
         </figure>
         <figure class="phone">

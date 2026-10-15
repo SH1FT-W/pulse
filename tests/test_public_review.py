@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 import pytest
 import voluptuous as vol
 
-from common import add_device, seed, tick
+from common import add_device, report_back, seed, tick
 from custom_components.pulse.const import DOMAIN
 
 
@@ -83,8 +83,7 @@ async def test_burst_becomes_one_notification(hass: HomeAssistant, setup):
     await tick(hass, setup["freezer"], timedelta(minutes=1))
     assert len(pushes) == 1
     # Erholt sich eines, kommt „läuft wieder“ wie sonst
-    hass.states.async_set(devices["thermo"].entities["temperature"], "25.4")
-    await hass.async_block_till_done()
+    await report_back(hass, setup["freezer"], devices["thermo"].entities["temperature"])
     assert pushes[-1].data["title"] == "Aquarium Temperatur läuft wieder"
 
 

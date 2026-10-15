@@ -1,6 +1,6 @@
 import { css, html, LitElement, nothing, type PropertyValues, svg } from 'lit';
 import { defineOnce } from './ha';
-import { dayTicks, hourMarks, tickHeight } from './logic';
+import { dayTicks, hourMarks, subtractSpans, tickHeight } from './logic';
 import { t } from './strings';
 import { puls, tokens } from './styles';
 
@@ -92,8 +92,11 @@ export class PulseHeartbeat extends LitElement {
     if (this.silentSince > 0 && this.silentSince < dayEnd && this.now > dayStart) {
       const from = Math.max(this.silentSince, dayStart) - dayStart;
       const to = Math.min(this.now, dayEnd) - dayStart;
-      if (to > from)
-        silent = svg`<line class="silent" x1=${x(from)} x2=${x(to)} y1=${H / 2} y2=${H / 2}></line>`;
+      // Wo Pulse nicht lief, liegt die Schraffur – dort keine Stille-Linie (keine Aussage möglich)
+      const spans = this.noData.map(([a, b]): [number, number] => [a - dayStart, b - dayStart]);
+      silent = subtractSpans(from, to, spans).map(
+        ([a, b]) => svg`<line class="silent" x1=${x(a)} x2=${x(b)} y1=${H / 2} y2=${H / 2}></line>`
+      );
     }
     // Feste 3-px-Striche als HTML (in der skalierten viewBox würden sie zu „Bohnen“)
     const ticks = dayTicks(this.bins[day] ?? [], length, this.binMinutes).map(

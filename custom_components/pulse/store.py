@@ -33,6 +33,8 @@ def default_record() -> dict[str, Any]:
         "notified_before_replace": None,  # für „Rückgängig“ nach „Batterie gewechselt“
         "told": False,  # eine Problem-Mitteilung wurde wirklich zugestellt (nicht nur vorgemerkt)
         "first_seen": None,
+        "partner_dismissed": [],  # verworfene Partner-Vorschläge (Geräte-IDs)
+        "battery_missing_since": None,  # Batterie-Entität ohne Wert seit
     }
 
 
@@ -76,6 +78,13 @@ def migrate(old_minor: int, data: dict[str, Any]) -> dict[str, Any]:
         if isinstance(arrive, dict) and "person" in arrive:
             person = arrive.pop("person")
             arrive["persons"] = [person] if person else []
+    if old_minor < 6:
+        # 1.1: verworfene Partner-Vorschläge, Batterie fehlt seit, gemeldete Cloud-Ausfälle
+        for record in data.get("devices", {}).values():
+            record.setdefault("partner_dismissed", [])
+            record.setdefault("battery_missing_since", None)
+        data.setdefault("cloud_notified", {})
+        data.setdefault("z2m_health_at", None)
     return data
 
 
@@ -90,6 +99,11 @@ class PulseStore:
         # Tag (ISO) der zuletzt geschickten Tageszusammenfassung – und einer noch zurückgehaltenen
         self.summary_sent: str | None = None
         self.summary_pending: str | None = None
+        # Cloud-Integrationen, deren Ausfall schon gemeldet ist (Integration → seit)
+        self.cloud_notified: dict[str, float] = {}
+        self.z2m_health_at: float | None = None
+        # Ein verzögertes Speichern steht an – nicht erneut planen (HA würde es sonst immer weiter schieben)
+        self._save_pending = False
 
     async def async_load(self) -> None:
         data = await self._store.async_load()
@@ -102,6 +116,8 @@ class PulseStore:
         self.uptime = [list(span) for span in data.get("uptime", []) if len(span) == 2]
         self.summary_sent = data.get("summary_sent")
         self.summary_pending = data.get("summary_pending")
+        self.cloud_notified = dict(data.get("cloud_notified") or {})
+        self.z2m_health_at = data.get("z2m_health_at")
 
     def record(self, device_id: str) -> dict[str, Any]:
         if device_id not in self.devices:
@@ -109,9 +125,23 @@ class PulseStore:
         return self.devices[device_id]
 
     def async_delay_save(self) -> None:
-        self._store.async_delay_save(self._data, SAVE_DELAY)
+        """Spätestens nach SAVE_DELAY speichern.
+
+        HAs `Store.async_delay_save` verschiebt ein anstehendes Speichern bei jedem Aufruf nach hinten –
+        Pulse ruft es jede Minute (Laufzeit) und bei jeder Meldung, im Betrieb würde nie gespeichert.
+        Deshalb nur planen, wenn nichts ansteht; der Stand wird erst beim Schreiben gelesen.
+        """
+        if self._save_pending:
+            return
+        self._save_pending = True
+        self._store.async_delay_save(self._write_data, SAVE_DELAY)
+
+    def _write_data(self) -> dict[str, Any]:
+        self._save_pending = False
+        return self._data()
 
     async def async_save(self) -> None:
+        self._save_pending = False
         await self._store.async_save(self._data())
 
     def _data(self) -> dict[str, Any]:
@@ -122,6 +152,8 @@ class PulseStore:
             "uptime": self.uptime,
             "summary_sent": self.summary_sent,
             "summary_pending": self.summary_pending,
+            "cloud_notified": self.cloud_notified,
+            "z2m_health_at": self.z2m_health_at,
         }
 
     async def async_remove(self) -> None:

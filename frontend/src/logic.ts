@@ -2,7 +2,17 @@
 
 import type { HassUser } from './ha';
 import { type StringKey, t } from './strings';
-import type { Device, Level, Settings, Snapshot, Status } from './types';
+import type {
+  CloudOutage,
+  Device,
+  DueBattery,
+  Forecast,
+  ForecastReason,
+  Level,
+  Settings,
+  Snapshot,
+  Status,
+} from './types';
 
 /**
  * Merkt sich das letzte Ergebnis und rechnet nur neu, wenn sich ein Argument geändert hat (Vergleich
@@ -40,9 +50,14 @@ export function tone(status: Status): Tone {
   return 'ok';
 }
 
-/** Farbe der Rhythmusleiste: Ignorierte grau, sonst nach Status. */
+/** Farbe der Rhythmusleiste: Ignorierte und Geräte einer schweigenden Cloud grau, sonst nach Status. */
 export function rhythmTone(device: Device): Tone {
-  return device.ignored ? 'muted' : tone(device.status);
+  return device.ignored || isCloudOutage(device) ? 'muted' : tone(device.status);
+}
+
+/** Still, weil die Cloud der Integration gerade nicht antwortet (Sammelhinweis statt Einzelalarm). */
+export function isCloudOutage(device: Device): boolean {
+  return !device.ignored && device.reason_key === 'cloud_outage';
 }
 
 export function statusKey(status: Status): StringKey {
@@ -60,10 +75,10 @@ export function monitored(devices: Device[]): Device[] {
   return devices.filter((d) => !d.ignored);
 }
 
-/** Prüfen + Ausgefallen, schlimmste zuerst. */
+/** Prüfen + Ausgefallen, schlimmste zuerst (ohne Geräte einer schweigenden Cloud). */
 export function attention(devices: Device[]): Device[] {
   return monitored(devices)
-    .filter((d) => SEVERITY[d.status] >= 2)
+    .filter((d) => SEVERITY[d.status] >= 2 && !isCloudOutage(d))
     .sort((a, b) => SEVERITY[b.status] - SEVERITY[a.status] || a.name.localeCompare(b.name));
 }
 
@@ -304,17 +319,28 @@ export function timeFormatOf(setting: string | undefined): TimeFormat {
   return undefined;
 }
 
+/**
+ * Zeitpunkt ohne Mehrdeutigkeit: heute nur die Uhrzeit, bis 5 Tage entfernt Wochentag + Uhrzeit,
+ * sonst Datum + Uhrzeit („04.10., 19:30“). Gilt auch für die Zukunft (Erinnerungen).
+ */
 export function formatWhen(
   language: string,
   ts: number,
+  now: number,
   timeZone?: string,
   timeFormat?: TimeFormat
 ): string {
+  const diff = Math.abs(dayNumber(now, timeZone) - dayNumber(ts, timeZone));
+  const day: Intl.DateTimeFormatOptions =
+    diff === 0 ? {} : diff < 6 ? { weekday: 'short' } : { day: '2-digit', month: '2-digit' };
+  const cycle: Intl.DateTimeFormatOptions = timeFormat
+    ? { hourCycle: timeFormat === '12' ? 'h12' : 'h23' }
+    : {};
   return new Intl.DateTimeFormat(language, {
-    weekday: 'short',
+    ...day,
     hour: 'numeric',
     minute: '2-digit',
-    ...(timeFormat ? { hourCycle: timeFormat === '12' ? 'h12' : 'h23' } : {}),
+    ...cycle,
     ...zoneOption(timeZone),
   }).format(new Date(ts * 1000));
 }
@@ -404,13 +430,36 @@ export function shouldDismiss(dy: number, velocity: number): boolean {
   return dy > 120 || (dy > 24 && velocity > 0.5);
 }
 
-/** Filter der Geräteliste (aus der Übersicht): ein Status oder „ignoriert“. */
-export type DeviceFilter = Status | 'ignored';
+/** Filter der Geräteliste (aus Übersicht/Mitteilungen): ein Status, „ignoriert“, wichtig, Batterie. */
+export type DeviceFilter = Status | 'ignored' | 'important' | 'battery';
 
-export function applyFilter(devices: Device[], filter: DeviceFilter | null): Device[] {
+/** Batterie-Thema: schwache/fehlende Batterie oder in den nächsten Wochen fällig (`due` = Geräte-IDs). */
+export function batteryDevices(devices: Device[], due: string[] = []): Device[] {
+  return monitored(devices)
+    .filter(
+      (d) =>
+        due.includes(d.id) ||
+        (d.battery.flag && d.battery.low) ||
+        (SEVERITY[d.status] >= 1 && (d.reason_key ?? '').startsWith('battery'))
+    )
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+export function applyFilter(
+  devices: Device[],
+  filter: DeviceFilter | null,
+  due: string[] = []
+): Device[] {
   if (filter === null) return devices;
   if (filter === 'ignored') return devices.filter((d) => d.ignored);
+  if (filter === 'important') return monitored(devices).filter((d) => d.critical);
+  if (filter === 'battery') return batteryDevices(devices, due);
   return monitored(devices).filter((d) => d.status === filter);
+}
+
+/** Wichtige Geräte (überwacht). */
+export function importantCount(devices: Device[]): number {
+  return monitored(devices).filter((d) => d.critical).length;
 }
 
 /** Kurzes Datum wie in iOS-Listen: „Heute“, „Gestern“, „3. Okt.“, mit Jahr nur wenn nicht dieses. */
@@ -427,9 +476,25 @@ export function shortDate(language: string, ts: number, now: number, timeZone?: 
   }).format(new Date(ts * 1000));
 }
 
-/** Wer gerade etwas braucht: Prüfen/Ausgefallen bekommen „Batterie gewechselt“ als Hauptaktion. */
+/** Wer gerade etwas braucht: Prüfen/Ausgefallen bekommen Aktionen (Wechsel, Erinnern). */
 export function needsAction(device: Device): boolean {
   return !device.ignored && SEVERITY[device.status] >= 2;
+}
+
+/** Begründungen der Stufe „Batterie“ (wie `BATTERY_REASONS` im Server). */
+export const BATTERY_REASONS: ReadonlySet<string> = new Set(['battery_low', 'battery_low_flag']);
+
+/** „Batterie gewechselt“ ist nur bei einem Batterie-Grund die Hauptaktion, sonst „Morgen erinnern“. */
+export function batteryFirst(device: Device): boolean {
+  const b = device.battery;
+  // Auch eine stille Batterie, die schon schwach war, ist fast sicher leer (gleiche 20 % wie der Server)
+  const weak = (b.flag && b.low) || (b.trusted && b.level !== null && b.level <= 20);
+  return BATTERY_REASONS.has(device.reason_key ?? '') || weak;
+}
+
+/** Wichtig umschalten: zurück auf den Automatik-Wert = null (Server entscheidet wieder selbst). */
+export function criticalChange(device: Device, on: boolean): boolean | null {
+  return on === device.critical_auto ? null : on;
 }
 
 /** Zeile unter „Batterien“: wie viele schwach sind (gleiche Schwelle wie der Status) und welche. */
@@ -459,24 +524,39 @@ export function silenceStart(device: Device): number | null {
   return device.silence_from === undefined ? device.last_activity : device.silence_from;
 }
 
+/**
+ * Beginn der Stille für Schlagzeile und Leiste: `silence_start` vom Server (letzte *regelmäßige*
+ * Meldung, vereinzelte danach zählen nicht), sonst wie bisher `silenceStart`.
+ */
+export function quietSince(device: Device): number | null {
+  return typeof device.silence_start === 'number' ? device.silence_start : silenceStart(device);
+}
+
+/** Vereinzelte Meldungen seit Beginn der Stille (0 = echte Stille oder älterer Server). */
+export function strays(device: Device): number {
+  return typeof device.strays === 'number' && device.strays > 0 ? device.strays : 0;
+}
+
 /** Nach „Batterie gewechselt“: wartet auf die erste echte Meldung (Status Beobachten). */
 export function isWaiting(device: Device): boolean {
   return !device.ignored && device.reason_key === 'waiting_first';
 }
 
 /** Begründungen, die den Takt betreffen (nicht nur die Batterie). */
-const OFF_RHYTHM = new Set(['silent', 'silent_new', 'unavailable', 'partner']);
+const OFF_RHYTHM = new Set(['silent', 'silent_new', 'unavailable', 'partner', 'radio_only']);
 const SILENT = new Set(['silent', 'silent_new']);
 
 /** Dauer als Wortgruppe für „seit …“: 12 Minuten, 5 Stunden, 4 Tagen. */
 export function span(language: string, seconds: number): string {
+  // Gleiche Rundung wie der Server (texts.py), damit Pille, Schlagzeile und Begründung dieselbe Zahl nennen
   const s = Math.max(0, seconds);
-  if (s < 3600) return t(language, 'span_minutes', { n: Math.max(1, Math.round(s / 60)) });
-  if (s < 86400) {
+  if (Math.round(s / 60) < 60)
+    return t(language, 'span_minutes', { n: Math.max(1, Math.round(s / 60)) });
+  if (Math.round(s / 3600) < 48) {
     const h = Math.round(s / 3600);
     return h <= 1 ? t(language, 'span_hour') : t(language, 'span_hours', { n: h });
   }
-  const d = Math.floor(s / 86400);
+  const d = Math.round(s / 86400);
   return d <= 1 ? t(language, 'span_day') : t(language, 'span_days', { n: d });
 }
 
@@ -501,7 +581,7 @@ export function isSilent(device: Device): boolean {
   return (
     !device.ignored &&
     SEVERITY[device.status] >= 1 &&
-    silenceStart(device) !== null &&
+    quietSince(device) !== null &&
     SILENT.has(device.reason_key ?? '')
   );
 }
@@ -516,41 +596,65 @@ export interface Hero {
   line1Short: string;
   line2: string;
   line2Short: string;
+  /** Farbe der zweiten Zeile: Verlauf nur, wenn alle im Takt sind */
+  tone: 'accent' | 'warn' | 'crit' | 'plain';
+  /** Unterzeile („2 von 10 im Takt.“), leer wenn nichts zu sagen ist */
+  sub: string;
 }
 
-/** Große Schlagzeile der Übersicht: „9 von 10 Geräten / schlagen im Takt.“ */
+function plainHero(line1: string, line2: string, heroTone: Hero['tone'], sub = ''): Hero {
+  return { line1, line1Short: line1, line2, line2Short: line2, tone: heroTone, sub };
+}
+
+/**
+ * Große Schlagzeile der Übersicht. Braucht ein Gerät dich, steht das vorn („8 Geräte / brauchen
+ * dich.“ in Warn-/Rot-Ton) und „2 von 10 im Takt.“ darunter; sonst „Alle 10 Geräte / schlagen im
+ * Takt.“ (mit Verlauf) bzw. „9 von 10 Geräten / schlagen im Takt.“ (ohne Verlauf).
+ */
 export function hero(language: string, devices: Device[]): Hero {
   const list = monitored(devices);
   const rated = list.filter((d) => d.status !== 'learning');
-  if (!list.length) {
-    const line1 = t(language, 'hero_none1');
-    const line2 = t(language, 'hero_none2');
-    return { line1, line1Short: line1, line2, line2Short: line2 };
-  }
-  if (!rated.length) {
-    const line1 = t(language, 'hero_learn1');
-    const line2 = t(language, 'hero_learn2');
-    return { line1, line1Short: line1, line2, line2Short: line2 };
-  }
+  if (!list.length)
+    return plainHero(t(language, 'hero_none1'), t(language, 'hero_none2'), 'accent');
+  if (!rated.length)
+    return plainHero(t(language, 'hero_learn1'), t(language, 'hero_learn2'), 'accent');
   const off = rated.filter(offRhythm).length;
   const ok = rated.length - off;
+  const need = attention(rated);
+  const needTone = need.some((d) => d.status === 'failed') ? 'crit' : 'warn';
   if (rated.length === 1) {
-    // Einzahl: „Dein einziges Gerät / schlägt im Takt.“ bzw. „… / ist still.“
+    // Einzahl: „Dein einziges Gerät / schlägt im Takt.“ bzw. „… / braucht dich.“ / „… / ist still.“
     const line1 = t(language, 'hero_one');
-    const line2 = t(language, off ? 'hero_beat_off' : 'hero_beat_one');
-    return { line1, line1Short: line1, line2, line2Short: line2 };
+    if (need.length) return plainHero(line1, t(language, 'hero_need_one'), needTone);
+    return plainHero(
+      line1,
+      t(language, off ? 'hero_beat_off' : 'hero_beat_one'),
+      off ? 'plain' : 'accent'
+    );
+  }
+  const sub = t(language, 'hero_sub', { ok, total: rated.length });
+  if (need.length) {
+    const one = need.length === 1;
+    return plainHero(
+      one ? t(language, 'hero_need1_one') : t(language, 'hero_need1', { count: need.length }),
+      t(language, one ? 'hero_need_one' : 'hero_need'),
+      needTone,
+      sub
+    );
   }
   const line2 = t(language, 'hero_beat');
   const line2Short = t(language, 'hero_beat_short');
   if (!off) {
     const line1 = t(language, 'hero_all', { count: rated.length });
-    return { line1, line1Short: line1, line2, line2Short };
+    return { line1, line1Short: line1, line2, line2Short, tone: 'accent', sub: '' };
   }
   return {
     line1: t(language, 'hero_some', { ok, total: rated.length }),
     line1Short: t(language, 'hero_some_short', { ok, total: rated.length }),
     line2,
     line2Short,
+    tone: 'plain',
+    sub: '',
   };
 }
 
@@ -581,7 +685,7 @@ export function heroSentences(
   timeZone?: string
 ): { mentions: Mention[]; more: number; text: string } {
   const list = monitored(devices)
-    .filter((d) => SEVERITY[d.status] >= 1)
+    .filter((d) => SEVERITY[d.status] >= 1 && !isCloudOutage(d))
     .sort((a, b) => SEVERITY[b.status] - SEVERITY[a.status] || a.name.localeCompare(b.name));
   const all = monitored(devices);
   const learning = all.filter((d) => d.status === 'learning').length;
@@ -601,7 +705,15 @@ export function heroSentences(
   }
   const mentions = list.slice(0, 2).map((d) => {
     const key = d.reason_key ?? '';
-    const since = silenceStart(d);
+    const since = quietSince(d);
+    if (SILENT.has(key) && since !== null && strays(d) > 0) {
+      // Sterbender Sensor: seit Tagen kaum noch, zwischendurch eine vereinzelte Meldung
+      const day = sinceDay(language, since, now, timeZone);
+      const last = ago(language, d.last_activity, now).replace(/\.$/, '');
+      return day
+        ? mention(language, 'sent_strays_since', d, { day, last })
+        : mention(language, 'sent_strays_for', d, { span: span(language, now - since), last });
+    }
     if (SILENT.has(key) && since !== null) {
       const day = sinceDay(language, since, now, timeZone);
       return day
@@ -612,6 +724,9 @@ export function heroSentences(
     if (key === 'battery_low') return mention(language, 'sent_battery_low', d, {});
     if (key === 'battery_soon') return mention(language, 'sent_battery', d, {});
     if (key === 'unavailable') return mention(language, 'sent_unavailable', d, {});
+    if (key === 'startup_waiting') return mention(language, 'sent_startup', d, {});
+    if (key === 'radio_only') return mention(language, 'sent_radio_only', d, {});
+    if (key === 'battery_missing') return mention(language, 'sent_battery_missing', d, {});
     if (key === 'partner')
       return mention(language, 'sent_partner', d, { partner: d.partner_name ?? '' });
     return mention(language, 'sent_other', d, { reason: d.reason });
@@ -650,7 +765,10 @@ export function monitorGroups(devices: Device[]): { key: MonitorKey; devices: De
   const byName = (a: Device, b: Device) => a.name.localeCompare(b.name);
   const sections: { key: MonitorKey; devices: Device[] }[] = [
     { key: 'need', devices: attention(list) },
-    { key: 'watch', devices: list.filter((d) => d.status === 'watch').sort(byName) },
+    {
+      key: 'watch',
+      devices: list.filter((d) => d.status === 'watch' || isCloudOutage(d)).sort(byName),
+    },
     { key: 'rhythm', devices: list.filter((d) => d.status === 'ok').sort(byName) },
     { key: 'learning', devices: list.filter((d) => d.status === 'learning').sort(byName) },
   ];
@@ -662,9 +780,11 @@ export const ROOMS_FROM = 12;
 
 /** „Seit 4 Tagen still“ für die abbrechende Leiste – nur bei Stille, nicht bei schwacher Batterie. */
 export function silenceFlag(language: string, device: Device, now: number): string | null {
-  const since = silenceStart(device);
+  const since = quietSince(device);
   if (!isSilent(device) || since === null) return null;
-  return t(language, 'flag_silent', { span: span(language, now - since) });
+  return t(language, strays(device) ? 'flag_strays' : 'flag_silent', {
+    span: span(language, now - since),
+  });
 }
 
 /** Pille in der Leiste: „Seit 4 Tagen still“, „Wartet“ (nach Batteriewechsel) oder „Lernt noch“. */
@@ -684,6 +804,7 @@ export function statusWord(
   now: number
 ): { text: string; tone: Tone } | null {
   if (device.ignored) return { text: t(language, 'ignored'), tone: 'muted' };
+  if (isCloudOutage(device)) return { text: t(language, 'status_cloud'), tone: 'muted' };
   if (isWaiting(device)) return { text: t(language, 'status_waiting'), tone: 'warn' };
   const level = device.battery.level;
   if (device.status === 'watch' && device.reason_key?.startsWith('battery') && level !== null)
@@ -738,15 +859,23 @@ export function detailHeadline(
 ): { text: string; tone: Tone | 'accent' } {
   if (device.ignored) return { text: t(language, 'dh_ignored'), tone: 'muted' };
   const key = device.reason_key ?? '';
-  const since = silenceStart(device);
+  const since = quietSince(device);
   if (isSilent(device) && since !== null) {
     const text =
       SEVERITY[device.status] >= 2
-        ? t(language, 'dh_silent', { span: span(language, now - since) })
+        ? t(language, strays(device) ? 'dh_strays' : 'dh_silent', {
+            span: span(language, now - since),
+          })
         : t(language, 'dh_watch');
     return { text, tone: tone(device.status) };
   }
+  if (isCloudOutage(device)) return { text: t(language, 'dh_cloud'), tone: 'muted' };
   if (isWaiting(device)) return { text: t(language, 'dh_waiting'), tone: 'warn' };
+  if (key === 'startup_waiting') return { text: t(language, 'dh_startup'), tone: 'warn' };
+  if (key === 'radio_only')
+    return { text: t(language, 'dh_radio_only'), tone: tone(device.status) };
+  if (key === 'battery_missing')
+    return { text: t(language, 'dh_battery_missing'), tone: tone(device.status) };
   if (key === 'unavailable')
     return { text: t(language, 'dh_unavailable'), tone: tone(device.status) };
   if (key === 'partner') return { text: t(language, 'dh_partner'), tone: tone(device.status) };
@@ -763,13 +892,14 @@ export function detailHeadline(
 export function detailText(
   language: string,
   device: Device,
+  now: number,
   timeZone?: string,
   timeFormat?: TimeFormat
 ): string {
   if (isSilent(device) && device.typical !== null && device.last_activity !== null)
     return t(language, 'detail_every', {
       every: every(language, device.typical).replace(/\.$/, ''),
-      when: formatWhen(language, device.last_activity, timeZone, timeFormat),
+      when: formatWhen(language, device.last_activity, now, timeZone, timeFormat),
     });
   if (device.status === 'learning' && !device.ignored) return t(language, 'learning_hint');
   return device.reason;
@@ -887,6 +1017,11 @@ const MAX_STRAYS = 2;
 export function silentIndex(device: Device, dayStarts: number[]): number {
   const since = silenceStart(device);
   if (!isSilent(device) || since === null || dayStarts.length < 2) return -1;
+  // Neuer Server: Beginn der Stille steht fest (Ausreißer-Regel dort) – Fenster nach dieser Meldung
+  if (typeof device.silence_start === 'number') {
+    const at = stripIndex(device.silence_start, dayStarts);
+    return at < 0 ? 0 : at + 1;
+  }
   const days = dayStarts.length - 1;
   // Mittlere Fensterlänge (für die Lücke in Fenstern) – an der Zeitumstellung kaum anders
   const size = ((dayStarts[days] ?? 0) - (dayStarts[0] ?? 0)) / (days * WINDOWS_PER_DAY);
@@ -966,8 +1101,7 @@ export function arrivePersons(settings: Settings): string[] {
  */
 export function settingsHero(
   language: string,
-  settings: Settings,
-  recipients: string
+  settings: Settings
 ): { line1: string; line2: string; sub: string } {
   const q = settings.quiet;
   // Gleiche Stufen zusammenfassen: „Ausfälle sofort, Prüfen und Batterien in der Zusammenfassung.“
@@ -992,6 +1126,105 @@ export function settingsHero(
     line2: q.enabled
       ? t(language, 'set_quiet', { start: q.start, end: q.end })
       : t(language, 'set_no_quiet'),
-    sub: [recipients ? `${recipients}.` : '', levels].filter(Boolean).join(' '),
+    // Empfänger stehen schon im Tagesband daneben – hier nur, was wann kommt
+    sub: levels,
   };
+}
+
+/**
+ * Strecke [from, to] ohne die Lücken (z. B. Zeiten, in denen Pulse nicht lief): die Stille-Linie
+ * wird dort unterbrochen, statt über der Schraffur zu liegen. Alle Werte im selben Maß (0–1 o. Ä.).
+ */
+export function subtractSpans(
+  from: number,
+  to: number,
+  gaps: [number, number][]
+): [number, number][] {
+  let parts: [number, number][] = to > from ? [[from, to]] : [];
+  for (const [a, b] of gaps) {
+    parts = parts.flatMap(([x, y]): [number, number][] => {
+      if (b <= x || a >= y) return [[x, y]];
+      const out: [number, number][] = [];
+      if (a > x) out.push([x, a]);
+      if (b < y) out.push([b, y]);
+      return out;
+    });
+  }
+  return parts;
+}
+
+// ── 1.1: Vorhersage, fällige Batterien, Cloud-Ausfälle ─────────────────────
+
+const FORECAST_REASONS: Record<ForecastReason, StringKey> = {
+  too_short: 'forecast_too_short',
+  flat: 'forecast_flat',
+  coarse: 'forecast_coarse',
+  untrusted: 'forecast_untrusted',
+  noisy: 'forecast_noisy',
+};
+
+/**
+ * Laufzeit als grober Bereich – nie tagesgenau: „Hält noch ca. 3–5 Wochen“, „… 2–4 Monate“,
+ * „… 1–2 Jahre“, unter ~10 Tagen „Hält nur noch wenige Tage“. Ohne Vorhersage der kurze Grund
+ * (oder leer, wenn der Server keinen nennt).
+ */
+export function forecastText(
+  language: string,
+  forecast: Forecast | null | undefined,
+  reason?: ForecastReason | null
+): string {
+  if (!forecast)
+    return reason && reason in FORECAST_REASONS ? t(language, FORECAST_REASONS[reason]) : '';
+  const lo = Math.max(0, Math.min(forecast.days_min, forecast.days_max));
+  const hi = Math.max(forecast.days_min, forecast.days_max);
+  if (hi <= 10) return t(language, 'forecast_days');
+  const range = (unit: number): { lo: number; hi: number } => {
+    const a = Math.max(1, Math.floor(lo / unit));
+    return { lo: a, hi: Math.max(a + 1, Math.ceil(hi / unit)) };
+  };
+  if (hi <= 70) return t(language, 'forecast_weeks', range(7));
+  if (hi <= 540) return t(language, 'forecast_months', range(30.44));
+  return t(language, 'forecast_years', range(365.25));
+}
+
+/** „2× CR2032, 1× AA“ – fällige Batterien nach Typ zusammengezählt (unbekannter Typ zuletzt). */
+export function dueLine(language: string, due: DueBattery[] | undefined): string {
+  if (!due?.length) return '';
+  const byType = new Map<string, number>();
+  const untyped: string[] = [];
+  for (const item of due) {
+    if (!item.type) untyped.push(item.name);
+    else byType.set(item.type, (byType.get(item.type) ?? 0) + Math.max(1, item.count ?? 1));
+  }
+  const items = [...byType.entries()]
+    .sort(([a, x], [b, y]) => y - x || a.localeCompare(b))
+    .map(([type, count]) => t(language, 'battery_count_type', { count, type }));
+  // Ohne bekannten Typ: das Gerät nennen, damit man weiß, wo man nachsehen muss
+  if (untyped.length) items.push(t(language, 'due_untyped', { names: untyped.join(', ') }));
+  return t(language, 'due_line', { items: items.join(', ') });
+}
+
+/** Anzeigename einer Integration aus ihrer Domain: netatmo → Netatmo, tado_x → Tado x. */
+export function integrationName(domain: string): string {
+  const name = domain.replaceAll('_', ' ').trim();
+  return name ? `${name.charAt(0).toUpperCase()}${name.slice(1)}` : domain;
+}
+
+/** Ruhiger Sammelhinweis je schweigender Cloud: „Netatmo-Cloud antwortet nicht – 3 Geräte betroffen“. */
+export function cloudLines(language: string, outages: CloudOutage[] | undefined): string[] {
+  return (outages ?? [])
+    .filter((o) => o.count > 0)
+    .map((o) =>
+      t(language, o.count === 1 ? 'cloud_outage_one' : 'cloud_outage_many', {
+        name: integrationName(o.integration),
+        count: o.count,
+      })
+    );
+}
+
+/** Partner-Vorschläge, die angeboten werden: nur ohne gesetzten Partner, höchstens 3. */
+export function partnerSuggestions(device: Device): { id: string; name: string }[] {
+  if (device.partner || device.ignored) return [];
+  // Ein Vorschlag auf einmal (der stärkste) – verworfen kommt der nächste
+  return (device.partner_suggestions ?? []).slice(0, 1);
 }

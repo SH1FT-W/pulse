@@ -11,12 +11,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er, issue_registry as ir
+from homeassistant.util import dt as dt_util
 import pytest
 from pytest_homeassistant_custom_component.common import (
     async_capture_events,
 )
 
-from common import add_device, seed, tick
+from common import add_device, report_back, seed, tick
 from custom_components.pulse.const import DOMAIN, EVENT_BATTERY_REPLACED, EVENT_STATUS_CHANGED
 from custom_components.pulse.monitor import PulseMonitor
 
@@ -171,8 +172,15 @@ async def test_silence_becomes_failed_with_repair_event_and_push(hass: HomeAssis
         if e.platform == DOMAIN and e.device_id == thermo_id and e.translation_key == "problem"
     )
     assert hass.states.get(problem).state == "on"
-    # Gerät meldet sich wieder → gut, Hinweis weg, „läuft wieder“
+    # Eine einzelne Meldung nach langer Stille ist ein Ausreißer (sterbender Sensor) – noch kein „läuft wieder“
     hass.states.async_set(devices["thermo"].entities["temperature"], "25.4")
+    await hass.async_block_till_done()
+    assert thermo.status == "failed" and thermo.strays == 1
+    assert monitor.reason(thermo).startswith("Seit 7 Stunden kaum noch Meldungen, zuletzt vor einer Minute")
+    assert len(pushes) == 1
+    # Die zweite im üblichen Takt: läuft wieder → gut, Hinweis weg, „läuft wieder“
+    setup["freezer"].tick(timedelta(minutes=30))
+    hass.states.async_set(devices["thermo"].entities["temperature"], "25.6")
     await hass.async_block_till_done()
     assert thermo.status == "ok"
     assert ir.async_get(hass).async_get_issue(DOMAIN, f"failed_{thermo_id}") is None
@@ -234,6 +242,7 @@ async def test_battery_replacement_auto_and_manual(hass: HomeAssistant, setup):
     hass.states.async_set(voltage, "1500")
     await hass.async_block_till_done()
     assert replaced == []  # erst vorgemerkt
+    setup["freezer"].tick(timedelta(seconds=30))
     hass.states.async_set(voltage, "1500")  # gleicher Wert erneut gemeldet
     await hass.async_block_till_done()
     assert [e.data["source"] for e in replaced] == ["auto"]
@@ -244,6 +253,7 @@ async def test_battery_replacement_auto_and_manual(hass: HomeAssistant, setup):
     # derselbe Wechsel zählt nicht doppelt
     hass.states.async_set(voltage, "1100")
     hass.states.async_set(voltage, "1500")
+    setup["freezer"].tick(timedelta(seconds=30))
     hass.states.async_set(voltage, "1500")
     await hass.async_block_till_done()
     assert len(replaced) == 1
@@ -283,12 +293,14 @@ async def test_battery_restart_sequence_is_no_replacement(hass: HomeAssistant, s
     settle(monitor)
     hass.states.async_set(battery, "20")
     hass.states.async_set(battery, "100")
+    setup["freezer"].tick(timedelta(seconds=30))
     hass.states.async_set(battery, "21")
     await hass.async_block_till_done()
     assert replaced == []
     # Prozent: 20 → 100 ohne Echo, bestätigt → Wechsel
     hass.states.async_set(battery, "20")
     hass.states.async_set(battery, "100")
+    setup["freezer"].tick(timedelta(seconds=30))
     hass.states.async_set(battery, "100")
     await hass.async_block_till_done()
     assert [e.data["source"] for e in replaced] == ["auto"]
@@ -310,6 +322,7 @@ async def test_voltage_in_volts_is_normalised(hass: HomeAssistant, setup):
     assert monitor.serialize(door, time.time())["battery"]["voltage"] == pytest.approx(1220)
     assert replaced == []
     hass.states.async_set(voltage, "1.5", {"unit_of_measurement": "V"})
+    setup["freezer"].tick(timedelta(seconds=30))
     hass.states.async_set(voltage, "1.5", {"unit_of_measurement": "V"})
     await hass.async_block_till_done()
     assert [e.data["source"] for e in replaced] == ["auto"]
@@ -461,12 +474,14 @@ async def test_quiet_queue_keeps_latest_per_device(hass: HomeAssistant, setup):
     seed(monitor, thermo_id, 1800, 200, time.time() - 7 * 3600)
     await tick(hass, setup["freezer"], timedelta(minutes=1))
     assert len(monitor.notifier.queue) == 1
-    hass.states.async_set(devices["thermo"].entities["temperature"], "25.4")
-    await hass.async_block_till_done()
+    await report_back(hass, setup["freezer"], devices["thermo"].entities["temperature"])
     assert monitor.devices[thermo_id].status == "ok"
     assert not monitor.notifier.queue
-    setup["freezer"].move_to("2026-10-04 06:00:00+00:00")
-    hass.states.async_set(devices["thermo"].entities["temperature"], "25.6")
+    # Die Nacht über im Takt gemeldet; nach der Ruhezeit wird nichts nachgeliefert
+    morning = dt_util.parse_datetime("2026-10-04 06:00:00+00:00")
+    assert morning is not None
+    seed(monitor, thermo_id, 1800, 200, morning.timestamp() - 60)
+    setup["freezer"].move_to(morning)
     await tick(hass, setup["freezer"], timedelta(minutes=1))
     assert not setup["pushes"]
 

@@ -8,6 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import area_registry as ar, device_registry as dr, entity_registry as er
 
 from .const import (
+    CLOUD_INTEGRATIONS,
     CRITICAL_BINARY_CLASSES,
     DOMAIN,
     EXCLUDED_DOMAINS,
@@ -41,10 +42,16 @@ class DeviceSpec:
     entities: list[str] = field(default_factory=list)  # zählen als Lebenszeichen
     actions: list[str] = field(default_factory=list)  # zählen für die Gegenprobe
     battery: str | None = None
+    battery_low: str | None = None  # Warn-Sensor „Batterie schwach“ neben einem Prozentwert
     voltage: str | None = None
     critical: bool = False
     ieee: str | None = None
     icon: str = "mdi:battery-heart-variant"
+
+    @property
+    def cloud(self) -> bool:
+        """Cloud-Integration mit Abfragetakt – ihr Takt ist der der Cloud, nicht der des Geräts."""
+        return self.integration in CLOUD_INTEGRATIONS
 
 
 # Symbol nach dem, was das Gerät misst (erste passende Regel gewinnt)
@@ -115,10 +122,12 @@ def discover(hass: HomeAssistant) -> dict[str, DeviceSpec]:
             continue
         if any(e.domain == "sensor" and _device_class(e) in EXCLUDED_SENSOR_CLASSES for e in own):
             continue
-        battery = next(
+        percent = next(
             (e.entity_id for e in own if e.domain == "sensor" and _device_class(e) == "battery"),
             None,
-        ) or next((e.entity_id for e in own if e.domain == "binary_sensor" and _device_class(e) == "battery"), None)
+        )
+        flag = next((e.entity_id for e in own if e.domain == "binary_sensor" and _device_class(e) == "battery"), None)
+        battery = percent or flag
         if battery is None:
             continue
         # Hauptintegration = die mit den meisten Entitäten (Vorlagen anderer Integrationen am Gerät zählen nicht)
@@ -152,6 +161,7 @@ def discover(hass: HomeAssistant) -> dict[str, DeviceSpec]:
             entities=[e.entity_id for e in mine],
             actions=actions,
             battery=battery,
+            battery_low=flag if percent else None,
             voltage=voltage,
             critical=critical,
             ieee=ieee_of(device),

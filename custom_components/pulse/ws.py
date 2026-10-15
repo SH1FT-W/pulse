@@ -55,6 +55,8 @@ def async_register(hass: HomeAssistant) -> None:
         ws_snooze,
         ws_settings,
         ws_enable_z2m,
+        ws_enable_z2m_health,
+        ws_partner_dismiss,
         ws_test,
         ws_summary,
         ws_heartbeat,
@@ -70,16 +72,19 @@ async def ws_subscribe(hass: HomeAssistant, connection: websocket_api.ActiveConn
     language = msg.get("language")
 
     @callback
-    def send() -> None:
+    def send(fresh: bool = False) -> None:
         monitor = _monitor(hass)
-        payload: dict[str, Any] = monitor.snapshot(language) if monitor else {"loaded": False}
+        payload: dict[str, Any] = {"loaded": False}
+        if monitor is not None:
+            # Gleicher Stand für alle offenen Panels: einmal je Update gebaut (Kopie oben, Geräte geteilt)
+            payload = dict(monitor.snapshot(language) if fresh else monitor.snapshot_cached(language))
         payload["battery_types"] = list(BATTERY_TYPES)
         payload["chemistries"] = list(CHEMISTRIES)
         connection.send_message(websocket_api.event_message(msg["id"], payload))
 
     connection.subscriptions[msg["id"]] = async_dispatcher_connect(hass, SIGNAL_UPDATE, send)
     connection.send_result(msg["id"])
-    send()
+    send(fresh=True)
 
 
 @websocket_api.websocket_command(
@@ -192,6 +197,39 @@ async def ws_enable_z2m(hass: HomeAssistant, connection: websocket_api.ActiveCon
         connection.send_error(msg["id"], "no_z2m", "Zigbee2MQTT not found")
         return
     await monitor.async_enable_z2m()
+    connection.send_result(msg["id"])
+
+
+@websocket_api.websocket_command({vol.Required("type"): "pulse/enable_z2m_health"})
+@websocket_api.require_admin
+@websocket_api.async_response
+async def ws_enable_z2m_health(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Health-Prüfung (Funk-Zähler) in Zigbee2MQTT einschalten – das Panel fragt vorher nach."""
+    if (monitor := _need(hass, connection, msg)) is None:
+        return
+    if monitor.z2m is None:
+        connection.send_error(msg["id"], "no_z2m", "Zigbee2MQTT not found")
+        return
+    await monitor.async_enable_z2m_health()
+    connection.send_result(msg["id"])
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "pulse/partner_suggestion_dismiss",
+        vol.Required("device_id"): str,
+        vol.Required("partner_id"): str,
+    }
+)
+@websocket_api.require_admin
+@callback
+def ws_partner_dismiss(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]) -> None:
+    """Partner-Vorschlag dauerhaft verwerfen."""
+    if (monitor := _need_device(hass, connection, msg)) is None:
+        return
+    monitor.dismiss_suggestion(msg["device_id"], msg["partner_id"])
     connection.send_result(msg["id"])
 
 

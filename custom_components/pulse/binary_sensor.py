@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import SIGNAL_NEW_DEVICES
+from .const import SIGNAL_NEW_DEVICES, SIGNAL_REMOVED_DEVICES
 from .entity import PulseDeviceEntity
 
 if TYPE_CHECKING:
@@ -33,7 +33,14 @@ async def async_setup_entry(
         async_add_entities(ProblemSensor(monitor, d) for d in fresh)
 
     add(list(monitor.devices))
+
+    @callback
+    def removed(device_ids: list[str]) -> None:
+        # Entitäten sind aus der Registry entfernt – kommt das Gerät zurück, entstehen sie neu
+        known.difference_update(device_ids)
+
     entry.async_on_unload(async_dispatcher_connect(hass, SIGNAL_NEW_DEVICES, add))
+    entry.async_on_unload(async_dispatcher_connect(hass, SIGNAL_REMOVED_DEVICES, removed))
 
 
 class ProblemSensor(PulseDeviceEntity, BinarySensorEntity):

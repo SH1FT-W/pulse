@@ -94,6 +94,7 @@ export class PulsePanel extends LitElement {
     groupBy: { state: true },
     filter: { state: true },
     confirmZigbee: { state: true },
+    confirmHealth: { state: true },
   };
 
   declare hass: HomeAssistant | undefined;
@@ -110,6 +111,8 @@ export class PulsePanel extends LitElement {
   declare filter: DeviceFilter | null;
   /** Rückfrage vor dem Schreiben in Zigbee2MQTT */
   declare confirmZigbee: boolean;
+  /** Rückfrage vor dem Einschalten der Z2M-Health-Prüfung („Funk-Zähler“) */
+  declare confirmHealth: boolean;
 
   private unsub: Promise<Unsubscribe> | null = null;
   private clock: number | undefined;
@@ -133,6 +136,7 @@ export class PulsePanel extends LitElement {
     this.groupBy = 'area';
     this.filter = null;
     this.confirmZigbee = false;
+    this.confirmHealth = false;
   }
 
   private get language(): string {
@@ -328,19 +332,35 @@ export class PulsePanel extends LitElement {
   }
 
   /** Herzschlag-Kalender fürs Gerätedetail (Server rechnet aus seinem Zwischenspeicher). */
+  /** Fehler gehen ans Gerätedetail weiter – es zeigt dann einen Hinweis mit „Neu laden“. */
   private readonly fetchHeartbeat = async (ids: string[]): Promise<unknown> => {
     if (!this.hass) return null;
-    try {
-      return await this.hass.callWS<unknown>({ type: 'pulse/heartbeat', device_ids: ids });
-    } catch {
-      return null;
-    }
+    return await this.hass.callWS<unknown>({ type: 'pulse/heartbeat', device_ids: ids });
   };
 
   private async onConfirmZigbee(): Promise<void> {
     this.confirmZigbee = false;
     await this.call({ type: 'pulse/enable_z2m' }, t(this.language, 'zigbee_sent'));
   }
+
+  private async onConfirmHealth(): Promise<void> {
+    this.confirmHealth = false;
+    await this.call({ type: 'pulse/enable_z2m_health' }, t(this.language, 'zigbee_sent'));
+  }
+
+  private onPartnerDismiss(id: string, partner: string): void {
+    if (this.readonly) return;
+    void this.call({
+      type: 'pulse/partner_suggestion_dismiss',
+      device_id: id,
+      partner_id: partner,
+    });
+  }
+
+  /** Geräte mit bald fälliger Batterie (für den Filter „Batterie“) – gleiches Array, solange gleich. */
+  private readonly dueIds = memoize((snap: Snapshot) =>
+    (snap.summary.due_batteries ?? []).map((x) => x.id)
+  );
 
   private async onTest(): Promise<void> {
     const result = await this.call({ type: 'pulse/test' });
@@ -460,6 +480,10 @@ export class PulsePanel extends LitElement {
           void this.call({ type: 'pulse/settings', settings: e.detail.settings })}
         @test=${() => void this.onTest()}
         @summary=${() => void this.onSummary()}
+        @show-devices=${(e: CustomEvent<{ filter: DeviceFilter | null }>) => {
+          this.filter = e.detail.filter;
+          this.go('devices');
+        }}
       ></pulse-settings>`;
     }
     if (this.view === 'devices') {
@@ -477,6 +501,7 @@ export class PulsePanel extends LitElement {
         .readonly=${this.readonly}
         .groupBy=${this.groupBy}
         .filter=${this.filter}
+        .dueIds=${this.dueIds(snap)}
         @group-change=${(e: CustomEvent<{ group: GroupBy }>) => {
           this.groupBy = e.detail.group;
         }}
@@ -506,11 +531,14 @@ export class PulsePanel extends LitElement {
   private renderContent() {
     const lang = this.language;
     const snap = this.snapshot;
-    if (this.error) return html`<ha-alert alert-type="error">${this.error}</ha-alert>`;
-    if (!snap) return html`<p class="muted center">${t(lang, 'loading')}</p>`;
+    // Abo abgebrochen: den letzten Stand weiter zeigen, darüber ein Hinweis (verbindet sich neu)
+    const lost = this.error
+      ? html`<ha-alert alert-type="warning" title=${this.error}>${t(lang, 'connection_lost')}</ha-alert>`
+      : nothing;
+    if (!snap) return this.error ? lost : html`<p class="muted center">${t(lang, 'loading')}</p>`;
     if (snap.loaded === false)
-      return html`<ha-alert alert-type="info">${t(lang, 'not_loaded')}</ha-alert>`;
-    return this.renderView(snap);
+      return html`${lost}<ha-alert alert-type="info">${t(lang, 'not_loaded')}</ha-alert>`;
+    return html`${lost}${this.renderView(snap)}`;
   }
 
   render() {
@@ -525,7 +553,7 @@ export class PulsePanel extends LitElement {
           <ha-icon-button slot="trigger" .label=${t(lang, 'more')}>
             <ha-icon icon="mdi:dots-vertical"></ha-icon>
           </ha-icon-button>
-          ${this.readonly ? nothing : html`<ha-dropdown-item value="summary"><ha-icon slot="icon" icon="mdi:text-box-outline"></ha-icon>${t(lang, 'summary_now')}</ha-dropdown-item>`}
+          ${this.readonly || this.view === 'settings' ? nothing : html`<ha-dropdown-item value="summary"><ha-icon slot="icon" icon="mdi:text-box-outline"></ha-icon>${t(lang, 'summary_now')}</ha-dropdown-item>`}
           <ha-dropdown-item value="welcome"><ha-icon slot="icon" icon="mdi:hand-wave-outline"></ha-icon>${t(lang, 'show_welcome')}</ha-dropdown-item>
           ${this.readonly ? nothing : html`<ha-dropdown-item value="integration"><ha-icon slot="icon" icon="mdi:cog-outline"></ha-icon>${t(lang, 'open_integration')}</ha-dropdown-item>`}
         </ha-dropdown>
@@ -550,6 +578,11 @@ export class PulsePanel extends LitElement {
         @enable-z2m=${() => {
           if (!this.readonly) this.confirmZigbee = true;
         }}
+        @enable-z2m-health=${() => {
+          if (!this.readonly) this.confirmHealth = true;
+        }}
+        @partner-dismiss=${(e: CustomEvent<{ id: string; partner: string }>) =>
+          this.onPartnerDismiss(e.detail.id, e.detail.partner)}
       >
         ${this.renderHead()} ${this.renderContent()}
         <p class="version muted">${t(lang, 'version', { version: __PULSE_VERSION__ })}</p>
@@ -602,6 +635,24 @@ export class PulsePanel extends LitElement {
                     this.confirmZigbee = false;
                   }}>${t(lang, 'cancel')}</button>
                   <button slot="footer" class="pbtn primary" type="button" @click=${() => void this.onConfirmZigbee()}>
+                    ${t(lang, 'zigbee_confirm_go')}
+                  </button>
+                </pulse-sheet>
+                <pulse-sheet
+                  no-close
+                  .open=${this.confirmHealth}
+                  .heading=${t(lang, 'health_confirm_title')}
+                  .language=${lang}
+                  @closed=${() => {
+                    this.confirmHealth = false;
+                  }}
+                >
+                  <p class="confirm-text">${t(lang, 'health_confirm_text')}</p>
+                  <p class="confirm-text">${t(lang, 'health_confirm_side')}</p>
+                  <button slot="footer" class="pbtn" type="button" @click=${() => {
+                    this.confirmHealth = false;
+                  }}>${t(lang, 'cancel')}</button>
+                  <button slot="footer" class="pbtn primary" type="button" @click=${() => void this.onConfirmHealth()}>
                     ${t(lang, 'zigbee_confirm_go')}
                   </button>
                 </pulse-sheet>`

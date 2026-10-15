@@ -10,7 +10,7 @@ from homeassistant.util import dt as dt_util
 import pytest
 from pytest_homeassistant_custom_component.common import async_capture_events
 
-from common import seed, tick
+from common import report_back, seed, tick
 from custom_components.pulse.const import DOMAIN, EVENT_STATUS_CHANGED
 from custom_components.pulse.store import migrate
 
@@ -41,8 +41,7 @@ async def test_recovered_after_daytime_push_survives_night_queue(hass: HomeAssis
     await tick(hass, setup["freezer"], timedelta(minutes=1))
     assert monitor.devices[thermo_id].status == "failed"
     assert len(monitor.notifier.queue) == 1
-    hass.states.async_set(devices["thermo"].entities["temperature"], "25.4")
-    await hass.async_block_till_done()
+    await report_back(hass, setup["freezer"], devices["thermo"].entities["temperature"])
     assert [m["title"] for m in monitor.notifier.queue] == ["Aquarium Temperatur läuft wieder"]
 
 

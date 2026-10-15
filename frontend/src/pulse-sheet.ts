@@ -114,8 +114,9 @@ export class PulseSheet extends LitElement {
   }
 
   private onClick(event: MouseEvent): void {
-    // Klick direkt auf <dialog> = auf den Hintergrund (der Inhalt liegt in .panel)
-    if (event.target === this.dialog) this.dialog?.close();
+    // Klick direkt auf <dialog> = auf den Hintergrund (der Inhalt liegt in .panel). Rückfragen
+    // (no-close) schließen nur über ihre Knöpfe oder Esc – ein verirrter Tipp daneben bricht nicht ab
+    if (event.target === this.dialog && !this.noClose) this.dialog?.close();
   }
 
   /** Mausrad/Trackpad über dem Hintergrund oder Kopf darf die Seite dahinter nicht scrollen. */

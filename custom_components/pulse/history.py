@@ -2,12 +2,17 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from datetime import timedelta
 import logging
+from typing import Any
 
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
 from homeassistant.util import dt as dt_util
+
+from .battery import LEVEL_LOW
+from .forecast import Forecast, predict
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -16,7 +21,7 @@ NOT_REAL = {STATE_UNAVAILABLE, STATE_UNKNOWN, ""}
 CHUNK = 3  # klein halten: gesprächige Sensoren haben zehntausende Zeilen je Tag
 
 
-def real_reports(states: list[State]) -> tuple[list[float], list[float]]:
+def real_reports(states: Iterable[Any]) -> tuple[list[float], list[float]]:
     """(Lebenszeichen, Aktionen) aus einer Zustandsfolge.
 
     Ein Lebenszeichen ist jede Zeile, deren Vorgänger schon ein echter Wert war – ein Wert direkt nach
@@ -26,6 +31,8 @@ def real_reports(states: list[State]) -> tuple[list[float], list[float]]:
     actions: list[float] = []
     previous: str | None = None
     for state in states:
+        if not isinstance(state, State):
+            continue  # minimal_response liefert für Folgezeilen dicts – hier nicht erwartet
         if state.state in NOT_REAL:
             previous = None
             continue
@@ -63,8 +70,10 @@ async def async_load_history(
                 minimal_response=False,
                 no_attributes=True,
             )
-            for entity_id, rows in result.items():
-                reports[entity_id] = real_reports([s for s in rows if isinstance(s, State)])
+            # Gleich eindampfen und loslassen: nie mehr als eine Portion State-Objekte im Speicher
+            for entity_id in list(result):
+                reports[entity_id] = real_reports(result.pop(entity_id))
+            del result
         return reports
 
     try:
@@ -72,3 +81,29 @@ async def async_load_history(
     except Exception:  # Verlauf ist Zugabe – Pulse lernt notfalls live
         _LOGGER.exception("Verlauf konnte nicht gelesen werden")
         return {}
+
+
+def load_forecasts(
+    hass: HomeAssistant, jobs: list[tuple[str, str, float, bool]], now: float
+) -> dict[str, tuple[Forecast | None, str | None]]:
+    """Im Recorder-Executor: Stundenmittel der Langzeitstatistik je Batterie-Entität → Vorhersage.
+
+    jobs: (Geräte-ID, Batterie-Entität, ab wann, Prozentwert vertrauenswürdig).
+    """
+    from homeassistant.components.recorder.statistics import statistics_during_period
+
+    result: dict[str, tuple[Forecast | None, str | None]] = {}
+    for device_id, entity_id, start, trusted in jobs:
+        if not trusted:
+            result[device_id] = (None, "untrusted")
+            continue
+        try:
+            rows = statistics_during_period(
+                hass, dt_util.utc_from_timestamp(start), None, {entity_id}, "hour", None, {"mean"}
+            ).get(entity_id, [])
+        except Exception:  # Statistik ist Zugabe – ohne sie gibt es eben keine Vorhersage
+            _LOGGER.debug("Statistik für %s nicht lesbar", entity_id, exc_info=True)
+            rows = []
+        points = [(float(row["start"]), float(mean)) for row in rows if (mean := row.get("mean")) is not None]
+        result[device_id] = predict(points, now, float(LEVEL_LOW), trusted)
+    return result

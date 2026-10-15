@@ -4,6 +4,7 @@ import {
   ago,
   applyFilter,
   axisColumns,
+  criticalChange,
   type DeviceFilter,
   dayLabels,
   formatWhen,
@@ -12,6 +13,7 @@ import {
   groupDevices,
   isSilent,
   memoize,
+  needsAction,
   rhythmPill,
   rhythmTone,
   search,
@@ -19,7 +21,6 @@ import {
   statusKey,
   statusWord,
   type TimeFormat,
-  tone,
 } from './logic';
 import { type StringKey, t } from './strings';
 import { monitor, puls, shared, tokens } from './styles';
@@ -50,6 +51,7 @@ export class PulseDevices extends LitElement {
     noData: { attribute: false },
     groupBy: { type: String },
     filter: { attribute: false },
+    dueIds: { attribute: false },
     readonly: { type: Boolean },
     query: { state: true },
     collapsed: { state: true },
@@ -72,6 +74,8 @@ export class PulseDevices extends LitElement {
   declare groupBy: GroupBy;
   /** Vorübergehender Filter aus der Übersicht (Chip mit ✕), unabhängig von der Gruppierung */
   declare filter: DeviceFilter | null;
+  /** Geräte mit bald fälliger Batterie (für den Filter „Batterie“) */
+  declare dueIds: string[];
   /** Nicht-Admin: keine ⋮-Menüs */
   declare readonly: boolean;
   declare query: string;
@@ -91,6 +95,7 @@ export class PulseDevices extends LitElement {
     this.noData = [];
     this.groupBy = 'area';
     this.filter = null;
+    this.dueIds = [];
     this.readonly = false;
     this.query = '';
     this.collapsed = new Set();
@@ -119,8 +124,28 @@ export class PulseDevices extends LitElement {
     if (value === 'details') this.fire('open', { id: device.id });
     else if (value === 'replaced') this.fire('replaced', { id: device.id });
     else if (value === 'later') this.fire('later', { id: device.id });
+    else if (value === 'important')
+      this.fire('device-change', {
+        id: device.id,
+        changes: { critical: criticalChange(device, !device.critical) },
+      });
     else if (value === 'ignore')
       this.fire('device-change', { id: device.id, changes: { ignored: !device.ignored } });
+  }
+
+  private filterName(filter: DeviceFilter): string {
+    const lang = this.language;
+    if (filter === 'ignored') return t(lang, 'ignored');
+    if (filter === 'important') return t(lang, 'filter_important');
+    if (filter === 'battery') return t(lang, 'filter_battery');
+    return t(lang, statusKey(filter));
+  }
+
+  private emptyText(): string {
+    const lang = this.language;
+    if (!this.devices.length) return t(lang, 'no_devices');
+    if (this.query.trim()) return t(lang, 'no_results', { query: this.query });
+    return t(lang, 'filter_empty');
   }
 
   private readonly gapsOf = memoize(gapFractions);
@@ -131,9 +156,9 @@ export class PulseDevices extends LitElement {
     const word = statusWord(lang, d, this.now);
     const time =
       isSilent(d) && d.last_activity !== null
-        ? formatWhen(lang, d.last_activity, this.timeZone, this.timeFormat)
+        ? formatWhen(lang, d.last_activity, this.now, this.timeZone, this.timeFormat)
         : ago(lang, d.last_activity, this.now);
-    const symbol = d.ignored ? 'ok' : tone(d.status);
+    const symbol = d.ignored ? 'ok' : rhythmTone(d);
     const menu = this.readonly
       ? nothing
       : html`<span class="menu"><ha-dropdown placement="bottom-end" @wa-select=${(e: Event) => this.onMenu(d, e)}>
@@ -142,17 +167,28 @@ export class PulseDevices extends LitElement {
           </ha-icon-button>
           <ha-dropdown-item value="details"><ha-icon slot="icon" icon="mdi:information-outline"></ha-icon>${t(lang, 'details')}</ha-dropdown-item>
           <ha-dropdown-item value="replaced"><ha-icon slot="icon" icon="mdi:battery-sync-outline"></ha-icon>${t(lang, 'replaced')}</ha-dropdown-item>
-          <ha-dropdown-item value="later"><ha-icon slot="icon" icon="mdi:bell-sleep-outline"></ha-icon>${t(lang, 'later')}</ha-dropdown-item>
+          ${needsAction(d) ? html`<ha-dropdown-item value="later"><ha-icon slot="icon" icon="mdi:bell-sleep-outline"></ha-icon>${t(lang, 'later')}</ha-dropdown-item>` : nothing}
+          ${
+            d.ignored
+              ? nothing
+              : html`<ha-dropdown-item value="important"><ha-icon slot="icon" icon=${d.critical ? 'mdi:star-off-outline' : 'mdi:star-outline'}></ha-icon>${t(lang, d.critical ? 'unmark_important' : 'mark_important')}</ha-dropdown-item>`
+          }
           <ha-dropdown-item value="ignore">
-            <ha-icon slot="icon" icon=${d.ignored ? 'mdi:eye-outline' : 'mdi:eye-off-outline'}></ha-icon>${t(lang, d.ignored ? 'resume' : 'ignore')}
+            <ha-icon slot="icon" icon=${d.ignored ? 'mdi:eye-outline' : 'mdi:eye-off-outline'}></ha-icon>${t(lang, d.ignored ? 'resume' : 'ignore_action')}
           </ha-dropdown-item>
         </ha-dropdown></span>`;
     return html`<div class="mrow">
       <button class="main rowgrid" type="button" @click=${() => this.fire('open', { id: d.id })}>
         <span class="nm">
           <ha-icon class=${`t-${symbol}`} .icon=${d.icon}></ha-icon>
-          <b>${d.name}</b>
-          ${this.groupBy !== 'area' && d.area ? html`<span class="room">${d.area}</span>` : nothing}
+          <span class="who">
+            <span class="title"><b>${d.name}</b>${
+              d.critical && !d.ignored
+                ? html`<span class="star" role="img" aria-label=${t(lang, 'important_badge')} title=${t(lang, 'important_badge')}><ha-icon icon="mdi:star"></ha-icon></span>`
+                : nothing
+            }</span>
+            ${this.groupBy !== 'area' && d.area ? html`<span class="room">${d.area}</span>` : nothing}
+          </span>
         </span>
         <pulse-rhythm
           .buckets=${d.strip}
@@ -173,7 +209,7 @@ export class PulseDevices extends LitElement {
 
   render() {
     const lang = this.language;
-    const found = search(applyFilter(this.devices, this.filter), this.query);
+    const found = search(applyFilter(this.devices, this.filter, this.dueIds), this.query);
     const byArea = this.groupBy === 'area';
     const watched = found.filter((d) => !d.ignored);
     const ignored = found.filter((d) => d.ignored);
@@ -182,9 +218,7 @@ export class PulseDevices extends LitElement {
     const days = dayLabels(lang, this.dayStarts, this.timeZone);
     if (ignored.length) groups.push({ area: t(lang, 'ignored'), devices: ignored });
     const filterLabel = this.filter
-      ? t(lang, 'filter_label', {
-          what: t(lang, this.filter === 'ignored' ? 'ignored' : statusKey(this.filter)),
-        })
+      ? t(lang, 'filter_label', { what: this.filterName(this.filter) })
       : '';
     const group = (g: { area: string; devices: Device[] }) => {
       const closed = this.collapsed.has(g.area);
@@ -205,6 +239,7 @@ export class PulseDevices extends LitElement {
           <input
             id="search"
             type="search"
+            aria-label=${t(lang, 'search_label')}
             .value=${this.query}
             placeholder=${this.devices.length === 1 ? t(lang, 'search_one') : t(lang, 'search', { count: this.devices.length })}
             @input=${(e: Event) => {
@@ -238,15 +273,7 @@ export class PulseDevices extends LitElement {
         <div class="days mono" style=${`grid-template-columns: ${axisColumns(this.dayStarts)}`}>${days.map((d) => html`<span>${d.replace('.', '')}</span>`)}</div>
         <span class="right">${t(lang, 'col_last')}</span>
       </div>
-      ${
-        found.length
-          ? groups.map(group)
-          : html`<p class="empty muted">${
-              this.query.trim()
-                ? t(lang, 'no_results', { query: this.query })
-                : t(lang, 'filter_empty')
-            }</p>`
-      }
+      ${found.length ? groups.map(group) : html`<p class="empty muted">${this.emptyText()}</p>`}
     </div>`;
   }
 
@@ -424,7 +451,7 @@ export class PulseDevices extends LitElement {
           align-items: start;
         }
         .main.rowgrid {
-          padding-right: 0;
+          padding: var(--pu-sp-12) 0 18px;
         }
         .menu {
           margin-top: 4px;

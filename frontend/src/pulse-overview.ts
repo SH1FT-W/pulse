@@ -3,9 +3,12 @@ import { defineOnce } from './ha';
 import {
   ago,
   axisColumns,
+  batteryDevices,
   batteryLine,
+  cloudLines,
   type DeviceFilter,
   dayLabels,
+  dueLine,
   formatWhen,
   gapFractions,
   groups,
@@ -24,7 +27,6 @@ import {
   silentIndex,
   statusWord,
   type TimeFormat,
-  tone,
 } from './logic';
 import { t } from './strings';
 import { monitor, puls, shared, tokens } from './styles';
@@ -123,14 +125,20 @@ export class PulseOverview extends LitElement {
     const word = statusWord(lang, d, this.now);
     const time =
       isSilent(d) && d.last_activity !== null
-        ? formatWhen(lang, d.last_activity, this.timeZone, this.timeFormat)
+        ? formatWhen(lang, d.last_activity, this.now, this.timeZone, this.timeFormat)
         : ago(lang, d.last_activity, this.now);
-    const symbol = d.ignored ? 'ok' : tone(d.status);
+    const symbol = d.ignored ? 'ok' : rhythmTone(d);
     return html`<button class="mrow rowgrid" type="button" @click=${() => this.fire('open', { id: d.id })}>
       <span class="nm">
         <ha-icon class=${`t-${symbol}`} .icon=${d.icon}></ha-icon>
-        <b>${d.name}</b>
-        ${d.area ? html`<span class="room">${d.area}</span>` : nothing}
+        <span class="who">
+          <span class="title"><b>${d.name}</b>${
+            d.critical && !d.ignored
+              ? html`<span class="star" role="img" aria-label=${t(lang, 'important_badge')} title=${t(lang, 'important_badge')}><ha-icon icon="mdi:star"></ha-icon></span>`
+              : nothing
+          }</span>
+          ${d.area ? html`<span class="room">${d.area}</span>` : nothing}
+        </span>
       </span>
       <pulse-rhythm
         .buckets=${d.strip}
@@ -199,19 +207,50 @@ export class PulseOverview extends LitElement {
     </div>`;
   }
 
+  /** Batterie-Kachel: schwache Batterien, Einkaufsliste der nächsten 8 Wochen; antippbar. */
+  private renderBattery() {
+    const lang = this.language;
+    const snap = this.snapshot;
+    const due = snap.summary.due_batteries;
+    const line = batteryLine(lang, snap.summary.low_batteries ?? []);
+    // Ältere Server: nur der nächste Einkauf; neue: Liste nach Typ
+    // Schon als „schwach“ genannte nicht doppelt in der Einkaufsliste
+    const low = snap.summary.low_batteries ?? [];
+    const shop =
+      due === undefined
+        ? (snap.summary.next_battery ?? '')
+        : dueLine(
+            lang,
+            due.filter((x) => !low.includes(x.name))
+          );
+    const label =
+      line.tone === 'ok' && due?.length
+        ? t(lang, due.length === 1 ? 'battery_due_one' : 'battery_due_many', { count: due.length })
+        : line.label;
+    const targets = batteryDevices(
+      snap.devices,
+      (due ?? []).map((x) => x.id)
+    );
+    const body = html`<span class="cap">${t(lang, 'batteries')}</span>
+      <b class=${line.tone === 'warn' ? 't-warn' : ''}>${label}</b>
+      ${line.value ? html`<span class="sub">${line.value}</span>` : nothing}
+      <span class="sub">${shop || (line.value ? '' : t(lang, 'nothing_due'))}</span>`;
+    if (!targets.length) return html`<div class="fact">${body}</div>`;
+    const go = () => {
+      const [only] = targets;
+      if (targets.length === 1 && only) this.fire('open', { id: only.id });
+      else this.show('battery');
+    };
+    return html`<button class="fact tappable" type="button" @click=${go}>${body}</button>`;
+  }
+
   private renderFacts() {
     const lang = this.language;
     const snap = this.snapshot;
-    const line = batteryLine(lang, snap.summary.low_batteries ?? []);
-    const shop = snap.summary.next_battery;
     const last = lastReplaced(snap.devices);
     const ignored = snap.devices.filter((d) => d.ignored).length;
     return html`<section class="facts">
-      <div class="fact">
-        <span class="cap">${t(lang, 'batteries')}</span>
-        <b class=${line.tone === 'warn' ? 't-warn' : ''}>${line.label}</b>
-        <span class="sub">${[line.value, shop].filter(Boolean).join(' · ') || t(lang, 'nothing_due')}</span>
-      </div>
+      ${this.renderBattery()}
       ${
         last
           ? html`<button class="fact tappable" type="button" @click=${() => this.fire('open', { id: last.device.id })}>
@@ -238,32 +277,30 @@ export class PulseOverview extends LitElement {
     const lang = this.language;
     const snap = this.snapshot;
     const head = hero(lang, snap.devices);
+    const clouds = cloudLines(lang, snap.summary.cloud_outages);
+    const line2Class = { accent: 'grad', warn: 't-warn', crit: 't-crit', plain: '' }[head.tone];
     const said = heroSentences(lang, snap.devices, this.now, this.timeZone);
     const sections = monitorGroups(snap.devices);
     this.gaps = this.gapsOf(this.noData, this.dayStarts);
     const watched = snap.devices.filter((d) => !d.ignored).length;
     const monitorHead =
       watched === 1 ? t(lang, 'monitor_head_one') : t(lang, 'monitor_head', { count: watched });
-    // Heute als Wochentag (die Übersicht zeigt eine Woche) – in HAs Zeitzone
-    const today = new Intl.DateTimeFormat(lang, {
-      weekday: 'short',
-      ...(this.timeZone ? { timeZone: this.timeZone } : {}),
-    }).format(new Date(this.now * 1000));
-    const days = dayLabels(lang, this.dayStarts, this.timeZone).map((d, i, all) =>
-      i === all.length - 1 ? today : d
-    );
+    // Achse wie überall: der letzte Tag heißt „heute“
+    const days = dayLabels(lang, this.dayStarts, this.timeZone);
     return html`<div class="page">
       <section class="hero">
         <div class="words">
           <h2 class="hl">
             <span class="long">${head.line1}</span><span class="short">${head.line1Short}</span><br />
-            <span class="grad long">${head.line2}</span><span class="grad short">${head.line2Short}</span>
+            <span class=${`l2 long ${line2Class}`}>${head.line2}</span><span class=${`l2 short ${line2Class}`}>${head.line2Short}</span>
           </h2>
           <p class="hsub">
+            ${head.sub ? html`<span class="ok-line">${head.sub}</span>` : nothing}
             ${said.mentions.map(
               (m) => html`${m.before}<b class=${`t-${m.tone}`}>${m.name}</b>${m.after} `
             )}${said.text}
           </p>
+          ${clouds.map((c) => html`<p class="cloud"><ha-icon icon="mdi:cloud-off-outline"></ha-icon><span>${c}</span></p>`)}
         </div>
         ${
           this.readonly
@@ -352,6 +389,29 @@ export class PulseOverview extends LitElement {
       .hsub b.t-ok {
         color: var(--pu-ink);
       }
+      /* „2 von 10 im Takt.“ – eigene Zeile über den Sätzen */
+      .ok-line {
+        display: block;
+        margin-bottom: var(--pu-sp-4);
+        color: var(--pu-ink);
+        font-weight: 600;
+      }
+      /* Ruhiger Sammelhinweis bei Cloud-Ausfall: grau, kein Alarm */
+      .cloud {
+        display: flex;
+        align-items: flex-start;
+        gap: var(--pu-sp-8);
+        margin: var(--pu-sp-12) 0 0;
+        max-width: 46ch;
+        font-size: var(--pu-fs-15);
+        line-height: 1.4;
+        color: var(--pu-muted);
+        --mdc-icon-size: 18px;
+      }
+      .cloud ha-icon {
+        flex: none;
+        margin-top: 1px;
+      }
       pulse-dayband.tappable {
         cursor: pointer;
         -webkit-tap-highlight-color: transparent;
@@ -365,9 +425,6 @@ export class PulseOverview extends LitElement {
       .monitor {
         margin-top: var(--pu-sp-32);
         border-top: 1px solid var(--pu-line);
-      }
-      .grp .count::before {
-        content: '· ';
       }
       .mrow {
         width: 100%;
@@ -460,12 +517,18 @@ export class PulseOverview extends LitElement {
         font-weight: 700;
         letter-spacing: -0.01em;
       }
+      /* Hinweise höchstens zweizeilig statt abgeschnitten */
       .fact .sub {
         font-size: var(--pu-fs-13);
+        line-height: 1.35;
         color: var(--pu-muted);
         overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+      }
+      .fact .sub:empty {
+        display: none;
       }
       .fact .line {
         display: flex;
@@ -529,6 +592,10 @@ export class PulseOverview extends LitElement {
         .hsub {
           font-size: var(--pu-fs-15);
         }
+        /* Luft unter jeder Zeile (die Leiste klebt sonst an der nächsten) */
+        .mrow.rowgrid {
+          padding: var(--pu-sp-12) 0 18px;
+        }
         .fact {
           border-inline-start: 0;
           padding-inline: 0;
@@ -545,7 +612,7 @@ export class PulseOverview extends LitElement {
           border-inline-start: 0;
         }
         .fact.zig .sub {
-          white-space: normal;
+          -webkit-line-clamp: 3;
         }
         .fact.zig ~ .fact {
           padding-inline-start: 0;

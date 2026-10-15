@@ -11,6 +11,11 @@ from typing import Any
 TEXTS: dict[str, dict[str, str]] = {
     "de": {
         "silent": "Seit {since} still. Meldet sich sonst etwa {every}.",
+        "silent_strays": "Seit {since} kaum noch Meldungen, zuletzt vor {last}. Meldet sich sonst etwa {every}.",
+        "startup_waiting": "Seit dem Neustart noch keine Meldung.",
+        "radio_only": "Funkt noch, schickt aber seit {since} keine Werte.",
+        "battery_missing": "Seit {since} kein Batteriewert, das Gerät meldet sich aber.",
+        "cloud_outage": "{integration}: {count} Geräte gleichzeitig still, vermutlich die Cloud.",
         "silent_new": "Seit über {since} keine Meldung.",
         "unavailable": "Seit {since} nicht erreichbar.",
         "partner": "{partner} war {count}× aktiv, {name} hat sich seitdem nicht gemeldet.",
@@ -44,6 +49,10 @@ TEXTS: dict[str, dict[str, str]] = {
         "push_replaced_many": "{count} Batteriewechsel erkannt",
         "push_burst": "{count} Geräte auf einmal still",
         "push_burst_msg": "Vermutlich ist eine Bridge oder ein Hub ausgefallen: {names}.",
+        "push_burst_mixed": "{count} Geräte auffällig",
+        "push_burst_mixed_msg": "Bitte prüfen: {names}.",
+        "push_cloud": "{integration}: {count} Geräte still",
+        "push_cloud_msg": "Vermutlich hakt die Cloud-Verbindung, nicht die Geräte.",
         "push_summary": "Heute: {count} Gerät prüfen",
         "push_summary_many": "Heute: {count} Geräte prüfen",
         "push_summary_battery": "Bald fällig: {list}.",
@@ -56,6 +65,11 @@ TEXTS: dict[str, dict[str, str]] = {
     },
     "en": {
         "silent": "Silent for {since}. Usually reports {every}.",
+        "silent_strays": "Hardly any reports for {since}, last one {last} ago. Usually reports {every}.",
+        "startup_waiting": "No report since the restart yet.",
+        "radio_only": "Still on the air, but no values for {since}.",
+        "battery_missing": "No battery value for {since}, but the device still reports.",
+        "cloud_outage": "{integration}: {count} devices went silent at once, probably the cloud.",
         "silent_new": "No report for more than {since}.",
         "unavailable": "Unreachable for {since}.",
         "partner": "{partner} was active {count}×, {name} hasn't reported since.",
@@ -88,6 +102,10 @@ TEXTS: dict[str, dict[str, str]] = {
         "push_replaced_many": "{count} battery changes detected",
         "push_burst": "{count} devices went silent at once",
         "push_burst_msg": "A bridge or hub is probably down: {names}.",
+        "push_burst_mixed": "{count} devices need attention",
+        "push_burst_mixed_msg": "Please check: {names}.",
+        "push_cloud": "{integration}: {count} devices silent",
+        "push_cloud_msg": "Probably the cloud connection, not the devices.",
         "push_summary": "Today: {count} device to check",
         "push_summary_many": "Today: {count} devices to check",
         "push_summary_battery": "Due soon: {list}.",
@@ -132,7 +150,9 @@ def reason_text(language: str | None, reason: Mapping[str, Any]) -> str:
     """Begründung (Schlüssel + Werte) als Satz."""
     key = str(reason["key"])
     params: dict[str, Any] = dict(reason.get("params", {}))
-    for name in ("since", "every"):
+    if key == "silent" and params.get("strays") and "last" in params:
+        key = "silent_strays"  # gleicher Grund, nur genauer: ein sterbender Sensor meldet sich vereinzelt
+    for name in ("since", "every", "last"):
         if name in params and isinstance(params[name], int | float):
-            params[name] = (since if name == "since" else every)(language, float(params[name]))
+            params[name] = (every if name == "every" else since)(language, float(params[name]))
     return text(language, key, **params)

@@ -3,9 +3,12 @@ import { defineOnce, navigateTo } from './ha';
 import {
   ago,
   axisColumns,
+  batteryFirst,
+  criticalChange,
   dayLabels,
   detailHeadline,
   detailText,
+  forecastText,
   formatDate,
   formatVoltage,
   formatWhen,
@@ -17,6 +20,7 @@ import {
   parseHeartbeat,
   partnerLine,
   partnerOptions,
+  partnerSuggestions,
   rhythmPill,
   rhythmTone,
   shortDate,
@@ -81,6 +85,7 @@ export class PulseDeviceSheet extends LitElement {
     open: { type: Boolean },
     readonly: { type: Boolean },
     settingsOpen: { state: true },
+    beatError: { state: true },
   };
 
   declare device: Device | null;
@@ -107,6 +112,8 @@ export class PulseDeviceSheet extends LitElement {
   declare readonly: boolean;
   /** Einstellungen ausgeklappt – bleibt beim Wechsel des Geräts so */
   declare settingsOpen: boolean;
+  /** Herzschlag ließ sich nicht laden → Hinweis + „Neu laden“ */
+  declare beatError: boolean;
 
   constructor() {
     super();
@@ -128,6 +135,7 @@ export class PulseDeviceSheet extends LitElement {
     this.open = false;
     this.readonly = false;
     this.settingsOpen = false;
+    this.beatError = false;
   }
 
   private readonly gapsOf = memoize(gapFractions);
@@ -146,13 +154,27 @@ export class PulseDeviceSheet extends LitElement {
     if (key === this.beatKey) return;
     if (!this.beat || !(d.id in this.beat.devices)) this.beat = null;
     this.beatKey = key;
+    this.beatError = false;
     void this.loadBeat(d.id, key);
   }
 
   private async loadBeat(id: string, key: string): Promise<void> {
     if (!this.fetchHeartbeat) return;
-    const data = parseHeartbeat(await this.fetchHeartbeat([id]));
-    if (key === this.beatKey && data) this.beat = data;
+    let data: HeartbeatData | null = null;
+    try {
+      data = parseHeartbeat(await this.fetchHeartbeat([id]));
+    } catch {
+      data = null;
+    }
+    if (key !== this.beatKey) return;
+    if (data) this.beat = data;
+    // Bleibt der alte Kalender stehen, reicht er; sonst Hinweis mit „Neu laden“
+    else if (!this.beat) this.beatError = true;
+  }
+
+  private reloadBeat(id: string): void {
+    this.beatError = false;
+    void this.loadBeat(id, this.beatKey);
   }
 
   private fire(name: string, detail: object): void {
@@ -246,28 +268,47 @@ export class PulseDeviceSheet extends LitElement {
       html`<pulse-rhythm .buckets=${x.strip} tone=${rhythmTone(x)} ?learning=${x.status === 'learning' && !x.ignored} .gaps=${gaps} .days=${days} .silentFrom=${silentIndex(x, this.dayStarts)}></pulse-rhythm>`;
     const pairLine = partner ? partnerLine(lang, d, partner) : '';
     const meta = [d.area, d.model].filter(Boolean).join(' · ');
+    // „Akku-Prozent sagt zu wenig“ steht schon unter dem Wert (Akku · ungenau) – nicht doppelt
+    const forecast = forecastText(
+      lang,
+      b.forecast,
+      b.forecast_reason === 'untrusted' && !b.trusted ? null : b.forecast_reason
+    );
+    const replaceButton = (primary: boolean) =>
+      html`<button class=${primary ? 'pbtn primary' : 'pbtn'} type="button" @click=${() => this.fire('replaced', { id: d.id })}>
+        <ha-icon icon="mdi:battery-sync-outline"></ha-icon>${t(lang, 'replaced')}
+      </button>`;
+    const laterButton = (primary: boolean) =>
+      snoozed && d.snooze_until !== null
+        ? html`<span class="snoozed">
+            <span class="muted small">${t(lang, 'snoozed_until', { when: formatWhen(lang, d.snooze_until, this.now, zone, this.timeFormat) })}</span>
+            <button class="pbtn" type="button" @click=${() => this.fire('snooze-cancel', { id: d.id })}>${t(lang, 'snooze_cancel')}</button>
+          </span>`
+        : html`<button class=${primary ? 'pbtn primary' : 'pbtn'} type="button" @click=${() => this.fire('later', { id: d.id })}>
+            <ha-icon icon="mdi:bell-sleep-outline"></ha-icon>${t(lang, 'later')}
+          </button>`;
+    // Batterie-Grund: „Batterie gewechselt“ zuerst; sonst ist Erinnern die sinnvolle Hauptaktion
+    const battery = batteryFirst(d);
     return html`
       <header class="hero">
-        ${meta ? html`<p class="dname"><ha-icon .icon=${d.icon}></ha-icon><span>${meta}</span></p>` : nothing}
+        ${
+          meta || d.cloud
+            ? html`<p class="dname"><ha-icon .icon=${d.icon}></ha-icon><span>${meta}</span>${
+                d.cloud
+                  ? html`<span class="chip-cloud"><ha-icon icon="mdi:cloud-outline"></ha-icon>${t(lang, 'cloud_device')}</span>`
+                  : nothing
+              }</p>`
+            : nothing
+        }
         <h3 class=${`dhl ${head.tone === 'accent' ? 'grad' : `t-${head.tone}`}`}>${head.text}</h3>
-        <p class="dtx">${detailText(lang, d, zone, this.timeFormat)}</p>
+        <p class="dtx">${detailText(lang, d, this.now, zone, this.timeFormat)}</p>
       </header>
 
       ${this.readonly ? html`<p class="ro muted small"><ha-icon icon="mdi:lock-outline"></ha-icon>${t(lang, 'read_only')}</p>` : nothing}
       ${
         needsAction(d) && !this.readonly
           ? html`<div class="buttons">
-              <button class="pbtn primary" type="button" @click=${() => this.fire('replaced', { id: d.id })}>
-                <ha-icon icon="mdi:battery-sync-outline"></ha-icon>${t(lang, 'replaced')}
-              </button>
-              ${
-                snoozed && d.snooze_until !== null
-                  ? html`<span class="snoozed">
-                      <span class="muted small">${t(lang, 'snoozed_until', { when: formatWhen(lang, d.snooze_until, zone, this.timeFormat) })}</span>
-                      <button class="pbtn" type="button" @click=${() => this.fire('snooze-cancel', { id: d.id })}>${t(lang, 'snooze_cancel')}</button>
-                    </span>`
-                  : html`<button class="pbtn" type="button" @click=${() => this.fire('later', { id: d.id })}>${t(lang, 'later')}</button>`
-              }
+              ${battery ? html`${replaceButton(true)}${laterButton(false)}` : html`${laterButton(!snoozed)}${replaceButton(false)}`}
             </div>`
           : nothing
       }
@@ -294,7 +335,12 @@ export class PulseDeviceSheet extends LitElement {
                 .language=${lang}
                 tone=${heartbeatTone(d)}
               ></pulse-heartbeat>`
-            : html`<div class="cal-wait"><pulse-rhythm .buckets=${d.strip} tone=${rhythmTone(d)} ?learning=${d.status === 'learning' && !d.ignored} .gaps=${gaps} .days=${days} .silentFrom=${silentIndex(d, this.dayStarts)} .flag=${rhythmPill(lang, d, this.now)}></pulse-rhythm>
+            : this.beatError
+              ? html`<div class="cal-err">
+                  <span class="muted">${t(lang, 'heartbeat_failed')}</span>
+                  <button class="pbtn" type="button" @click=${() => this.reloadBeat(d.id)}>${t(lang, 'reload')}</button>
+                </div>`
+              : html`<div class="cal-wait"><pulse-rhythm .buckets=${d.strip} tone=${rhythmTone(d)} ?learning=${d.status === 'learning' && !d.ignored} .gaps=${gaps} .days=${days} .silentFrom=${silentIndex(d, this.dayStarts)} .flag=${rhythmPill(lang, d, this.now)}></pulse-rhythm>
                 <div class="axis muted" aria-hidden="true" style=${`grid-template-columns: ${axisColumns(this.dayStarts)}`}>${dayLabels(lang, this.dayStarts, zone).map((l) => html`<span>${l}</span>`)}</div></div>`
         }
       </section>
@@ -319,6 +365,22 @@ export class PulseDeviceSheet extends LitElement {
         <div><span>${t(lang, 'battery_type')}</span><b>${typeText}</b></div>
         <div><span>${t(lang, 'stat_changed')}</span><b>${lastChange !== undefined ? shortDate(lang, lastChange, this.now, zone) : t(lang, 'unknown')}</b></div>
       </section>
+      ${forecast ? html`<p class=${b.forecast ? 'fc' : 'fc muted'}><ha-icon icon=${b.forecast ? 'mdi:battery-clock-outline' : 'mdi:battery-unknown'}></ha-icon><span>${forecast}</span></p>` : nothing}
+
+      ${this.renderSuggestions(d)}
+
+      <div class="list quick">
+        ${
+          needsAction(d) || this.readonly
+            ? nothing
+            : html`<button class="row action" type="button" @click=${() => this.fire('replaced', { id: d.id })}>
+                <span class="label">${t(lang, 'replaced_now')}</span>
+              </button>`
+        }
+        ${this.switchRow(t(lang, 'important'), t(lang, 'important_hint'), d.critical, (on) =>
+          this.change({ critical: criticalChange(d, on) })
+        )}
+      </div>
 
       <details class="more" ?open=${this.settingsOpen} @toggle=${(e: Event) => {
         const el = e.currentTarget;
@@ -331,6 +393,25 @@ export class PulseDeviceSheet extends LitElement {
         ${this.renderSettings(d)}
       </details>
     `;
+  }
+
+  /** Partner-Vorschläge vom Server (nur Admins, nur ohne Partner): Übernehmen oder Verwerfen. */
+  private renderSuggestions(d: Device) {
+    const lang = this.language;
+    const list = this.readonly ? [] : partnerSuggestions(d);
+    if (!list.length) return nothing;
+    return html`<section class="suggest">
+      <span class="cap">${t(lang, 'partner')}</span>
+      ${list.map(
+        (p) => html`<div class="sg">
+          <span class="sg-t"><b>${t(lang, 'partner_suggest', { name: p.name })}</b><small>${t(lang, 'partner_suggest_why')}</small></span>
+          <span class="sg-b">
+            <button class="pbtn" type="button" @click=${() => this.fire('partner-dismiss', { id: d.id, partner: p.id })}>${t(lang, 'partner_dismiss')}</button>
+            <button class="pbtn primary" type="button" @click=${() => this.change({ partner: p.id })}>${t(lang, 'partner_accept')}</button>
+          </span>
+        </div>`
+      )}
+    </section>`;
   }
 
   /** Einstellungen des Geräts – eingeklappt unter dem Herzschlag, ruhig und ohne schwere Flächen. */
@@ -367,13 +448,6 @@ export class PulseDeviceSheet extends LitElement {
         <h4 class="section-title">${t(lang, 'replaced_history')}</h4>
         <div class="list">
           ${
-            needsAction(d) || this.readonly
-              ? nothing
-              : html`<button class="row action" type="button" @click=${() => this.fire('replaced', { id: d.id })}>
-                  <span class="label">${t(lang, 'replaced_now')}</span>
-                </button>`
-          }
-          ${
             b.replaced.length
               ? [...b.replaced]
                   .reverse()
@@ -398,9 +472,6 @@ export class PulseDeviceSheet extends LitElement {
       <section class="section">
         <h4 class="section-title">${t(lang, 'monitoring')}</h4>
         <div class="list">
-          ${this.switchRow(t(lang, 'important'), t(lang, 'important_hint'), d.critical, (on) =>
-            this.change({ critical: on === d.critical_auto ? null : on })
-          )}
           ${this.switchRow(t(lang, 'ignore'), t(lang, 'ignore_hint'), d.ignored, (on) =>
             this.change({ ignored: on })
           )}
@@ -536,6 +607,72 @@ export class PulseDeviceSheet extends LitElement {
       .cal-wait {
         display: grid;
         gap: 6px;
+      }
+      .cal-err {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px 12px;
+        min-height: 64px;
+        font-size: var(--pu-fs-15);
+      }
+      .chip-cloud {
+        display: inline-flex;
+        flex: none;
+        align-items: center;
+        gap: 4px;
+        padding: 1px 8px;
+        border-radius: var(--pu-r-full);
+        background: var(--pu-fill);
+        font-size: 12px;
+        --mdc-icon-size: 14px;
+      }
+      /* Laufzeit-Vorhersage unter den Batterie-Kennzahlen */
+      .fc {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        margin: -12px 0 0;
+        font-size: var(--pu-fs-15);
+        line-height: 1.4;
+        --mdc-icon-size: 18px;
+      }
+      .fc ha-icon {
+        flex: none;
+        margin-top: 1px;
+        color: var(--pu-muted);
+      }
+      .fc.muted {
+        font-size: var(--pu-fs-13);
+      }
+      .suggest {
+        display: grid;
+        gap: 8px;
+        padding-top: 14px;
+        border-top: 1px solid var(--pu-line);
+      }
+      .sg {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px 12px;
+      }
+      .sg-t {
+        display: grid;
+        min-width: 0;
+      }
+      .sg-t small {
+        font-size: var(--pu-fs-13);
+        color: var(--pu-muted);
+      }
+      .sg-b {
+        display: flex;
+        gap: 8px;
+      }
+      .quick {
+        --pu-card: transparent;
       }
       .axis {
         display: grid;

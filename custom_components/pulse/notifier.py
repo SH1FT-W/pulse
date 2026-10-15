@@ -11,7 +11,7 @@ from homeassistant.const import STATE_HOME
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.util import dt as dt_util
 
-from . import battery as batt
+from . import battery as batt, forecast as fc
 from .const import (
     ACTION_LATER,
     ACTION_REPLACED,
@@ -20,6 +20,7 @@ from .const import (
     NOTIFY_NOW,
     NOTIFY_OFF,
     SEVERITY,
+    SILENT_REASONS,
     STATUS_CHECK,
     STATUS_FAILED,
 )
@@ -249,29 +250,61 @@ class Notifier:
 
     @callback
     def async_end_tick(self) -> None:
-        """Gesammelte Problem-Mitteilungen: wenige einzeln, viele als eine gemeinsame (Sturm-Bremse)."""
+        """Gesammelte Problem-Mitteilungen: wenige einzeln, viele als eine gemeinsame (Sturm-Bremse).
+
+        Batterie-Gründe zählen nicht mit – leere Batterien haben keine gemeinsame Ursache.
+        """
         self._collecting = False
         pending, self._pending_problems = self._pending_problems, []
-        if len(pending) < PROBLEM_BURST_MIN:
-            for msg in pending:
+        battery = [m for m in pending if m.get("reason_key") in BATTERY_REASONS]
+        others = [m for m in pending if m.get("reason_key") not in BATTERY_REASONS]
+        for msg in battery:
+            self._route(msg)
+        if len(others) < PROBLEM_BURST_MIN:
+            for msg in others:
                 self._route(msg)
             return
-        _LOGGER.info("Pulse: %s Geräte auf einmal auffällig – eine gemeinsame Mitteilung", len(pending))
+        _LOGGER.info("Pulse: %s Geräte auf einmal auffällig – eine gemeinsame Mitteilung", len(others))
+        members = [{"device_id": m["device_id"], "name": m["name"], "reason_key": m.get("reason_key")} for m in others]
+        self._route(self._burst(members))
+
+    def _burst(self, members: list[dict[str, Any]]) -> dict[str, Any]:
+        """Gemeinsame Mitteilung – der Satz nach den Gründen: nur still/weg = vermutlich Bridge/Hub."""
+        names = ", ".join(m["name"] for m in members)
+        bridge = all(m.get("reason_key") in SILENT_REASONS for m in members)
+        title, body = ("push_burst", "push_burst_msg") if bridge else ("push_burst_mixed", "push_burst_mixed_msg")
+        return {
+            "title": text(self.language, title, count=len(members)),
+            "message": text(self.language, body, names=names),
+            "data": {
+                "group": "pulse",
+                "url": "/pulse",
+                "clickAction": "/pulse",
+                "push": {"interruption-level": "time-sensitive"},
+                "priority": "high",
+                "ttl": 0,
+            },
+            "critical": False,
+            "problem": True,
+            "device_ids": [m["device_id"] for m in members],
+            "members": members,
+        }
+
+    def on_cloud_outage(self, integration: str, count: int) -> None:
+        """Mehrere Geräte einer Cloud auf einmal still: eine gedämpfte Mitteilung (nie kritisch)."""
+        if str((self.settings.get("levels") or {}).get("failed", NOTIFY_NOW)) == NOTIFY_OFF or not self.targets():
+            return
         self._route(
             {
-                "title": text(self.language, "push_burst", count=len(pending)),
-                "message": text(self.language, "push_burst_msg", names=", ".join(m["name"] for m in pending)),
+                "title": text(self.language, "push_cloud", integration=integration, count=count),
+                "message": text(self.language, "push_cloud_msg"),
                 "data": {
                     "group": "pulse",
+                    "tag": f"pulse-cloud-{integration}",
                     "url": "/pulse",
-                    "clickAction": "/pulse",
-                    "push": {"interruption-level": "time-sensitive"},
-                    "priority": "high",
-                    "ttl": 0,
+                    "push": {"interruption-level": "active"},
                 },
                 "critical": False,
-                "problem": True,
-                "device_ids": [m["device_id"] for m in pending],
             }
         )
 
@@ -322,16 +355,28 @@ class Notifier:
         ]
 
     def due_batteries(self) -> list[Device]:
-        """Geräte, deren Batterie bald fällig ist (nur wo der Prozentwert etwas sagt)."""
+        """Batterie jetzt fällig: Prozentwert (nur wo er etwas sagt) oder das Gerät meldet selbst „schwach“."""
         due: list[Device] = []
         for device in self.monitor.monitored():
             level = self.monitor.battery_level(device)
-            if level is not None and level <= batt.LEVEL_SOON and batt.level_trusted(device.record.get("chemistry")):
+            if (
+                level is not None and level <= batt.LEVEL_SOON and batt.level_trusted(device.record.get("chemistry"))
+            ) or self.monitor.flag_on(device):
                 due.append(device)
         return due
 
+    def due_soon(self) -> list[tuple[Device, float]]:
+        """Einkaufsliste: jetzt fällig oder laut Vorhersage in den nächsten 8 Wochen – (Gerät, bis wann)."""
+        now = time.time()
+        result = {d.device_id: (d, now) for d in self.due_batteries()}
+        for device in self.monitor.monitored():
+            forecast = device.forecast
+            if device.device_id not in result and forecast is not None and forecast.due_within(fc.DUE_DAYS):
+                result[device.device_id] = (device, forecast.until)
+        return sorted(result.values(), key=lambda item: item[1])
+
     def battery_due_text(self) -> str | None:
-        infos = [d.battery_info for d in self.due_batteries()]
+        infos = [d.battery_info for d, _ in self.due_soon()]
         known = [i for i in infos if i is not None]
         return batt.shopping_list(known) or None
 
@@ -339,7 +384,10 @@ class Notifier:
         """Zusammenfassung schicken; `defer`: in Ruhezeit/unterwegs bis danach zurückhalten."""
         devices = self.summary_devices()
         levels = self.settings.get("levels") or {}
-        battery = self.battery_due_text() if levels.get("battery") == NOTIFY_DAILY else None
+        # Die Einkaufsliste (auch „laut Vorhersage in 8 Wochen“) kommt mit – auslösen tut sie die
+        # Zusammenfassung aber nur, wenn eine Batterie jetzt fällig ist (sonst käme wochenlang jeden Tag eine)
+        due_now = levels.get("battery") == NOTIFY_DAILY and bool(self.due_batteries())
+        battery = self.battery_due_text() if due_now else None
         if not devices and not battery:
             return False
         count = len(devices)
@@ -393,6 +441,7 @@ class Notifier:
             "device_id": device.device_id,
             "name": device.name,
             "problem": actions,
+            "reason_key": device.reason.get("key"),
         }
         if actions and self._collecting:
             self._pending_problems.append(msg)  # am Ende des Takts: einzeln oder gemeinsam
@@ -402,26 +451,48 @@ class Notifier:
     def _route(self, msg: dict[str, Any]) -> None:
         """Sofort zustellen – oder in Ruhezeit/unterwegs zurückhalten (kritische nie)."""
         if not msg.get("critical") and (self.quiet_now() or self.away()):
-            # Je Gerät zählt nur die neueste wartende Mitteilung
-            if device := self.monitor.devices.get(msg.get("device_id") or ""):
-                self._drop_queued(device)
+            # Je Gerät zählt nur die neueste wartende Mitteilung (auch aus einer älteren gemeinsamen)
+            ids = msg.get("device_ids") or [msg.get("device_id") or ""]
+            for device in (self.monitor.devices.get(i) for i in ids):
+                if device is not None:
+                    self._drop_queued(device)
+            if tag := msg["data"].get("tag"):
+                self.queue = [m for m in self.queue if m["data"].get("tag") != tag]
             self.queue.append(msg)
             _LOGGER.debug("Mitteilung zurückgehalten (Ruhezeit/unterwegs): %s", msg["title"])
             return
         self._deliver(msg)
 
+    @staticmethod
+    def _about(msg: dict[str, Any], device: Device) -> bool:
+        """Betrifft die Mitteilung dieses Gerät (eigene oder Teil einer gemeinsamen)?"""
+        own = msg["data"].get("tag") == f"pulse-{device.device_id}"
+        return own or device.device_id in (msg.get("device_ids") or ())
+
     def _waiting(self, device: Device) -> bool:
         """Liegt für das Gerät schon eine Mitteilung bereit (Warteschlange oder laufender Takt)?"""
-        tag = f"pulse-{device.device_id}"
-        return any(m["data"].get("tag") == tag for m in (*self.queue, *self._pending_problems))
+        return any(self._about(m, device) for m in (*self.queue, *self._pending_problems))
 
     def _drop_queued(self, device: Device) -> bool:
-        """Wartende Mitteilungen zu diesem Gerät verwerfen. True = es lag eine bereit."""
-        tag = f"pulse-{device.device_id}"
-        kept = [m for m in self.queue if m["data"].get("tag") != tag]
-        dropped = len(kept) != len(self.queue)
+        """Wartende Mitteilungen zu diesem Gerät verwerfen. True = es lag eine bereit.
+
+        Aus einer gemeinsamen Mitteilung wird nur das Gerät genommen (die übrigen bleiben gemeldet).
+        Erst so erkennt `maybe_notify`, dass ein Gerät schon in einer wartenden gemeinsamen Mitteilung steckt –
+        sonst reihte jeder Takt in der Ruhezeit eine neue ein.
+        """
+        dropped = False
+        kept: list[dict[str, Any]] = []
+        for msg in self.queue:
+            if not self._about(msg, device):
+                kept.append(msg)
+                continue
+            dropped = True
+            members = [m for m in msg.get("members") or () if m["device_id"] != device.device_id]
+            # Bleibt nur eins übrig, reiht der nächste Takt dessen eigene Mitteilung ein (`maybe_notify`)
+            if len(members) >= 2:
+                kept.append(self._burst(members))
         self.queue = kept
-        self._pending_problems = [m for m in self._pending_problems if m["data"].get("tag") != tag]
+        self._pending_problems = [m for m in self._pending_problems if not self._about(m, device)]
         return dropped
 
     def _deliver(self, msg: dict[str, Any]) -> None:

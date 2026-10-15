@@ -73,8 +73,9 @@ async def test_z2m_last_seen_echo_availability_announce(hass: HomeAssistant, mqt
     async_fire_mqtt_message(hass, "zigbee2mqtt/Aquarium Temperatur", json.dumps({"last_seen": frozen.isoformat()}))
     await hass.async_block_till_done()
     assert len(thermo.record["events"]) == count  # Echo-Fenster: nichts
-    freezer.tick(timedelta(minutes=2))
-    async_fire_mqtt_message(hass, "zigbee2mqtt/Aquarium Temperatur", json.dumps({"last_seen": frozen.isoformat()}))
+    freezer.tick(timedelta(minutes=4))  # nach dem Echo-Fenster (180 s); eine neue Nachricht (andere Werte)
+    payload = {"last_seen": frozen.isoformat(), "linkquality": 80}
+    async_fire_mqtt_message(hass, "zigbee2mqtt/Aquarium Temperatur", json.dumps(payload))
     await hass.async_block_till_done()
     assert thermo.last_activity == pytest.approx(time.time(), abs=2)
 

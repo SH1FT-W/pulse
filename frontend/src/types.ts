@@ -16,6 +16,49 @@ export interface Battery {
   trusted: boolean;
   replaced: number[];
   entity: string | null;
+  /** Laufzeit-Vorhersage (1.1); null/fehlend = keine möglich */
+  forecast?: Forecast | null;
+  /** Warum keine Vorhersage (nur wenn forecast null und das Gerät Prozent meldet) */
+  forecast_reason?: ForecastReason | null;
+  /** Batterie-Entität seit … dauerhaft nicht verfügbar, der Rest meldet (Grund `battery_missing`) */
+  missing_since?: number | null;
+  /** Gerät meldet „schwach“, der Prozentwert widerspricht */
+  flag_conflict?: boolean;
+}
+
+export interface Forecast {
+  days_min: number;
+  days_max: number;
+  /** Mitte des Bereichs (Zeitstempel) */
+  until: number;
+  /** Verbrauch in Prozentpunkten je Woche */
+  rate_per_week: number;
+  threshold: number;
+}
+
+export type ForecastReason = 'too_short' | 'flat' | 'coarse' | 'untrusted' | 'noisy';
+
+export interface PartnerSuggestion {
+  id: string;
+  name: string;
+  /** 0..1 */
+  score: number;
+  /** gemeinsame Ereignisse */
+  together: number;
+}
+
+export interface DueBattery {
+  id: string;
+  name: string;
+  type: string | null;
+  count: number | null;
+  until: number | null;
+}
+
+export interface CloudOutage {
+  integration: string;
+  count: number;
+  since: number | null;
 }
 
 export interface Device {
@@ -50,6 +93,16 @@ export interface Device {
   strip: (number | null)[];
   zigbee: boolean;
   exact: boolean;
+  /** Beginn der Stille nach der Ausreißer-Regel (letzte regelmäßige Meldung, 1.1) */
+  silence_start?: number | null;
+  /** Vereinzelte Meldungen seit `silence_start` (0 = echte Stille) */
+  strays?: number;
+  /** Cloud-Gerät (Takt = Abfragetakt der Cloud) */
+  cloud?: boolean;
+  /** Funkt (Z2M-Health-Zähler steigt), schickt aber keine Werte */
+  radio_only?: boolean;
+  /** Höchstens 3, nur ohne gesetzten Partner */
+  partner_suggestions?: PartnerSuggestion[];
 }
 
 export interface Settings {
@@ -83,6 +136,9 @@ export interface Snapshot {
     learning: number;
     next_battery: string | null;
     low_batteries?: string[];
+    /** Fällig in den nächsten 8 Wochen (Vorhersage + schwach) */
+    due_batteries?: DueBattery[];
+    cloud_outages?: CloudOutage[];
   };
   settings: Settings;
   targets: string[];
@@ -94,6 +150,9 @@ export interface Snapshot {
     version: string | null;
     devices: number;
     requested_at: number | null;
+    /** Health-Prüfung in Zigbee2MQTT aktiv (Zähler kommen an) */
+    health?: boolean;
+    health_requested_at?: number | null;
   };
   battery_types: string[];
   chemistries: string[];

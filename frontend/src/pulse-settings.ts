@@ -1,7 +1,7 @@
 import { css, html, LitElement, nothing } from 'lit';
 import { live } from 'lit/directives/live.js';
 import { defineOnce, showToast } from './ha';
-import { arrivePersons, cleanZ2mBase, settingsHero, timeOptions } from './logic';
+import { arrivePersons, cleanZ2mBase, importantCount, settingsHero, timeOptions } from './logic';
 import type { Choice } from './pulse-picker';
 import { type StringKey, t } from './strings';
 import { puls, shared, tokens } from './styles';
@@ -49,8 +49,38 @@ export class PulseSettings extends LitElement {
     );
   }
 
-  private fire(name: string): void {
-    this.dispatchEvent(new CustomEvent(name, { bubbles: true, composed: true }));
+  private fire(name: string, detail: object = {}): void {
+    this.dispatchEvent(new CustomEvent(name, { detail, bubbles: true, composed: true }));
+  }
+
+  /** Zeile mit Pfeil, die woanders hinführt (ganze Zeile tippbar). */
+  private linkRow(label: string, value: string, onTap: () => void) {
+    return html`<button class="row link" type="button" @click=${onTap}>
+      <span class="label">${label}</span>
+      <span class="value">${value}</span>
+      <ha-icon class="chev" icon="mdi:chevron-right"></ha-icon>
+    </button>`;
+  }
+
+  /**
+   * Schreibt in Zigbee2MQTT nur nach Rückfrage (Blatt im Panel): an = „Aktiv“, gerade angefragt =
+   * „Angefragt“, sonst Schalter-Zeile, die die Rückfrage öffnet.
+   */
+  private z2mOptionRow(
+    label: StringKey,
+    hint: StringKey,
+    active: boolean,
+    requestedAt: number | null | undefined,
+    event: string
+  ) {
+    const lang = this.language;
+    const content = html`<span class="label">${t(lang, label)}<small>${t(lang, hint)}</small></span>`;
+    if (active)
+      return html`<div class="row">${content}<span class="value t-ok on"><ha-icon icon="mdi:check-circle"></ha-icon>${t(lang, 'zigbee_active')}</span></div>`;
+    const requested = typeof requestedAt === 'number' && this.now - requestedAt < 120;
+    if (requested)
+      return html`<div class="row">${content}<span class="value">${t(lang, 'zigbee_requested')}</span></div>`;
+    return this.toggleRow(content, false, () => this.fire(event));
   }
 
   /** Basisthema von Zigbee2MQTT: prüfen, dann speichern; Ungültiges als Hinweis und zurücksetzen. */
@@ -165,7 +195,9 @@ export class PulseSettings extends LitElement {
         tone: iconTone,
       });
     const persons = arrivePersons(s);
-    const head = settingsHero(lang, s, this.recipients);
+    const head = settingsHero(lang, s);
+    const important = importantCount(snap.devices);
+    const z = snap.z2m;
     return html`
       <section class="hero">
         <div class="words">
@@ -232,6 +264,7 @@ export class PulseSettings extends LitElement {
         <h3 class="section-title">${t(lang, 'special')}</h3>
         <div class="list">
           ${this.switchRow('critical', s.critical_alerts, (on) => this.save({ critical_alerts: on }), 'critical_hint')}
+          ${this.linkRow(t(lang, 'important_devices'), String(important), () => this.fire('show-devices', { filter: 'important' }))}
           ${this.switchRow(
             'arrive',
             s.arrive_home.enabled,
@@ -266,6 +299,14 @@ export class PulseSettings extends LitElement {
 
       <section class="section">
         <h3 class="section-title">${t(lang, 'zigbee')}</h3>
+        ${
+          z.present
+            ? html`<div class="list z2m">
+                ${this.z2mOptionRow('welcome_zigbee_title', 'zigbee_hint', z.last_seen && z.availability, z.requested_at, 'enable-z2m')}
+                ${this.z2mOptionRow('health_title', 'health_hint', z.health === true, z.health_requested_at, 'enable-z2m-health')}
+              </div>`
+            : nothing
+        }
         <details class="list adv">
           <summary class="row">
             <span class="label">${t(lang, 'advanced')}</span>
@@ -349,6 +390,18 @@ export class PulseSettings extends LitElement {
       .section {
         break-inside: avoid;
         margin-bottom: 28px;
+      }
+      .z2m {
+        margin-bottom: var(--pu-sp-12);
+      }
+      .on {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--pu-sp-4);
+        --mdc-icon-size: 18px;
+      }
+      .row .value.t-ok {
+        color: var(--pu-ok-text);
       }
       .capname {
         text-transform: capitalize;

@@ -12,13 +12,17 @@ PLATFORMS: Final = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 STORE_KEY: Final = "pulse.devices"
 STORE_VERSION: Final = 1
-# 2: Laufzeit (uptime), 3: Quelle je Batteriewechsel, Fehl-Wechsel verworfen, 4: Tag der Zusammenfassung
-STORE_MINOR: Final = 5
+# 2: Laufzeit (uptime), 3: Quelle je Batteriewechsel, Fehl-Wechsel verworfen, 4: Volt → mV, Heimkommen als Liste,
+# 5: Tag der Zusammenfassung (summary_sent/summary_pending), 6: verworfene Partner-Vorschläge, Batterie fehlt seit,
+# Cloud-Ausfall gemeldet, Z2M-Health angefragt
+STORE_MINOR: Final = 6
 
 # Dispatcher: etwas hat sich geändert (Panel neu senden, Entitäten aktualisieren)
 SIGNAL_UPDATE: Final = "pulse_update"
 # Neue überwachte Geräte (Plattformen legen ihre Entitäten an)
 SIGNAL_NEW_DEVICES: Final = "pulse_new_devices"
+# Geräte nicht mehr überwacht (Plattformen vergessen sie, damit sie bei Rückkehr neu entstehen)
+SIGNAL_REMOVED_DEVICES: Final = "pulse_removed_devices"
 
 EVENT_STATUS_CHANGED: Final = "pulse_device_status_changed"
 EVENT_BATTERY_REPLACED: Final = "pulse_battery_replaced"
@@ -48,8 +52,9 @@ THIN_SECONDS: Final = 120.0
 STRIP_PER_DAY: Final = 12
 
 TICK: Final = timedelta(seconds=60)
-# Nach einem Neustart der Zigbee2MQTT-Bridge schickt sie alte Werte noch einmal – die zählen nicht
-ECHO_WINDOW: Final = timedelta(seconds=90)
+# Nach einem Neustart der Zigbee2MQTT-Bridge schickt sie alte Werte noch einmal – die zählen nicht.
+# Das zweite Echo kam in Prod bis zu 142 s nach „unknown“, daher großzügig.
+ECHO_WINDOW: Final = timedelta(seconds=180)
 
 Z2M_BASE: Final = "zigbee2mqtt"
 
@@ -78,6 +83,41 @@ HUB_PLATFORMS: Final = {
     "fritz",
     "fritzbox",
 }
+# Cloud-Integrationen mit Abfragetakt: ihr Takt ist der der Cloud, nicht der des Geräts. Fallen mehrere Geräte
+# derselben Cloud gleichzeitig aus, ist es die Cloud (ein Sammelgrund statt vieler Ausfälle).
+CLOUD_INTEGRATIONS: Final = frozenset(
+    {
+        "netatmo",
+        "ring",
+        "nest",
+        "ecobee",
+        "tado",
+        "blink",
+        "august",
+        "yale",
+        "ezviz",
+        "simplisafe",
+        "smartthings",
+        "tuya",
+        "airthings",
+        "switchbot_cloud",
+        "sensibo",
+        "withings",
+        "honeywell",
+        "lyric",
+        "totalconnect",
+        "home_connect",
+        "miele",
+        "eufy",
+        "wyze",
+        "myq",
+        "hydrawise",
+        "rachio",
+        "awair",
+        "mill",
+        "plugwise_cloud",
+    }
+)
 # Diese Domänen sagen nichts darüber, ob das Gerät funkt
 INACTIVE_DOMAINS: Final = {"update", "button", "scene", "text", "image"}
 # Wichtige Geräte: strengere Grenzen, sofortige (auf Wunsch kritische) Mitteilung
@@ -104,5 +144,7 @@ DEFAULT_SETTINGS: Final[dict[str, Any]] = {
 
 # Begründungen, die von der Stufe „Batterie“ (statt „Prüfen“) gemeldet werden
 BATTERY_REASONS: Final = frozenset({"battery_low", "battery_low_flag"})
+# Begründungen, die „still/weg“ bedeuten (Sturm-Bremse: Bridge/Hub; Cloud-Sammelgrund)
+SILENT_REASONS: Final = frozenset({"silent", "silent_new", "unavailable"})
 # „Später“ höchstens ein Jahr (sonst landen unendliche Zeitstempel in den Entitäten)
 SNOOZE_MAX_HOURS: Final = 8760

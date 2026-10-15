@@ -1,5 +1,30 @@
 # Changelog
 
+## 1.1.0 – unreleased
+
+### New
+- **Battery forecast:** Pulse estimates how long a battery will last ("about 2–5 months") from Home Assistant's long-term statistics. Devices with coarse or unreliable levels honestly show no forecast. The battery card lists what is due in the next eight weeks.
+- **"Radio, but no values":** with Zigbee2MQTT's health check (enabled only after you confirm in the panel), Pulse notices devices that still talk to the network but no longer send readings.
+- **Missing battery entity:** a device whose battery sensor has been unavailable for a day while it keeps reporting gets its own reason.
+- **Cloud outages:** when several devices of a cloud integration (e.g. Netatmo, Ring) go quiet together, Pulse sends one calm message instead of an alarm per device. A cloud's polling is no longer taken as a sign of life.
+- **Partner suggestions:** Pulse suggests devices that are regularly active together; accept or dismiss them in the device sheet.
+
+### Fixed
+- A grouped notification was queued again every minute during quiet hours.
+- Stored data was only written at shutdown while devices kept reporting.
+- After a longer Home Assistant downtime all devices were reported as failed. The time Home Assistant was off no longer counts as silence.
+- Zigbee2MQTT replays after a restart arrived later than expected and counted as signs of life, hiding real failures.
+- A single Zigbee2MQTT message with battery and voltage could be taken as a battery change.
+- A device's own "battery low" sensor now wins over a contradicting percentage.
+- Devices no longer monitored keep no orphaned Pulse entities.
+- Headline, rhythm bar and reason now agree on when a silence started; a single stray report after a long silence no longer counts as recovery, a real action does.
+- Less work in the event loop with many or chatty devices.
+
+### Panel
+- The headline puts problems first ("3 devices need you") and only glows when everything is in rhythm.
+- Times older than five days show a date; important devices carry a star and can be marked from the menu.
+- "Battery replaced" is the main action only when the battery is the likely cause; clearer, consistent wording; better phone layout; empty and connection-lost states keep the last view.
+
 ## 1.0.1 – 2026-10-13
 
 Checked against the Home Assistant Integration Quality Scale (self-assessed: Platinum, see

@@ -5,9 +5,13 @@ import {
   arrivePersons,
   attention,
   axisColumns,
+  batteryDevices,
+  batteryFirst,
   batteryLine,
   canEdit,
   cleanZ2mBase,
+  cloudLines,
+  criticalChange,
   daybandLine,
   dayLabels,
   dayNumber,
@@ -15,7 +19,9 @@ import {
   dayTicks,
   detailHeadline,
   detailText,
+  dueLine,
   every,
+  forecastText,
   formatVoltage,
   formatWhen,
   gapFractions,
@@ -27,6 +33,8 @@ import {
   hourMarks,
   hourOfDay,
   hoursOf,
+  importantCount,
+  integrationName,
   isSilent,
   isWaiting,
   lastReplaced,
@@ -38,7 +46,9 @@ import {
   parseHeartbeat,
   partnerLine,
   partnerOptions,
+  partnerSuggestions,
   quietRanges,
+  quietSince,
   resample,
   rhythmPill,
   rhythmTone,
@@ -52,8 +62,10 @@ import {
   sinceDay,
   span,
   statusWord,
+  strays,
   stripHeights,
   stripIndex,
+  subtractSpans,
   tickHeight,
   timeFormatOf,
   timeFraction,
@@ -258,7 +270,7 @@ describe('Geräteliste', () => {
 
   it('gruppiert nach Status in fester Reihenfolge, ohne Ignorierte', () => {
     const g = groupDevices(list, 'status', 'de', 'Ohne Bereich');
-    expect(g.map((x) => x.area)).toEqual(['Ausgefallen', 'Prüfen', 'Gut']);
+    expect(g.map((x) => x.area)).toEqual(['Ausgefallen', 'Prüfen', 'Im Takt']);
     expect(groupDevices(list, 'none', 'de', '-')[0]?.devices.map((d) => d.id)).toEqual([
       'Alt',
       'Kontakt',
@@ -351,7 +363,8 @@ describe('Richtung Puls', () => {
     expect(span('de', 30)).toBe('1 Minuten');
     expect(span('de', 5 * H)).toBe('5 Stunden');
     expect(span('de', H)).toBe('1 Stunde');
-    expect(span('de', D + H)).toBe('1 Tag');
+    expect(span('de', D + H)).toBe('25 Stunden');
+    expect(span('de', 6.7 * D)).toBe('7 Tagen'); // wie der Server (round)
     expect(span('de', 4.2 * D)).toBe('4 Tagen');
     expect(sinceDay('de', NOW - D, NOW)).toBe('gestern');
     expect(sinceDay('de', NOW - 4 * D, NOW)).toBe('Dienstag');
@@ -368,11 +381,28 @@ describe('Richtung Puls', () => {
   });
 
   it('Schlagzeile', () => {
+    // Ein Problem steht vorn (rot bei Ausfall), „im Takt“ in der Unterzeile
     const h = hero('de', [door, cellar, lock]);
-    expect(h.line1).toBe('2 von 3 Geräten');
-    expect(h.line1Short).toBe('2 von 3');
-    expect(h.line2).toBe('schlagen im Takt.');
-    expect(h.line2Short).toBe('im Takt.');
+    expect(h.line1).toBe('Ein Gerät');
+    expect(h.line2).toBe('braucht dich.');
+    expect(h.tone).toBe('crit');
+    expect(h.sub).toBe('2 von 3 im Takt.');
+    const two = hero('de', [door, { ...door, id: 'b', status: 'check' }, lock]);
+    expect(two.line1).toBe('2 Geräte');
+    expect(two.line2).toBe('brauchen dich.');
+    expect(two.tone).toBe('crit');
+    expect(hero('de', [{ ...door, status: 'check' }, lock]).tone).toBe('warn');
+    // Nur „Im Blick“ (still, aber nicht dringend): alte Form ohne Verlauf
+    const w = hero('de', [{ ...door, status: 'watch' }, cellar, lock]);
+    expect(w.line1).toBe('2 von 3 Geräten');
+    expect(w.line1Short).toBe('2 von 3');
+    expect(w.line2).toBe('schlagen im Takt.');
+    expect(w.line2Short).toBe('im Takt.');
+    expect(w.tone).toBe('plain');
+    expect(w.sub).toBe('');
+    expect(hero('de', [lock, cellar]).tone).toBe('accent');
+    // Geräte einer schweigenden Cloud sind kein Einzelalarm
+    expect(hero('de', [{ ...door, reason_key: 'cloud_outage' }, lock]).tone).not.toBe('crit');
     expect(hero('de', [lock, cellar]).line1).toBe('Alle 2 Geräte');
     expect(hero('de', [device('n', { status: 'learning' })]).line2).toBe('lernt noch.');
     expect(hero('de', []).line1).toBe('Noch keine');
@@ -494,8 +524,8 @@ describe('Richtung Puls', () => {
     expect(
       detailHeadline('de', device('p', { status: 'check', reason_key: 'partner' }), NOW).text
     ).toBe('Schweigt, Partner aktiv.');
-    expect(detailText('de', door)).toMatch(/^Meldet sich sonst alle 3 Std\. Zuletzt /);
-    expect(detailText('de', cellar)).toBe('');
+    expect(detailText('de', door, NOW)).toMatch(/^Meldet sich sonst alle 3 Std\. Zuletzt /);
+    expect(detailText('de', cellar, NOW)).toBe('');
   });
 
   it('Partner-Vergleich', () => {
@@ -567,13 +597,13 @@ describe('Richtung Puls', () => {
       recovered: true,
       z2m_base: 'zigbee2mqtt',
     };
-    expect(settingsHero('de', settings, 'An Alex’ iPhone')).toEqual({
+    expect(settingsHero('de', settings)).toEqual({
       line1: 'Pulse meldet sich um 18:00.',
       line2: 'Ruhe 22:00–07:30.',
-      sub: 'An Alex’ iPhone. Ausfälle sofort, Auffälliges und Batterien in der Zusammenfassung.',
+      sub: 'Ausgefallene Geräte sofort, „Prüfen“ und Batterien in der Zusammenfassung.',
     });
     const off = { ...settings, quiet: { ...settings.quiet, enabled: false } };
-    expect(settingsHero('de', off, '').line2).toBe('Ohne Ruhezeit.');
+    expect(settingsHero('de', off).line2).toBe('Ohne Ruhezeit.');
   });
 });
 
@@ -707,7 +737,8 @@ describe('Zweite Runde', () => {
     const l2 = device('L2', { status: 'learning' });
     expect(hero('de', [ok, l1, l2]).line1).toBe('Dein einziges Gerät');
     expect(hero('de', [ok, l1, l2]).line2).toBe('schlägt im Takt.');
-    expect(hero('en', [silent]).line2).toBe('is silent.');
+    expect(hero('en', [silent]).line2).toBe('needs you.');
+    expect(hero('en', [{ ...silent, status: 'watch' }]).line2).toBe('is silent.');
     expect(hero('de', [ok, device('B')]).line1).toBe('Alle 2 Geräte');
     expect(heroSentences('de', [ok, l1, l2], NOW).text).toBe(
       'Alle melden sich wie gewohnt. 2 Geräte lernt Pulse noch kennen.'
@@ -722,7 +753,7 @@ describe('Zweite Runde', () => {
     expect(heroSentences('de', [], NOW).text).toBe('');
     expect(learningLine('en', 1)).toBe('Pulse is still getting to know 1 device.');
     expect(learningLine('en', 3)).toBe('Pulse is still getting to know 3 devices.');
-    expect(detailText('de', l1)).toBe(
+    expect(detailText('de', l1, NOW)).toBe(
       'Lernt noch: braucht etwa 7 Meldungen, um den Takt zu kennen.'
     );
   });
@@ -808,9 +839,154 @@ describe('Zeitformat', () => {
     expect(timeFormatOf('12')).toBe('12');
     expect(timeFormatOf('language')).toBeUndefined();
     const ts = Date.UTC(2026, 9, 3, 6, 5) / 1000;
-    expect(formatWhen('en-US', ts, 'Europe/Berlin')).toBe('Sat 8:05 AM');
-    expect(formatWhen('en-US', ts, 'Europe/Berlin', '24')).toBe('Sat 08:05');
-    expect(formatWhen('de', ts, 'Europe/Berlin', '12')).toContain('8:05');
-    expect(formatWhen('de', ts, 'Europe/Berlin')).toBe('Sa., 08:05');
+    const later = ts + 2 * 86400; // Montag
+    expect(formatWhen('en-US', ts, later, 'Europe/Berlin')).toBe('Sat 8:05 AM');
+    expect(formatWhen('en-US', ts, later, 'Europe/Berlin', '24')).toBe('Sat 08:05');
+    expect(formatWhen('de', ts, later, 'Europe/Berlin', '12')).toContain('8:05');
+    expect(formatWhen('de', ts, later, 'Europe/Berlin')).toBe('Sa., 08:05');
+  });
+});
+
+describe('Pulse 1.1', () => {
+  const NOW = Date.UTC(2026, 9, 15, 10, 0) / 1000; // Donnerstag, 12:00 in Berlin
+  const H = 3600;
+  const D = 86400;
+  const BERLIN = 'Europe/Berlin';
+
+  it('Zeit: heute nur Uhrzeit, bis 5 Tage Wochentag, danach Datum', () => {
+    expect(formatWhen('de', NOW - 2 * H, NOW, BERLIN)).toBe('10:00');
+    expect(formatWhen('de', NOW - 3 * D, NOW, BERLIN)).toBe('Mo., 12:00');
+    expect(formatWhen('de', NOW - 5 * D, NOW, BERLIN)).toMatch(/^Sa\./);
+    expect(formatWhen('de', NOW - 11 * D + 7.5 * H, NOW, BERLIN)).toBe('04.10., 19:30');
+    expect(formatWhen('en-US', NOW - 11 * D + 7.5 * H, NOW, BERLIN)).toBe('10/04, 7:30 PM');
+    expect(formatWhen('en-US', NOW - 11 * D + 7.5 * H, NOW, BERLIN, '24')).toBe('10/04, 19:30');
+    // Zukunft (Erinnerung morgen) ebenso mit Wochentag
+    expect(formatWhen('de', NOW + D, NOW, BERLIN)).toBe('Fr., 12:00');
+  });
+
+  it('Vorhersage als grober Bereich, ohne Vorhersage der Grund', () => {
+    const f = (days_min: number, days_max: number) => ({
+      days_min,
+      days_max,
+      until: NOW,
+      rate_per_week: 1,
+      threshold: 10,
+    });
+    expect(forecastText('de', f(60, 120))).toBe('Hält noch ca. 1–4 Monate');
+    expect(forecastText('de', f(65, 125))).toBe('Hält noch ca. 2–5 Monate');
+    expect(forecastText('de', f(21, 35))).toBe('Hält noch ca. 3–5 Wochen');
+    expect(forecastText('de', f(28, 28))).toBe('Hält noch ca. 4–5 Wochen');
+    expect(forecastText('de', f(2, 8))).toBe('Hält nur noch wenige Tage');
+    expect(forecastText('de', f(400, 900))).toBe('Hält noch ca. 1–3 Jahre');
+    expect(forecastText('en', f(60, 120))).toBe('Lasts about 1–4 more months');
+    expect(forecastText('de', null, 'too_short')).toBe(
+      'Für eine Vorhersage noch zu kurz beobachtet'
+    );
+    expect(forecastText('de', null, null)).toBe('');
+    expect(forecastText('de', undefined)).toBe('');
+  });
+
+  it('fällige Batterien nach Typ, Cloud-Hinweis', () => {
+    const due = [
+      { id: 'a', name: 'A', type: 'CR2032', count: 1, until: NOW },
+      { id: 'b', name: 'B', type: 'CR2032', count: 1, until: NOW },
+      { id: 'c', name: 'C', type: 'AA', count: 2, until: NOW },
+      { id: 'd', name: 'D', type: null, count: null, until: null },
+    ];
+    expect(dueLine('de', due)).toBe(
+      'In den nächsten 8 Wochen fällig: 2 × AA, 2 × CR2032, Typ offen: D'
+    );
+    expect(dueLine('de', [])).toBe('');
+    expect(dueLine('de', undefined)).toBe('');
+    expect(integrationName('tado_x')).toBe('Tado x');
+    expect(cloudLines('de', [{ integration: 'netatmo', count: 3, since: NOW }])).toEqual([
+      'Netatmo-Cloud antwortet nicht – 3 Geräte betroffen',
+    ]);
+    expect(cloudLines('de', undefined)).toEqual([]);
+  });
+
+  it('Stille aus silence_start/strays, Rückfall auf die eigene Rechnung', () => {
+    const start = NOW - 7 * D;
+    const starts = Array.from({ length: 8 }, (_, i) => start + i * D);
+    const dying = device('Sensor', {
+      status: 'failed',
+      reason_key: 'silent',
+      last_activity: NOW - 3 * H,
+      silence_from: NOW - 3 * H,
+      silence_start: NOW - 3 * D,
+      strays: 2,
+    });
+    expect(quietSince(dying)).toBe(NOW - 3 * D);
+    expect(strays(dying)).toBe(2);
+    expect(strays(device('x'))).toBe(0);
+    expect(silentIndex(dying, starts)).toBe(4 * 12 + 1);
+    const said = heroSentences('de', [dying], NOW, BERLIN).mentions[0];
+    expect(`${said?.before}${said?.name}${said?.after}`).toBe(
+      'Sensor meldet sich seit Montag kaum noch, zuletzt vor 3 Std.'
+    );
+    expect(silenceFlag('de', dying, NOW)).toBe('Seit 3 Tagen kaum noch');
+    expect(detailHeadline('de', dying, NOW).text).toBe('Seit 3 Tagen kaum noch.');
+    // Älterer Server ohne Feld: wie bisher
+    const old = { ...dying, silence_start: undefined, strays: undefined };
+    expect(quietSince(old)).toBe(NOW - 3 * H);
+  });
+
+  it('neue Begründungen und Cloud-Ausfall', () => {
+    const boot = device('Boot', { status: 'watch', reason_key: 'startup_waiting' });
+    const radio = device('Funk', { status: 'check', reason_key: 'radio_only' });
+    const gone = device('Ohne', { status: 'check', reason_key: 'battery_missing' });
+    const cloud = device('Wolke', { status: 'failed', reason_key: 'cloud_outage', cloud: true });
+    expect(detailHeadline('de', boot, NOW).text).toBe('Seit dem Neustart noch keine Meldung.');
+    expect(detailHeadline('de', radio, NOW).text).toBe('Funkt ohne Werte.');
+    expect(detailHeadline('de', gone, NOW).text).toBe('Batteriestand fehlt.');
+    expect(detailHeadline('de', cloud, NOW).tone).toBe('muted');
+    expect(offRhythm(radio)).toBe(true);
+    const said = heroSentences('de', [boot, cloud], NOW).mentions;
+    expect(said.map((m) => m.name)).toEqual(['Boot']);
+    expect(said[0]?.after).toBe(' hat sich seit dem Neustart noch nicht gemeldet.');
+    expect(attention([cloud, radio]).map((d) => d.id)).toEqual(['Funk']);
+    expect(monitorGroups([cloud]).map((g) => g.key)).toEqual(['watch']);
+    expect(rhythmTone(cloud)).toBe('muted');
+    expect(statusWord('de', cloud, NOW)).toEqual({ text: 'Cloud still', tone: 'muted' });
+  });
+
+  it('Stille-Linie spart Lücken aus', () => {
+    expect(subtractSpans(0.5, 1, [[0.6, 0.7]])).toEqual([
+      [0.5, 0.6],
+      [0.7, 1],
+    ]);
+    expect(subtractSpans(0.5, 1, [[0.4, 1]])).toEqual([]);
+    expect(subtractSpans(0.5, 1, [[0.1, 0.2]])).toEqual([[0.5, 1]]);
+    expect(subtractSpans(1, 0.5, [])).toEqual([]);
+  });
+
+  it('wichtige Geräte, Batterie-Filter, Hauptaktion, Partner-Vorschläge', () => {
+    const star = device('Stern', { critical: true });
+    const low = device('Leer', { status: 'check', reason_key: 'battery_low' });
+    const silentOne = device('Still', { status: 'failed', reason_key: 'silent' });
+    const list = [star, low, silentOne, device('Ign', { critical: true, ignored: true })];
+    expect(importantCount(list)).toBe(1);
+    expect(applyFilter(list, 'important').map((d) => d.id)).toEqual(['Stern']);
+    expect(applyFilter(list, 'battery').map((d) => d.id)).toEqual(['Leer']);
+    expect(applyFilter(list, 'battery', ['Stern']).map((d) => d.id)).toEqual(['Leer', 'Stern']);
+    expect(batteryDevices(list).length).toBe(1);
+    expect(batteryFirst(low)).toBe(true);
+    expect(batteryFirst(silentOne)).toBe(false);
+    const weakSilent = { ...silentOne, battery: { ...silentOne.battery, level: 12 } };
+    expect(batteryFirst(weakSilent)).toBe(true);
+    expect(
+      batteryFirst({ ...weakSilent, battery: { ...weakSilent.battery, trusted: false } })
+    ).toBe(false);
+    expect(criticalChange(star, false)).toBeNull();
+    expect(criticalChange(device('x'), true)).toBe(true);
+    expect(criticalChange({ ...star, critical_auto: true }, false)).toBe(false);
+    const s1 = { id: 'p', name: 'Schloss', score: 0.8, together: 12 };
+    expect(
+      partnerSuggestions(device('a', { partner_suggestions: [s1, { ...s1, id: 'q' }] }))
+    ).toEqual([s1]);
+    expect(partnerSuggestions(device('a', { partner: 'x', partner_suggestions: [s1] }))).toEqual(
+      []
+    );
+    expect(partnerSuggestions(device('a'))).toEqual([]);
   });
 });

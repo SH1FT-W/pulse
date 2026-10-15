@@ -23,9 +23,14 @@ const WELCOME: Feature[] = [
 
 /**
  * Nach einem Update: das Neue dieser Version, in Worten der Nutzer. Bei jedem Release ersetzen
- * (2–4 Einträge). 1.0 ist die erste Version – da gibt es nichts „Neues“, nur das Willkommen.
+ * (2–4 Einträge). Stand: 1.1.0.
  */
-export const WHATS_NEW: Feature[] = [];
+export const WHATS_NEW: Feature[] = [
+  { icon: 'mdi:battery-clock-outline', title: 'new_forecast_title', text: 'new_forecast_text' },
+  { icon: 'mdi:alert-circle-outline', title: 'new_hero_title', text: 'new_hero_text' },
+  { icon: 'mdi:access-point', title: 'new_radio_title', text: 'new_radio_text' },
+  { icon: 'mdi:cloud-off-outline', title: 'new_cloud_title', text: 'new_cloud_text' },
+];
 
 const CHANGELOG_URL = 'https://github.com/SH1FT-W/pulse/blob/main/CHANGELOG.md';
 

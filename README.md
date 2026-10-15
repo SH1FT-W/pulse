@@ -16,7 +16,7 @@
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/images/overview-dark.png">
-    <img src="docs/images/overview-light.png" alt="The Pulse overview: a big headline saying 7 of 10 devices are in rhythm, and one rhythm strip per device. A silent aquarium thermometer breaks off into a red dashed line." width="900">
+    <img src="docs/images/overview-light.png" alt="The Pulse overview: a big headline saying 3 devices need you, 7 of 10 in rhythm below it, and one rhythm strip per device. A silent aquarium thermometer breaks off into a red dashed line." width="900">
   </picture>
 </p>
 
@@ -37,15 +37,23 @@ battery and no airtime.
 - **Zigbee signs of life.** One switch turns on `last_seen` and availability in Zigbee2MQTT, so Pulse also sees
   reports that didn't change a value.
 - **Cross-check.** Pair devices that fire together, such as a lock and its door contact. If one keeps reporting
-  and the other falls silent, Pulse notices early.
+  and the other falls silent, Pulse notices early. Pulse also suggests partners on its own: devices that were
+  active together on several days show up in the device sheet, where you accept or dismiss them.
 - **Battery changes.** Detects a new battery from a voltage or level jump or a Zigbee re-join, keeps a history,
   knows the battery type of common models and ignores the meaningless percentage of NiMH rechargeables.
+- **Battery forecast.** From Home Assistant's long-term statistics Pulse estimates how long a battery will last,
+  as a rough range such as "about 2 to 5 months". The battery card lists what is due in the next eight weeks, so
+  you know what to buy.
+- **Radio, but no values.** With the Zigbee2MQTT health check, Pulse notices devices that still talk to the
+  network but no longer send readings.
+- **Cloud outages stay calm.** When several devices of one cloud integration (Netatmo, Ring and others) go quiet
+  together, that is the cloud, not the batteries. Pulse shows them as *Watch* and sends one message.
 - **Notifications you control.** Right away, in a daily summary or off, per level. Quiet hours, critical alerts
   for important devices, "only when someone is home", action buttons in the notification. Never the same message
   twice. When a hub or bridge takes many devices down at once, you get one message instead of forty.
 - **Repairs.** Failed devices show up under *Settings → Repairs* and disappear on their own.
-- **A panel that reads like a dashboard.** One headline, a seven day rhythm strip per device, a heartbeat calendar
-  per device, and the notification settings.
+- **A panel that reads like a dashboard.** One headline that puts problems first, a seven day rhythm strip per
+  device, a heartbeat calendar per device, and the notification settings. Important devices carry a star.
 
 ## Installation
 
@@ -80,11 +88,26 @@ Unreachable devices (Zigbee2MQTT availability, Matter, entities that are unavail
 *Watch*, at 10 % or less *Check*. NiMH rechargeables are exempt because their percentage says nothing. A device
 that only reports "battery low" becomes *Check* when it does.
 
+The time Home Assistant was not running never counts as silence. After a start, a device that has not reported
+yet waits for one usual gap as *Watch*, without a notification. After a long silence, one or two stray reports don't count as
+recovery. Two reports in the usual rhythm do, and so does a real action such as a door opening.
+
+A few more reasons have their own wording:
+
+- **Battery entity missing.** The battery sensor has been unavailable for a day while the rest of the device
+  keeps reporting. Pulse says so instead of guessing a level.
+- **"Battery low" wins.** If a device has its own "battery low" sensor and it is on, that counts, even when the
+  percentage still looks fine.
+- **Radio, but no values.** Zigbee2MQTT still counts messages from the device, but nothing new arrives in Home
+  Assistant. This is at most *Check*, never *Failed*, and it does not count as a sign of life.
+- **Cloud devices.** For cloud integrations only a real change of value counts as a sign of life, because the
+  cloud's polling repeats old values. A single cloud device becomes *Failed* after a day at the earliest.
+
 After *Battery replaced* the silence counts from the replacement, and the device shows "waiting for the first
 report" until it reports again.
 
 <p align="center">
-  <img src="docs/images/detail.png" alt="Device detail: a headline reading Silent for 5 days, the buttons Battery replaced and Remind tomorrow, and a heartbeat calendar with one row per day where the silent days are red dashed lines." width="520">
+  <img src="docs/images/detail.png" alt="Device detail: a headline reading Silent for 5 days, the buttons Remind tomorrow and Battery replaced, a heartbeat calendar with one row per day where the silent days are red dashed lines, and the battery with its forecast status." width="520">
 </p>
 
 ## Notifications
@@ -101,7 +124,10 @@ recipient list, new phones are added automatically.
 - **Buttons** in the notification work for everyone: *Battery replaced* records a replacement, *Remind tomorrow*
   stays quiet for 24 hours.
 - **One message for an outage.** If three or more devices go silent in the same minute, Pulse sends a single
-  non-critical message naming them, because that is almost always a hub or bridge, not the batteries.
+  non-critical message naming them, because that is almost always a hub or bridge, not the batteries. The same
+  goes for a cloud outage: one calm message for the integration instead of one alarm per device.
+- **Batteries to buy.** The daily summary mentions batteries that are forecast to run out in the next eight
+  weeks. It only goes out because of a battery when one is due now.
 - **The daily summary** waits for quiet hours and for someone to come home. If Home Assistant was down at summary
   time, the summary is sent up to two hours late.
 
@@ -115,6 +141,11 @@ Pulse listens to `zigbee2mqtt/#` (the base topic can be changed in the panel). W
 bridge options: `last_seen`, a timestamp on every message so Pulse also sees reports without a new value, and
 availability. Battery devices send nothing extra. Note that with availability turned on, Home Assistant shows
 silent Zigbee devices as unavailable, and Zigbee2MQTT pings mains powered routers.
+
+A second, separate switch turns on Zigbee2MQTT's health check (Zigbee2MQTT 2.x). The bridge then publishes a
+message counter per device, and Pulse notices devices that keep talking to the network but no longer send values.
+Both switches are the only things Pulse ever writes, and only after you confirm them in the panel. You find them
+in the welcome sheet and under *Notifications → Zigbee2MQTT*. Battery devices send nothing extra.
 
 If the MQTT broker starts later than Home Assistant, Pulse keeps trying every five minutes.
 
@@ -142,8 +173,9 @@ Per monitored device, attached to the device itself as diagnostic entities:
 Overall: `sensor.pulse_problems` (count, attribute `devices` with `device_id`, `name`, `status`, `reason_key`,
 `reason`) and `sensor.pulse_monitored_devices`. Ignored devices are unavailable.
 
-`reason_key` is one of `ok_rhythm`, `learning`, `silent`, `silent_new`, `unavailable`, `partner`, `battery_low`,
-`battery_low_flag`, `battery_soon`, `waiting_first`.
+`reason_key` is one of `ok_rhythm`, `learning`, `silent`, `silent_new`, `silent_strays`, `unavailable`, `partner`,
+`battery_low`, `battery_low_flag`, `battery_soon`, `battery_missing`, `radio_only`, `cloud_outage`,
+`startup_waiting`, `waiting_first`.
 
 **Events**
 
@@ -188,6 +220,11 @@ actions:
 - **Notifications only through the Companion app** (`notify.mobile_app_*`). For anything else, use the
   `pulse_device_status_changed` event in an automation.
 - **NiMH rechargeables** never get a battery warning from their percentage, only from silence.
+- **Cloud integrations come from a fixed list.** Pulse knows the common cloud integrations (Netatmo, Ring, Nest,
+  tado and others). A cloud integration that is not on the list is treated like a local one.
+- **Forecasts need usable percentages.** Pulse only forecasts when the battery level falls in fine steps over at
+  least two weeks. Coarse levels (100, 50, 0), flat or noisy values, NiMH rechargeables and devices that only
+  report "battery low" get no forecast, and the panel says why.
 
 ## Troubleshooting
 

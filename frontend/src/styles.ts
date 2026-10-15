@@ -326,27 +326,52 @@ export const monitor = css`
     text-transform: uppercase;
     color: var(--pu-muted);
   }
+  .grp .count::before {
+    content: '· ';
+  }
   .nm {
     display: flex;
     align-items: center;
     gap: var(--pu-sp-12);
     min-width: 0;
   }
-  .nm ha-icon {
+  .nm > ha-icon {
     flex: none;
     color: var(--pu-muted);
     --mdc-icon-size: 20px;
   }
   /* Name immer in Textfarbe – die Statusfarbe steht höchstens am Symbol */
-  .nm ha-icon.t-crit {
+  .nm > ha-icon.t-crit {
     color: var(--pu-crit-text);
   }
-  .nm ha-icon.t-warn {
+  .nm > ha-icon.t-warn {
     color: var(--pu-warn-text);
+  }
+  /* Name (+ Stern) und Raum: nebeneinander, auf dem Handy untereinander */
+  .who {
+    display: flex;
+    align-items: center;
+    gap: var(--pu-sp-12);
+    min-width: 0;
+  }
+  .title {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--pu-sp-4);
+    flex: 0 0 auto;
+    min-width: 0;
+    max-width: 100%;
+  }
+  /* Wichtiges Gerät: kleiner Stern in Akzentfarbe hinter dem Namen */
+  .star {
+    display: inline-flex;
+    flex: none;
+    color: var(--pu-accent);
+    --mdc-icon-size: 14px;
   }
   /* Erst weicht der Raum, dann der Name */
   .nm b {
-    flex: 0 0 auto;
+    flex: 0 1 auto;
     max-width: 100%;
     min-width: 0;
     font-size: var(--pu-fs-15);
@@ -356,13 +381,17 @@ export const monitor = css`
     overflow: hidden;
     text-overflow: ellipsis;
   }
+  /* Lange Raumnamen zweizeilig statt abgeschnitten */
   .room {
     flex: 0 100 auto;
     min-width: 0;
     overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    hyphens: auto;
     font-size: var(--pu-fs-13);
+    line-height: 1.25;
     color: var(--pu-faint);
   }
   .st {
@@ -398,16 +427,27 @@ export const monitor = css`
     .rowgrid {
       grid-template-columns: minmax(0, 1fr) auto;
       gap: var(--pu-sp-8) var(--pu-sp-12);
-      padding: var(--pu-sp-12) 0 10px;
+      padding: var(--pu-sp-12) 0 18px;
     }
     .rowgrid pulse-rhythm {
       grid-column: 1 / -1;
       grid-row: 2;
       --rhythm-height: 22px;
     }
-    .nm ha-icon,
-    .room {
+    .nm > ha-icon {
       display: none;
+    }
+    /* Raum klein unter dem Namen */
+    .who {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 2px;
+    }
+    .room {
+      display: block;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      max-width: 100%;
     }
     .nm b {
       white-space: normal;

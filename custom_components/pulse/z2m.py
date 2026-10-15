@@ -1,8 +1,14 @@
 """Zigbee2MQTT mithören: „zuletzt gesehen“, Verfügbarkeit, Bridge-Neustarts, Neuanmeldungen.
 
-Pulse liest nur mit, was die Bridge ohnehin veröffentlicht. Einziger Schreibzugriff: auf ausdrücklichen
-Wunsch die Bridge-Optionen `last_seen` und `availability` einschalten – das kostet keine Batterie,
-weil die Bridge nur eigene Zeitstempel anhängt.
+Pulse liest nur mit, was die Bridge ohnehin veröffentlicht. Einzige Schreibzugriffe: auf ausdrücklichen
+Wunsch die Bridge-Optionen `last_seen` und `availability` bzw. die Health-Prüfung (`health`) einschalten –
+das kostet keine Batterie, weil die Bridge nur eigene Zeitstempel/Zähler veröffentlicht.
+
+Echos: Nach einem Neustart schickt die Bridge zwischengespeicherte Werte noch einmal (in Prod zwei Mal, das
+zweite bis zu 142 s später). Sie zählen nie als Lebenszeichen – im Echo-Fenster ohnehin nicht, und danach
+nicht, wenn der mitgeschickte `last_seen` nicht neuer ist als der bekannte (sofern sich der Stempel bewegt;
+ein eingefrorener Stempel bei ausgeschalteter Option sagt nichts) oder die Nachricht kurz nach dem Neustart
+Wort für Wort der letzten gleicht.
 """
 
 from __future__ import annotations
@@ -22,6 +28,11 @@ from .const import ECHO_WINDOW
 _LOGGER = logging.getLogger(__name__)
 
 AVAILABILITY = "/availability"
+HEALTH = "bridge/health"
+# So lange nach „online“ ist eine Nachricht, die Wort für Wort der letzten gleicht, ein Echo
+ECHO_SUSPECT = 10 * 60
+# So lange gilt ein erkanntes Echo auch für die Entitäten derselben Nachricht (gleicher Durchlauf)
+ECHO_MARK = 2.0
 
 
 def parse_last_seen(value: Any) -> float | None:
@@ -51,6 +62,7 @@ class Z2MListener:
         on_availability: Callable[[str, bool], None],
         on_announce: Callable[[str], None],
         on_change: Callable[[], None],
+        on_radio: Callable[[str, float], None] | None = None,
     ) -> None:
         self.hass = hass
         self.base = base
@@ -58,6 +70,7 @@ class Z2MListener:
         self._on_availability = on_availability
         self._on_announce = on_announce
         self._on_change = on_change
+        self._on_radio = on_radio
         self._unsubs: list[Callable[[], None]] = []
         self.names: dict[str, str] = {}  # friendly_name → ieee
         self.present = False
@@ -65,6 +78,15 @@ class Z2MListener:
         self.availability_enabled = False
         self.version: str | None = None
         self.echo_until = 0.0
+        self.online_at: float | None = None
+        # Echo-Erkennung je Gerät: letzter bekannter Stempel, ob er sich je bewegt hat, letzte Nachricht
+        self._stamps: dict[str, float] = {}
+        self.started_at = time.time()
+        self._last_payload: dict[str, str] = {}
+        self._echo_marks: dict[str, float] = {}
+        # Health (Z2M 2.x): Nachrichtenzähler je Gerät
+        self.health = False
+        self._counters: dict[str, int] = {}
 
     @property
     def in_echo_window(self) -> bool:
@@ -77,6 +99,7 @@ class Z2MListener:
             return False
         if not await mqtt.async_wait_for_mqtt_client(self.hass):
             return False
+        self.started_at = time.time()
         base = self.base
         self._unsubs.append(await mqtt.async_subscribe(self.hass, f"{base}/bridge/devices", self._devices))
         self._unsubs.append(await mqtt.async_subscribe(self.hass, f"{base}/bridge/info", self._info))
@@ -90,6 +113,18 @@ class Z2MListener:
     def async_stop(self) -> None:
         while self._unsubs:
             self._unsubs.pop()()
+
+    def echo_marked(self, ieee: str) -> bool:
+        """Gerade ein Echo für dieses Gerät erkannt – gilt auch für HAs Entitäten derselben Nachricht."""
+        mark = self._echo_marks.get(ieee)
+        return mark is not None and abs(time.time() - mark) < ECHO_MARK
+
+    async def async_enable_health(self) -> None:
+        """Health-Prüfung der Bridge einschalten (Z2M 2.x): veröffentlicht Zähler, fragt kein Gerät ab."""
+        from homeassistant.components import mqtt
+
+        payload = {"options": {"health": {"interval": 10, "reset_on_check": False}}}
+        await mqtt.async_publish(self.hass, f"{self.base}/bridge/request/options", json.dumps(payload))
 
     async def async_enable_options(self) -> None:
         """Bridge-Optionen setzen: Zeitstempel an jeder Nachricht + Verfügbarkeit."""
@@ -130,7 +165,10 @@ class Z2MListener:
         config = data.get("config") or {}
         advanced = config.get("advanced") or {}
         availability = config.get("availability")
-        self.last_seen_enabled = advanced.get("last_seen") not in (None, "disable", False)
+        enabled = advanced.get("last_seen") not in (None, "disable", False)
+        if enabled != self.last_seen_enabled:
+            self._stamps.clear()  # Option umgeschaltet: alte Stempel sagen nichts mehr
+        self.last_seen_enabled = enabled
         if isinstance(availability, dict):
             self.availability_enabled = bool(availability.get("enabled", False))
         else:
@@ -145,7 +183,8 @@ class Z2MListener:
         state = data.get("state") if isinstance(data, dict) else data
         if state == "online":
             # Die Bridge schickt jetzt ihre zwischengespeicherten Werte noch einmal
-            self.echo_until = time.time() + ECHO_WINDOW.total_seconds()
+            self.online_at = time.time()
+            self.echo_until = self.online_at + ECHO_WINDOW.total_seconds()
             _LOGGER.debug("Zigbee2MQTT online – Echo-Fenster %ss", ECHO_WINDOW.total_seconds())
 
     @callback
@@ -160,7 +199,9 @@ class Z2MListener:
     @callback
     def _topic(self, msg: Any) -> None:
         rest = msg.topic[len(self.base) + 1 :]
-        if rest in self.names:
+        if rest == HEALTH:
+            self._health(msg.payload)
+        elif rest in self.names:
             self._message(self.names[rest], msg.payload, bool(getattr(msg, "retain", False)))
         elif rest.endswith(AVAILABILITY) and rest[: -len(AVAILABILITY)] in self.names:
             self._availability(self.names[rest[: -len(AVAILABILITY)]], msg.payload)
@@ -169,6 +210,11 @@ class Z2MListener:
         data = self._json(payload)
         if not isinstance(data, dict):
             return
+        now = time.time()
+        if self._is_echo(ieee, data, now):
+            self._echo_marks[ieee] = now
+            return
+        self._echo_marks.pop(ieee, None)
         # Den Zeitstempel der Bridge nur glauben, wenn die Option an ist – sonst schickt Zigbee2MQTT
         # den zuletzt gespeicherten (eingefrorenen) Wert immer wieder mit
         seen = parse_last_seen(data.get("last_seen")) if self.last_seen_enabled else None
@@ -177,7 +223,47 @@ class Z2MListener:
             self._on_seen(ieee, seen, True)
         elif not self.in_echo_window and not retained:
             # Gespeicherte Nachrichten (retain) kommen beim Abonnieren alle auf einmal – das ist kein Lebenszeichen
-            self._on_seen(ieee, time.time(), False)
+            self._on_seen(ieee, now, False)
+
+    def _is_echo(self, ieee: str, data: dict[str, Any], now: float) -> bool:
+        """Zwischengespeicherte Nachricht noch einmal geschickt – nur kurz nach „online“ bzw. dem Abo-Start.
+
+        Mit eingeschalteter `last_seen`-Option: Stempel nicht neuer als der bekannte. Ohne (eingefrorener Stempel):
+        Wort für Wort dieselbe Nachricht wie zuletzt. Außerhalb des Fensters ist nichts ein Echo (Uhrsprung,
+        Option zur Laufzeit umgeschaltet).
+        """
+        body = json.dumps({k: v for k, v in data.items() if k != "last_seen"}, sort_keys=True, default=str)
+        same = self._last_payload.get(ieee) == body
+        self._last_payload[ieee] = body
+        if self.last_seen_enabled and (stamp := parse_last_seen(data.get("last_seen"))) is not None:
+            known = self._stamps.get(ieee)
+            self._stamps[ieee] = stamp if known is None else max(known, stamp)
+            if known is None or stamp > known:
+                return False  # neuer Stempel: sicher eine neue Nachricht
+            return self._near_restart(now)
+        return same and self._near_restart(now)
+
+    def _near_restart(self, now: float) -> bool:
+        return now - max(self.online_at or 0.0, self.started_at) < ECHO_SUSPECT
+
+    def _health(self, payload: Any) -> None:
+        """`bridge/health`: Nachrichtenzähler je Gerät – steigt er, funkt das Gerät noch."""
+        data = self._json(payload)
+        devices = data.get("devices") if isinstance(data, dict) else None
+        if not isinstance(devices, dict):
+            return
+        now = time.time()
+        self.health = True
+        for key, info in devices.items():
+            ieee = self.names.get(str(key), str(key))
+            count = info.get("messages") if isinstance(info, dict) else None
+            if not isinstance(count, int) or isinstance(count, bool):
+                continue
+            before = self._counters.get(ieee)
+            self._counters[ieee] = count
+            # Kleiner geworden = Zähler zurückgesetzt (Neustart): neuer Ausgangswert
+            if before is not None and count > before and self._on_radio is not None:
+                self._on_radio(ieee, now)
 
     def _availability(self, ieee: str, payload: Any) -> None:
         data = self._json(payload)

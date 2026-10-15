@@ -12,7 +12,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .const import SIGNAL_NEW_DEVICES, STATUSES
+from .const import SIGNAL_NEW_DEVICES, SIGNAL_REMOVED_DEVICES, STATUSES
 from .entity import PulseDeviceEntity, PulseHubEntity
 
 if TYPE_CHECKING:
@@ -39,7 +39,14 @@ async def async_setup_entry(
 
     async_add_entities([ProblemsSensor(monitor), MonitoredSensor(monitor)])
     add(list(monitor.devices))
+
+    @callback
+    def removed(device_ids: list[str]) -> None:
+        # Entitäten sind aus der Registry entfernt – kommt das Gerät zurück, entstehen sie neu
+        known.difference_update(device_ids)
+
     entry.async_on_unload(async_dispatcher_connect(hass, SIGNAL_NEW_DEVICES, add))
+    entry.async_on_unload(async_dispatcher_connect(hass, SIGNAL_REMOVED_DEVICES, removed))
 
 
 class StatusSensor(PulseDeviceEntity, SensorEntity):
@@ -62,7 +69,7 @@ class StatusSensor(PulseDeviceEntity, SensorEntity):
         device = self.device
         if device is None:
             return {}
-        since = self.monitor.silence_from(device)
+        since = self.monitor.silence_start(device)
         snooze = device.record.get("snooze_until")
         return {
             "reason_key": device.reason.get("key"),

@@ -13,9 +13,27 @@ es hört nur zu (Zustände, „gemeldet ohne Änderung“, Zigbee2MQTT-Nachricht
   Snapshot fürs Panel. Neustart-Echos zählen nie (Wert direkt nach unavailable/unknown, Z2M-Bridge-Neustart).
 - Reine Logik ohne HA, hier zuerst testen: `rhythm.py` (Takt lernen, Grenzen, Status mit Begründung,
   Rhythmusleiste), `battery.py` (Bibliothek nur sicherer Modelle, Wechsel-Erkennung, Einkaufsliste),
-  `texts.py` (Sätze de/en – Panel, Push und Reparatur sagen dasselbe).
+  `texts.py` (Sätze de/en – Panel, Push und Reparatur sagen dasselbe), `forecast.py` (Laufzeit-Vorhersage),
+  `partners.py` (Partner-Vorschläge). `snapshot.py` baut Snapshot/serialize fürs Panel (aus `monitor.py` ausgelagert).
+- Stille (1.1): ein Bezugspunkt `silence_start` + `strays` (`rhythm.silence_start`, Ausreißer-Regel: nach einer Lücke
+  ≥ max(6 h, 3× Takt, längster Abstand) zählen ≤ 2 vereinzelte Meldungen nicht – zwei im üblichen Takt = läuft
+  wieder; eine echte Aktion nach der Lücke oder „Batterie gewechselt“ beendet die Stille sofort). Gilt für Status, `silent_since`, Texte
+  (`silent_strays`) und Panel. HA-Pausen (Lücken in `store.uptime` ≥ `UPTIME_SLACK`) zählen nie als Stille
+  (`Facts.downtime`); bis der eigene Takt seit dem Start um ist: `startup_waiting` (watch, keine Mitteilung).
+- Cloud-Geräte (`CLOUD_INTEGRATIONS`, `DeviceSpec.cloud`): nur echte Wertänderungen sind Lebenszeichen (kein
+  state_reported), einzeln erst nach ≥ 1 Tag `failed`; größte Gruppe ≥ 2 Geräte derselben Cloud, deren Stille im
+  2-h-Fenster begann → `cloud_outage` (watch; hält, solange seine Geräte still sind) + eine gedämpfte Mitteilung (`store.cloud_notified`), `summary.cloud_outages`.
+- Batterie: Warn-Sensor neben Prozent (`spec.battery_low`) an → `battery_low_flag` gewinnt (`battery.flag_conflict`);
+  Batterie-Entität ≥ 24 h ohne Wert, Rest meldet → `battery_missing` (`record["battery_missing_since"]`).
+  Vorhersage einmal am Tag (`_async_daily`, nach Bootstrap): Stundenmittel der Langzeitstatistik
+  (`history.load_forecasts`, Recorder-Executor) ab letztem Wechsel → `device.forecast` bzw. `forecast_reason`;
+  `notifier.due_soon` = Einkaufsliste (8 Wochen), löst die Zusammenfassung aber nur bei jetzt fälliger Batterie aus.
+- Partner-Vorschläge (gleicher Lauf, letzte 7 Tage, ≤ 300 Aktionen je Gerät): Aktionen ≤ 120 s zusammen, ≥ 3× an
+  ≥ 2 Tagen, Wert ≥ 0,8 (anderer Raum × 0,75), max. 3; „Batterie gewechselt“ löscht die Vorhersage; verworfene in
+  `record["partner_dismissed"]` (`pulse/partner_suggestion_dismiss`).
 - Batteriewechsel (`_check_battery`): nur aus echten Übergängen (alter + neuer Zustand real, kein Echo, nicht in den
-  ersten 5 Min. nach HA-Start), Sprung muss sich bei der nächsten echten Meldung bestätigen (`pending_jump`);
+  ersten 5 Min. nach HA-Start), Sprung muss sich bei einer späteren echten Meldung bestätigen (`pending_jump`,
+  ≥ `MERGE_SECONDS` später – nicht dieselbe Funknachricht; bewertet wird nur die gerade meldende Entität);
   Spannung ≥ 15 % UND ≥ 150 mV. Neuanmeldung zählt nur nach echter Stille, nicht im Bridge-Echo. Quelle je Wechsel in
   `replaced_source`. Mitteilung nur bei vorherigem Problem/schwacher Batterie, gesammelt (3 Min.), ≥ 3 in 10 Min. eine
   gemeinsame, > 3 keine (Neustart-Artefakt).
@@ -23,6 +41,13 @@ es hört nur zu (Zustände, „gemeldet ohne Änderung“, Zigbee2MQTT-Nachricht
   gesprächigen Geräten) – Panel schraffiert sie in Leisten und Kalender.
 - Zigbee2MQTT (`z2m.py`): ein Abo `<base>/#` (Namen mit `/`), `last_seen` aus Nachrichten nur, wenn die Bridge-Option
   an ist (sonst schickt Z2M einen eingefrorenen Stempel mit). Basis-Thema `z2m_base` im Panel einstellbar.
+  Echos: Fenster `ECHO_WINDOW` 180 s nach „online“; bis 10 Min. nach „online“/Abo-Start zusätzlich Echo, wenn (Option
+  an) `last_seen` nicht neuer als der bekannte ist bzw. (Option aus) die Nachricht Wort für Wort der letzten gleicht.
+  Neuer Stempel ist nie ein Echo; Umschalten der Option leert die Stempel.
+  Ein erkanntes Echo gilt auch für HAs Entitäten derselben Nachricht (`echo_marked`; State-Events von Z2M-Geräten
+  werden dafür per `call_soon` nach dem MQTT-Durchlauf ausgewertet). `bridge/health` (Z2M 2.x, passiv): steigt der
+  Nachrichtenzähler ≥ 2× mindestens 15 Min. nach der letzten Meldung (die eigene Wert-Nachricht zählt mit) und
+  frisch (< Watch-Grenze) → `radio_only` (höchstens check, nie failed; kein Lebenszeichen für die Stille).
   Spannung immer in mV (`_millivolts`, Volt-Sensoren werden umgerechnet).
 - Nach „Batterie gewechselt“ zählt die Stille ab dem Wechsel (`silence_from`, auch im Snapshot), Status „wartet auf
   die erste Meldung“ (`waiting_first`, watch); Rückgängig stellt `notified` wieder her (`notified_before_replace`).
@@ -32,7 +57,9 @@ es hört nur zu (Zustände, „gemeldet ohne Änderung“, Zigbee2MQTT-Nachricht
 - Entitäten schreiben nur bei Änderung (`PulseEntity._handle_update`); Attribute stabil (`reason_key`, `silent_since`),
   keine laufend wechselnden Sätze. Lesen (Panel, `pulse/subscribe`, `pulse/heartbeat`) für alle, Schreiben nur Admins.
 - Sturm-Bremse: während `_tick` sammelt der Notifier Problem-Mitteilungen (`async_begin_tick`/`async_end_tick`);
-  ab `PROBLEM_BURST_MIN` (3) im selben Takt eine gemeinsame, nie kritische (`push_burst`). `notified` ohne `told`
+  ab `PROBLEM_BURST_MIN` (3) im selben Takt eine gemeinsame, nie kritische (`push_burst` bei still/weg, sonst
+  `push_burst_mixed`; Batterie-Gründe immer einzeln). Wartende gemeinsame kennen ihre Geräte (`device_ids`/`members`):
+  `_waiting`/`_drop_queued` sehen sie, Erholung nimmt das Gerät heraus (bleibt eins, kommt dessen eigene). `notified` ohne `told`
   = eingereiht, aber nie zugestellt (Warteschlange ist flüchtig) → nach Neustart erneut einreihen. Erholung ohne
   beobachteten Übergang (`_evaluate`, `announce=False`/vor Bootstrap) → `notifier.forget` löscht die Merker.
   Zusammenfassung: `store.summary_pending` (Tag) solange sie zurückgehalten wird, Nachholen bis `SUMMARY_WINDOW`.
@@ -45,7 +72,11 @@ es hört nur zu (Zustände, „gemeldet ohne Änderung“, Zigbee2MQTT-Nachricht
   Problem + „läuft wieder“ in derselben Nacht heben sich auf, außer es kam vorher schon eine an (`told`); wichtige Geräte
   „Prüfen“ sofort, kritisch nur bei Ausfall; Zusammenfassung wartet Ruhezeit/Heimkommen ab (mehrere Personen); Tag der Zusammenfassung in `store.summary_sent`, kritisch für wichtige
   Geräte, erst beim Heimkommen, keine Wiederholungen über `record["notified"]`, Aktionen aus der App).
-- `store.py` (.storage/pulse.devices: Meldungen, Einstellungen pro Gerät, Mitteilungs-Einstellungen),
+- `store.py` (.storage/pulse.devices: Meldungen, Einstellungen pro Gerät, Mitteilungs-Einstellungen; Minor 6).
+  `async_delay_save` plant nur, wenn nichts ansteht (HA verschiebt sonst bei jedem Aufruf – es wurde nie gespeichert).
+  Nicht mehr überwachte Geräte (noch in der Registry, mit eigenen Entitäten oder deaktiviert): Pulse-Entitäten
+  entfernen, Datensatz gekürzt behalten, `SIGNAL_REMOVED_DEVICES` → Plattformen vergessen sie (kommen neu wieder).
+  Snapshot fürs Abo einmal je Update und Sprache (`snapshot_cached`).
   `entity.py`/`binary_sensor.py`/`sensor.py` (Entitäten hängen über `device_entry` am Gerät der anderen
   Integration – kein eigenes Gerät pro Sensor), `services.py`, `ws.py`, `panel.py`.
 
@@ -67,11 +98,23 @@ Eine Akzentfarbe: das Panel überschreibt `--primary-color` und HAs Schalter-Far
 über HAs Hinweis). Kopf ohne Hauptaktion; ⋮ in der App-Leiste. Willkommen/„Neu in Pulse“ in `pulse-welcome.ts` + `welcome.ts` (localStorage
 `pulse.seenVersion`; bei jedem Release WHATS_NEW ersetzen). Anzeige-Logik in `logic.ts` (getestet). Texte nur in `strings-de.ts`/`strings-en.ts`. Farben aus
 HA-Theme-Variablen (`styles.ts`, Akzent `--pulse-accent`). `www/pulse-panel.js` ist Build-Ausgabe.
+Panel 1.1: Schlagzeile stellt Probleme vorn („3 Geräte / brauchen dich.“ rot/orange, „7 von 10 im Takt.“ darunter,
+Verlauf nur wenn alle im Takt; `hero().tone/sub`). Zeiten über `formatWhen(…, now)`: heute nur Uhrzeit, < 6 Tage
+Wochentag, sonst Datum. Begriffe: Ausgefallen/Prüfen (= „Braucht dich“), Im Blick, Im Takt, Nicht überwacht.
+Stille aus `silence_start`/`strays` (Rückfall: eigene `silentIndex`-Rechnung), Stille-Linie spart `no_data` aus
+(`subtractSpans`). Neue Gründe `radio_only`, `battery_missing`, `startup_waiting`, `cloud_outage` (Cloud-Geräte nie
+Einzelalarm: grau, „Im Blick“, Sammelhinweis aus `summary.cloud_outages`). Vorhersage nur als grober Bereich
+(`forecastText`), Einkaufsliste aus `summary.due_batteries` (`dueLine`), Batterie-Kachel antippbar (Filter
+`battery`), wichtige Geräte mit Stern + Filter `important`. Funk-Zähler (`pulse/enable_z2m_health`) und
+Zigbee-Lebenszeichen auch unter Mitteilungen → Zigbee2MQTT, nur nach Rückfrage. Partner-Vorschläge im Detail
+(`pulse/device {partner}` / `pulse/partner_suggestion_dismiss`). Abo-Fehler: letzter Stand bleibt + Hinweis.
+Panel-Version kommt aus `manifest.json` (vite.config) – nach dem Versionssprung neu bauen.
 
 ## Regeln
 
-- **Nie ein Gerät abfragen oder Funkverkehr auslösen.** Einziger Schreibzugriff: Z2M-Bridge-Optionen
-  `last_seen` + `availability` – nur nach Bestätigung im Panel.
+- **Nie ein Gerät abfragen oder Funkverkehr auslösen.** Einzige Schreibzugriffe: Z2M-Bridge-Optionen
+  `last_seen` + `availability` (`pulse/enable_z2m`) und die Health-Prüfung `health` (`pulse/enable_z2m_health`) –
+  beides nur nach Bestätigung im Panel; die Bridge veröffentlicht dann nur eigene Stempel/Zähler.
 - TypeScript strict, kein `any`, keine `as`-Casts (außer `as const`), keine IIFEs.
 - Vor „fertig“: im Frontend `corepack yarn typecheck && corepack yarn test && corepack yarn check && corepack yarn build`;
   in Python `pytest` (Abdeckung ≥ 95 %), `uvx ruff check . && uvx ruff format --check .`,

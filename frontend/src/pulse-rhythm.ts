@@ -1,6 +1,6 @@
 import { css, html, LitElement, nothing, type PropertyValues, svg } from 'lit';
 import { defineOnce } from './ha';
-import { resample, stripHeights, type Tone } from './logic';
+import { resample, stripHeights, subtractSpans, type Tone } from './logic';
 import { tokens } from './styles';
 
 /** Unter dieser Breite zeigt die Leiste halb so viele Balken (Handy). */
@@ -148,10 +148,12 @@ export class PulseRhythm extends LitElement {
       hot.push(
         svg`<rect class="mark" x=${(mark * step + (step - bw) / 2).toFixed(1)} y="1" width=${bw.toFixed(1)} height=${H - 2} rx=${(bw / 2).toFixed(1)}></rect>`
       );
+    // Gestrichelte Stille – unterbrochen, wo Pulse nicht lief (dort liegt die Schraffur, keine Aussage)
     if (silentFrom >= 0 && silentFrom < end)
-      hot.push(
-        svg`<line class="silent" x1=${(silentFrom * step).toFixed(1)} x2=${(end * step).toFixed(1)} y1=${H / 2} y2=${H / 2}></line>`
-      );
+      for (const [a, b] of subtractSpans(silentFrom / n, end / n, this.gaps))
+        hot.push(
+          svg`<line class="silent" x1=${(a * W).toFixed(1)} x2=${(b * W).toFixed(1)} y1=${H / 2} y2=${H / 2}></line>`
+        );
     const dayLines = Array.from({ length: Math.max(0, this.days - 1) }, (_, k) => {
       const x = (((k + 1) / this.days) * W).toFixed(1);
       return svg`<line class="day" x1=${x} x2=${x} y1="1" y2=${H - 1}></line>`;

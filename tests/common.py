@@ -124,3 +124,12 @@ async def tick(hass: HomeAssistant, freezer, delta: timedelta) -> None:
     freezer.tick(delta)
     async_fire_time_changed(hass, dt_util.utcnow())
     await hass.async_block_till_done()
+
+
+async def report_back(hass: HomeAssistant, freezer, entity_id: str, values: tuple[str, str] = ("25.4", "25.6")) -> None:
+    """Zurück nach langer Stille: zwei Meldungen im üblichen Takt (eine einzelne ist ein Ausreißer)."""
+    hass.states.async_set(entity_id, values[0])
+    await hass.async_block_till_done()
+    freezer.tick(timedelta(minutes=20))
+    hass.states.async_set(entity_id, values[1])
+    await hass.async_block_till_done()
