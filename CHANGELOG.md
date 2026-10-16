@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.1.0 – unreleased
+## 1.1.0 – 2026-10-16
 
 ### New
 - **Battery forecast:** Pulse estimates how long a battery will last ("about 2–5 months") from Home Assistant's long-term statistics. Devices with coarse or unreliable levels honestly show no forecast. The battery card lists what is due in the next eight weeks.
