@@ -319,5 +319,8 @@ export const DE: Record<keyof typeof EN, string> = {
   new_cloud_title: 'Ruhig bei Cloud-Ausfällen',
   new_cloud_text:
     'Antwortet eine Cloud nicht, gibt es einen Sammelhinweis statt vieler Alarme. Dazu schlägt Pulse passende Partnergeräte vor.',
+  new_calver_title: 'Neue Versionsnummern',
+  new_calver_text:
+    'Ab jetzt lesen sich Versionen als Jahr.Monat.Release: 26.10.4 ist das vierte Release im Oktober 2026. Der Sprung von 1.1.0 ist gewollt – Updates werden wie gewohnt erkannt.',
   due_untyped: 'Typ offen: {names}',
 };

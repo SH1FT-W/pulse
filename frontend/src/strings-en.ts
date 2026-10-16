@@ -317,5 +317,8 @@ export const EN = {
   new_cloud_title: 'Calm during cloud outages',
   new_cloud_text:
     'If a cloud stops responding, you get one summary instead of many alerts. Pulse also suggests matching partner devices.',
+  new_calver_title: 'New version numbers',
+  new_calver_text:
+    'From now on versions read year.month.release: 26.10.4 is the fourth release in October 2026. The jump from 1.1.0 is intended – updates are found as usual.',
   due_untyped: 'type unknown: {names}',
 };

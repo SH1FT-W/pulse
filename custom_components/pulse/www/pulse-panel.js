@@ -876,6 +876,8 @@ var We = {
 	new_radio_text: "Mit dem Funk-Zähler von Zigbee2MQTT merkt Pulse, wenn ein Gerät noch funkt, aber nichts mehr misst.",
 	new_cloud_title: "Ruhig bei Cloud-Ausfällen",
 	new_cloud_text: "Antwortet eine Cloud nicht, gibt es einen Sammelhinweis statt vieler Alarme. Dazu schlägt Pulse passende Partnergeräte vor.",
+	new_calver_title: "Neue Versionsnummern",
+	new_calver_text: "Ab jetzt lesen sich Versionen als Jahr.Monat.Release: 26.10.4 ist das vierte Release im Oktober 2026. Der Sprung von 1.1.0 ist gewollt – Updates werden wie gewohnt erkannt.",
 	due_untyped: "Typ offen: {names}"
 }, Ge = {
 	title: "Pulse",
@@ -1177,6 +1179,8 @@ var We = {
 	new_radio_text: "With the Zigbee2MQTT radio counter, Pulse notices when a device still transmits but no longer measures anything.",
 	new_cloud_title: "Calm during cloud outages",
 	new_cloud_text: "If a cloud stops responding, you get one summary instead of many alerts. Pulse also suggests matching partner devices.",
+	new_calver_title: "New version numbers",
+	new_calver_text: "From now on versions read year.month.release: 26.10.4 is the fourth release in October 2026. The jump from 1.1.0 is intended – updates are found as usual.",
 	due_untyped: "type unknown: {names}"
 };
 //#endregion
@@ -2403,28 +2407,11 @@ var J = o`
 		title: "welcome_notify_title",
 		text: "welcome_notify_text"
 	}
-], An = [
-	{
-		icon: "mdi:battery-clock-outline",
-		title: "new_forecast_title",
-		text: "new_forecast_text"
-	},
-	{
-		icon: "mdi:alert-circle-outline",
-		title: "new_hero_title",
-		text: "new_hero_text"
-	},
-	{
-		icon: "mdi:access-point",
-		title: "new_radio_title",
-		text: "new_radio_text"
-	},
-	{
-		icon: "mdi:cloud-off-outline",
-		title: "new_cloud_title",
-		text: "new_cloud_text"
-	}
-], jn = "https://github.com/SH1FT-W/pulse/blob/main/CHANGELOG.md";
+], An = [{
+	icon: "mdi:calendar-month-outline",
+	title: "new_calver_title",
+	text: "new_calver_text"
+}], jn = "https://github.com/SH1FT-W/pulse/blob/main/CHANGELOG.md";
 I("pulse-welcome", class extends N {
 	static {
 		this.properties = {
@@ -5629,7 +5616,7 @@ function mr() {
 	let e = pr();
 	if (!e) return null;
 	try {
-		return Fn(e, "1.1.0", An.length > 0);
+		return Fn(e, "26.10.4", An.length > 0);
 	} catch {
 		return null;
 	}
@@ -5820,7 +5807,7 @@ var gr = class extends N {
 		this.welcome = null;
 		let e = pr();
 		try {
-			e && In(e, "1.1.0");
+			e && In(e, "26.10.4");
 		} catch {}
 	}
 	zigbeeOffer(e) {
@@ -5978,7 +5965,7 @@ var gr = class extends N {
         @partner-dismiss=${(e) => this.onPartnerDismiss(e.detail.id, e.detail.partner)}
       >
         ${this.renderHead()} ${this.renderContent()}
-        <p class="version muted">${L(t, "version", { version: "1.1.0" })}</p>
+        <p class="version muted">${L(t, "version", { version: "26.10.4" })}</p>
         ${e ? E`<pulse-device-sheet
                   .open=${n !== null}
                   .device=${n}
@@ -6003,7 +5990,7 @@ var gr = class extends N {
                 <pulse-welcome
                   .mode=${this.welcome}
                   .language=${t}
-                  .version=${"1.1.0"}
+                  .version=${"26.10.4"}
                   .zigbee=${this.zigbeeOffer(e)}
                   @closed=${() => this.welcomeDone()}
                   @enable-z2m=${() => {

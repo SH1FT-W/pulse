@@ -2,6 +2,15 @@
 
 After 1.1.0, releases use calendar versions `YY.M.N` (year, month, number of the release in that month), e.g. `26.10.4`. They count as newer than every 1.x version, so updates through HACS work as before.
 
+## 26.10.4 – 2026-10-16
+
+### New version numbers
+- From now on Pulse uses calendar versions: **year.month.release of that month**. `26.10.4` is the fourth Pulse
+  release in October 2026; the next month starts again at `.1` (e.g. `26.11.1`).
+- The jump from `1.1.0` to `26.10.4` is intended. Home Assistant and HACS see `26.10.4` as newer than every `1.x`,
+  so the update is offered as usual.
+- The "What's new" sheet explains the new numbers once.
+
 ## 1.1.0 – 2026-10-16
 
 ### New
