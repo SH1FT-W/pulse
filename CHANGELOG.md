@@ -1,5 +1,7 @@
 # Changelog
 
+After 1.1.0, releases use calendar versions `YY.M.N` (year, month, number of the release in that month), e.g. `26.10.4`. They count as newer than every 1.x version, so updates through HACS work as before.
+
 ## 1.1.0 – 2026-10-16
 
 ### New
