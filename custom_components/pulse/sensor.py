@@ -81,6 +81,9 @@ class StatusSensor(PulseDeviceEntity, SensorEntity):
 
 
 class LastReportSensor(PulseDeviceEntity, SensorEntity):
+    # Jede Meldung wäre eine Zeile im Recorder (gesprächige Geräte: Zehntausende am Tag) – wer die Zeit
+    # in einer Automation braucht, schaltet die Entität ein
+    _attr_entity_registry_enabled_default = False
     _attr_device_class = SensorDeviceClass.TIMESTAMP
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 

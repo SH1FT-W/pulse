@@ -7,7 +7,7 @@ MQTT-Nachrichten von Zigbee2MQTT. Kein Gerät wird je abgefragt.
 from __future__ import annotations
 
 import asyncio
-from bisect import bisect_left
+from bisect import bisect_left, bisect_right
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
@@ -122,6 +122,13 @@ CLOUD_OUTAGE_MIN = 2
 CLOUD_SPREAD = 2 * 3600.0
 # Vorhersage: höchstens so weit zurück (falls kein Wechsel eingetragen ist)
 FORECAST_LOOKBACK = 180 * 86400.0
+# Registry-Änderungen, die die Geräteliste betreffen können – Name, Symbol oder Optionen einer Entität nicht
+DEVICE_CHANGES = frozenset(
+    {"name", "name_by_user", "area_id", "disabled_by", "identifiers", "manufacturer", "model", "via_device_id"}
+)
+ENTITY_CHANGES = frozenset(
+    {"device_id", "disabled_by", "device_class", "original_device_class", "entity_category", "platform", "entity_id"}
+)
 
 
 @dataclass
@@ -252,8 +259,16 @@ class PulseMonitor:
         self._unsubs.append(
             self.hass.bus.async_listen(EVENT_STATE_REPORTED, self._state_reported, event_filter=self._tracked)
         )
-        self._unsubs.append(self.hass.bus.async_listen(dr.EVENT_DEVICE_REGISTRY_UPDATED, self._registry_changed))
-        self._unsubs.append(self.hass.bus.async_listen(er.EVENT_ENTITY_REGISTRY_UPDATED, self._registry_changed))
+        self._unsubs.append(
+            self.hass.bus.async_listen(
+                dr.EVENT_DEVICE_REGISTRY_UPDATED, self._registry_changed, event_filter=self._device_relevant
+            )
+        )
+        self._unsubs.append(
+            self.hass.bus.async_listen(
+                er.EVENT_ENTITY_REGISTRY_UPDATED, self._registry_changed, event_filter=self._entity_relevant
+            )
+        )
         self._unsubs.append(async_track_time_interval(self.hass, self._tick, TICK))
         self._unsubs.append(async_at_started(self.hass, self._started))
         self.notifier.async_start()
@@ -319,6 +334,23 @@ class PulseMonitor:
     @callback
     def _registry_changed(self, _event: Event[Any]) -> None:
         self.hass.async_create_task(self._rediscover_debouncer.async_call())
+
+    @staticmethod
+    @callback
+    def _device_relevant(event_data: Any) -> bool:
+        """Nur Geräte-Änderungen, die die Suche beeinflussen (nicht Labels, Hersteller-URL, Firmware)."""
+        return event_data["action"] != "update" or bool(DEVICE_CHANGES & set(event_data.get("changes") or ()))
+
+    @callback
+    def _entity_relevant(self, event_data: Any) -> bool:
+        """Eigene Entitäten (drei je Gerät) und kosmetische Änderungen lösen keine Neusuche aus."""
+        action = event_data["action"]
+        if action == "remove":
+            return True  # der Eintrag ist schon weg, eigene lassen sich hier nicht mehr erkennen
+        entry = er.async_get(self.hass).async_get(event_data["entity_id"])
+        if entry is not None and entry.platform == DOMAIN:
+            return False
+        return action != "update" or bool(ENTITY_CHANGES & set(event_data.get("changes") or ()))
 
     async def _async_rediscover(self) -> None:
         if not self._stopped:
@@ -758,7 +790,8 @@ class PulseMonitor:
         partner_actions = 0
         if partner is not None:
             since = own_last_action or (now - 2 * DAY)
-            partner_actions = sum(1 for ts in partner.record["actions"] if ts > since)
+            actions = partner.record["actions"]
+            partner_actions = len(actions) - bisect_right(actions, since)
         level = self._battery_level(device.spec)
         silence_from = self.silence_from(device)
         replaced = record["replaced"]

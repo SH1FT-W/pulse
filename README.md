@@ -175,7 +175,7 @@ Every monitored device gets diagnostic entities on the device itself. Status cha
 |:--|:--|:--|
 | `binary_sensor.<device>_pulse_problem` | on for Check or Failed | `status`, `reason_key` |
 | `sensor.<device>_pulse_status` | `ok`, `learning`, `watch`, `check`, `failed` | `reason_key`, `silent_since`, `typical_interval` (s), `critical`, `snoozed_until` |
-| `sensor.<device>_pulse_last_report` | time of the last report | |
+| `sensor.<device>_pulse_last_report` | time of the last report, disabled by default (one recorder row per report) | |
 
 Overall: `sensor.pulse_problems` (count, attribute `devices` with `device_id`, `name`, `status`, `reason_key`, `reason`) and `sensor.pulse_monitored_devices`. Ignored devices are unavailable.
 

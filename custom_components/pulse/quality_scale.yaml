@@ -75,8 +75,8 @@ rules:
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default:
-    status: exempt
-    comment: Every entity is used by the panel or by automations; none is noisy.
+    status: done
+    comment: The "last report" timestamp per device is disabled by default; it would write a recorder row for every report. Status and problem entities change rarely and stay enabled.
   entity-translations: done
   exception-translations: done
   icon-translations: done
