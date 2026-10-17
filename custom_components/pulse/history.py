@@ -79,7 +79,7 @@ async def async_load_history(
     try:
         return await get_instance(hass).async_add_executor_job(_load)
     except Exception:  # Verlauf ist Zugabe – Pulse lernt notfalls live
-        _LOGGER.exception("Verlauf konnte nicht gelesen werden")
+        _LOGGER.exception("Could not read history")
         return {}
 
 
@@ -102,7 +102,7 @@ def load_forecasts(
                 hass, dt_util.utc_from_timestamp(start), None, {entity_id}, "hour", None, {"mean"}
             ).get(entity_id, [])
         except Exception:  # Statistik ist Zugabe – ohne sie gibt es eben keine Vorhersage
-            _LOGGER.debug("Statistik für %s nicht lesbar", entity_id, exc_info=True)
+            _LOGGER.debug("Statistics for %s not readable", entity_id, exc_info=True)
             rows = []
         points = [(float(row["start"]), float(mean)) for row in rows if (mean := row.get("mean")) is not None]
         result[device_id] = predict(points, now, float(LEVEL_LOW), trusted)

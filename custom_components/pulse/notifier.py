@@ -220,7 +220,7 @@ class Notifier:
         recent = len([ts for ts in self._auto_replaced if now - ts < REPLACED_BURST_WINDOW])
         devices = [d for d in (self.monitor.devices.get(i) for i, _ in pending) if d is not None]
         if not devices or recent > REPLACED_BURST_MAX:
-            _LOGGER.info("Batteriewechsel ohne Mitteilung: %s auf einmal (vermutlich Neustart)", recent)
+            _LOGGER.info("Battery changes without notification: %s at once (probably a restart)", recent)
             return
         if recent > 2:
             names = ", ".join(d.name for d in devices)
@@ -264,7 +264,7 @@ class Notifier:
             for msg in others:
                 self._route(msg)
             return
-        _LOGGER.info("Pulse: %s Geräte auf einmal auffällig – eine gemeinsame Mitteilung", len(others))
+        _LOGGER.info("%s devices need attention at once, sending one combined notification", len(others))
         members = [{"device_id": m["device_id"], "name": m["name"], "reason_key": m.get("reason_key")} for m in others]
         self._route(self._burst(members))
 
@@ -459,7 +459,7 @@ class Notifier:
             if tag := msg["data"].get("tag"):
                 self.queue = [m for m in self.queue if m["data"].get("tag") != tag]
             self.queue.append(msg)
-            _LOGGER.debug("Mitteilung zurückgehalten (Ruhezeit/unterwegs): %s", msg["title"])
+            _LOGGER.debug("Notification held back (quiet hours/away): %s", msg["title"])
             return
         self._deliver(msg)
 
@@ -507,7 +507,7 @@ class Notifier:
             self.monitor.store.summary_pending = None
         self.sent.append({**payload, "at": time.time(), "targets": targets})
         del self.sent[:-20]
-        _LOGGER.info("Pulse-Mitteilung an %s: %s – %s", targets or "niemanden", msg["title"], msg["message"])
+        _LOGGER.info("Notification to %s: %s: %s", targets or "nobody", msg["title"], msg["message"])
         for target in targets:
             self.hass.async_create_task(self._async_call(target, payload), eager_start=True)
 
@@ -515,7 +515,7 @@ class Notifier:
         try:
             await self.hass.services.async_call("notify", target, payload, blocking=True)
         except Exception:  # Ein Empfänger, der gerade nicht geht, darf die anderen nicht stören
-            _LOGGER.warning("Mitteilung an %s fehlgeschlagen", target, exc_info=True)
+            _LOGGER.warning("Notification to %s failed", target, exc_info=True)
 
     def send_test(self) -> list[str]:
         self._deliver(

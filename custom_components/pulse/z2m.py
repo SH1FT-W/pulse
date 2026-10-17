@@ -185,7 +185,7 @@ class Z2MListener:
             # Die Bridge schickt jetzt ihre zwischengespeicherten Werte noch einmal
             self.online_at = time.time()
             self.echo_until = self.online_at + ECHO_WINDOW.total_seconds()
-            _LOGGER.debug("Zigbee2MQTT online – Echo-Fenster %ss", ECHO_WINDOW.total_seconds())
+            _LOGGER.debug("Zigbee2MQTT online, echo window %ss", ECHO_WINDOW.total_seconds())
 
     @callback
     def _event(self, msg: Any) -> None:

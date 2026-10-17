@@ -279,7 +279,7 @@ class PulseMonitor:
             try:
                 active = await listener.async_start()
             except Exception:  # MQTT ist optional
-                _LOGGER.exception("Zigbee2MQTT konnte nicht abonniert werden")
+                _LOGGER.exception("Could not subscribe to Zigbee2MQTT")
                 active = False
             if not active or self._stopped:
                 listener.async_stop()  # auch halb gestartete Abos wieder abmelden
@@ -295,7 +295,7 @@ class PulseMonitor:
         """MQTT war beim Start noch nicht da (Broker brauchte länger): später noch einmal abonnieren."""
         await self._async_start_z2m()
         if self.z2m is not None:
-            _LOGGER.info("Zigbee2MQTT nachträglich abonniert")
+            _LOGGER.info("Subscribed to Zigbee2MQTT after a delayed MQTT start")
             self.async_update()
 
     @callback
@@ -398,7 +398,7 @@ class PulseMonitor:
                 del record["actions"][:-TRIM_KEEP]
                 self.store.async_delay_save()
         if gone or unmonitored:
-            _LOGGER.info("Pulse: %s Geräte nicht mehr überwacht, aufgeräumt", len(gone | unmonitored))
+            _LOGGER.info("%s devices are no longer monitored, cleaned up", len(gone | unmonitored))
             async_dispatcher_send(self.hass, SIGNAL_REMOVED_DEVICES, sorted(gone | unmonitored))
 
     @staticmethod
@@ -499,7 +499,7 @@ class PulseMonitor:
             ):
                 device.record["first_seen"] = device.record["events"][0]
         self.bootstrapped = True
-        _LOGGER.debug("Verlauf gelesen: %s Entitäten", len(result))
+        _LOGGER.debug("History read: %s entities", len(result))
         self._tick(dt_util.utcnow())
 
     # ── Meldungen ────────────────────────────────────────────────────────
@@ -941,7 +941,7 @@ class PulseMonitor:
             if not self._stopped:
                 await self._async_partners()
         except Exception:
-            _LOGGER.exception("Pulse: Vorhersage/Partner-Vorschläge fehlgeschlagen")
+            _LOGGER.exception("Forecast/partner suggestions failed")
         finally:
             self._daily_running = False
         self.async_update()
