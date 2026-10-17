@@ -2,6 +2,26 @@
 
 After 1.1.0, releases use calendar versions `YY.M.N` (year, month, number of the release in that month), e.g. `26.10.4`. They count as newer than every 1.x version, so updates through HACS work as before.
 
+## Unreleased
+
+### Changed
+- Devices without a learned rhythm (they only report on actions) become *Watch* after two days of silence and *Check* only after a week. They no longer show up in the daily summary after two quiet days; the README and the panel's learning hint say so.
+- `sensor.<device>_pulse_last_report` is disabled by default: every report would be a recorder row. Enable it in the entity settings if an automation needs it.
+- Stored data is written far less often: the uptime stamp is saved every five minutes instead of every minute, new reports wait ten minutes, settings and actions one minute. Stopping still saves immediately.
+- Non-admin users no longer receive notification recipients or persons in the panel's live data.
+- The diagnostics download no longer contains device IDs of partners or dismissed partner suggestions.
+- `pulse.snooze` accepts up to 8760 hours (one year) in the actions UI as well, matching the service schema.
+- Log messages are in English.
+
+### Fixed
+- `pulse_device_status_changed` fired for the first evaluation after a start when the recorder history changed the verdict.
+- A battery or "battery low" entity provided by another integration (for example a template sensor) counted as a sign of life.
+- Undoing an automatically detected battery change did not remove the report that had been inserted with it.
+- Registry changes of Pulse's own entities and cosmetic entity changes no longer trigger a device rediscovery.
+
+### Development
+- CI: HACS validation runs on push and weekly, actions in the issue triage are pinned to commits, translations are checked for completeness, and a weekly job tests against the latest Home Assistant. Issue form for bug reports. Panel component tests with happy-dom.
+
 ## 26.10.4 – 2026-10-16
 
 ### New version numbers

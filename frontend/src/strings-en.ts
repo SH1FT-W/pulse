@@ -240,7 +240,8 @@ export const EN = {
   arrive_hint:
     'Notifications wait until one of the selected people is home. Applies to all recipients.',
   persons_none: 'No person found in Home Assistant.',
-  learning_hint: 'Still learning: needs about 7 reports to know the rhythm. A device that only reports on actions takes longer.',
+  learning_hint:
+    'Still learning: needs about 7 reports to know the rhythm. A device that only reports on actions takes longer.',
   learning_one: 'Pulse is still getting to know 1 device.',
   learning_many: 'Pulse is still getting to know {count} devices.',
   pill_learning: 'Learning',
