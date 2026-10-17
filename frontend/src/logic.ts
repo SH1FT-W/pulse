@@ -1228,3 +1228,11 @@ export function partnerSuggestions(device: Device): { id: string; name: string }
   // Ein Vorschlag auf einmal (der stärkste) – verworfen kommt der nächste
   return (device.partner_suggestions ?? []).slice(0, 1);
 }
+
+/** Abo-Neuversuch nach einem Fehler: 2 s, dann verdoppelt bis höchstens 60 s; ein Erfolg setzt zurück. */
+export const RETRY_FIRST = 2000;
+export const RETRY_MAX = 60_000;
+
+export function nextRetryDelay(delay: number): number {
+  return Math.min(Math.max(delay, RETRY_FIRST) * 2, RETRY_MAX);
+}

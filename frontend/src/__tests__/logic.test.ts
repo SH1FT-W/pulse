@@ -42,6 +42,7 @@ import {
   memoize,
   monitorGroups,
   needsAction,
+  nextRetryDelay,
   offRhythm,
   parseHeartbeat,
   partnerLine,
@@ -49,6 +50,8 @@ import {
   partnerSuggestions,
   quietRanges,
   quietSince,
+  RETRY_FIRST,
+  RETRY_MAX,
   resample,
   rhythmPill,
   rhythmTone,
@@ -988,5 +991,16 @@ describe('Pulse 1.1', () => {
       []
     );
     expect(partnerSuggestions(device('a'))).toEqual([]);
+  });
+});
+
+describe('nextRetryDelay', () => {
+  it('verdoppelt den Abstand bis zur Obergrenze', () => {
+    expect(nextRetryDelay(RETRY_FIRST)).toBe(4000);
+    expect(nextRetryDelay(4000)).toBe(8000);
+    expect(nextRetryDelay(40_000)).toBe(RETRY_MAX);
+    expect(nextRetryDelay(RETRY_MAX)).toBe(RETRY_MAX);
+    // Kleiner als der Start kann der Abstand nie werden
+    expect(nextRetryDelay(0)).toBe(4000);
   });
 });

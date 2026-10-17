@@ -17,7 +17,9 @@ import {
   dayStartsOf,
   memoize,
   monitored,
+  nextRetryDelay,
   parseSpans,
+  RETRY_FIRST,
   timeFormatOf,
   validTimeZone,
 } from './logic';
@@ -44,8 +46,6 @@ interface Route {
 }
 
 /** Erster und größter Abstand zwischen zwei Abo-Versuchen nach einem Fehler (ms). */
-const RETRY_FIRST = 2000;
-const RETRY_MAX = 60_000;
 
 /** localStorage, wenn der Browser ihn hergibt – sonst nichts (dann kommt kein Willkommen). */
 function storage(): StorageLike | null {
@@ -266,7 +266,7 @@ export class PulsePanel extends LitElement {
       if (!this.isConnected) return;
       // Nicht bei jedem hass-Update neu versuchen, sondern mit wachsendem Abstand
       const delay = this.retryDelay;
-      this.retryDelay = Math.min(delay * 2, RETRY_MAX);
+      this.retryDelay = nextRetryDelay(delay);
       this.retryTimer = window.setTimeout(() => {
         this.retryTimer = undefined;
         this.ensureSubscribed();
