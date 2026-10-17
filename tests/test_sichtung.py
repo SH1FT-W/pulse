@@ -80,7 +80,7 @@ async def test_registry_filters_skip_own_and_cosmetic_changes(hass: HomeAssistan
 
 
 async def test_last_report_sensor_disabled_by_default(hass: HomeAssistant, setup):
-    """Jede Meldung wäre eine Recorder-Zeile – die Entität gibt es, aber aus."""
+    """Jede Meldung wäre eine Recorder-Zeile, die Entität gibt es, aber aus."""
     reg = er.async_get(hass)
     mine = [e for e in reg.entities.values() if e.platform == DOMAIN and e.translation_key == "last_report"]
     assert len(mine) == 4
@@ -92,7 +92,7 @@ async def test_last_report_sensor_disabled_by_default(hass: HomeAssistant, setup
 
 
 async def test_no_status_event_for_first_evaluation_after_start(hass: HomeAssistant, setup):
-    """Vor dem Verlauf galt die Tür als ausgefallen, mit Verlauf läuft sie – das ist kein Wechsel."""
+    """Vor dem Verlauf galt die Tür als ausgefallen, mit Verlauf läuft sie, das ist kein Wechsel."""
     monitor: PulseMonitor = setup["monitor"]
     door = setup["devices"]["door"]
     now = time.time()

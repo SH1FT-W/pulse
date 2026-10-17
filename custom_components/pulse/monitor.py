@@ -105,7 +105,7 @@ HOUR_SECONDS = 3600
 STARTUP_GRACE = 5 * 60
 UPTIME_KEEP = 30 * 86400
 UPTIME_MAX = 200
-# Der Laufzeit-Stempel wird nur alle 5 Minuten gespeichert (UPTIME_SLACK ist 10 Minuten) – sonst schriebe
+# Der Laufzeit-Stempel wird nur alle 5 Minuten gespeichert (UPTIME_SLACK ist 10 Minuten), sonst schriebe
 # jeder Takt die ganze Datei mit allen Meldungen
 UPTIME_SAVE_EVERY = 5 * 60
 # Zigbee2MQTT nach einem Fehlstart (Broker noch nicht da) alle 5 Minuten noch einmal versuchen
@@ -122,7 +122,7 @@ CLOUD_OUTAGE_MIN = 2
 CLOUD_SPREAD = 2 * 3600.0
 # Vorhersage: höchstens so weit zurück (falls kein Wechsel eingetragen ist)
 FORECAST_LOOKBACK = 180 * 86400.0
-# Registry-Änderungen, die die Geräteliste betreffen können – Name, Symbol oder Optionen einer Entität nicht
+# Registry-Änderungen, die die Geräteliste betreffen können; Name, Symbol oder Optionen einer Entität nicht
 DEVICE_CHANGES = frozenset(
     {"name", "name_by_user", "area_id", "disabled_by", "identifiers", "manufacturer", "model", "via_device_id"}
 )
@@ -1100,7 +1100,7 @@ class PulseMonitor:
         sources: list[str] = device.record.get("replaced_source") or []
         source = sources.pop() if sources else "manual"
         if source != "manual":
-            # Automatisch erkannte Wechsel trugen den Zeitpunkt als Meldung ein (`mark_replaced`) – auch die weg
+            # Automatisch erkannte Wechsel trugen den Zeitpunkt als Meldung ein (`mark_replaced`), auch die weg
             events: list[float] = device.record["events"]
             idx = bisect_left(events, ts)
             if idx < len(events) and events[idx] == ts:

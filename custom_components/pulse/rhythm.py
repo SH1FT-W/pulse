@@ -43,7 +43,7 @@ RADIO_MIN_RISES = 2
 BATTERY_MISSING_AFTER = DAY
 
 # Ohne gelernten Takt (Gerät meldet nur bei Aktionen, z. B. eine selten geöffnete Tür): nach zwei Tagen Stille
-# „im Blick“, erst nach einer Woche „prüfen“ – sonst stünde jede ruhige Tür täglich in der Zusammenfassung
+# „im Blick“, erst nach einer Woche „prüfen“, sonst stünde jede ruhige Tür täglich in der Zusammenfassung
 SILENT_NEW_WATCH = 2 * DAY
 SILENT_NEW_CHECK = 7 * DAY
 
