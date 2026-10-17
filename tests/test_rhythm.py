@@ -95,11 +95,21 @@ def test_evaluate_silence_steps():
 
 
 def test_evaluate_without_rhythm_but_long_silence():
+    """Ohne Takt (meldet nur bei Aktionen): nach 2 Tagen „im Blick“, erst nach einer Woche „prüfen“."""
     verdict = evaluate(facts(rhythm=Rhythm(None, None, 0), last_activity=NOW - 3 * DAY))
-    assert verdict.status == STATUS_CHECK
+    assert verdict.status == STATUS_WATCH
     assert verdict.reason["key"] == "silent_new"
+    week = evaluate(facts(rhythm=Rhythm(None, None, 0), last_activity=NOW - 8 * DAY))
+    assert (week.status, week.reason["key"]) == (STATUS_CHECK, "silent_new")
     never = evaluate(facts(rhythm=Rhythm(None, None, 0), last_activity=None, observed_since=NOW - 3 * DAY))
+    assert (never.status, never.reason["key"]) == (STATUS_WATCH, "silent_new")
+    never = evaluate(facts(rhythm=Rhythm(None, None, 0), last_activity=None, observed_since=NOW - 8 * DAY))
     assert never.status == STATUS_CHECK
+    # Eine HA-Pause zählt nicht mit
+    paused = evaluate(
+        facts(rhythm=Rhythm(None, None, 0), last_activity=None, observed_since=NOW - 8 * DAY, downtime=3 * DAY)
+    )
+    assert paused.status == STATUS_WATCH
 
 
 def test_evaluate_unavailable():

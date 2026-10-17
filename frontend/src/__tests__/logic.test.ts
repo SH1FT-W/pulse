@@ -754,7 +754,7 @@ describe('Zweite Runde', () => {
     expect(learningLine('en', 1)).toBe('Pulse is still getting to know 1 device.');
     expect(learningLine('en', 3)).toBe('Pulse is still getting to know 3 devices.');
     expect(detailText('de', l1, NOW)).toBe(
-      'Lernt noch: braucht etwa 7 Meldungen, um den Takt zu kennen.'
+      'Lernt noch: braucht etwa 7 Meldungen, um den Takt zu kennen. Geräte, die nur bei Aktionen melden, brauchen länger.'
     );
   });
 

@@ -42,6 +42,11 @@ RADIO_MIN_RISES = 2
 # Batterie-Entität so lange ohne Wert (Rest meldet) → eigener Grund
 BATTERY_MISSING_AFTER = DAY
 
+# Ohne gelernten Takt (Gerät meldet nur bei Aktionen, z. B. eine selten geöffnete Tür): nach zwei Tagen Stille
+# „im Blick“, erst nach einer Woche „prüfen“ – sonst stünde jede ruhige Tür täglich in der Zusammenfassung
+SILENT_NEW_WATCH = 2 * DAY
+SILENT_NEW_CHECK = 7 * DAY
+
 
 @dataclass(frozen=True)
 class Rhythm:
@@ -248,6 +253,15 @@ def _worse(a: Verdict, b: Verdict) -> Verdict:
     return b if SEVERITY[b.status] > SEVERITY[a.status] else a
 
 
+def _silent_new(real: float, silence: float) -> Verdict | None:
+    """Stille ohne gelernten Takt: Grund `silent_new`, Stufe nach Dauer (ohne HA-Pausen)."""
+    if silence >= SILENT_NEW_CHECK:
+        return Verdict(STATUS_CHECK, {"key": "silent_new", "params": {"since": real}})
+    if silence >= SILENT_NEW_WATCH:
+        return Verdict(STATUS_WATCH, {"key": "silent_new", "params": {"since": real}})
+    return None
+
+
 def evaluate(facts: Facts) -> Verdict:
     """Status mit Begründung. Der schlimmste Befund gewinnt."""
     now = facts.now
@@ -273,13 +287,13 @@ def evaluate(facts: Facts) -> Verdict:
                     silent = Verdict(status, {"key": "silent", "params": params})
                     break
             waiting = silent is None and real >= lim.watch
-        elif silence >= 2 * DAY:
-            # Kaum Daten, aber lange still: vorsichtig nur „prüfen“
-            silent = Verdict(STATUS_CHECK, {"key": "silent_new", "params": {"since": real}})
         else:
-            waiting = real >= 2 * DAY
-    elif facts.observed_since is not None and now - facts.observed_since - facts.downtime >= 2 * DAY:
-        silent = Verdict(STATUS_CHECK, {"key": "silent_new", "params": {"since": now - facts.observed_since}})
+            # Kaum Daten, aber lange still: vorsichtig, erst „im Blick“, nach einer Woche „prüfen“
+            silent = _silent_new(real, silence)
+            waiting = silent is None and real >= SILENT_NEW_WATCH
+    elif facts.observed_since is not None:
+        observed = now - facts.observed_since
+        silent = _silent_new(observed, observed - facts.downtime)
     if (
         silent is not None
         and facts.radio_last is not None

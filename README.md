@@ -106,7 +106,7 @@ After *Battery replaced* the silence counts from the replacement, and the device
 <br/>
 
 - **Only devices with a battery entity.** Pulse finds devices through `device_class: battery` (a percentage or a "battery low" switch). Devices without one are not monitored.
-- **Quiet by design is hard to tell from dead.** A device that only reports when something happens, with no periodic battery report, has no rhythm. Pulse learns the longest normal gap, but a door that is rarely opened stays in *Learning* or *Watch* longer.
+- **Quiet by design is hard to tell from dead.** A device that only reports when something happens, with no periodic battery report, has no rhythm. Pulse learns the longest normal gap, but a door that is rarely opened stays in *Learning* or *Watch* longer: after two days without a report it becomes *Watch* (no notification), only after a week *Check*.
 - **Stuck values are not silence.** A sensor that keeps reporting the same wrong value counts as alive. Pulse watches whether a device talks, not whether what it says is right.
 - **Zigbee2MQTT `last_seen` in payloads.** If the bridge option was once on and is now off, Zigbee2MQTT keeps sending a frozen timestamp. Pulse ignores `last_seen` unless the option is on.
 - **History needs the recorder.** Entities excluded from the recorder start in *Learning* after every install.

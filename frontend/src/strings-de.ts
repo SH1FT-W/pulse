@@ -240,7 +240,7 @@ export const DE: Record<keyof typeof EN, string> = {
   arrive_hint:
     'Mitteilungen warten, bis jemand der Gewählten zu Hause ist. Gilt für alle Empfänger.',
   persons_none: 'Keine Person in Home Assistant gefunden.',
-  learning_hint: 'Lernt noch: braucht etwa 7 Meldungen, um den Takt zu kennen.',
+  learning_hint: 'Lernt noch: braucht etwa 7 Meldungen, um den Takt zu kennen. Geräte, die nur bei Aktionen melden, brauchen länger.',
   learning_one: 'Ein Gerät lernt Pulse noch kennen.',
   learning_many: '{count} Geräte lernt Pulse noch kennen.',
   pill_learning: 'Lernt noch',
