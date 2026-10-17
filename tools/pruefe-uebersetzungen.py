@@ -2,12 +2,13 @@
 """Prüft, dass strings.json und alle translations/*.json dieselben Schlüssel haben
 und dass Platzhalter {x} in jeder Sprache gleich sind. Vorlage aus mac-werkzeuge/vorlagen.
 Aufruf im Repo-Wurzelverzeichnis: python tools/pruefe-uebersetzungen.py"""
+
 from __future__ import annotations
 
 import json
+from pathlib import Path
 import re
 import sys
-from pathlib import Path
 
 
 def flach(d: object, pfad: str = "") -> dict[str, str]:

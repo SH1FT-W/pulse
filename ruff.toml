@@ -1,8 +1,6 @@
 # Python-Lint wie im Frontend Biome: `uvx ruff@0.16.9 check .` / `uvx ruff@0.16.9 format --check .` (Version wie ci.yml)
 line-length = 120
 target-version = "py313"
-# Gemeinsame Vorlage aus mac-werkzeuge, bleibt Zeichen für Zeichen wie dort
-extend-exclude = ["tools/pruefe-uebersetzungen.py"]
 
 [lint]
 select = ["E", "F", "W", "I", "B", "UP", "SIM", "ASYNC", "BLE", "LOG", "G", "DTZ", "PT", "RUF", "PIE", "RET", "C4", "PERF"]
