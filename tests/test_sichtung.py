@@ -159,3 +159,29 @@ async def test_undo_replaced_removes_inserted_report(hass: HomeAssistant, setup)
     assert monitor.undo_replaced(thermo_id)
     assert thermo.record["events"] == events_before
     assert thermo.record["replaced"] == [] and thermo.record["replaced_source"] == []
+
+
+# ── 7. Nicht-Admins sehen keine Empfänger und Personen ───────────────────
+
+
+async def test_non_admin_snapshot_without_recipients(
+    hass: HomeAssistant, setup, hass_ws_client, hass_read_only_access_token
+):
+    monitor: PulseMonitor = setup["monitor"]
+    monitor.store.settings["targets"] = ["mobile_app_alex"]
+    monitor.store.settings["arrive_home"]["persons"] = ["person.alex"]
+    hass.states.async_set("person.alex", "home")
+    client = await hass_ws_client(hass, hass_read_only_access_token)
+    await client.send_json_auto_id({"type": "pulse/subscribe"})
+    assert (await client.receive_json())["success"]
+    event = (await client.receive_json())["event"]
+    assert event["devices"] and event["settings"]["summary_time"] == "18:00"
+    assert event["targets"] == [] and event["persons"] == []
+    assert event["settings"]["targets"] is None and event["settings"]["arrive_home"]["persons"] == []
+    assert "mobile_app_alex" not in str(event) and "person.alex" not in str(event)
+    # Admins sehen weiter alles
+    admin = await hass_ws_client(hass)
+    await admin.send_json_auto_id({"type": "pulse/subscribe"})
+    assert (await admin.receive_json())["success"]
+    event = (await admin.receive_json())["event"]
+    assert event["settings"]["targets"] == ["mobile_app_alex"] and event["persons"] == ["person.alex"]

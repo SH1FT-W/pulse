@@ -64,6 +64,14 @@ def async_register(hass: HomeAssistant) -> None:
         websocket_api.async_register_command(hass, handler)
 
 
+def _without_recipients(payload: dict[str, Any]) -> dict[str, Any]:
+    """Nicht-Admins: Empfänger (notify-Dienste) und Personen bleiben draußen, Zeiten und Stufen sind sichtbar."""
+    settings = dict(payload.get("settings") or {})
+    settings["targets"] = None
+    settings["arrive_home"] = {**(settings.get("arrive_home") or {}), "persons": []}
+    return {**payload, "settings": settings, "targets": [], "persons": []}
+
+
 # Lesen dürfen alle angemeldeten Nutzer (Mitbewohner tippen auf die Mitteilung), Ändern nur Admins
 @websocket_api.websocket_command({vol.Required("type"): "pulse/subscribe", vol.Optional("language"): str})
 @websocket_api.async_response
@@ -78,6 +86,8 @@ async def ws_subscribe(hass: HomeAssistant, connection: websocket_api.ActiveConn
         if monitor is not None:
             # Gleicher Stand für alle offenen Panels: einmal je Update gebaut (Kopie oben, Geräte geteilt)
             payload = dict(monitor.snapshot(language) if fresh else monitor.snapshot_cached(language))
+            if not connection.user.is_admin:
+                payload = _without_recipients(payload)
         payload["battery_types"] = list(BATTERY_TYPES)
         payload["chemistries"] = list(CHEMISTRIES)
         connection.send_message(websocket_api.event_message(msg["id"], payload))

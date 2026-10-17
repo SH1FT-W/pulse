@@ -429,6 +429,8 @@ export class PulsePanel extends LitElement {
   /** „An Alex’ iPhone“ – wer die Mitteilungen bekommt (für das Tagesband). */
   private recipients(snap: Snapshot, names: Record<string, string>): string {
     const lang = this.language;
+    // Nicht-Admins bekommen vom Server keine Empfänger (Mitteilungen gehören den Admins)
+    if (this.readonly) return '';
     const chosen = (snap.settings.targets ?? snap.targets).filter((x) => snap.targets.includes(x));
     if (!chosen.length) return t(lang, 'day_nobody');
     const label = (service: string) =>
