@@ -1,8 +1,14 @@
 name: HACS Validation
 
-# Nur manuell: private Repos kann die HACS-Prüfung nicht auslesen,
-# Beschreibung/Topics/Lizenz braucht es erst beim Veröffentlichen.
+# Das Repo ist öffentlich: bei jedem Push und Pull Request, dazu wöchentlich
+# (HACS ändert seine Anforderungen gelegentlich) und von Hand.
 on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "41 5 * * 1"
   workflow_dispatch:
 
 permissions:

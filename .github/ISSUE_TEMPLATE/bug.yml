@@ -1,0 +1,48 @@
+name: Bug report
+description: Something in Pulse does not work as described.
+labels: ["bug"]
+body:
+  - type: input
+    id: ha_version
+    attributes:
+      label: Home Assistant version
+      placeholder: "2026.10.1"
+    validations:
+      required: true
+  - type: input
+    id: pulse_version
+    attributes:
+      label: Pulse version
+      description: Settings > Devices & services > Pulse, or the panel's "What's new" sheet.
+      placeholder: "26.10.4"
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: "1. ...\n2. ...\n3. ..."
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: What happens instead
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Diagnostics
+      description: Settings > Devices & services > Pulse > three dots > Download diagnostics. The file contains no device names, recipients or persons. Drag it here.
+  - type: textarea
+    id: context
+    attributes:
+      label: Anything else
+      description: Device type, integration (Zigbee2MQTT, ZHA, Z-Wave, cloud), log lines.

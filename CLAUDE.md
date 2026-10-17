@@ -117,8 +117,9 @@ Panel-Version kommt aus `manifest.json` (vite.config) – nach dem Versionssprun
   beides nur nach Bestätigung im Panel; die Bridge veröffentlicht dann nur eigene Stempel/Zähler.
 - TypeScript strict, kein `any`, keine `as`-Casts (außer `as const`), keine IIFEs.
 - Vor „fertig“: im Frontend `corepack yarn typecheck && corepack yarn test && corepack yarn check && corepack yarn build`;
-  in Python `pytest` (Abdeckung ≥ 95 %), `uvx ruff check . && uvx ruff format --check .`,
-  `uvx mypy@2.3.1 --python-executable <venv>/bin/python`, hassfest per Docker.
+  in Python `pytest` (Abdeckung ≥ 95 %), `uvx ruff@0.16.9 check . && uvx ruff@0.16.9 format --check .` (dieselbe
+  Version wie in ci.yml), `uvx mypy@2.3.1 --python-executable <venv>/bin/python`,
+  `python tools/pruefe-uebersetzungen.py` (strings.json gegen translations/*.json), hassfest per Docker.
 - Tests laufen mit der Evenlight-venv (gleiche HA-Version): `~/Software/evenlight/.venv/bin/python -m pytest -q -p no:logging`.
 - UI im eigenen Docker-Test-HA `pulse-test` (Port 8126, siehe ~/pulse-test/ZUGANG.txt) ansehen.
   flode-test, casora-test, evenlight-test gehören anderen Projekten.
@@ -131,8 +132,9 @@ Panel-Version kommt aus `manifest.json` (vite.config) – nach dem Versionssprun
 
 - **Kalender-Versionen `YY.M.N`** ab dem Release nach 1.1.0: Jahr zweistellig, Monat ohne führende Null, N = laufende
   Nummer des Releases im Monat ab 1 (alle veröffentlichten GitHub-Releases des Monats zählen, auch alte X.Y.Z; bloße Tags nicht). Jedes Release – Funktion
-  oder Bugfix – bekommt einfach die nächste Nummer, kein Major/Minor/Patch mehr. Nummer: `dev/next-version`
-  (z. B. `26.10.4`; neuer Monat beginnt wieder bei `.1`). Nie führende Nullen (`26.3.1`, nicht `26.03.1`).
+  oder Bugfix – bekommt einfach die nächste Nummer, kein Major/Minor/Patch mehr. Nummer: `tools/next-version`
+  (z. B. `26.10.4`; neuer Monat beginnt wieder bei `.1`; gemeinsame Vorlage aus mac-werkzeuge, byteidentisch).
+  Nie führende Nullen (`26.3.1`, nicht `26.03.1`).
 - Version gleich in `custom_components/pulse/manifest.json` und `frontend/package.json`, Panel danach neu bauen
   (Version kommt über vite.config ins Panel), CHANGELOG-Abschnitt `## <version> – <datum>`, WHATS_NEW in
   `pulse-welcome.ts` (zeigt sich einmal pro Version).

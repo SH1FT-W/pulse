@@ -5,6 +5,8 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  schedule:
+    - cron: "17 5 * * 1"   # montags: fängt Brüche durch neue HA-Versionen (Job ha-latest)
   workflow_dispatch:
 
 permissions:
@@ -32,13 +34,37 @@ jobs:
           uv venv --python 3.14
           uv pip install -r requirements_test.txt
       - name: Lint
+        # Dieselbe Version steht in CLAUDE.md und ruff.toml
         run: uvx ruff@0.16.9 check . && uvx ruff@0.16.9 format --check .
       - name: Types
         # mypy aus uvx, Home Assistant aus der Projekt-venv (Konfiguration: mypy.ini)
         run: uvx mypy@2.3.1 --python-executable .venv/bin/python
+      - name: Translations complete
+        run: .venv/bin/python tools/pruefe-uebersetzungen.py
       - name: Test
         # Abdeckungs-Grenze knapp unter dem Stand (1.0: 96 %) – sinkt sie, fehlen Tests
         run: .venv/bin/python -m pytest -q --cov=custom_components/pulse --cov-report=term --cov-fail-under=95
+
+  ha-latest:
+    # Frühwarnung: Tests gegen die neueste pytest-homeassistant-custom-component (zieht die aktuelle HA mit).
+    # Darf rot sein, blockiert nichts.
+    name: Tests against latest HA (early warning)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    continue-on-error: true
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
+      - name: Install (latest)
+        run: |
+          uv venv --python 3.14
+          sed -E 's/==.*//' requirements_test.txt > /tmp/req-latest.txt
+          uv pip install --prerelease=allow -r /tmp/req-latest.txt
+      - name: Test
+        run: .venv/bin/python -m pytest -q -p no:logging
 
   panel:
     name: Panel (typecheck, test, lint, build)
