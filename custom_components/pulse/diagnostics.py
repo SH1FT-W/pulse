@@ -45,7 +45,12 @@ def _device(monitor: PulseMonitor, device: Device) -> dict[str, Any]:
         "partner_suggestions": len(device.suggestions),
         "events": len(record["events"]),
         "actions": len(record["actions"]),
-        "record": {k: v for k, v in record.items() if k not in ("events", "actions")},
+        # Partner und verworfene Vorschläge sind Geräte-IDs: nur ob/wie viele
+        "record": {
+            **{k: v for k, v in record.items() if k not in ("events", "actions", "partner", "partner_dismissed")},
+            "partner": record.get("partner") is not None,
+            "partner_dismissed": len(record.get("partner_dismissed") or ()),
+        },
     }
 
 

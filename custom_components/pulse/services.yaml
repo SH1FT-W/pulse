@@ -19,7 +19,7 @@ snooze:
       selector:
         number:
           min: 0
-          max: 336
+          max: 8760
           unit_of_measurement: h
 ignore:
   fields:

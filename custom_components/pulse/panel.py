@@ -39,5 +39,5 @@ async def async_register_panel(hass: HomeAssistant) -> None:
 
 
 def async_unregister_panel(hass: HomeAssistant) -> None:
-    if DOMAIN in hass.data.get("frontend_panels", {}):
+    if DOMAIN in hass.data.get(frontend.DATA_PANELS, {}):
         frontend.async_remove_panel(hass, DOMAIN)
