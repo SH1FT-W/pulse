@@ -69,6 +69,18 @@ Pulse monitors every device that has a battery sensor (`device_class: battery`),
 report "battery low" as on or off. Phones, tablets, vacuums, mowers and devices with power or energy sensors are
 skipped on purpose. If a device is missing, check that it has a battery entity and that the entity is enabled.
 
+**Without HACS:** download the [latest release](https://github.com/SH1FT-W/pulse/releases/latest), copy its
+`custom_components/pulse` folder into `/config/custom_components/`, restart Home Assistant and add the integration.
+
+### Updates and version numbers
+
+Updates arrive through HACS like any other integration. Pulse uses calendar versions **`YY.M.N`**: two-digit
+year, month without a leading zero, and the number of the release in that month. `26.10.4` is the fourth release
+of October 2026, and the next month starts again at `.1`. There is no major, minor or patch anymore; every
+release, feature or fix, simply gets the next number. The jump from `1.1.0` to `26.10.4` was intended: Home
+Assistant and HACS see `26.10.x` as newer than every `1.x`, so updates are offered as usual. After an update the
+panel shows what is new once.
+
 ## How Pulse decides
 
 Pulse needs about seven reports from a device to know its rhythm. With recorder history this is there right away.
