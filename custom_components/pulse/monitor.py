@@ -140,6 +140,8 @@ class Device:
     rhythm: Rhythm = field(default_factory=lambda: Rhythm(None, None, 0))
     unavailable_since: float | None = None
     evaluated: bool = False
+    # Erste Bewertung nach dem Verlauf-Lesen ist der Ausgangspunkt: erst danach gibt es Status-Ereignisse
+    baseline: bool = False
     # Ausreißer-Regel: Beginn der Stille und vereinzelte Meldungen seitdem
     silence_start: float | None = None
     strays: int = 0
@@ -214,7 +216,10 @@ class PulseMonitor:
         self.entry = entry
         self.store = store
         self.devices: dict[str, Device] = {}
+        # Alle beobachteten Entitäten → Gerät; Lebenszeichen sind nur die in `spec.entities` (`_alive`),
+        # Batterie-/Warn-Entitäten anderer Plattformen hängen nur für Batteriewerte mit drin
         self._entity_map: dict[str, str] = {}
+        self._alive: set[str] = set()
         self._ieee_map: dict[str, str] = {}
         self._unsubs: list[Callable[[], None]] = []
         self.notifier = Notifier(hass, self)
@@ -387,6 +392,7 @@ class PulseMonitor:
             ir.async_delete_issue(self.hass, DOMAIN, f"failed_{device_id}")
         self._remove_vanished(specs)
         self._entity_map = {e: d.device_id for d in self.devices.values() for e in d.spec.entities}
+        self._alive = set(self._entity_map)
         for d in self.devices.values():
             for extra in (d.spec.battery, d.spec.battery_low):
                 if extra:
@@ -508,7 +514,7 @@ class PulseMonitor:
 
     async def async_bootstrap(self) -> None:
         """Die letzten Tage aus dem Verlauf lernen – Pulse kennt den Takt dann sofort."""
-        entity_ids = sorted(self._entity_map)
+        entity_ids = sorted(self._alive)
         result = await async_load_history(self.hass, entity_ids, HISTORY_DAYS)
         if self._stopped:
             return
@@ -583,6 +589,8 @@ class PulseMonitor:
         # Batteriewechsel nur aus echten Übergängen (nie aus Neustart-Echos)
         if entity_id in (device.spec.battery, device.spec.voltage):
             self._check_battery(device, now, entity_id)
+        if entity_id not in self._alive:
+            return  # Batterie-/Warn-Entität einer anderen Plattform: kein Lebenszeichen des Geräts
         action = entity_id in device.spec.actions and old.state != new.state
         self._activity(device, new.last_updated.timestamp(), action)
 
@@ -604,7 +612,8 @@ class PulseMonitor:
         # Gleicher Wert erneut gemeldet: bestätigt (oder verwirft) einen vorgemerkten Batteriesprung
         if entity_id in (device.spec.battery, device.spec.voltage) and device.record.get("pending_jump"):
             self._check_battery(device, time.time(), entity_id)
-        self._activity(device, new.last_reported.timestamp(), False)
+        if entity_id in self._alive:
+            self._activity(device, new.last_reported.timestamp(), False)
 
     def _activity(self, device: Device, ts: float, action: bool) -> None:
         keep_from = time.time() - KEEP_DAYS * DAY
@@ -923,8 +932,11 @@ class PulseMonitor:
         cloud = verdict.reason.get("key") == "cloud_outage"
         changed = verdict.status != previous or verdict.reason.get("key") != device.reason.get("key")
         device.status, device.reason = verdict.status, verdict.reason
-        first = not device.evaluated
         device.evaluated = True
+        # Vor dem Verlauf ist der Status vorläufig; die erste Bewertung danach setzt den Ausgangspunkt
+        first = not device.baseline
+        if self.bootstrapped:
+            device.baseline = True
         if device.status == STATUS_FAILED:
             ir.async_create_issue(
                 self.hass,
@@ -1084,10 +1096,15 @@ class PulseMonitor:
         replaced: list[float] = device.record["replaced"]
         if not replaced or time.time() - replaced[-1] > 3600:
             return False
-        replaced.pop()
+        ts = replaced.pop()
         sources: list[str] = device.record.get("replaced_source") or []
-        if sources:
-            sources.pop()
+        source = sources.pop() if sources else "manual"
+        if source != "manual":
+            # Automatisch erkannte Wechsel trugen den Zeitpunkt als Meldung ein (`mark_replaced`) – auch die weg
+            events: list[float] = device.record["events"]
+            idx = bisect_left(events, ts)
+            if idx < len(events) and events[idx] == ts:
+                del events[idx]
         device.record["notified"] = device.record.get("notified_before_replace")
         self._evaluate(device, time.time(), announce=False)
         self.store.async_delay_save()
@@ -1108,6 +1125,7 @@ class PulseMonitor:
             return
         device.record["ignored"] = ignored
         device.evaluated = False
+        device.baseline = False  # wieder beobachtet: der erste Status ist kein Wechsel
         self._evaluate(device, time.time(), announce=False)
         self.store.async_delay_save()
         async_dispatcher_send(self.hass, SIGNAL_NEW_DEVICES, [device_id])

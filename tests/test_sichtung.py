@@ -4,13 +4,15 @@ from __future__ import annotations
 
 from datetime import timedelta
 import time
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from pytest_homeassistant_custom_component.common import async_capture_events
 
-from common import tick
-from custom_components.pulse.const import DOMAIN
+from common import add_device, seed, tick
+from custom_components.pulse.const import DOMAIN, EVENT_STATUS_CHANGED
+from custom_components.pulse.monitor import PulseMonitor
 from custom_components.pulse.store import SAVE_DELAY, SAVE_DELAY_EVENTS, PulseStore
 
 # ── 1. Schreibhäufigkeit ─────────────────────────────────────────────────
@@ -84,3 +86,76 @@ async def test_last_report_sensor_disabled_by_default(hass: HomeAssistant, setup
     assert len(mine) == 4
     assert all(e.disabled_by is er.RegistryEntryDisabler.INTEGRATION for e in mine)
     assert all(hass.states.get(e.entity_id) is None for e in mine)
+
+
+# ── 4. Kein Status-Ereignis für die Startbewertung ───────────────────────
+
+
+async def test_no_status_event_for_first_evaluation_after_start(hass: HomeAssistant, setup):
+    """Vor dem Verlauf galt die Tür als ausgefallen, mit Verlauf läuft sie – das ist kein Wechsel."""
+    monitor: PulseMonitor = setup["monitor"]
+    door = setup["devices"]["door"]
+    now = time.time()
+    seed(monitor, door.device_id, 1800, 200, now - 7 * 3600)
+    events = async_capture_events(hass, EVENT_STATUS_CHANGED)
+    fresh = [now - 1800 * i for i in range(20, 0, -1)]
+    history = {door.entities["contact"]: (fresh, [])}
+    with patch("custom_components.pulse.monitor.async_load_history", AsyncMock(return_value=history)):
+        assert await hass.config_entries.async_reload(setup["entry"].entry_id)
+        await hass.async_block_till_done()
+    monitor = setup["entry"].runtime_data
+    assert monitor.bootstrapped
+    assert monitor.devices[door.device_id].status == "ok"
+    assert not events
+    # Ein echter Wechsel danach kommt weiter als Ereignis
+    seed(monitor, door.device_id, 1800, 200, now - 7 * 3600)
+    await tick(hass, setup["freezer"], timedelta(minutes=1))
+    assert [e.data["status"] for e in events] == ["failed"]
+
+
+# ── 5. Batterie-Entität anderer Plattform ist kein Lebenszeichen ─────────
+
+
+async def test_foreign_battery_entity_is_no_sign_of_life(hass: HomeAssistant, setup):
+    monitor: PulseMonitor = setup["monitor"]
+    dev = add_device(
+        hass, "window", "Fenster Küche", [("binary_sensor", "contact", "window"), ("sensor", "temp", "temperature")]
+    )
+    battery = er.async_get(hass).async_get_or_create(
+        "sensor", "template", "window_battery", device_id=dev.device_id, original_device_class="battery"
+    )
+    hass.states.async_set(dev.entities["contact"], "off")
+    hass.states.async_set(battery.entity_id, "80")
+    monitor._rediscover()
+    await hass.async_block_till_done()
+    device = monitor.devices[dev.device_id]
+    assert device.spec.battery == battery.entity_id
+    assert battery.entity_id not in device.spec.entities
+    assert battery.entity_id in monitor._entity_map
+    before = list(device.record["events"])
+    setup["freezer"].tick(timedelta(minutes=6))
+    hass.states.async_set(battery.entity_id, "79")
+    await hass.async_block_till_done()
+    assert device.record["events"] == before  # Batteriewert allein ist keine Meldung
+    assert device.record["last_level"] == 79  # aber der Batteriewert wird weiter verfolgt
+    hass.states.async_set(dev.entities["contact"], "on")
+    await hass.async_block_till_done()
+    assert len(device.record["events"]) == len(before) + 1
+
+
+# ── 6. Rückgängig nimmt auch die eingetragene Meldung zurück ─────────────
+
+
+async def test_undo_replaced_removes_inserted_report(hass: HomeAssistant, setup):
+    monitor: PulseMonitor = setup["monitor"]
+    thermo_id = setup["devices"]["thermo"].device_id
+    seed(monitor, thermo_id, 1800, 200, time.time() - 7 * 3600)
+    await tick(hass, setup["freezer"], timedelta(minutes=6))
+    thermo = monitor.devices[thermo_id]
+    assert thermo.status == "failed"
+    events_before = list(thermo.record["events"])
+    monitor.mark_replaced(thermo_id, "auto")
+    assert len(thermo.record["events"]) == len(events_before) + 1
+    assert monitor.undo_replaced(thermo_id)
+    assert thermo.record["events"] == events_before
+    assert thermo.record["replaced"] == [] and thermo.record["replaced_source"] == []
