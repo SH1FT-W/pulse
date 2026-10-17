@@ -11,6 +11,8 @@ from homeassistant.helpers.storage import Store
 from .const import DEFAULT_SETTINGS, STORE_KEY, STORE_MINOR, STORE_VERSION
 
 SAVE_DELAY = 60
+# Meldungen kommen laufend: sie dürfen länger warten (beim Stoppen wird ohnehin sofort gespeichert)
+SAVE_DELAY_EVENTS = 600
 
 
 def default_record() -> dict[str, Any]:
@@ -90,6 +92,7 @@ def migrate(old_minor: int, data: dict[str, Any]) -> dict[str, Any]:
 
 class PulseStore:
     def __init__(self, hass: HomeAssistant) -> None:
+        self._hass = hass
         self._store: Store[dict[str, Any]] = _VersionedStore(hass, STORE_VERSION, STORE_KEY, minor_version=STORE_MINOR)
         self.devices: dict[str, dict[str, Any]] = {}
         self.settings: dict[str, Any] = copy.deepcopy(DEFAULT_SETTINGS)
@@ -104,6 +107,7 @@ class PulseStore:
         self.z2m_health_at: float | None = None
         # Ein verzögertes Speichern steht an – nicht erneut planen (HA würde es sonst immer weiter schieben)
         self._save_pending = False
+        self._save_due: float | None = None
 
     async def async_load(self) -> None:
         data = await self._store.async_load()
@@ -124,24 +128,29 @@ class PulseStore:
             self.devices[device_id] = default_record()
         return self.devices[device_id]
 
-    def async_delay_save(self) -> None:
-        """Spätestens nach SAVE_DELAY speichern.
+    def async_delay_save(self, delay: float = SAVE_DELAY) -> None:
+        """Spätestens nach `delay` Sekunden speichern.
 
         HAs `Store.async_delay_save` verschiebt ein anstehendes Speichern bei jedem Aufruf nach hinten –
-        Pulse ruft es jede Minute (Laufzeit) und bei jeder Meldung, im Betrieb würde nie gespeichert.
-        Deshalb nur planen, wenn nichts ansteht; der Stand wird erst beim Schreiben gelesen.
+        Pulse ruft es bei jeder Meldung, im Betrieb würde nie gespeichert. Deshalb nur neu planen, wenn
+        nichts ansteht oder das Anstehende später käme als jetzt gewünscht; der Stand wird erst beim
+        Schreiben gelesen. Meldungen warten länger (SAVE_DELAY_EVENTS), Einstellungen kurz (SAVE_DELAY).
         """
-        if self._save_pending:
+        due = self._hass.loop.time() + delay
+        if self._save_pending and self._save_due is not None and self._save_due <= due:
             return
         self._save_pending = True
-        self._store.async_delay_save(self._write_data, SAVE_DELAY)
+        self._save_due = due
+        self._store.async_delay_save(self._write_data, delay)
 
     def _write_data(self) -> dict[str, Any]:
         self._save_pending = False
+        self._save_due = None
         return self._data()
 
     async def async_save(self) -> None:
         self._save_pending = False
+        self._save_due = None
         await self._store.async_save(self._data())
 
     def _data(self) -> dict[str, Any]:

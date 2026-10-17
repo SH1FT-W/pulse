@@ -17,7 +17,7 @@ from pytest_homeassistant_custom_component.common import async_capture_events, a
 
 from common import SOURCE, add_device, report_back, seed, set_states, source_entry, standard_devices, tick
 from custom_components.pulse.const import DOMAIN, EVENT_BATTERY_REPLACED
-from custom_components.pulse.monitor import PulseMonitor
+from custom_components.pulse.monitor import UPTIME_SAVE_EVERY, PulseMonitor
 
 HOUR = 3600.0
 DAY = 86400.0
@@ -82,7 +82,8 @@ async def test_store_saves_while_running(hass: HomeAssistant, hass_storage, setu
         await hass.async_block_till_done()
     await tick(hass, setup["freezer"], timedelta(seconds=30))
     data = hass_storage["pulse.devices"]["data"]
-    assert data["uptime"][-1][1] >= time.time() - 2 * 60
+    # Der Laufzeit-Stempel wird nur alle UPTIME_SAVE_EVERY gesichert (deutlich unter UPTIME_SLACK)
+    assert data["uptime"][-1][1] >= time.time() - UPTIME_SAVE_EVERY - 2 * 60
     assert data["devices"][setup["devices"]["thermo"].device_id]["events"]
 
 

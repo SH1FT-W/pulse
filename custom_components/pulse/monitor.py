@@ -91,7 +91,7 @@ from .rhythm import (
     strip,
 )
 from .snapshot import serialize, snapshot
-from .store import PulseStore
+from .store import SAVE_DELAY_EVENTS, PulseStore
 from .texts import reason_text
 from .z2m import Z2MListener
 
@@ -105,6 +105,9 @@ HOUR_SECONDS = 3600
 STARTUP_GRACE = 5 * 60
 UPTIME_KEEP = 30 * 86400
 UPTIME_MAX = 200
+# Der Laufzeit-Stempel wird nur alle 5 Minuten gespeichert (UPTIME_SLACK ist 10 Minuten) – sonst schriebe
+# jeder Takt die ganze Datei mit allen Meldungen
+UPTIME_SAVE_EVERY = 5 * 60
 # Zigbee2MQTT nach einem Fehlstart (Broker noch nicht da) alle 5 Minuten noch einmal versuchen
 Z2M_RETRY = 5 * 60
 
@@ -229,6 +232,7 @@ class PulseMonitor:
         self._snapshots: dict[str | None, tuple[int, dict[str, Any]]] = {}
         self.started_at = time.time()
         self._z2m_tried = self.started_at  # letzter Versuch, Zigbee2MQTT zu abonnieren
+        self._uptime_saved = self.started_at  # Laufzeit-Stempel zuletzt zum Speichern gegeben
         self._rediscover_debouncer = Debouncer(
             hass, _LOGGER, cooldown=5, immediate=False, function=self._async_rediscover
         )
@@ -239,6 +243,7 @@ class PulseMonitor:
     async def async_start(self) -> None:
         self.started_at = time.time()
         self._z2m_tried = self.started_at
+        self._uptime_saved = self.started_at
         self._start_uptime(self.started_at)
         self._rediscover()
         self._unsubs.append(
@@ -578,7 +583,7 @@ class PulseMonitor:
         if device.unavailable_since is not None:
             device.unavailable_since = None
         if added or action:
-            self.store.async_delay_save()
+            self.store.async_delay_save(SAVE_DELAY_EVENTS)
             if device.problem or action:
                 self._evaluate(device, time.time())
             self.async_update()
@@ -694,8 +699,10 @@ class PulseMonitor:
     def _tick(self, _now: datetime) -> None:
         now = time.time()
         if self.store.uptime:
-            self.store.uptime[-1][1] = now
-            self.store.async_delay_save()
+            self.store.uptime[-1][1] = now  # im Speicher immer aktuell, jede Sicherung nimmt ihn mit
+            if now - self._uptime_saved >= UPTIME_SAVE_EVERY:
+                self._uptime_saved = now
+                self.store.async_delay_save()
         # Erst der Notifier (abgelaufenes „Später“, Ruhezeit vorbei), dann bewerten – so meldet ein Takt nichts doppelt
         self.notifier.async_tick(now)
         self._cloud_pass(now)
