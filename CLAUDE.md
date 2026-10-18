@@ -24,8 +24,10 @@ es hört nur zu (Zustände, „gemeldet ohne Änderung“, Zigbee2MQTT-Nachricht
   state_reported), einzeln erst nach ≥ 1 Tag `failed`; größte Gruppe ≥ 2 Geräte derselben Cloud, deren Stille im
   2-h-Fenster begann → `cloud_outage` (watch; hält, solange seine Geräte still sind) + eine gedämpfte Mitteilung (`store.cloud_notified`), `summary.cloud_outages`.
 - Erreichbarkeit von der Integration (`DeviceSpec.reachable_via`: `"matter"` oder Konnektivitäts-binary_sensor derselben
-  Integration, `spec.connectivity`): ist das Gerät laut Integration erreichbar (`Facts.reachable`), zählt Stille gar
-  nicht (`ok_reachable`, auch ohne gelernten Takt; ein Lecksensor hat ohne Wasser nichts zu melden). Konnektivität aus →
+  Integration, `spec.connectivity`): ist das Gerät laut Integration erreichbar (`Facts.reachable`) und meldet nur bei
+  Ereignissen (längster normaler Abstand > `REGULAR_LONGEST` 3 h oder kein Takt), zählt Stille gar nicht (`ok_reachable`;
+  ein Lecksensor hat ohne Wasser nichts zu melden). Meldet es regelmäßig von selbst (Präsenzmelder), zählt Stille weiter,
+  aber als `radio_only` (höchstens check: erreichbar, schickt aber keine Werte). Konnektivität aus →
   `unavailable_since`; der Sensor selbst ist kein Lebenszeichen (nicht in `spec.entities`).
 - Neustart-Zeilen im Recorder: HA schreibt beim Start jeden Zustand neu → `rhythm.restart_echoes` (erste Zeile je Start
   in [Start − 2 Min., Start + 5 Min.] nach einer früheren) zählt in `history.real_reports` nicht. Minor 7 hat solche

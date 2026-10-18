@@ -325,7 +325,7 @@ export const DE: Record<keyof typeof EN, string> = {
     'Ab jetzt lesen sich Versionen als Jahr.Monat.Release: 26.10.4 ist das vierte Release im Oktober 2026. Der Sprung von 1.1.0 ist gewollt – Updates werden wie gewohnt erkannt.',
   new_reachable_title: 'Erreichbar heißt in Ordnung',
   new_reachable_text:
-    'Bei Matter-Geräten und Cloud-Geräten mit Erreichbarkeits-Sensor (z. B. Netatmo) fragt Pulse jetzt die Integration. Ein Lecksensor ohne Wasser, ein selten benutztes Schloss oder ein Regenmesser bei Trockenheit gilt nicht mehr als still.',
+    'Bei Matter-Geräten und Cloud-Geräten mit Erreichbarkeits-Sensor (z. B. Netatmo) fragt Pulse jetzt die Integration. Ein Lecksensor ohne Wasser oder ein selten benutztes Schloss gilt nicht mehr als still. Geräte, die von selbst regelmäßig melden, prüft Pulse weiter: schweigen sie trotz Verbindung, kommt „Prüfen“.',
   new_restart_title: 'Neustarts täuschen nicht mehr',
   new_restart_text:
     'Nach einem Neustart von Home Assistant sah ein stilles Gerät kurz wieder lebendig aus. Diese Scheinmeldungen zählen nicht mehr.',

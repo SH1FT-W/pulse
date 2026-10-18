@@ -23,7 +23,7 @@ const WELCOME: Feature[] = [
 
 /**
  * After an update: what is new in this version, in the user's words. Replace on every release
- * (1 to 4 entries). As of 26.10.6.
+ * (1 to 4 entries). As of 26.10.7.
  */
 export const WHATS_NEW: Feature[] = [
   { icon: 'mdi:access-point-check', title: 'new_reachable_title', text: 'new_reachable_text' },

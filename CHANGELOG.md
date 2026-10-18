@@ -2,6 +2,11 @@
 
 After 1.1.0, releases use calendar versions `YY.M.N` (year, month, number of the release in that month), e.g. `26.10.4`. They count as newer than every 1.x version, so updates through HACS work as before.
 
+## 26.10.7 – 2026-10-18
+
+### Changed
+- Reachable devices that report on their own all the time (longest normal gap up to three hours, e.g. a Matter presence sensor or a Netatmo outdoor module) are judged by silence again. If such a device stays silent much longer than usual while the integration still reports it reachable, Pulse shows *Check* ("still on the air, but no values"), never *Failed*. Reachable devices that only report on events (leak sensor, lock, window contact, rain gauge) stay *OK* as in 26.10.6.
+
 ## 26.10.6 – 2026-10-18
 
 ### Changed

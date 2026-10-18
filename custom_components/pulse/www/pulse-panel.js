@@ -879,7 +879,7 @@ var Ge = {
 	new_calver_title: "Neue Versionsnummern",
 	new_calver_text: "Ab jetzt lesen sich Versionen als Jahr.Monat.Release: 26.10.4 ist das vierte Release im Oktober 2026. Der Sprung von 1.1.0 ist gewollt – Updates werden wie gewohnt erkannt.",
 	new_reachable_title: "Erreichbar heißt in Ordnung",
-	new_reachable_text: "Bei Matter-Geräten und Cloud-Geräten mit Erreichbarkeits-Sensor (z. B. Netatmo) fragt Pulse jetzt die Integration. Ein Lecksensor ohne Wasser, ein selten benutztes Schloss oder ein Regenmesser bei Trockenheit gilt nicht mehr als still.",
+	new_reachable_text: "Bei Matter-Geräten und Cloud-Geräten mit Erreichbarkeits-Sensor (z. B. Netatmo) fragt Pulse jetzt die Integration. Ein Lecksensor ohne Wasser oder ein selten benutztes Schloss gilt nicht mehr als still. Geräte, die von selbst regelmäßig melden, prüft Pulse weiter: schweigen sie trotz Verbindung, kommt „Prüfen“.",
 	new_restart_title: "Neustarts täuschen nicht mehr",
 	new_restart_text: "Nach einem Neustart von Home Assistant sah ein stilles Gerät kurz wieder lebendig aus. Diese Scheinmeldungen zählen nicht mehr.",
 	new_sheet_title: "Einstellungen im Blick",
@@ -1188,7 +1188,7 @@ var Ge = {
 	new_calver_title: "New version numbers",
 	new_calver_text: "From now on versions read year.month.release: 26.10.4 is the fourth release in October 2026. The jump from 1.1.0 is intended – updates are found as usual.",
 	new_reachable_title: "Reachable means fine",
-	new_reachable_text: "For Matter devices and cloud devices with a connectivity sensor (e.g. Netatmo), Pulse now asks the integration. A leak sensor without water, a rarely used lock or a rain gauge on a dry day no longer counts as silent.",
+	new_reachable_text: "For Matter devices and cloud devices with a connectivity sensor (e.g. Netatmo), Pulse now asks the integration. A leak sensor without water or a rarely used lock no longer counts as silent. Devices that report on their own are still checked: if they go quiet despite the connection, you get Check.",
 	new_restart_title: "Restarts no longer fool Pulse",
 	new_restart_text: "After a Home Assistant restart, a silent device briefly looked alive again. These fake reports no longer count.",
 	new_sheet_title: "Settings in view",
@@ -5666,7 +5666,7 @@ function gr() {
 	let e = hr();
 	if (!e) return null;
 	try {
-		return Rn(e, "26.10.6", Nn.length > 0);
+		return Rn(e, "26.10.7", Nn.length > 0);
 	} catch {
 		return null;
 	}
@@ -5857,7 +5857,7 @@ var vr = class extends M {
 		this.welcome = null;
 		let e = hr();
 		try {
-			e && zn(e, "26.10.6");
+			e && zn(e, "26.10.7");
 		} catch {}
 	}
 	zigbeeOffer(e) {
@@ -6017,7 +6017,7 @@ var vr = class extends M {
         @partner-dismiss=${(e) => this.onPartnerDismiss(e.detail.id, e.detail.partner)}
       >
         ${this.renderHead()} ${this.renderContent()}
-        <p class="version muted">${I(t, "version", { version: "26.10.6" })}</p>
+        <p class="version muted">${I(t, "version", { version: "26.10.7" })}</p>
         ${e ? T`<pulse-device-sheet
                   .open=${n !== null}
                   .device=${n}
@@ -6042,7 +6042,7 @@ var vr = class extends M {
                 <pulse-welcome
                   .mode=${this.welcome}
                   .language=${t}
-                  .version=${"26.10.6"}
+                  .version=${"26.10.7"}
                   .zigbee=${this.zigbeeOffer(e)}
                   @closed=${() => this.welcomeDone()}
                   @enable-z2m=${() => {
