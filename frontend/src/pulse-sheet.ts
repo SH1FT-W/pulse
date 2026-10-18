@@ -4,12 +4,12 @@ import { shouldDismiss } from './logic';
 import { t } from './strings';
 import { tokens } from './styles';
 
-/** Bottom-Sheet-Modus: Touch oder schmal (wie die CSS-Regel unten). */
+/** Bottom sheet mode: touch or narrow (like the CSS rule below). */
 const SHEET_QUERY = '(pointer: coarse), (max-width: 600px)';
-/** Ab so viel Bewegung wird aus dem Tippen ein Ziehen. */
+/** From this much movement on, a tap becomes a drag. */
 const DRAG_SLOP = 6;
 
-/** Offene Blätter (auch übereinander) – solange eins offen ist, scrollt die Seite dahinter nicht. */
+/** Open sheets (also stacked); while one is open, the page behind does not scroll. */
 let openSheets = 0;
 let savedOverflow = '';
 
@@ -28,13 +28,13 @@ function lockPage(lock: boolean): void {
 }
 
 /**
- * Blatt für Details und kurze Formulare: auf dem Handy (Touch oder schmal) ein Bottom-Sheet mit
- * Griff, das von unten hereinfährt und sich nach unten wegwischen lässt; am Desktop ein zentrierter
- * Dialog. Nutzt das native `<dialog>` (Fokus bleibt im Blatt, Esc schließt). Ein Tipp auf den
- * abgedunkelten Hintergrund schließt ebenfalls. Nur der Inhalt scrollt – die Seite dahinter nie.
+ * Sheet for details and short forms: on the phone (touch or narrow) a bottom sheet with a handle
+ * that slides in from below and can be swiped down to dismiss; on desktop a centered dialog.
+ * Uses the native `<dialog>` (focus stays in the sheet, Esc closes). A tap on the dimmed
+ * backdrop closes it as well. Only the content scrolls, never the page behind.
  *
- * `open` öffnet/schließt; beim Schließen (auch durch Esc/Hintergrund/Wischen) kommt `closed`.
- * Slots: Standard (Inhalt), `footer` (Knöpfe, klebt unten).
+ * `open` opens/closes; on close (also via Esc/backdrop/swipe) `closed` fires.
+ * Slots: default (content), `footer` (buttons, sticks to the bottom).
  */
 export class PulseSheet extends LitElement {
   static properties = {
@@ -48,7 +48,7 @@ export class PulseSheet extends LitElement {
   declare open: boolean;
   declare heading: string;
   declare language: string;
-  /** Ohne ✕ – für Rückfragen, deren Knöpfe schon die Ausgänge sind (Esc bleibt „abbrechen“) */
+  /** Without ✕: for confirmations whose buttons already are the exits (Esc stays "cancel") */
   declare noClose: boolean;
   declare hasFooter: boolean;
 
@@ -92,7 +92,7 @@ export class PulseSheet extends LitElement {
       dialog.style.transform = '';
       this.removeAttribute('scrolled');
       dialog.showModal();
-      // Fokus aufs Blatt selbst, ohne Ring – sonst trägt der erste Knopf nach einem Mausklick einen
+      // Focus the sheet itself, without a ring; otherwise the first button carries one after a mouse click
       dialog.focus({ focusVisible: false });
       this.setLocked(true);
       const body = this.body;
@@ -101,7 +101,7 @@ export class PulseSheet extends LitElement {
     if (!this.open && dialog.open) dialog.close();
   }
 
-  /** Esc, Hintergrund, Wischen oder Schließen-Knopf */
+  /** Esc, backdrop, swipe or close button */
   private onClose(): void {
     this.setLocked(false);
     const dialog = this.dialog;
@@ -114,12 +114,12 @@ export class PulseSheet extends LitElement {
   }
 
   private onClick(event: MouseEvent): void {
-    // Klick direkt auf <dialog> = auf den Hintergrund (der Inhalt liegt in .panel). Rückfragen
-    // (no-close) schließen nur über ihre Knöpfe oder Esc – ein verirrter Tipp daneben bricht nicht ab
+    // Click directly on <dialog> = on the backdrop (the content lives in .panel). Confirmations
+    // (no-close) only close via their buttons or Esc; a stray tap next to them does not cancel
     if (event.target === this.dialog && !this.noClose) this.dialog?.close();
   }
 
-  /** Mausrad/Trackpad über dem Hintergrund oder Kopf darf die Seite dahinter nicht scrollen. */
+  /** Mouse wheel/trackpad over the backdrop or header must not scroll the page behind. */
   private onWheel(event: WheelEvent): void {
     const body = this.body;
     const inBody = body !== null && event.composedPath().includes(body);
@@ -149,12 +149,12 @@ export class PulseSheet extends LitElement {
     if (!drag.active) {
       if (Math.abs(dy) < DRAG_SLOP) return;
       drag.active = true;
-      // Erst jetzt einfangen – ein kurzer Tipp auf ✕ bleibt ein Klick
+      // Capture only now; a short tap on ✕ stays a click
       const target = event.currentTarget;
       if (target instanceof HTMLElement) target.setPointerCapture(event.pointerId);
       dialog.style.transition = 'none';
     }
-    // Nach oben nur mit Widerstand (wie iOS), nach unten 1:1
+    // Upward only with resistance (like iOS), downward 1:1
     drag.dy = dy > 0 ? dy : dy / 6;
     dialog.style.transform = `translateY(${drag.dy}px)`;
   }
@@ -175,8 +175,8 @@ export class PulseSheet extends LitElement {
   }
 
   render() {
-    // autofocus auf dem Blatt selbst: beim Öffnen trägt kein Knopf einen Fokusring (Touch),
-    // Tab führt von dort in den Inhalt
+    // autofocus on the sheet itself: on open no button carries a focus ring (touch),
+    // Tab leads from there into the content
     return html`<dialog
       tabindex="-1"
       autofocus
@@ -232,10 +232,10 @@ export class PulseSheet extends LitElement {
     tokens,
     css`
       dialog {
-        /* Flächen: hell = Seitenhintergrund mit weißen Listen, dunkel = erhöhte Fläche (setzt das Panel) */
+        /* Surfaces: light = page background with white lists, dark = raised surface (set by the panel) */
         --pu-card: var(--pulse-sheet-card, var(--card-background-color, #fff));
         width: min(100% - 2 * 16px, 520px);
-        max-height: min(100dvh - 2 * 32px, 760px);
+        max-height: min(100dvh - 2 * 32px, 960px);
         padding: 0;
         border: 0;
         border-radius: 18px;
@@ -247,21 +247,21 @@ export class PulseSheet extends LitElement {
         overflow: hidden;
         overscroll-behavior: contain;
       }
-      /* Nur offen sichtbar – sonst überschriebe display:flex das Verstecken des <dialog> */
+      /* Only visible when open, otherwise display:flex would override hiding the <dialog> */
       dialog[open] {
         display: flex;
         flex-direction: column;
         animation: fade-in 250ms cubic-bezier(0.2, 0.8, 0.2, 1);
       }
-      /* Den Dialog selbst nicht umranden – der Fokus liegt auf seinen Knöpfen */
+      /* No outline on the dialog itself, focus sits on its buttons */
       dialog:focus {
         outline: none;
       }
       dialog::backdrop {
-        /* ::backdrop erbt je nach Browser keine Variablen – deshalb ohne Token */
+        /* ::backdrop does not inherit variables in every browser, hence no token */
         background: color-mix(in srgb, black 40%, transparent);
       }
-      /* Kopf fest, nur der Inhalt scrollt (min-height: 0 lässt den Flex-Bereich schrumpfen) */
+      /* Fixed header, only the content scrolls (min-height: 0 lets the flex area shrink) */
       .panel {
         flex: 1;
         min-height: 0;
@@ -332,7 +332,7 @@ export class PulseSheet extends LitElement {
       footer.empty {
         display: none;
       }
-      /* Handy: am unteren Rand, volle Breite, fährt von unten herein, Griff + Kopf zum Wegwischen */
+      /* Phone: at the bottom edge, full width, slides in from below, handle + header to swipe away */
       @media (pointer: coarse), (max-width: 600px) {
         dialog {
           width: 100%;

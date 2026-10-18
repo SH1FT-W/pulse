@@ -1,4 +1,4 @@
-/** Anzeige-Logik ohne UI – hier wird getestet. */
+/** Display logic without UI; tested here. */
 
 import type { HassUser } from './ha';
 import { type StringKey, t } from './strings';
@@ -15,8 +15,8 @@ import type {
 } from './types';
 
 /**
- * Merkt sich das letzte Ergebnis und rechnet nur neu, wenn sich ein Argument geändert hat (Vergleich
- * nach Identität). So bekommen Kind-Elemente dieselben Arrays und rendern nicht unnötig neu.
+ * Remembers the last result and only recalculates when an argument changed (compared by
+ * identity). This way child elements get the same arrays and do not re-render needlessly.
  */
 export function memoize<A extends readonly unknown[], R>(fn: (...args: A) => R): (...args: A) => R {
   let last: { args: A; value: R } | null = null;
@@ -50,12 +50,12 @@ export function tone(status: Status): Tone {
   return 'ok';
 }
 
-/** Farbe der Rhythmusleiste: Ignorierte und Geräte einer schweigenden Cloud grau, sonst nach Status. */
+/** Color of the rhythm bar: ignored devices and devices of a silent cloud gray, otherwise by status. */
 export function rhythmTone(device: Device): Tone {
   return device.ignored || isCloudOutage(device) ? 'muted' : tone(device.status);
 }
 
-/** Still, weil die Cloud der Integration gerade nicht antwortet (Sammelhinweis statt Einzelalarm). */
+/** Silent because the integration's cloud is not responding (collective notice instead of single alarm). */
 export function isCloudOutage(device: Device): boolean {
   return !device.ignored && device.reason_key === 'cloud_outage';
 }
@@ -75,7 +75,7 @@ export function monitored(devices: Device[]): Device[] {
   return devices.filter((d) => !d.ignored);
 }
 
-/** Prüfen + Ausgefallen, schlimmste zuerst (ohne Geräte einer schweigenden Cloud). */
+/** Check + offline, worst first (without devices of a silent cloud). */
 export function attention(devices: Device[]): Device[] {
   return monitored(devices)
     .filter((d) => SEVERITY[d.status] >= 2 && !isCloudOutage(d))
@@ -91,7 +91,7 @@ export interface Group {
   devices: Device[];
 }
 
-/** Alle überwachten Geräte nach Raum (Räume alphabetisch, „ohne Raum“ zuletzt). */
+/** All monitored devices by room (rooms alphabetical, "ohne Raum" (no room) last). */
 export function groups(devices: Device[], noArea: string): Group[] {
   const map = new Map<string, Device[]>();
   for (const device of monitored(devices)) {
@@ -123,7 +123,7 @@ export function every(language: string, seconds: number | null): string {
   return t(language, 'every_days', { n: Math.round(seconds / 86400) });
 }
 
-/** Balkenhöhen 0–1. Ausreißer kappen (90. Perzentil), damit ruhige Geräte nicht verschwinden. */
+/** Bar heights 0–1. Cap outliers (90th percentile) so quiet devices do not vanish. */
 export function stripHeights(buckets: (number | null)[]): (number | null)[] {
   const values = buckets.filter((b): b is number => b !== null && b > 0).sort((a, b) => a - b);
   if (!values.length) return buckets.map((b) => (b === null ? null : 0));
@@ -133,7 +133,7 @@ export function stripHeights(buckets: (number | null)[]): (number | null)[] {
 
 const zoneFormats = new Map<string, Intl.DateTimeFormat>();
 
-/** Formatierer für Datumsteile in einer Zeitzone (ungültige Zone → Zeitzone des Browsers). */
+/** Formatter for date parts in a time zone (invalid zone → browser time zone). */
 function zoneFormat(timeZone: string | undefined): Intl.DateTimeFormat {
   const key = timeZone ?? '';
   const cached = zoneFormats.get(key);
@@ -151,7 +151,7 @@ function zoneFormat(timeZone: string | undefined): Intl.DateTimeFormat {
   return format;
 }
 
-/** Zeitzone von Home Assistant, wenn der Browser sie kennt – sonst undefined (Browser-Zeitzone). */
+/** Home Assistant time zone if the browser knows it, otherwise undefined (browser time zone). */
 const knownZones = new Map<string, boolean>();
 
 export function validTimeZone(timeZone: string | undefined): string | undefined {
@@ -169,7 +169,7 @@ export function validTimeZone(timeZone: string | undefined): string | undefined 
   return known ? timeZone : undefined;
 }
 
-/** Gültige Zeitzone für Intl-Optionen (ungültige fallen auf den Browser zurück). */
+/** Valid time zone for Intl options (invalid ones fall back to the browser). */
 function zoneOption(timeZone: string | undefined): { timeZone?: string } {
   const zone = validTimeZone(timeZone);
   return zone ? { timeZone: zone } : {};
@@ -196,19 +196,19 @@ function zoned(ts: number, timeZone: string | undefined): ZonedParts {
   return parts;
 }
 
-/** Kalendertag als Zahl (Tage seit 1970) in der Zeitzone – Differenzen sind sommerzeitfest. */
+/** Calendar day as a number (days since 1970) in the time zone; differences are DST-safe. */
 export function dayNumber(ts: number, timeZone?: string): number {
   const p = zoned(ts, timeZone);
   return Date.UTC(p.year, p.month - 1, p.day) / 86_400_000;
 }
 
-/** Uhrzeit als Stunden (0–24) in der Zeitzone, z. B. 18:30 → 18.5. */
+/** Time of day as hours (0–24) in the time zone, e.g. 18:30 → 18.5. */
 export function hourOfDay(ts: number, timeZone?: string): number {
   const p = zoned(ts, timeZone);
   return p.hour + p.minute / 60;
 }
 
-/** Tagesgrenzen (strip_days + 1 Mitternächte) – vom Server, sonst gleichmäßig ab strip_start. */
+/** Day boundaries (strip_days + 1 midnights): from the server, otherwise evenly from strip_start. */
 export function dayStartsOf(snapshot: Snapshot): number[] {
   return validDayStarts(snapshot.day_starts, snapshot.strip_start, snapshot.strip_days);
 }
@@ -223,7 +223,7 @@ function validDayStarts(value: unknown, start: number, days: number): number[] {
   return Array.from({ length: days + 1 }, (_, i) => start + i * 86400);
 }
 
-/** Kurze Wochentage für die Achse (Tagesmitte je Tag); der letzte Tag heißt „heute“. */
+/** Short weekdays for the axis (middle of each day); the last day is called "heute" (today). */
 export function dayLabels(language: string, dayStarts: number[], timeZone?: string): string[] {
   const format = new Intl.DateTimeFormat(language, { weekday: 'short', ...zoneOption(timeZone) });
   const days = Math.max(0, dayStarts.length - 1);
@@ -235,20 +235,20 @@ export function dayLabels(language: string, dayStarts: number[], timeZone?: stri
 }
 
 /**
- * Spalten der Achse: gleich breite Tage. Der Server teilt jeden Kalendertag in genau 12 Fenster –
- * auch an der Zeitumstellung (23/25 h) –, also ist jeder Tag in der Leiste gleich breit.
+ * Axis columns: equally wide days. The server splits every calendar day into exactly 12 windows,
+ * also on DST changes (23/25 h), so every day in the bar is equally wide.
  */
 export function axisColumns(dayStarts: number[]): string {
   const days = Math.max(1, dayStarts.length - 1);
   return `repeat(${days}, minmax(0, 1fr))`;
 }
 
-/** Fenster je Kalendertag in der Rhythmusleiste (`strip`). */
+/** Windows per calendar day in the rhythm bar (`strip`). */
 export const WINDOWS_PER_DAY = 12;
 
 /**
- * Index des Leistenfensters für einen Zeitpunkt (12 je Tag, Fensterlänge = Tageslänge / 12).
- * −1 vor dem ersten Tag, Tage × 12 nach dem letzten.
+ * Index of the bar window for a point in time (12 per day, window length = day length / 12).
+ * −1 before the first day, days × 12 after the last.
  */
 export function stripIndex(ts: number, dayStarts: number[]): number {
   const days = dayStarts.length - 1;
@@ -265,7 +265,7 @@ export function stripIndex(ts: number, dayStarts: number[]): number {
   return days * WINDOWS_PER_DAY;
 }
 
-/** Zeitpunkt als Anteil der Leiste (0–1) bei gleich breiten Tagen – Lage im Tag nach echter Länge. */
+/** Point in time as a fraction of the bar (0–1) with equally wide days; position in the day by real length. */
 export function timeFraction(ts: number, dayStarts: number[]): number {
   const days = dayStarts.length - 1;
   const first = dayStarts[0];
@@ -279,8 +279,8 @@ export function timeFraction(ts: number, dayStarts: number[]): number {
 }
 
 /**
- * Wo die Stunden eines Tages wirklich liegen (Anteil 0–1 der echten Tageslänge), z. B. 3/6/…/21 Uhr
- * für die Gitterlinien im Kalender. An 23/25-h-Tagen verschieben sie sich mit der Zeitumstellung.
+ * Where the hours of a day really lie (fraction 0–1 of the real day length), e.g. 3/6/…/21 h
+ * for the grid lines in the calendar. On 23/25 h days they shift with the DST change.
  */
 export function hourMarks(
   dayStart: number,
@@ -310,7 +310,7 @@ export function formatDate(language: string, ts: number, timeZone?: string): str
   }).format(new Date(ts * 1000));
 }
 
-/** HAs Zeitformat-Einstellung → feste Stundenzählung; 'language'/'system' lassen die Sprache entscheiden. */
+/** HA's time format setting → fixed hour cycle; 'language'/'system' let the language decide. */
 export type TimeFormat = '12' | '24' | undefined;
 
 export function timeFormatOf(setting: string | undefined): TimeFormat {
@@ -320,8 +320,8 @@ export function timeFormatOf(setting: string | undefined): TimeFormat {
 }
 
 /**
- * Zeitpunkt ohne Mehrdeutigkeit: heute nur die Uhrzeit, bis 5 Tage entfernt Wochentag + Uhrzeit,
- * sonst Datum + Uhrzeit („04.10., 19:30“). Gilt auch für die Zukunft (Erinnerungen).
+ * Point in time without ambiguity: today only the time, up to 5 days away weekday + time,
+ * otherwise date + time ("04.10., 19:30"). Also applies to the future (reminders).
  */
 export function formatWhen(
   language: string,
@@ -345,7 +345,7 @@ export function formatWhen(
   }).format(new Date(ts * 1000));
 }
 
-/** Spannung (mV): ab 1000 als Volt mit zwei Nachkommastellen, sonst als mV. */
+/** Voltage (mV): from 1000 on as volts with two decimals, otherwise as mV. */
 export function formatVoltage(language: string, mv: number): string {
   if (Math.abs(mv) >= 1000) {
     const value = new Intl.NumberFormat(language, {
@@ -357,7 +357,7 @@ export function formatVoltage(language: string, mv: number): string {
   return t(language, 'unit_millivolt', { value: Math.round(mv) });
 }
 
-/** Basisthema von Zigbee2MQTT prüfen: nicht leer, ohne # und +, ohne Schrägstrich am Rand. */
+/** Validate the Zigbee2MQTT base topic: not empty, no # or +, no leading/trailing slash. */
 export function cleanZ2mBase(value: string): string | null {
   const base = value.trim();
   if (!base || base.includes('#') || base.includes('+')) return null;
@@ -365,7 +365,7 @@ export function cleanZ2mBase(value: string): string | null {
   return base;
 }
 
-/** Kann der Partner-Auswahl angeboten werden? (nicht das Gerät selbst, nicht ignoriert) */
+/** Can it be offered in the partner picker? (not the device itself, not ignored) */
 export function partnerOptions(devices: Device[], self: Device): Device[] {
   return monitored(devices)
     .filter((d) => d.id !== self.id)
@@ -374,7 +374,7 @@ export function partnerOptions(devices: Device[], self: Device): Device[] {
 
 export type GroupBy = 'area' | 'status' | 'none';
 
-/** Suche über Name, Bereich, Hersteller und Modell (Groß/klein egal). */
+/** Search across name, area, manufacturer and model (case-insensitive). */
 export function search(devices: Device[], query: string): Device[] {
   const q = query.trim().toLowerCase();
   if (!q) return devices;
@@ -385,7 +385,7 @@ export function search(devices: Device[], query: string): Device[] {
 
 const STATUS_ORDER: Status[] = ['failed', 'check', 'watch', 'learning', 'ok'];
 
-/** Gruppen für die Geräteliste. Ohne Gruppierung eine Gruppe mit leerem Titel. */
+/** Groups for the device list. Without grouping, one group with an empty title. */
 export function groupDevices(
   devices: Device[],
   by: GroupBy,
@@ -403,7 +403,7 @@ export function groupDevices(
   })).filter((g) => g.devices.length > 0);
 }
 
-/** Uhrzeiten im 24-h-Format im Halbstundenraster (plus ein abweichender gespeicherter Wert). */
+/** Times in 24 h format on a half-hour grid (plus a differing stored value). */
 export function timeOptions(current?: string): string[] {
   const list: string[] = [];
   for (let minutes = 0; minutes < 24 * 60; minutes += 30) {
@@ -415,7 +415,7 @@ export function timeOptions(current?: string): string[] {
   return list.sort();
 }
 
-/** Der zuletzt eingetragene Batteriewechsel über alle Geräte. */
+/** The most recently recorded battery change across all devices. */
 export function lastReplaced(devices: Device[]): { device: Device; at: number } | null {
   let best: { device: Device; at: number } | null = null;
   for (const device of devices) {
@@ -425,15 +425,15 @@ export function lastReplaced(devices: Device[]): { device: Device; at: number } 
   return best;
 }
 
-/** Blatt wegwischen: weit genug gezogen oder schnell nach unten geschnippt (px, px/ms). */
+/** Swipe the sheet away: dragged far enough or flicked down quickly (px, px/ms). */
 export function shouldDismiss(dy: number, velocity: number): boolean {
   return dy > 120 || (dy > 24 && velocity > 0.5);
 }
 
-/** Filter der Geräteliste (aus Übersicht/Mitteilungen): ein Status, „ignoriert“, wichtig, Batterie. */
+/** Device list filter (from overview/notifications): a status, "ignored", important, battery. */
 export type DeviceFilter = Status | 'ignored' | 'important' | 'battery';
 
-/** Batterie-Thema: schwache/fehlende Batterie oder in den nächsten Wochen fällig (`due` = Geräte-IDs). */
+/** Battery topic: low/missing battery or due in the coming weeks (`due` = device IDs). */
 export function batteryDevices(devices: Device[], due: string[] = []): Device[] {
   return monitored(devices)
     .filter(
@@ -457,12 +457,12 @@ export function applyFilter(
   return monitored(devices).filter((d) => d.status === filter);
 }
 
-/** Wichtige Geräte (überwacht). */
+/** Important devices (monitored). */
 export function importantCount(devices: Device[]): number {
   return monitored(devices).filter((d) => d.critical).length;
 }
 
-/** Kurzes Datum wie in iOS-Listen: „Heute“, „Gestern“, „3. Okt.“, mit Jahr nur wenn nicht dieses. */
+/** Short date as in iOS lists: "Heute", "Gestern", "3. Okt.", with the year only if not the current one. */
 export function shortDate(language: string, ts: number, now: number, timeZone?: string): string {
   const diff = dayNumber(now, timeZone) - dayNumber(ts, timeZone);
   if (diff === 0) return t(language, 'today_cap');
@@ -476,28 +476,28 @@ export function shortDate(language: string, ts: number, now: number, timeZone?: 
   }).format(new Date(ts * 1000));
 }
 
-/** Wer gerade etwas braucht: Prüfen/Ausgefallen bekommen Aktionen (Wechsel, Erinnern). */
+/** Who needs something right now: check/offline get actions (change, remind). */
 export function needsAction(device: Device): boolean {
   return !device.ignored && SEVERITY[device.status] >= 2;
 }
 
-/** Begründungen der Stufe „Batterie“ (wie `BATTERY_REASONS` im Server). */
+/** Reasons of the "Batterie" (battery) level (like `BATTERY_REASONS` on the server). */
 export const BATTERY_REASONS: ReadonlySet<string> = new Set(['battery_low', 'battery_low_flag']);
 
-/** „Batterie gewechselt“ ist nur bei einem Batterie-Grund die Hauptaktion, sonst „Morgen erinnern“. */
+/** "Batterie gewechselt" (battery changed) is the main action only for a battery reason, else "Morgen erinnern". */
 export function batteryFirst(device: Device): boolean {
   const b = device.battery;
-  // Auch eine stille Batterie, die schon schwach war, ist fast sicher leer (gleiche 20 % wie der Server)
+  // A silent battery that was already low is almost certainly empty too (same 20 % as the server)
   const weak = (b.flag && b.low) || (b.trusted && b.level !== null && b.level <= 20);
   return BATTERY_REASONS.has(device.reason_key ?? '') || weak;
 }
 
-/** Wichtig umschalten: zurück auf den Automatik-Wert = null (Server entscheidet wieder selbst). */
+/** Toggle important: back to the automatic value = null (the server decides again by itself). */
 export function criticalChange(device: Device, on: boolean): boolean | null {
   return on === device.critical_auto ? null : on;
 }
 
-/** Zeile unter „Batterien“: wie viele schwach sind (gleiche Schwelle wie der Status) und welche. */
+/** Line under "Batterien" (batteries): how many are low (same threshold as the status) and which. */
 export function batteryLine(
   language: string,
   low: string[]
@@ -512,43 +512,43 @@ export function batteryLine(
   };
 }
 
-// ── Richtung „Puls“: Schlagzeile, Monitor, Tagesband, Herzschlag ─────────────
+// ── Direction "Puls": headline, monitor, day band, heartbeat ────────────────
 
-/** Darf der angemeldete Benutzer etwas ändern? Nur Admins (der Server prüft das ebenso). */
+/** May the logged-in user change anything? Admins only (the server checks this as well). */
 export function canEdit(user: HassUser | undefined): boolean {
   return user?.is_admin === true;
 }
 
-/** Ab wann die Stille zählt: `silence_from` vom Server, bei älteren Servern die letzte Meldung. */
+/** When silence starts counting: `silence_from` from the server, for older servers the last report. */
 export function silenceStart(device: Device): number | null {
   return device.silence_from === undefined ? device.last_activity : device.silence_from;
 }
 
 /**
- * Beginn der Stille für Schlagzeile und Leiste: `silence_start` vom Server (letzte *regelmäßige*
- * Meldung, vereinzelte danach zählen nicht), sonst wie bisher `silenceStart`.
+ * Start of the silence for headline and bar: `silence_start` from the server (last *regular*
+ * report, sporadic ones after it do not count), otherwise `silenceStart` as before.
  */
 export function quietSince(device: Device): number | null {
   return typeof device.silence_start === 'number' ? device.silence_start : silenceStart(device);
 }
 
-/** Vereinzelte Meldungen seit Beginn der Stille (0 = echte Stille oder älterer Server). */
+/** Sporadic reports since the start of the silence (0 = real silence or older server). */
 export function strays(device: Device): number {
   return typeof device.strays === 'number' && device.strays > 0 ? device.strays : 0;
 }
 
-/** Nach „Batterie gewechselt“: wartet auf die erste echte Meldung (Status Beobachten). */
+/** After "Batterie gewechselt" (battery changed): waiting for the first real report (status watch). */
 export function isWaiting(device: Device): boolean {
   return !device.ignored && device.reason_key === 'waiting_first';
 }
 
-/** Begründungen, die den Takt betreffen (nicht nur die Batterie). */
+/** Reasons concerning the rhythm (not just the battery). */
 const OFF_RHYTHM = new Set(['silent', 'silent_new', 'unavailable', 'partner', 'radio_only']);
 const SILENT = new Set(['silent', 'silent_new']);
 
-/** Dauer als Wortgruppe für „seit …“: 12 Minuten, 5 Stunden, 4 Tagen. */
+/** Duration as a phrase for "seit …" (since …): 12 Minuten, 5 Stunden, 4 Tagen. */
 export function span(language: string, seconds: number): string {
-  // Gleiche Rundung wie der Server (texts.py), damit Pille, Schlagzeile und Begründung dieselbe Zahl nennen
+  // Same rounding as the server (texts.py), so pill, headline and reason name the same number
   const s = Math.max(0, seconds);
   if (Math.round(s / 60) < 60)
     return t(language, 'span_minutes', { n: Math.max(1, Math.round(s / 60)) });
@@ -560,7 +560,7 @@ export function span(language: string, seconds: number): string {
   return d <= 1 ? t(language, 'span_day') : t(language, 'span_days', { n: d });
 }
 
-/** „gestern“ oder Wochentag, wenn die Stille vor 1–6 Kalendertagen begann; sonst null. */
+/** "gestern" (yesterday) or weekday if the silence began 1–6 calendar days ago; otherwise null. */
 export function sinceDay(
   language: string,
   ts: number,
@@ -576,7 +576,7 @@ export function sinceDay(
   return null;
 }
 
-/** Ist das Gerät still (und nicht nur die Batterie schwach)? */
+/** Is the device silent (and not just the battery low)? */
 export function isSilent(device: Device): boolean {
   return (
     !device.ignored &&
@@ -586,7 +586,7 @@ export function isSilent(device: Device): boolean {
   );
 }
 
-/** Aus dem Takt: Stille, nicht erreichbar oder Partner aktiv (eine schwache Batterie zählt nicht). */
+/** Out of rhythm: silence, unreachable or partner active (a low battery does not count). */
 export function offRhythm(device: Device): boolean {
   return SEVERITY[device.status] >= 1 && OFF_RHYTHM.has(device.reason_key ?? '');
 }
@@ -596,9 +596,9 @@ export interface Hero {
   line1Short: string;
   line2: string;
   line2Short: string;
-  /** Farbe der zweiten Zeile: Verlauf nur, wenn alle im Takt sind */
+  /** Color of the second line: gradient only when all are in rhythm */
   tone: 'accent' | 'warn' | 'crit' | 'plain';
-  /** Unterzeile („2 von 10 im Takt.“), leer wenn nichts zu sagen ist */
+  /** Subline ("2 von 10 im Takt.", 2 of 10 in rhythm), empty when there is nothing to say */
   sub: string;
 }
 
@@ -607,9 +607,9 @@ function plainHero(line1: string, line2: string, heroTone: Hero['tone'], sub = '
 }
 
 /**
- * Große Schlagzeile der Übersicht. Braucht ein Gerät dich, steht das vorn („8 Geräte / brauchen
- * dich.“ in Warn-/Rot-Ton) und „2 von 10 im Takt.“ darunter; sonst „Alle 10 Geräte / schlagen im
- * Takt.“ (mit Verlauf) bzw. „9 von 10 Geräten / schlagen im Takt.“ (ohne Verlauf).
+ * Large headline of the overview. If a device needs you, that comes first ("8 Geräte / brauchen
+ * dich." in warning/red tone) with "2 von 10 im Takt." below; otherwise "Alle 10 Geräte / schlagen im
+ * Takt." (with gradient) or "9 von 10 Geräten / schlagen im Takt." (without gradient).
  */
 export function hero(language: string, devices: Device[]): Hero {
   const list = monitored(devices);
@@ -623,7 +623,7 @@ export function hero(language: string, devices: Device[]): Hero {
   const need = attention(rated);
   const needTone = need.some((d) => d.status === 'failed') ? 'crit' : 'warn';
   if (rated.length === 1) {
-    // Einzahl: „Dein einziges Gerät / schlägt im Takt.“ bzw. „… / braucht dich.“ / „… / ist still.“
+    // Singular: "Dein einziges Gerät / schlägt im Takt." or "… / braucht dich." / "… / ist still."
     const line1 = t(language, 'hero_one');
     if (need.length) return plainHero(line1, t(language, 'hero_need_one'), needTone);
     return plainHero(
@@ -677,7 +677,7 @@ function mention(
   return { before, name: device.name, after, tone: tone(device.status) };
 }
 
-/** Ein Satz pro auffälligem Gerät (höchstens zwei), mit hervorgehobenem Namen. */
+/** One sentence per conspicuous device (at most two), with the name highlighted. */
 export function heroSentences(
   language: string,
   devices: Device[],
@@ -689,7 +689,7 @@ export function heroSentences(
     .sort((a, b) => SEVERITY[b.status] - SEVERITY[a.status] || a.name.localeCompare(b.name));
   const all = monitored(devices);
   const learning = all.filter((d) => d.status === 'learning').length;
-  // Lernende Geräte zählen nicht als „im Takt“ – sie bekommen einen eigenen Satz
+  // Learning devices do not count as "im Takt" (in rhythm); they get their own sentence
   const learnText = learning ? learningLine(language, learning) : '';
   if (!list.length) {
     const allLearning = learning > 0 && learning === all.length;
@@ -707,7 +707,7 @@ export function heroSentences(
     const key = d.reason_key ?? '';
     const since = quietSince(d);
     if (SILENT.has(key) && since !== null && strays(d) > 0) {
-      // Sterbender Sensor: seit Tagen kaum noch, zwischendurch eine vereinzelte Meldung
+      // Dying sensor: hardly anything for days, a sporadic report now and then
       const day = sinceDay(language, since, now, timeZone);
       const last = ago(language, d.last_activity, now).replace(/\.$/, '');
       return day
@@ -741,7 +741,7 @@ export function heroSentences(
   };
 }
 
-/** „Ein Gerät / 3 Geräte lernt Pulse noch kennen.“ */
+/** "Ein Gerät / 3 Geräte lernt Pulse noch kennen." (Pulse is still learning one device / 3 devices) */
 export function learningLine(language: string, count: number): string {
   return count === 1 ? t(language, 'learning_one') : t(language, 'learning_many', { count });
 }
@@ -759,7 +759,7 @@ export function monitorTitle(key: MonitorKey): StringKey {
   return MONITOR_TITLES[key];
 }
 
-/** Abschnitte des Monitors: Braucht dich / Im Blick / Im Takt / Lernt noch (leere fallen weg). */
+/** Monitor sections: Braucht dich / Im Blick / Im Takt / Lernt noch (empty ones are dropped). */
 export function monitorGroups(devices: Device[]): { key: MonitorKey; devices: Device[] }[] {
   const list = monitored(devices);
   const byName = (a: Device, b: Device) => a.name.localeCompare(b.name);
@@ -775,10 +775,10 @@ export function monitorGroups(devices: Device[]): { key: MonitorKey; devices: De
   return sections.filter((s) => s.devices.length > 0);
 }
 
-/** Ab so vielen Geräten zeigt „Im Takt“ Räume zum Einklappen. */
+/** From this many devices on, "Im Takt" (in rhythm) shows collapsible rooms. */
 export const ROOMS_FROM = 12;
 
-/** „Seit 4 Tagen still“ für die abbrechende Leiste – nur bei Stille, nicht bei schwacher Batterie. */
+/** "Seit 4 Tagen still" (silent for 4 days) for the breaking-off bar; only on silence, not on low battery. */
 export function silenceFlag(language: string, device: Device, now: number): string | null {
   const since = quietSince(device);
   if (!isSilent(device) || since === null) return null;
@@ -787,7 +787,7 @@ export function silenceFlag(language: string, device: Device, now: number): stri
   });
 }
 
-/** Pille in der Leiste: „Seit 4 Tagen still“, „Wartet“ (nach Batteriewechsel) oder „Lernt noch“. */
+/** Pill in the bar: "Seit 4 Tagen still", "Wartet" (after a battery change) or "Lernt noch". */
 export function rhythmPill(language: string, device: Device, now: number): string {
   if (device.ignored) return '';
   const flag = silenceFlag(language, device, now);
@@ -797,7 +797,7 @@ export function rhythmPill(language: string, device: Device, now: number): strin
   return '';
 }
 
-/** Statuswort rechts im Monitor (null = nur die Zeit). */
+/** Status word on the right in the monitor (null = only the time). */
 export function statusWord(
   language: string,
   device: Device,
@@ -818,7 +818,7 @@ export function statusWord(
   return null;
 }
 
-/** Leiste auf weniger Balken zusammenfassen (Handy): Summen je Gruppe, ganz in der Zukunft = null. */
+/** Condense the bar into fewer bars (phone): sums per group, entirely in the future = null. */
 export function resample(buckets: (number | null)[], count: number): (number | null)[] {
   if (count <= 0 || buckets.length <= count) return buckets;
   const factor = Math.ceil(buckets.length / count);
@@ -832,13 +832,13 @@ export function resample(buckets: (number | null)[], count: number): (number | n
   return out;
 }
 
-/** „22:00“ → 22, „07:30“ → 7.5 */
+/** "22:00" → 22, "07:30" → 7.5 */
 export function hoursOf(time: string): number {
   const [h = '0', m = '0'] = time.split(':');
   return Number(h) + Number(m) / 60;
 }
 
-/** Ruhezeit als Bereiche in Stunden 0–24 (über Mitternacht = zwei Bereiche). */
+/** Quiet time as ranges in hours 0–24 (across midnight = two ranges). */
 export function quietRanges(start: string, end: string): [number, number][] {
   const a = hoursOf(start);
   const b = hoursOf(end);
@@ -851,7 +851,7 @@ export function quietRanges(start: string, end: string): [number, number][] {
       ];
 }
 
-/** Kurze Schlagzeile im Gerätedetail mit Farbe. */
+/** Short headline in the device detail with color. */
 export function detailHeadline(
   language: string,
   device: Device,
@@ -876,6 +876,8 @@ export function detailHeadline(
     return { text: t(language, 'dh_radio_only'), tone: tone(device.status) };
   if (key === 'battery_missing')
     return { text: t(language, 'dh_battery_missing'), tone: tone(device.status) };
+  if (key === 'silent_reachable')
+    return { text: t(language, 'dh_unused'), tone: tone(device.status) };
   if (key === 'unavailable')
     return { text: t(language, 'dh_unavailable'), tone: tone(device.status) };
   if (key === 'partner') return { text: t(language, 'dh_partner'), tone: tone(device.status) };
@@ -888,7 +890,7 @@ export function detailHeadline(
   return { text: t(language, 'dh_ok'), tone: 'accent' };
 }
 
-/** Satz unter der Schlagzeile: bei Stille Takt + letzte Meldung, sonst die Begründung vom Server. */
+/** Sentence under the headline: on silence rhythm + last report, otherwise the reason from the server. */
 export function detailText(
   language: string,
   device: Device,
@@ -905,7 +907,7 @@ export function detailText(
   return device.reason;
 }
 
-/** Satz unter dem Partner-Vergleich. */
+/** Sentence under the partner comparison. */
 export function partnerLine(language: string, device: Device, partner: Device): string {
   if (isSilent(device) && !offRhythm(partner))
     return t(language, 'partner_quiet', { partner: partner.name, name: device.name });
@@ -917,11 +919,11 @@ export interface HeartbeatData {
   start: number;
   days: number;
   binMinutes: number;
-  /** Echte lokale Mitternächte: Tag i deckt [dayStarts[i], dayStarts[i+1]) ab */
+  /** Real local midnights: day i covers [dayStarts[i], dayStarts[i+1]) */
   dayStarts: number[];
-  /** Je Gerät eine Liste pro Tag (92/96/100 Fenster bei 23/24/25 h) */
+  /** Per device one list per day (92/96/100 windows for 23/24/25 h) */
   devices: Record<string, (number | null)[][]>;
-  /** Zeiten ohne Daten: [von, bis] in Sekunden */
+  /** Times without data: [from, to] in seconds */
   noData: [number, number][];
 }
 
@@ -934,15 +936,15 @@ function isSpan(value: unknown): value is [number, number] {
   );
 }
 
-/** Zeitspannen ohne Daten prüfen (ohne Casts) – Unbrauchbares fällt weg. */
+/** Validate time spans without data (without casts); unusable ones are dropped. */
 export function parseSpans(value: unknown): [number, number][] {
   return Array.isArray(value) ? value.filter(isSpan) : [];
 }
 
 /**
- * Zeiten ohne Daten als Anteile einer Leiste (0–1), z. B. für die Schraffur in der Rhythmusleiste.
- * Jeder Tag ist gleich breit; innerhalb eines Tages zählt seine echte Länge. Leer, wenn nichts ins
- * Fenster fällt.
+ * Times without data as fractions of a bar (0–1), e.g. for the hatching in the rhythm bar.
+ * Every day is equally wide; within a day its real length counts. Empty if nothing falls into the
+ * window.
  */
 export function gapFractions(spans: [number, number][], dayStarts: number[]): [number, number][] {
   if (dayStarts.length < 2) return [];
@@ -959,7 +961,7 @@ function isDayBins(value: unknown): value is (number | null)[][] {
   return Array.isArray(value) && value.every(isBins);
 }
 
-/** Antwort von `pulse/heartbeat` prüfen (ohne Casts). */
+/** Validate the `pulse/heartbeat` response (without casts). */
 export function parseHeartbeat(value: unknown): HeartbeatData | null {
   if (typeof value !== 'object' || value === null) return null;
   const start: unknown = Reflect.get(value, 'start');
@@ -982,8 +984,8 @@ export function parseHeartbeat(value: unknown): HeartbeatData | null {
 }
 
 /**
- * Striche des Herzschlag-Kalenders für einen Tag: Position als Anteil des Tages (0–1, nach echter
- * Tageslänge) und Stärke je Fenster.
+ * Strokes of the heartbeat calendar for one day: position as a fraction of the day (0–1, by real
+ * day length) and strength per window.
  */
 export function dayTicks(
   bins: (number | null)[],
@@ -999,31 +1001,30 @@ export function dayTicks(
   return ticks;
 }
 
-/** Höhe eines Kalender-Strichs in px: 1 Meldung 12, 2 Meldungen 18, ab 3 Meldungen 22. */
+/** Height of a calendar stroke in px: 1 report 12, 2 reports 18, 3 or more reports 22. */
 export function tickHeight(count: number): number {
   if (count >= 3) return 22;
   return count === 2 ? 18 : 12;
 }
 
-/** Höchstens so viele vereinzelte Meldungen nach dem Abreißen gelten noch als „still“. */
+/** At most this many sporadic reports after the break-off still count as "silent". */
 const MAX_STRAYS = 2;
 
 /**
- * Erstes stilles Fenster der Leiste (−1 = nicht still): das Fenster nach der letzten *regelmäßigen*
- * Meldung. Kamen nach einer langen Lücke nur noch ein, zwei vereinzelte Meldungen (ein sterbender
- * Sensor), beginnt die Stille schon vor der Lücke – die Ausreißer stehen dann als Balken auf der
- * gestrichelten Linie.
+ * First silent window of the bar (−1 = not silent): the window after the last *regular* report.
+ * If after a long gap only one or two sporadic reports came (a dying sensor), the silence already
+ * starts before the gap; the strays then appear as bars on the dashed line.
  */
 export function silentIndex(device: Device, dayStarts: number[]): number {
   const since = silenceStart(device);
   if (!isSilent(device) || since === null || dayStarts.length < 2) return -1;
-  // Neuer Server: Beginn der Stille steht fest (Ausreißer-Regel dort) – Fenster nach dieser Meldung
+  // New server: the start of the silence is fixed (stray rule there); window after that report
   if (typeof device.silence_start === 'number') {
     const at = stripIndex(device.silence_start, dayStarts);
     return at < 0 ? 0 : at + 1;
   }
   const days = dayStarts.length - 1;
-  // Mittlere Fensterlänge (für die Lücke in Fenstern) – an der Zeitumstellung kaum anders
+  // Mean window length (for the gap in windows); hardly different on DST changes
   const size = ((dayStarts[days] ?? 0) - (dayStarts[0] ?? 0)) / (days * WINDOWS_PER_DAY);
   const last = stripIndex(since, dayStarts);
   if (last < 0) return 0;
@@ -1031,7 +1032,7 @@ export function silentIndex(device: Device, dayStarts: number[]): number {
   device.strip.forEach((count, i) => {
     if (count && i <= last) active.push(i);
   });
-  // Lücke, ab der eine Meldung als vereinzelt gilt: drei Fenster oder dreimal der übliche Takt
+  // Gap from which a report counts as sporadic: three windows or three times the usual rhythm
   const gapLimit = Math.max(3, Math.ceil((3 * (device.typical ?? 0)) / size));
   for (let k = active.length - 2; k >= 0 && active.length - 1 - k <= MAX_STRAYS; k--) {
     const here = active[k];
@@ -1043,11 +1044,11 @@ export function silentIndex(device: Device, dayStarts: number[]): number {
 }
 
 /**
- * Beginn der gestrichelten Stille im Herzschlag-Kalender (−1 = nicht still). Die Stille beginnt nach
- * der letzten Meldung: `silence_from`, aber nie vor dem Ende des letzten Fensters mit einer Meldung –
- * sonst stünden Striche auf der Stille-Linie. (Früher kam der Beginn aus der 2-h-Leiste: auf deren
- * Fenstergrenze abgerundet und bei vereinzelten Meldungen vor die Lücke gezogen – daher violette
- * Striche auf der roten Linie.)
+ * Start of the dashed silence in the heartbeat calendar (−1 = not silent). The silence starts after
+ * the last report: `silence_from`, but never before the end of the last window with a report;
+ * otherwise strokes would sit on the silence line. (Previously the start came from the 2 h bar:
+ * rounded down to its window boundary and pulled before the gap for sporadic reports, hence violet
+ * strokes on the red line.)
  */
 export function heartbeatSilence(
   device: Device,
@@ -1076,7 +1077,7 @@ const LEVEL_WORD: Record<Level, StringKey> = {
   off: 'set_level_off',
 };
 
-/** Textzeile im Tagesband: „18:00 Zusammenfassung · Ruhe 22:00 bis 07:30“. */
+/** Text line in the day band: "18:00 Zusammenfassung · Ruhe 22:00 bis 07:30". */
 export function daybandLine(language: string, settings: Settings): string {
   const q = settings.quiet;
   return [
@@ -1087,7 +1088,7 @@ export function daybandLine(language: string, settings: Settings): string {
   ].join(' · ');
 }
 
-/** Gewählte Personen fürs Heimkommen (ältere Server schicken noch `person`). */
+/** Selected persons for arriving home (older servers still send `person`). */
 export function arrivePersons(settings: Settings): string[] {
   const persons: unknown = Reflect.get(settings.arrive_home, 'persons');
   if (Array.isArray(persons)) return persons.filter((p): p is string => typeof p === 'string');
@@ -1096,15 +1097,15 @@ export function arrivePersons(settings: Settings): string[] {
 }
 
 /**
- * Schlagzeile der Mitteilungen: „Pulse meldet sich um 18:00. / Ruhe 22:00–07:30.“ und ein Satz,
- * was wann kommt – im Stil der Übersicht statt eines nackten Formulars.
+ * Headline of the notifications page: "Pulse meldet sich um 18:00. / Ruhe 22:00–07:30." and a sentence
+ * on what comes when, in the style of the overview instead of a bare form.
  */
 export function settingsHero(
   language: string,
   settings: Settings
 ): { line1: string; line2: string; sub: string } {
   const q = settings.quiet;
-  // Gleiche Stufen zusammenfassen: „Ausfälle sofort, Prüfen und Batterien in der Zusammenfassung.“
+  // Merge equal levels: "Ausfälle sofort, Prüfen und Batterien in der Zusammenfassung."
   const names: Record<keyof Settings['levels'], StringKey> = {
     failed: 'set_failed',
     check: 'set_check',
@@ -1126,14 +1127,14 @@ export function settingsHero(
     line2: q.enabled
       ? t(language, 'set_quiet', { start: q.start, end: q.end })
       : t(language, 'set_no_quiet'),
-    // Empfänger stehen schon im Tagesband daneben – hier nur, was wann kommt
+    // Recipients are already in the day band next to it; here only what comes when
     sub: levels,
   };
 }
 
 /**
- * Strecke [from, to] ohne die Lücken (z. B. Zeiten, in denen Pulse nicht lief): die Stille-Linie
- * wird dort unterbrochen, statt über der Schraffur zu liegen. Alle Werte im selben Maß (0–1 o. Ä.).
+ * Range [from, to] without the gaps (e.g. times when Pulse was not running): the silence line is
+ * interrupted there instead of lying over the hatching. All values in the same unit (0–1 or similar).
  */
 export function subtractSpans(
   from: number,
@@ -1153,7 +1154,7 @@ export function subtractSpans(
   return parts;
 }
 
-// ── 1.1: Vorhersage, fällige Batterien, Cloud-Ausfälle ─────────────────────
+// ── 1.1: forecast, due batteries, cloud outages ────────────────────────────
 
 const FORECAST_REASONS: Record<ForecastReason, StringKey> = {
   too_short: 'forecast_too_short',
@@ -1164,9 +1165,9 @@ const FORECAST_REASONS: Record<ForecastReason, StringKey> = {
 };
 
 /**
- * Laufzeit als grober Bereich – nie tagesgenau: „Hält noch ca. 3–5 Wochen“, „… 2–4 Monate“,
- * „… 1–2 Jahre“, unter ~10 Tagen „Hält nur noch wenige Tage“. Ohne Vorhersage der kurze Grund
- * (oder leer, wenn der Server keinen nennt).
+ * Runtime as a rough range, never to the day: "Hält noch ca. 3–5 Wochen", "… 2–4 Monate",
+ * "… 1–2 Jahre", under ~10 days "Hält nur noch wenige Tage". Without a forecast the short reason
+ * (or empty if the server gives none).
  */
 export function forecastText(
   language: string,
@@ -1187,7 +1188,7 @@ export function forecastText(
   return t(language, 'forecast_years', range(365.25));
 }
 
-/** „2× CR2032, 1× AA“ – fällige Batterien nach Typ zusammengezählt (unbekannter Typ zuletzt). */
+/** "2× CR2032, 1× AA": due batteries summed up by type (unknown type last). */
 export function dueLine(language: string, due: DueBattery[] | undefined): string {
   if (!due?.length) return '';
   const byType = new Map<string, number>();
@@ -1199,18 +1200,18 @@ export function dueLine(language: string, due: DueBattery[] | undefined): string
   const items = [...byType.entries()]
     .sort(([a, x], [b, y]) => y - x || a.localeCompare(b))
     .map(([type, count]) => t(language, 'battery_count_type', { count, type }));
-  // Ohne bekannten Typ: das Gerät nennen, damit man weiß, wo man nachsehen muss
+  // Without a known type: name the device so one knows where to look
   if (untyped.length) items.push(t(language, 'due_untyped', { names: untyped.join(', ') }));
   return t(language, 'due_line', { items: items.join(', ') });
 }
 
-/** Anzeigename einer Integration aus ihrer Domain: netatmo → Netatmo, tado_x → Tado x. */
+/** Display name of an integration from its domain: netatmo → Netatmo, tado_x → Tado x. */
 export function integrationName(domain: string): string {
   const name = domain.replaceAll('_', ' ').trim();
   return name ? `${name.charAt(0).toUpperCase()}${name.slice(1)}` : domain;
 }
 
-/** Ruhiger Sammelhinweis je schweigender Cloud: „Netatmo-Cloud antwortet nicht – 3 Geräte betroffen“. */
+/** Calm collective notice per silent cloud: "Netatmo-Cloud antwortet nicht – 3 Geräte betroffen". */
 export function cloudLines(language: string, outages: CloudOutage[] | undefined): string[] {
   return (outages ?? [])
     .filter((o) => o.count > 0)
@@ -1222,14 +1223,14 @@ export function cloudLines(language: string, outages: CloudOutage[] | undefined)
     );
 }
 
-/** Partner-Vorschläge, die angeboten werden: nur ohne gesetzten Partner, höchstens 3. */
+/** Partner suggestions that are offered: only without a set partner, at most 3. */
 export function partnerSuggestions(device: Device): { id: string; name: string }[] {
   if (device.partner || device.ignored) return [];
-  // Ein Vorschlag auf einmal (der stärkste) – verworfen kommt der nächste
+  // One suggestion at a time (the strongest); once dismissed, the next one comes
   return (device.partner_suggestions ?? []).slice(0, 1);
 }
 
-/** Abo-Neuversuch nach einem Fehler: 2 s, dann verdoppelt bis höchstens 60 s; ein Erfolg setzt zurück. */
+/** Subscription retry after an error: 2 s, then doubled up to at most 60 s; a success resets it. */
 export const RETRY_FIRST = 2000;
 export const RETRY_MAX = 60_000;
 

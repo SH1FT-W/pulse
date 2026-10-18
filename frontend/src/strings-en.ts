@@ -269,6 +269,7 @@ export const EN = {
   dh_startup: 'No report since the restart.',
   dh_radio_only: 'On the air, no values.',
   dh_battery_missing: 'Battery level missing.',
+  dh_unused: 'Not used for a while.',
   forecast_too_short: 'Not observed long enough for a forecast',
   forecast_flat: 'Percentage barely changes – no forecast yet',
   forecast_coarse: 'Reports only coarse steps – no forecast',
@@ -321,5 +322,14 @@ export const EN = {
   new_calver_title: 'New version numbers',
   new_calver_text:
     'From now on versions read year.month.release: 26.10.4 is the fourth release in October 2026. The jump from 1.1.0 is intended – updates are found as usual.',
+  new_reachable_title: 'Reachable means fine',
+  new_reachable_text:
+    'For Matter devices and cloud devices with a connectivity sensor (e.g. Netatmo), Pulse now asks the integration. A rarely used lock or a rain gauge on a dry day no longer counts as unusually silent.',
+  new_restart_title: 'Restarts no longer fool Pulse',
+  new_restart_text:
+    'After a Home Assistant restart, a silent device briefly looked alive again. These fake reports no longer count.',
+  new_sheet_title: 'Settings in view',
+  new_sheet_text:
+    'Opening the settings in the device sheet now grows the sheet and shows them right away.',
   due_untyped: 'type unknown: {names}',
 };

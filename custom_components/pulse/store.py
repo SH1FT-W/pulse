@@ -1,4 +1,4 @@
-"""Gespeichertes: Meldungen, Einstellungen pro Gerät, Mitteilungs-Einstellungen."""
+"""Persisted data: reports, per-device settings, notification settings."""
 
 from __future__ import annotations
 
@@ -9,9 +9,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import Store
 
 from .const import DEFAULT_SETTINGS, STORE_KEY, STORE_MINOR, STORE_VERSION
+from .rhythm import restart_echoes
 
 SAVE_DELAY = 60
-# Meldungen kommen laufend: sie dürfen länger warten (beim Stoppen wird ohnehin sofort gespeichert)
+# Reports arrive constantly: they may wait longer (on stop everything is saved immediately anyway)
 SAVE_DELAY_EVENTS = 600
 
 
@@ -20,28 +21,28 @@ def default_record() -> dict[str, Any]:
         "events": [],
         "actions": [],
         "ignored": False,
-        "critical": None,  # None = automatisch
+        "critical": None,  # None = automatic
         "battery_type": None,
         "battery_count": None,
         "chemistry": None,
         "partner": None,
         "replaced": [],
-        "replaced_source": [],  # je Wechsel: manual / auto / announce
-        "pending_jump": None,  # Batteriesprung, der sich bei der nächsten echten Meldung bestätigen muss
+        "replaced_source": [],  # per change: manual / auto / announce
+        "pending_jump": None,  # battery jump that must be confirmed by the next real report
         "snooze_until": None,
         "last_level": None,
         "last_voltage": None,
         "notified": None,
-        "notified_before_replace": None,  # für „Rückgängig“ nach „Batterie gewechselt“
-        "told": False,  # eine Problem-Mitteilung wurde wirklich zugestellt (nicht nur vorgemerkt)
+        "notified_before_replace": None,  # for "Rückgängig" (undo) after "Batterie gewechselt" (battery changed)
+        "told": False,  # a problem notification was actually delivered (not just queued)
         "first_seen": None,
-        "partner_dismissed": [],  # verworfene Partner-Vorschläge (Geräte-IDs)
-        "battery_missing_since": None,  # Batterie-Entität ohne Wert seit
+        "partner_dismissed": [],  # dismissed partner suggestions (device IDs)
+        "battery_missing_since": None,  # battery entity without a value since
     }
 
 
 def merge_settings(base: dict[str, Any], update: dict[str, Any]) -> dict[str, Any]:
-    """Teil-Update in die Einstellungen mischen (eine Ebene tief für Unterobjekte)."""
+    """Merge a partial update into the settings (one level deep for sub-objects)."""
     result = copy.deepcopy(base)
     for key, value in update.items():
         if key not in DEFAULT_SETTINGS:
@@ -62,31 +63,41 @@ class _VersionedStore(Store[dict[str, Any]]):
 
 
 def migrate(old_minor: int, data: dict[str, Any]) -> dict[str, Any]:
-    """Speicher auf den aktuellen Stand bringen (nur Minor-Versionen, rückwärts lesbar)."""
+    """Bring the store up to date (minor versions only, backward readable)."""
     if old_minor < 3:
-        # Bis 1.2 wurde nicht gespeichert, woher ein Wechsel kam – und nach Neustarts wurden Wechsel
-        # fälschlich erkannt. Alte Einträge verwerfen; ab jetzt mit Quelle.
+        # Up to 1.2 the source of a change was not stored, and after restarts changes were detected
+        # wrongly. Drop old entries; from now on with source.
         for record in data.get("devices", {}).values():
             record["replaced"] = []
             record["replaced_source"] = []
             record["pending_jump"] = None
     if old_minor < 4:
-        # Bis 1.3 wurden Volt-Sensoren (z. B. ZHA) als Volt gespeichert – ab jetzt immer mV
+        # Up to 1.3 volt sensors (e.g. ZHA) were stored as volts; from now on always mV
         for record in data.get("devices", {}).values():
             if (volt := record.get("last_voltage")) is not None and volt < 100:
                 record["last_voltage"] = volt * 1000
-        # Heimkommen: eine Person → Liste
+        # Arrive home: one person → list
         arrive = data.get("settings", {}).get("arrive_home")
         if isinstance(arrive, dict) and "person" in arrive:
             person = arrive.pop("person")
             arrive["persons"] = [person] if person else []
     if old_minor < 6:
-        # 1.1: verworfene Partner-Vorschläge, Batterie fehlt seit, gemeldete Cloud-Ausfälle
+        # 1.1: dismissed partner suggestions, battery missing since, reported cloud outages
         for record in data.get("devices", {}).values():
             record.setdefault("partner_dismissed", [])
             record.setdefault("battery_missing_since", None)
         data.setdefault("cloud_notified", {})
         data.setdefault("z2m_health_at", None)
+    if old_minor < 7:
+        # Up to 26.10.4 the state rows HA rewrites on start were read back from the recorder as reports, and
+        # before 1.1 every cloud poll counted. Drop the restart echoes; cloud devices are rebuilt from history.
+        starts = [float(span[0]) for span in data.get("uptime", []) if len(span) == 2]
+        for record in data.get("devices", {}).values():
+            for key in ("events", "actions"):
+                stamps = record.get(key) or []
+                echoes = restart_echoes(stamps, starts)
+                record[key] = [ts for ts in stamps if ts not in echoes]
+            record["rebuild_events"] = True
     return data
 
 
@@ -97,15 +108,15 @@ class PulseStore:
         self.devices: dict[str, dict[str, Any]] = {}
         self.settings: dict[str, Any] = copy.deepcopy(DEFAULT_SETTINGS)
         self.z2m_enabled_at: float | None = None
-        # Eigene Laufzeit: [Start, zuletzt gesehen] je Lauf – zeigt im Panel, wann Pulse keine Daten hatte
+        # Own uptime: [start, last seen] per run; shows in the panel when Pulse had no data
         self.uptime: list[list[float]] = []
-        # Tag (ISO) der zuletzt geschickten Tageszusammenfassung – und einer noch zurückgehaltenen
+        # Day (ISO) of the last sent daily summary, and of one still held back
         self.summary_sent: str | None = None
         self.summary_pending: str | None = None
-        # Cloud-Integrationen, deren Ausfall schon gemeldet ist (Integration → seit)
+        # Cloud integrations whose outage was already reported (integration → since)
         self.cloud_notified: dict[str, float] = {}
         self.z2m_health_at: float | None = None
-        # Ein verzögertes Speichern steht an – nicht erneut planen (HA würde es sonst immer weiter schieben)
+        # A delayed save is pending; do not schedule again (HA would otherwise keep pushing it back)
         self._save_pending = False
         self._save_due: float | None = None
 
@@ -129,12 +140,12 @@ class PulseStore:
         return self.devices[device_id]
 
     def async_delay_save(self, delay: float = SAVE_DELAY) -> None:
-        """Spätestens nach `delay` Sekunden speichern.
+        """Save after `delay` seconds at the latest.
 
-        HAs `Store.async_delay_save` verschiebt ein anstehendes Speichern bei jedem Aufruf nach hinten –
-        Pulse ruft es bei jeder Meldung, im Betrieb würde nie gespeichert. Deshalb nur neu planen, wenn
-        nichts ansteht oder das Anstehende später käme als jetzt gewünscht; der Stand wird erst beim
-        Schreiben gelesen. Meldungen warten länger (SAVE_DELAY_EVENTS), Einstellungen kurz (SAVE_DELAY).
+        HA's `Store.async_delay_save` pushes a pending save back on every call; Pulse calls it on
+        every report, so in operation it would never save. Hence only reschedule if nothing is pending
+        or the pending save would come later than now wanted; the state is only read when writing.
+        Reports wait longer (SAVE_DELAY_EVENTS), settings briefly (SAVE_DELAY).
         """
         due = self._hass.loop.time() + delay
         if self._save_pending and self._save_due is not None and self._save_due <= due:
@@ -166,5 +177,5 @@ class PulseStore:
         }
 
     async def async_remove(self) -> None:
-        """Integration entfernt: nichts liegen lassen (Meldungen, Einstellungen, Wechsel-Historie)."""
+        """Integration removed: leave nothing behind (reports, settings, change history)."""
         await self._store.async_remove()

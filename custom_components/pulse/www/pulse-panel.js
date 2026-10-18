@@ -832,6 +832,7 @@ var Ge = {
 	dh_startup: "Seit dem Neustart noch keine Meldung.",
 	dh_radio_only: "Funkt ohne Werte.",
 	dh_battery_missing: "Batteriestand fehlt.",
+	dh_unused: "Länger nicht benutzt.",
 	forecast_too_short: "Für eine Vorhersage noch zu kurz beobachtet",
 	forecast_flat: "Prozent ändert sich kaum – noch keine Vorhersage",
 	forecast_coarse: "Meldet nur grobe Stufen – keine Vorhersage",
@@ -878,6 +879,12 @@ var Ge = {
 	new_cloud_text: "Antwortet eine Cloud nicht, gibt es einen Sammelhinweis statt vieler Alarme. Dazu schlägt Pulse passende Partnergeräte vor.",
 	new_calver_title: "Neue Versionsnummern",
 	new_calver_text: "Ab jetzt lesen sich Versionen als Jahr.Monat.Release: 26.10.4 ist das vierte Release im Oktober 2026. Der Sprung von 1.1.0 ist gewollt – Updates werden wie gewohnt erkannt.",
+	new_reachable_title: "Erreichbar heißt in Ordnung",
+	new_reachable_text: "Bei Matter-Geräten und Cloud-Geräten mit Erreichbarkeits-Sensor (z. B. Netatmo) fragt Pulse jetzt die Integration. Ein selten benutztes Schloss oder ein Regenmesser bei Trockenheit gilt nicht mehr als ungewohnt still.",
+	new_restart_title: "Neustarts täuschen nicht mehr",
+	new_restart_text: "Nach einem Neustart von Home Assistant sah ein stilles Gerät kurz wieder lebendig aus. Diese Scheinmeldungen zählen nicht mehr.",
+	new_sheet_title: "Einstellungen im Blick",
+	new_sheet_text: "Klappst du im Gerätedetail die Einstellungen auf, wächst das Fenster mit und zeigt sie gleich an.",
 	due_untyped: "Typ offen: {names}"
 }, Ke = {
 	title: "Pulse",
@@ -1135,6 +1142,7 @@ var Ge = {
 	dh_startup: "No report since the restart.",
 	dh_radio_only: "On the air, no values.",
 	dh_battery_missing: "Battery level missing.",
+	dh_unused: "Not used for a while.",
 	forecast_too_short: "Not observed long enough for a forecast",
 	forecast_flat: "Percentage barely changes – no forecast yet",
 	forecast_coarse: "Reports only coarse steps – no forecast",
@@ -1181,6 +1189,12 @@ var Ge = {
 	new_cloud_text: "If a cloud stops responding, you get one summary instead of many alerts. Pulse also suggests matching partner devices.",
 	new_calver_title: "New version numbers",
 	new_calver_text: "From now on versions read year.month.release: 26.10.4 is the fourth release in October 2026. The jump from 1.1.0 is intended – updates are found as usual.",
+	new_reachable_title: "Reachable means fine",
+	new_reachable_text: "For Matter devices and cloud devices with a connectivity sensor (e.g. Netatmo), Pulse now asks the integration. A rarely used lock or a rain gauge on a dry day no longer counts as unusually silent.",
+	new_restart_title: "Restarts no longer fool Pulse",
+	new_restart_text: "After a Home Assistant restart, a silent device briefly looked alive again. These fake reports no longer count.",
+	new_sheet_title: "Settings in view",
+	new_sheet_text: "Opening the settings in the device sheet now grows the sheet and shows them right away.",
 	due_untyped: "type unknown: {names}"
 };
 //#endregion
@@ -1746,6 +1760,9 @@ function nn(e, t, n) {
 		tone: z(t.status)
 	} : r === "battery_missing" ? {
 		text: I(e, "dh_battery_missing"),
+		tone: z(t.status)
+	} : r === "silent_reachable" ? {
+		text: I(e, "dh_unused"),
 		tone: z(t.status)
 	} : r === "unavailable" ? {
 		text: I(e, "dh_unavailable"),
@@ -2411,11 +2428,23 @@ var J = o`
 		title: "welcome_notify_title",
 		text: "welcome_notify_text"
 	}
-], Nn = [{
-	icon: "mdi:calendar-month-outline",
-	title: "new_calver_title",
-	text: "new_calver_text"
-}], Pn = "https://github.com/SH1FT-W/pulse/blob/main/CHANGELOG.md";
+], Nn = [
+	{
+		icon: "mdi:access-point-check",
+		title: "new_reachable_title",
+		text: "new_reachable_text"
+	},
+	{
+		icon: "mdi:restart",
+		title: "new_restart_title",
+		text: "new_restart_text"
+	},
+	{
+		icon: "mdi:tune-variant",
+		title: "new_sheet_title",
+		text: "new_sheet_text"
+	}
+], Pn = "https://github.com/SH1FT-W/pulse/blob/main/CHANGELOG.md";
 F("pulse-welcome", class extends M {
 	static {
 		this.properties = {
@@ -2503,7 +2532,7 @@ F("pulse-welcome", class extends M {
             </li>`)}
         </ol>
       </div>
-      <!-- Fester Fuß: Schalter und „Weiter“ bleiben immer sichtbar, der Text darüber scrollt -->
+      <!-- Fixed footer: switch and "Weiter" (continue) always stay visible, the text above scrolls -->
       <div slot="footer" class="foot">
         ${t && this.zigbee !== "none" ? this.renderZigbee() : O}
         <button class="go" type="button" @click=${() => this.close()}>${I(e, "continue")}</button>
@@ -2517,7 +2546,7 @@ F("pulse-welcome", class extends M {
 			X,
 			o`
       ha-dialog {
-        /* Bühne wie die Seite: im Dunkeln schwarz, damit das EKG leuchtet */
+        /* Stage like the page: black in dark mode so the ECG glows */
         --ha-dialog-surface-background: var(--primary-background-color);
         --mdc-theme-surface: var(--primary-background-color);
         --mdc-dialog-max-width: 480px;
@@ -2533,7 +2562,7 @@ F("pulse-welcome", class extends M {
         padding: 4px 4px 4px;
         color: var(--pu-ink);
       }
-      /* Leuchten läuft zu allen Rändern weich aus – keine Kante am Dialogrand */
+      /* The glow fades out softly towards all edges, no hard edge at the dialog border */
       .glow {
         position: absolute;
         inset: 0 0 auto;
@@ -2666,7 +2695,7 @@ F("pulse-welcome", class extends M {
         min-height: 52px;
         border: 0;
         border-radius: 26px;
-        /* Einfarbig wie alle Primärknöpfe: Weiß auf dem Flächen-Akzent ≥ 4,5:1 */
+        /* Solid like all primary buttons: white on the surface accent ≥ 4.5:1 */
         background: var(--pu-accent-fill);
         box-shadow: 0 10px 40px -8px color-mix(in srgb, var(--pu-accent-fill) 60%, transparent);
         color: #fff;
@@ -2688,7 +2717,7 @@ F("pulse-welcome", class extends M {
       .sheet {
         padding-bottom: 12px;
       }
-      /* Handy: HAs Dialog-Fuß hat dort keinen Innenabstand – bündig mit dem Text darüber */
+      /* Phone: HA's dialog footer has no padding there, flush with the text above */
       @media (max-width: 600px) {
         .foot {
           max-width: none;
@@ -3065,10 +3094,10 @@ F("pulse-sheet", class extends M {
 	static {
 		this.styles = [J, o`
       dialog {
-        /* Flächen: hell = Seitenhintergrund mit weißen Listen, dunkel = erhöhte Fläche (setzt das Panel) */
+        /* Surfaces: light = page background with white lists, dark = raised surface (set by the panel) */
         --pu-card: var(--pulse-sheet-card, var(--card-background-color, #fff));
         width: min(100% - 2 * 16px, 520px);
-        max-height: min(100dvh - 2 * 32px, 760px);
+        max-height: min(100dvh - 2 * 32px, 960px);
         padding: 0;
         border: 0;
         border-radius: 18px;
@@ -3080,21 +3109,21 @@ F("pulse-sheet", class extends M {
         overflow: hidden;
         overscroll-behavior: contain;
       }
-      /* Nur offen sichtbar – sonst überschriebe display:flex das Verstecken des <dialog> */
+      /* Only visible when open, otherwise display:flex would override hiding the <dialog> */
       dialog[open] {
         display: flex;
         flex-direction: column;
         animation: fade-in 250ms cubic-bezier(0.2, 0.8, 0.2, 1);
       }
-      /* Den Dialog selbst nicht umranden – der Fokus liegt auf seinen Knöpfen */
+      /* No outline on the dialog itself, focus sits on its buttons */
       dialog:focus {
         outline: none;
       }
       dialog::backdrop {
-        /* ::backdrop erbt je nach Browser keine Variablen – deshalb ohne Token */
+        /* ::backdrop does not inherit variables in every browser, hence no token */
         background: color-mix(in srgb, black 40%, transparent);
       }
-      /* Kopf fest, nur der Inhalt scrollt (min-height: 0 lässt den Flex-Bereich schrumpfen) */
+      /* Fixed header, only the content scrolls (min-height: 0 lets the flex area shrink) */
       .panel {
         flex: 1;
         min-height: 0;
@@ -3165,7 +3194,7 @@ F("pulse-sheet", class extends M {
       footer.empty {
         display: none;
       }
-      /* Handy: am unteren Rand, volle Breite, fährt von unten herein, Griff + Kopf zum Wegwischen */
+      /* Phone: at the bottom edge, full width, slides in from below, handle + header to swipe away */
       @media (pointer: coarse), (max-width: 600px) {
         dialog {
           width: 100%;
@@ -3554,16 +3583,17 @@ F("pulse-rhythm", class extends M {
 });
 //#endregion
 //#region src/pulse-device-sheet.ts
-function Qn(e) {
+var Qn = 260;
+function $n(e) {
 	return z(e.status) === "warn" ? "warn" : "crit";
 }
-function $n(e) {
+function er(e) {
 	return e.ignored ? "muted" : z(e.status) === "ok" ? "ok" : "neutral";
 }
-var er = Array.from({ length: 12 }, (e, t) => ({
+var tr = Array.from({ length: 12 }, (e, t) => ({
 	value: String(t + 1),
 	label: String(t + 1)
-})), tr = {
+})), nr = {
 	nimh: "chem_nimh",
 	alkaline: "chem_alkaline",
 	lithium: "chem_lithium"
@@ -3593,7 +3623,15 @@ F("pulse-device-sheet", class extends M {
 		};
 	}
 	constructor() {
-		super(), this.gapsOf = L(cn), this.beatKey = "", this.device = null, this.devices = [], this.language = "en", this.now = 0, this.stripStart = 0, this.stripDays = 7, this.dayStarts = [], this.timeZone = void 0, this.timeFormat = void 0, this.bucketHours = 2, this.fetchHeartbeat = null, this.beat = null, this.batteryTypes = [], this.chemistries = [], this.noData = [], this.open = !1, this.readonly = !1, this.settingsOpen = !1, this.beatError = !1;
+		super(), this.gapsOf = L(cn), this.beatKey = "", this.onSettingsToggle = (e) => {
+			let t = e.currentTarget;
+			if (!(t instanceof HTMLDetailsElement) || (this.settingsOpen = t.open, !t.open)) return;
+			let n = CSS.supports("interpolate-size", "allow-keywords");
+			window.setTimeout(() => t.scrollIntoView({
+				block: "nearest",
+				behavior: "smooth"
+			}), n ? Qn : 0);
+		}, this.device = null, this.devices = [], this.language = "en", this.now = 0, this.stripStart = 0, this.stripDays = 7, this.dayStarts = [], this.timeZone = void 0, this.timeFormat = void 0, this.bucketHours = 2, this.fetchHeartbeat = null, this.beat = null, this.batteryTypes = [], this.chemistries = [], this.noData = [], this.open = !1, this.readonly = !1, this.settingsOpen = !1, this.beatError = !1;
 	}
 	willUpdate(e) {
 		if (!e.has("device") && !e.has("open") && !e.has("stripStart")) return;
@@ -3708,9 +3746,9 @@ F("pulse-device-sheet", class extends M {
                 .now=${this.now}
                 .silentSince=${gn(e, d, u.dayStarts, u.binMinutes)}
                 .noData=${f}
-                silence=${Qn(e)}
+                silence=${$n(e)}
                 .language=${t}
-                tone=${$n(e)}
+                tone=${er(e)}
               ></pulse-heartbeat>` : this.beatError ? T`<div class="cal-err">
                   <span class="muted">${I(t, "heartbeat_failed")}</span>
                   <button class="pbtn" type="button" @click=${() => this.reloadBeat(e.id)}>${I(t, "reload")}</button>
@@ -3745,10 +3783,7 @@ F("pulse-device-sheet", class extends M {
         ${this.switchRow(I(t, "important"), I(t, "important_hint"), e.critical, (t) => this.change({ critical: jt(e, t) }))}
       </div>
 
-      <details class="more" ?open=${this.settingsOpen} @toggle=${(e) => {
-			let t = e.currentTarget;
-			t instanceof HTMLDetailsElement && (this.settingsOpen = t.open);
-		}}>
+      <details class="more" ?open=${this.settingsOpen} @toggle=${this.onSettingsToggle}>
         <summary>
           <span>${I(t, "device_settings")}</span>
           <ha-icon icon="mdi:chevron-down"></ha-icon>
@@ -3785,7 +3820,7 @@ F("pulse-device-sheet", class extends M {
 			label: I(t, "chem_unknown")
 		}, ...this.chemistries.map((e) => ({
 			value: e,
-			label: I(t, tr[e] ?? "chem_unknown")
+			label: I(t, nr[e] ?? "chem_unknown")
 		}))], a = [{
 			value: "",
 			label: I(t, "partner_none")
@@ -3798,7 +3833,7 @@ F("pulse-device-sheet", class extends M {
         <h4 class="section-title">${I(t, "battery")}</h4>
         <div class="list">
           ${this.picker(I(t, "battery_type"), n.type ?? "", r, (e) => this.change({ battery_type: e || null }))}
-          ${this.picker(I(t, "battery_count"), String(n.count ?? 1), er, (e) => this.change({ battery_count: Number(e) }))}
+          ${this.picker(I(t, "battery_count"), String(n.count ?? 1), tr, (e) => this.change({ battery_count: Number(e) }))}
           ${this.picker(I(t, "chemistry"), n.chemistry ?? "", i, (e) => this.change({ chemistry: e || null }), n.trusted ? void 0 : I(t, "level_unreliable"))}
           ${n.voltage === null ? O : T`<div class="row"><span class="label">${I(t, "voltage")}</span><span class="value">${ht(t, n.voltage)}</span></div>`}
         </div>
@@ -3971,7 +4006,7 @@ F("pulse-device-sheet", class extends M {
         font-size: 12px;
         --mdc-icon-size: 14px;
       }
-      /* Laufzeit-Vorhersage unter den Batterie-Kennzahlen */
+      /* Battery forecast below the battery figures */
       .fc {
         display: flex;
         align-items: flex-start;
@@ -4022,7 +4057,7 @@ F("pulse-device-sheet", class extends M {
         text-align: center;
         font-size: 12px;
       }
-      /* Partner-Vergleich: Haarlinie statt Fläche – im Dunkeln keine graue Kachel */
+      /* Partner comparison: hairline instead of a surface, no grey tile in dark mode */
       .pair {
         display: grid;
         gap: 6px;
@@ -4090,9 +4125,26 @@ F("pulse-device-sheet", class extends M {
         opacity: 0.7;
       }
 
-      /* Einstellungen eingeklappt: eine ruhige Zeile, aufgeklappt leichte Listen ohne Fläche */
+      /* Settings collapsed: one calm row; open: light lists without a surface */
       .more {
         border-top: 1px solid var(--pu-line);
+        interpolate-size: allow-keywords;
+      }
+      /* Open and close smoothly where the browser can animate to auto height (elsewhere it simply jumps) */
+      .more::details-content {
+        block-size: 0;
+        overflow: clip;
+        transition:
+          block-size 240ms cubic-bezier(0.2, 0.8, 0.2, 1),
+          content-visibility 240ms allow-discrete;
+      }
+      .more[open]::details-content {
+        block-size: auto;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .more::details-content {
+          transition: none;
+        }
       }
       summary {
         display: flex;
@@ -4185,7 +4237,7 @@ F("pulse-device-sheet", class extends M {
 });
 //#endregion
 //#region src/pulse-devices.ts
-var nr = {
+var rr = {
 	area: "group_area",
 	status: "group_status",
 	none: "group_none"
@@ -4314,7 +4366,7 @@ F("pulse-devices", class extends M {
         </label>
         <ha-dropdown placement="bottom-end" @wa-select=${(e) => this.setGroup(ze(e) ?? "")}>
           <button slot="trigger" class="chip" type="button">
-            ${I(e, "group_by", { what: I(e, nr[this.groupBy]) })}
+            ${I(e, "group_by", { what: I(e, rr[this.groupBy]) })}
             <ha-icon icon="mdi:menu-down"></ha-icon>
           </button>
           ${[
@@ -4323,7 +4375,7 @@ F("pulse-devices", class extends M {
 			"none"
 		].map((t) => T`<ha-dropdown-item value=${t}>
               <ha-icon slot="icon" class=${t === this.groupBy ? "check" : "check hidden"} icon="mdi:check"></ha-icon>
-              ${I(e, nr[t])}
+              ${I(e, rr[t])}
             </ha-dropdown-item>`)}
         </ha-dropdown>
         ${s ? T`<button class="chip filter" type="button" @click=${() => this.fire("filter-clear", {})} aria-label=${`${s}, ${I(e, "filter_clear")}`}>
@@ -4532,7 +4584,7 @@ F("pulse-devices", class extends M {
 });
 //#endregion
 //#region src/pulse-dayband.ts
-var rr = (e) => `${(e / 24 * 100).toFixed(2)}%`;
+var ir = (e) => `${(e / 24 * 100).toFixed(2)}%`;
 F("pulse-dayband", class extends M {
 	static {
 		this.properties = {
@@ -4555,9 +4607,9 @@ F("pulse-dayband", class extends M {
       <p class="line">${a}</p>
       <div class="band" role="img" aria-label=${`${I(e, "day_title")}: ${a}`}>
         <div class="track" aria-hidden="true">
-          ${i.map(([e, t]) => T`<span class="quiet" style=${`left: ${rr(e)}; width: ${rr(t - e)}`}></span>`)}
-          <span class="nowline" style=${`left: ${rr(n)}`}></span>
-          <span class="dot" style=${`left: ${rr(r)}`}></span>
+          ${i.map(([e, t]) => T`<span class="quiet" style=${`left: ${ir(e)}; width: ${ir(t - e)}`}></span>`)}
+          <span class="nowline" style=${`left: ${ir(n)}`}></span>
+          <span class="dot" style=${`left: ${ir(r)}`}></span>
         </div>
         <div class="hours mono" aria-hidden="true">
           ${[
@@ -4653,18 +4705,18 @@ F("pulse-dayband", class extends M {
 });
 //#endregion
 //#region src/pulse-overview.ts
-var ir = "pulse.closedRooms";
-function ar() {
+var ar = "pulse.closedRooms";
+function or() {
 	try {
-		let e = JSON.parse(window.localStorage.getItem(ir) ?? "[]");
+		let e = JSON.parse(window.localStorage.getItem(ar) ?? "[]");
 		return new Set(Array.isArray(e) ? e.filter((e) => typeof e == "string") : []);
 	} catch {
 		return /* @__PURE__ */ new Set();
 	}
 }
-function or(e) {
+function sr(e) {
 	try {
-		window.localStorage.setItem(ir, JSON.stringify([...e]));
+		window.localStorage.setItem(ar, JSON.stringify([...e]));
 	} catch {}
 }
 F("pulse-overview", class extends M {
@@ -4683,7 +4735,7 @@ F("pulse-overview", class extends M {
 		};
 	}
 	constructor() {
-		super(), this.gapsOf = L(cn), this.gaps = [], this.language = "en", this.now = 0, this.recipients = "", this.timeZone = void 0, this.timeFormat = void 0, this.dayStarts = [], this.noData = [], this.readonly = !1, this.closed = ar();
+		super(), this.gapsOf = L(cn), this.gaps = [], this.language = "en", this.now = 0, this.recipients = "", this.timeZone = void 0, this.timeFormat = void 0, this.dayStarts = [], this.noData = [], this.readonly = !1, this.closed = or();
 	}
 	fire(e, t = {}) {
 		this.dispatchEvent(new CustomEvent(e, {
@@ -4697,7 +4749,7 @@ F("pulse-overview", class extends M {
 	}
 	toggleRoom(e) {
 		let t = new Set(this.closed);
-		t.has(e) ? t.delete(e) : t.add(e), this.closed = t, or(t);
+		t.has(e) ? t.delete(e) : t.add(e), this.closed = t, sr(t);
 	}
 	renderRow(e) {
 		let t = this.language, n = Qt(t, e, this.now), r = G(e) && e.last_activity !== null ? mt(t, e.last_activity, this.now, this.timeZone, this.timeFormat) : Xe(t, e.last_activity, this.now);
@@ -5221,10 +5273,10 @@ var $ = {
 	BOOLEAN_ATTRIBUTE: 4,
 	EVENT: 5,
 	ELEMENT: 6
-}, sr = (e) => (...t) => ({
+}, cr = (e) => (...t) => ({
 	_$litDirective$: e,
 	values: t
-}), cr = class {
+}), lr = class {
 	constructor(e) {}
 	get _$AU() {
 		return this._$AM._$AU;
@@ -5238,10 +5290,10 @@ var $ = {
 	update(e, t) {
 		return this.render(...t);
 	}
-}, { I: lr } = je, ur = (e) => e.strings === void 0, dr = {}, fr = (e, t = dr) => e._$AH = t, pr = sr(class extends cr {
+}, { I: ur } = je, dr = (e) => e.strings === void 0, fr = {}, pr = (e, t = fr) => e._$AH = t, mr = cr(class extends lr {
 	constructor(e) {
 		if (super(e), e.type !== $.PROPERTY && e.type !== $.ATTRIBUTE && e.type !== $.BOOLEAN_ATTRIBUTE) throw Error("The `live` directive is not allowed on child or event bindings");
-		if (!ur(e)) throw Error("`live` bindings can only contain a single expression");
+		if (!dr(e)) throw Error("`live` bindings can only contain a single expression");
 	}
 	render(e) {
 		return e;
@@ -5254,7 +5306,7 @@ var $ = {
 		} else if (e.type === $.BOOLEAN_ATTRIBUTE) {
 			if (!!t === n.hasAttribute(r)) return D;
 		} else if (e.type === $.ATTRIBUTE && n.getAttribute(r) === t + "") return D;
-		return fr(e), t;
+		return pr(e), t;
 	}
 });
 F("pulse-settings", class extends M {
@@ -5456,7 +5508,7 @@ F("pulse-settings", class extends M {
               autocomplete="off"
               autocapitalize="off"
               placeholder="zigbee2mqtt"
-              .value=${pr(n.z2m_base)}
+              .value=${mr(n.z2m_base)}
               @change=${(e) => this.onZ2mBase(e)}
               @keydown=${(e) => {
 			e.key === "Enter" && e.currentTarget instanceof HTMLInputElement && e.currentTarget.blur();
@@ -5608,23 +5660,23 @@ F("pulse-settings", class extends M {
 });
 //#endregion
 //#region src/pulse-panel.ts
-function mr() {
+function hr() {
 	try {
 		return window.localStorage;
 	} catch {
 		return null;
 	}
 }
-function hr() {
-	let e = mr();
+function gr() {
+	let e = hr();
 	if (!e) return null;
 	try {
-		return Rn(e, "26.10.4", Nn.length > 0);
+		return Rn(e, "26.10.5", Nn.length > 0);
 	} catch {
 		return null;
 	}
 }
-function gr(e) {
+function _r(e) {
 	return [
 		e.language,
 		e.themes?.darkMode,
@@ -5635,7 +5687,7 @@ function gr(e) {
 		e.user?.is_admin
 	].join("|");
 }
-var _r = class extends M {
+var vr = class extends M {
 	static {
 		this.properties = {
 			hass: { attribute: !1 },
@@ -5662,7 +5714,7 @@ var _r = class extends M {
 		}, this.deepLink = "", this.subscribedLanguage = "", this.fetchHeartbeat = async (e) => this.hass ? await this.hass.callWS({
 			type: "pulse/heartbeat",
 			device_ids: e
-		}) : null, this.dueIds = L((e) => (e.summary.due_batteries ?? []).map((e) => e.id)), this.narrow = !1, this.snapshot = null, this.now = Date.now() / 1e3, this.openId = null, this.welcome = hr(), this.error = null, this.groupBy = "area", this.filter = null, this.confirmZigbee = !1, this.confirmHealth = !1;
+		}) : null, this.dueIds = L((e) => (e.summary.due_batteries ?? []).map((e) => e.id)), this.narrow = !1, this.snapshot = null, this.now = Date.now() / 1e3, this.openId = null, this.welcome = gr(), this.error = null, this.groupBy = "area", this.filter = null, this.confirmZigbee = !1, this.confirmHealth = !1;
 	}
 	get language() {
 		return this.hass?.language ?? "en";
@@ -5704,7 +5756,7 @@ var _r = class extends M {
 		let t = e.get("hass");
 		if (!t || !this.hass) return !0;
 		let n = this.namesCache.value;
-		return gr(t) !== gr(this.hass) || this.names() !== n;
+		return _r(t) !== _r(this.hass) || this.names() !== n;
 	}
 	updated() {
 		this.toggleAttribute("dark", this.hass?.themes?.darkMode === !0);
@@ -5808,9 +5860,9 @@ var _r = class extends M {
 	}
 	welcomeDone() {
 		this.welcome = null;
-		let e = mr();
+		let e = hr();
 		try {
-			e && zn(e, "26.10.4");
+			e && zn(e, "26.10.5");
 		} catch {}
 	}
 	zigbeeOffer(e) {
@@ -5970,7 +6022,7 @@ var _r = class extends M {
         @partner-dismiss=${(e) => this.onPartnerDismiss(e.detail.id, e.detail.partner)}
       >
         ${this.renderHead()} ${this.renderContent()}
-        <p class="version muted">${I(t, "version", { version: "26.10.4" })}</p>
+        <p class="version muted">${I(t, "version", { version: "26.10.5" })}</p>
         ${e ? T`<pulse-device-sheet
                   .open=${n !== null}
                   .device=${n}
@@ -5995,7 +6047,7 @@ var _r = class extends M {
                 <pulse-welcome
                   .mode=${this.welcome}
                   .language=${t}
-                  .version=${"26.10.4"}
+                  .version=${"26.10.5"}
                   .zigbee=${this.zigbeeOffer(e)}
                   @closed=${() => this.welcomeDone()}
                   @enable-z2m=${() => {
@@ -6179,6 +6231,6 @@ var _r = class extends M {
 		];
 	}
 };
-F("pulse-panel", _r);
+F("pulse-panel", vr);
 //#endregion
-export { _r as PulsePanel };
+export { vr as PulsePanel };

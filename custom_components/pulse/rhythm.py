@@ -1,8 +1,8 @@
-"""Rhythmus lernen und Status bestimmen – reine Rechenlogik ohne HA-Abhängigkeit.
+"""Learn the rhythm and determine the status: pure calculation logic without HA dependency.
 
-Ein Gerät meldet sich in seinem eigenen Takt. Aus den Abständen der letzten Tage entsteht ein
-„typischer“ Abstand (90. Perzentil) und ein „längster normaler“ (98. Perzentil, damit ein früherer
-Ausfall die Grenzen nicht für immer aufbläst). Wird die aktuelle Stille deutlich länger, steigt der Status.
+A device reports in its own rhythm. The intervals of the last days yield a "typical" interval
+(90th percentile) and a "longest normal" one (98th percentile, so an earlier outage does not inflate
+the limits forever). If the current silence gets clearly longer, the status rises.
 """
 
 from __future__ import annotations
@@ -28,29 +28,48 @@ MINUTE = 60.0
 HOUR = 3600.0
 DAY = 86400.0
 
-# Herzschlag-Kalender: höchstens so viele Meldungen je Fenster
+# Heartbeat calendar: at most this many reports per window
 HEARTBEAT_CAP = 9
 
-# Mindestens so viele Abstände, bevor Pulse einem Rhythmus traut
+# At least this many intervals before Pulse trusts a rhythm
 MIN_GAPS = 6
 
-# Funkt ohne Werte: der Health-Zähler steigt auch durch normale Wert-Nachrichten (beim nächsten Health-Takt, ≤ 10 Min.).
-# Erst Anstiege mit diesem Abstand nach der letzten Meldung zählen – mehrere davon, und frisch.
+# Transmits without values: the health counter also rises with regular value messages (next health tick, ≤ 10 min).
+# Only increases this long after the last report count; several of them, and recent.
 RADIO_BUFFER = 15 * MINUTE
 RADIO_MIN_RISES = 2
 
-# Batterie-Entität so lange ohne Wert (Rest meldet) → eigener Grund
+# Battery entity without a value for this long (the rest reports) → own reason
 BATTERY_MISSING_AFTER = DAY
 
-# Ohne gelernten Takt (Gerät meldet nur bei Aktionen, z. B. eine selten geöffnete Tür): nach zwei Tagen Stille
-# „im Blick“, erst nach einer Woche „prüfen“, sonst stünde jede ruhige Tür täglich in der Zusammenfassung
+# Without a learned rhythm (device reports only on actions, e.g. a rarely opened door): after two days of silence
+# "im Blick" (watch), only after a week "prüfen" (check), otherwise every quiet door would be in the daily summary
 SILENT_NEW_WATCH = 2 * DAY
 SILENT_NEW_CHECK = 7 * DAY
+
+# Reachability comes from the integration (Matter subscription, cloud "reachable" flag): silence then only means
+# "not used" (a lock during vacation, a rain gauge in dry weather); only after a week "im Blick" (watch), never more
+REACHABLE_QUIET = 7 * DAY
+
+# On start HA rewrites every state; in the recorder this row looks like a report. The first row of an
+# entity in this window around an HA start (after a row before it) is no sign of life.
+RESTART_BEFORE = 2 * MINUTE
+RESTART_AFTER = 5 * MINUTE
+
+
+def restart_echoes(stamps: Sequence[float], starts: Sequence[float]) -> set[float]:
+    """Timestamps that are only the rewrite on HA start: per start the first one after an earlier one."""
+    echoes: set[float] = set()
+    for start in starts:
+        idx = bisect_left(stamps, start - RESTART_BEFORE)
+        if 0 < idx < len(stamps) and stamps[idx] <= start + RESTART_AFTER:
+            echoes.add(stamps[idx])
+    return echoes
 
 
 @dataclass(frozen=True)
 class Rhythm:
-    """Gelernter Takt in Sekunden (None = noch zu wenig Daten)."""
+    """Learned rhythm in seconds (None = not enough data yet)."""
 
     typical: float | None
     longest: float | None
@@ -75,7 +94,7 @@ class Verdict:
 
 
 def percentile(values: Sequence[float], q: float, presorted: bool = False) -> float:
-    """Perzentil mit linearer Interpolation (values nicht leer)."""
+    """Percentile with linear interpolation (values not empty)."""
     ordered = values if presorted else sorted(values)
     if len(ordered) == 1:
         return ordered[0]
@@ -92,7 +111,7 @@ def merge_event(
     limit: int = 4000,
     window: float = MERGE_SECONDS,
 ) -> bool:
-    """Meldung einsortieren; dicht aufeinanderfolgende (< window) zählen als eine. True = neu aufgenommen."""
+    """Insert a report; reports close together (< window) count as one. True = newly added."""
     if events and abs(events[-1] - ts) < window:
         return False
     if events and ts < events[-1]:
@@ -122,7 +141,7 @@ def learn(events: Sequence[float]) -> Rhythm:
 
 
 class RhythmCache:
-    """Gelernter Takt je Gerät – neu gelernt nur, wenn sich die Meldungen geändert haben (nicht jede Minute)."""
+    """Learned rhythm per device; relearned only when the reports changed (not every minute)."""
 
     def __init__(self) -> None:
         self._data: dict[str, tuple[tuple[int, float | None, float | None], Rhythm]] = {}
@@ -140,13 +159,13 @@ class RhythmCache:
         self._data.pop(key_id, None)
 
 
-# Cloud-Geräte: der Takt ist der Abfragetakt der Cloud – einzeln erst deutlich später „ausgefallen“
+# Cloud devices: the rhythm is the cloud's polling rhythm; individually "ausgefallen" (offline) only much later
 CLOUD_CHECK_MIN = 6 * HOUR
 CLOUD_FAILED_MIN = DAY
 
 
 def limits(rhythm: Rhythm, critical: bool, cloud: bool = False) -> Limits:
-    """Ab welcher Stille welcher Status gilt."""
+    """Which status applies from which silence on."""
     typical = rhythm.typical or HOUR
     longest = rhythm.longest or typical
     if critical:
@@ -166,22 +185,22 @@ def limits(rhythm: Rhythm, critical: bool, cloud: bool = False) -> Limits:
     return lim
 
 
-# Ausreißer-Regel (ein Bezugspunkt für Status, Panel, `silent_since`): kamen nach einer langen Lücke nur noch
-# ein, zwei vereinzelte Meldungen (ein sterbender Sensor), beginnt die Stille schon vor der Lücke.
+# Stray rule (one reference point for status, panel, `silent_since`): if after a long gap only one or two
+# sporadic reports came (a dying sensor), the silence already starts before the gap.
 MAX_STRAYS = 2
 STRAY_GAP_MIN = 6 * HOUR
-# Zwei Meldungen nach der Lücke im üblichen Takt: das Gerät läuft wieder (keine Ausreißer)
+# Two reports after the gap in the usual rhythm: the device is running again (no strays)
 STRAY_RESUME = 1.5
 
 
 def downtime_gaps(uptime: Sequence[Sequence[float]]) -> list[tuple[float, float]]:
-    """Lücken in der eigenen Laufzeit (HA lief nicht), ab UPTIME_SLACK."""
+    """Gaps in the own uptime (HA was not running), from UPTIME_SLACK on."""
     spans = sorted((float(a), float(b)) for a, b in uptime if b >= a)
     return [(end, nxt) for (_, end), (nxt, _) in itertools.pairwise(spans) if nxt - end >= UPTIME_SLACK]
 
 
 def overlap(gaps: Sequence[tuple[float, float]], start: float, end: float) -> float:
-    """Wie viel der Zeit [start, end] in Lücken ohne Daten lag."""
+    """How much of the time [start, end] lay in gaps without data."""
     return sum(max(0.0, min(end, b) - max(start, a)) for a, b in gaps)
 
 
@@ -192,11 +211,11 @@ def silence_start(
     gaps: Sequence[tuple[float, float]] = (),
     actions: Sequence[float] = (),
 ) -> tuple[float | None, int]:
-    """(Beginn der Stille, Zahl vereinzelter Meldungen seitdem).
+    """(Start of the silence, number of sporadic reports since).
 
-    Ohne Ausreißer ist das die letzte Meldung (oder ein späterer „Batterie gewechselt“). Lücken, in denen
-    Home Assistant nicht lief, zählen nicht als Lücke. Eine echte Aktion nach der Lücke (Taster gedrückt, Tür auf)
-    beendet die Stille sofort – die Regel gilt nur für reine Zustandsmeldungen.
+    Without strays this is the last report (or a later "Batterie gewechselt" (battery changed)). Gaps in
+    which Home Assistant was not running do not count as a gap. A real action after the gap (button pressed,
+    door opened) ends the silence immediately; the rule only applies to pure state reports.
     """
     if not events:
         return replaced_at, 0
@@ -210,7 +229,7 @@ def silence_start(
     for k in range(n - 2, max(-1, n - 2 - MAX_STRAYS), -1):
         here, nxt = events[k], events[k + 1]
         if replaced_at is not None and replaced_at >= here:
-            break  # nach einem Wechsel ist jede Meldung neues Leben
+            break  # after a change every report is new life
         if nxt - here - overlap(gaps, here, nxt) >= limit:
             tail = events[k + 1 :]
             if actions and actions[-1] > here:
@@ -223,30 +242,31 @@ def silence_start(
 
 @dataclass(frozen=True)
 class Facts:
-    """Was Pulse gerade über ein Gerät weiß."""
+    """What Pulse currently knows about a device."""
 
     now: float
     last_activity: float | None
     rhythm: Rhythm
     critical: bool = False
-    observed_since: float | None = None  # seit wann Pulse überhaupt Daten hat
+    observed_since: float | None = None  # since when Pulse has any data at all
     unavailable_since: float | None = None
     battery_level: float | None = None
-    battery_trusted: bool = True  # NiMH-Akkus: Prozentwert sagt nichts
-    battery_flag: bool = False  # nur ein Warn-Sensor („Batterie schwach“ an/aus), kein Prozentwert
+    battery_trusted: bool = True  # NiMH rechargeables: the percentage says nothing
+    battery_flag: bool = False  # only a warning sensor ("battery low" on/off), no percentage
     partner_name: str | None = None
-    partner_actions: int = 0  # Aktionen des Partners seit der letzten eigenen Aktion
+    partner_actions: int = 0  # partner's actions since the last own action
     own_last_action: float | None = None
     name: str = ""
-    waiting_first: bool = False  # „Batterie gewechselt“ eingetragen, noch keine Meldung danach
-    downtime: float = 0.0  # Zeit seit `last_activity` (bzw. `observed_since`), in der HA nicht lief
-    strays: int = 0  # vereinzelte Meldungen seit `last_activity` (Ausreißer-Regel)
-    last_report: float | None = None  # wirklich letzte Meldung (bei Ausreißern später als last_activity)
-    cloud: bool = False  # Takt der Cloud, nicht des Geräts
-    radio_last: float | None = None  # Zigbee2MQTT-Health: Nachrichtenzähler zuletzt gestiegen
-    radio_rises: int = 0  # so oft ist der Zähler seit der letzten Meldung (+ Puffer) gestiegen
-    flag_on: bool = False  # Warn-Sensor „Batterie schwach“ an (zusätzlich zum Prozentwert)
-    battery_missing_since: float | None = None  # Batterie-Entität dauerhaft ohne Wert
+    waiting_first: bool = False  # "Batterie gewechselt" (battery changed) recorded, no report since
+    downtime: float = 0.0  # time since `last_activity` (or `observed_since`) during which HA was not running
+    strays: int = 0  # sporadic reports since `last_activity` (stray rule)
+    last_report: float | None = None  # actual last report (with strays later than last_activity)
+    cloud: bool = False  # rhythm of the cloud, not of the device
+    radio_last: float | None = None  # Zigbee2MQTT health: message counter last increased
+    radio_rises: int = 0  # how often the counter increased since the last report (+ buffer)
+    flag_on: bool = False  # "battery low" warning sensor on (in addition to the percentage)
+    battery_missing_since: float | None = None  # battery entity permanently without a value
+    reachable: str | None = None  # integration currently reports the device reachable (its name), otherwise None
 
 
 def _worse(a: Verdict, b: Verdict) -> Verdict:
@@ -254,7 +274,7 @@ def _worse(a: Verdict, b: Verdict) -> Verdict:
 
 
 def _silent_new(real: float, silence: float) -> Verdict | None:
-    """Stille ohne gelernten Takt: Grund `silent_new`, Stufe nach Dauer (ohne HA-Pausen)."""
+    """Silence without a learned rhythm: reason `silent_new`, level by duration (without HA pauses)."""
     if silence >= SILENT_NEW_CHECK:
         return Verdict(STATUS_CHECK, {"key": "silent_new", "params": {"since": real}})
     if silence >= SILENT_NEW_WATCH:
@@ -263,17 +283,19 @@ def _silent_new(real: float, silence: float) -> Verdict | None:
 
 
 def evaluate(facts: Facts) -> Verdict:
-    """Status mit Begründung. Der schlimmste Befund gewinnt."""
+    """Status with reason. The worst finding wins."""
     now = facts.now
     rhythm = facts.rhythm
-    if rhythm.known:
+    if rhythm.known and facts.reachable:
+        verdict = Verdict(STATUS_OK, {"key": "ok_reachable", "params": {"via": facts.reachable}})
+    elif rhythm.known:
         verdict = Verdict(STATUS_OK, {"key": "ok_rhythm", "params": {"every": rhythm.typical}})
     else:
         verdict = Verdict(STATUS_LEARNING, {"key": "learning", "params": {}})
 
-    # 1. Stille im Vergleich zum eigenen Takt – Zeiten, in denen HA nicht lief, zählen nicht mit
+    # 1. Silence compared to the own rhythm; times when HA was not running do not count
     silent: Verdict | None = None
-    waiting = False  # nach einer HA-Pause: noch keine Meldung, aber der eigene Takt ist noch nicht um
+    waiting = False  # after an HA pause: no report yet, but the own rhythm has not elapsed yet
     if facts.last_activity is not None:
         real = now - facts.last_activity
         silence = real - facts.downtime
@@ -288,19 +310,29 @@ def evaluate(facts: Facts) -> Verdict:
                     break
             waiting = silent is None and real >= lim.watch
         else:
-            # Kaum Daten, aber lange still: vorsichtig, erst „im Blick“, nach einer Woche „prüfen“
+            # Hardly any data, but silent for long: carefully, first "im Blick" (watch), after a week "prüfen" (check)
             silent = _silent_new(real, silence)
             waiting = silent is None and real >= SILENT_NEW_WATCH
     elif facts.observed_since is not None:
         observed = now - facts.observed_since
         silent = _silent_new(observed, observed - facts.downtime)
+    if silent is not None and facts.reachable:
+        # The integration sees the device: silence here means "not used", not an outage
+        since = silent.reason["params"]["since"]
+        quiet = since - facts.downtime
+        silent = (
+            Verdict(STATUS_WATCH, {"key": "silent_reachable", "params": {"since": since, "via": facts.reachable}})
+            if quiet >= REACHABLE_QUIET
+            else None
+        )
+        waiting = False
     if (
         silent is not None
         and facts.radio_last is not None
         and facts.radio_rises >= RADIO_MIN_RISES
         and now - facts.radio_last < limits(rhythm, facts.critical, facts.cloud).watch + RADIO_BUFFER
     ):
-        # Zigbee2MQTT zählt noch Funk, nur keine Werte: nie „ausgefallen“
+        # Zigbee2MQTT still counts radio traffic, just no values: never "ausgefallen" (offline)
         status = STATUS_CHECK if SEVERITY[silent.status] >= SEVERITY[STATUS_CHECK] else silent.status
         silent = Verdict(status, {"key": "radio_only", "params": {"since": silent.reason["params"]["since"]}})
     if silent is not None:
@@ -308,7 +340,7 @@ def evaluate(facts: Facts) -> Verdict:
     elif waiting and facts.downtime > 0:
         verdict = _worse(verdict, Verdict(STATUS_WATCH, {"key": "startup_waiting", "params": {}}))
 
-    # 2. Nicht erreichbar (Zigbee-Verfügbarkeit, Matter)
+    # 2. Not reachable (Zigbee availability, Matter)
     if facts.unavailable_since is not None:
         gone = now - facts.unavailable_since
         params = {"since": gone}
@@ -317,7 +349,7 @@ def evaluate(facts: Facts) -> Verdict:
         elif gone >= (10 * MINUTE if facts.critical else 20 * MINUTE):
             verdict = _worse(verdict, Verdict(STATUS_CHECK, {"key": "unavailable", "params": params}))
 
-    # 3. Gegenprobe: der Partner war mehrfach aktiv, dieses Gerät nicht
+    # 3. Cross-check: the partner was active several times, this device was not
     if facts.partner_name and facts.partner_actions >= 3:
         quiet_for = now - facts.own_last_action if facts.own_last_action is not None else None
         if quiet_for is None or quiet_for >= 2 * HOUR:
@@ -332,12 +364,12 @@ def evaluate(facts: Facts) -> Verdict:
                 ),
             )
 
-    # Nach einem eingetragenen Wechsel: im Blick, bis die erste Meldung kommt (Stille zählt ab dem Wechsel)
+    # After a recorded change: watch until the first report comes (silence counts from the change)
     if facts.waiting_first:
         verdict = _worse(verdict, Verdict(STATUS_WATCH, {"key": "waiting_first", "params": {}}))
 
-    # 4. Batterie – Warn-Sensor ohne Prozent, sonst nur, wenn der Prozentwert etwas aussagt.
-    # Meldet das Gerät selbst „schwach“, gewinnt das gegen einen (widersprechenden) Prozentwert.
+    # 4. Battery: warning sensor without percentage, otherwise only if the percentage means something.
+    # If the device itself reports "low", that wins over a (contradicting) percentage.
     if facts.flag_on:
         verdict = _worse(verdict, Verdict(STATUS_CHECK, {"key": "battery_low_flag", "params": {}}))
     if facts.battery_flag:
@@ -349,7 +381,7 @@ def evaluate(facts: Facts) -> Verdict:
             verdict = _worse(verdict, Verdict(STATUS_CHECK, {"key": "battery_low", "params": {"level": level}}))
         elif level <= batt.LEVEL_SOON:
             verdict = _worse(verdict, Verdict(STATUS_WATCH, {"key": "battery_soon", "params": {"level": level}}))
-    # Batterie-Entität seit einem Tag ohne Wert, das Gerät meldet aber weiter
+    # Battery entity without a value for a day, but the device keeps reporting
     missing = facts.battery_missing_since
     if (
         missing is not None
@@ -363,8 +395,8 @@ def evaluate(facts: Facts) -> Verdict:
 
 
 def strip(events: Sequence[float], day_starts: Sequence[float], per_day: int, now: float) -> list[int | None]:
-    """Meldungen je Zeitfenster für die Rhythmusleiste: `per_day` Fenster je Kalendertag (Tage mit
-    Zeitumstellung haben etwas längere/kürzere Fenster); Fenster in der Zukunft sind None."""
+    """Reports per time window for the rhythm bar: `per_day` windows per calendar day (days with a
+    DST change have slightly longer/shorter windows); windows in the future are None."""
     buckets: list[int | None] = []
     for start, end in itertools.pairwise(day_starts):
         buckets += _bins(events, start, per_day, (end - start) / per_day, now, cap=None)
@@ -374,11 +406,11 @@ def strip(events: Sequence[float], day_starts: Sequence[float], per_day: int, no
 def heartbeat_days(
     events: Sequence[float], day_starts: Sequence[float], bin_minutes: int, now: float
 ) -> list[list[int | None]]:
-    """Herzschlag-Kalender: Meldungen je kleinem Fenster (z. B. 15 min), gekappt auf 9 je Fenster.
+    """Heartbeat calendar: reports per small window (e.g. 15 min), capped at 9 per window.
 
-    Genug, um im Panel einen Strich pro Meldung zu zeichnen, ohne bei sehr gesprächigen Geräten
-    tausende Zeitpunkte zu übertragen. Eine Zeile je Kalendertag (Tage mit Zeitumstellung haben
-    23 oder 25 Stunden), Fenster in der Zukunft sind None.
+    Enough to draw one stroke per report in the panel without transferring thousands of timestamps
+    for very chatty devices. One row per calendar day (days with a DST change have 23 or 25 hours),
+    windows in the future are None.
     """
     size = bin_minutes * MINUTE
     return [
@@ -403,9 +435,9 @@ def _bins(
     return bins
 
 
-# Lücken in der eigenen Laufzeit unter dieser Länge sind ein normaler Neustart, keine fehlenden Daten
+# Gaps in the own uptime shorter than this are a normal restart, not missing data
 UPTIME_SLACK = 10 * MINUTE
-# Vor der ersten eigenen Laufzeit (Verlauf aus dem Recorder): so lange hat kein Gerät etwas gemeldet → HA lief nicht
+# Before the first own uptime (history from the recorder): no device reported for this long → HA was not running
 HISTORY_GAP = 3 * HOUR
 
 
@@ -416,12 +448,12 @@ def no_data(
     now: float,
     chatty: bool,
 ) -> list[list[float]]:
-    """Zeiten ohne Daten im Fenster [window_start, now] – Pulse bzw. Home Assistant lief nicht.
+    """Times without data in the window [window_start, now]: Pulse or Home Assistant was not running.
 
-    Seit Pulse läuft, steht das in der eigenen Laufzeit (`uptime`: [Start, zuletzt gesehen]).
-    Davor (Verlauf aus dem Recorder) zählt eine Lücke von mindestens drei Stunden, in der kein
-    einziges Gerät etwas gemeldet hat – aber nur, wenn es gesprächige Geräte gibt (`chatty`), sonst
-    wäre eine ruhige Nacht nicht von fehlenden Daten zu unterscheiden.
+    Since Pulse runs, this is in the own uptime (`uptime`: [start, last seen]).
+    Before that (history from the recorder) a gap of at least three hours counts in which not a
+    single device reported anything, but only if there are chatty devices (`chatty`), otherwise
+    a quiet night could not be told apart from missing data.
     """
     gaps: list[list[float]] = []
     spans = sorted((float(a), float(b)) for a, b in uptime if b >= a)
@@ -446,8 +478,8 @@ def no_data(
 
 
 class BinCache:
-    """Zwischenspeicher für Leisten und Kalender: neu gerechnet wird nur, wenn sich die Meldungen,
-    der Tag oder das aktuelle Fenster geändert haben – nicht bei jedem Senden an das Panel."""
+    """Cache for bars and calendars: recalculated only when the reports, the day or the current
+    window changed, not on every send to the panel."""
 
     def __init__(self) -> None:
         self._data: dict[tuple[str, str], tuple[tuple[Any, ...], Any]] = {}
@@ -505,6 +537,7 @@ __all__ = [
     "no_data",
     "overlap",
     "percentile",
+    "restart_echoes",
     "silence_start",
     "strip",
 ]

@@ -23,6 +23,13 @@ es hört nur zu (Zustände, „gemeldet ohne Änderung“, Zigbee2MQTT-Nachricht
 - Cloud-Geräte (`CLOUD_INTEGRATIONS`, `DeviceSpec.cloud`): nur echte Wertänderungen sind Lebenszeichen (kein
   state_reported), einzeln erst nach ≥ 1 Tag `failed`; größte Gruppe ≥ 2 Geräte derselben Cloud, deren Stille im
   2-h-Fenster begann → `cloud_outage` (watch; hält, solange seine Geräte still sind) + eine gedämpfte Mitteilung (`store.cloud_notified`), `summary.cloud_outages`.
+- Erreichbarkeit von der Integration (`DeviceSpec.reachable_via`: `"matter"` oder Konnektivitäts-binary_sensor derselben
+  Integration, `spec.connectivity`): ist das Gerät laut Integration erreichbar (`Facts.reachable`), zählt Stille nur als
+  „nicht benutzt“ (`ok_reachable`; ab `REACHABLE_QUIET` 7 Tage `silent_reachable`, nur watch). Konnektivität aus →
+  `unavailable_since`; der Sensor selbst ist kein Lebenszeichen (nicht in `spec.entities`).
+- Neustart-Zeilen im Recorder: HA schreibt beim Start jeden Zustand neu → `rhythm.restart_echoes` (erste Zeile je Start
+  in [Start − 2 Min., Start + 5 Min.] nach einer früheren) zählt in `history.real_reports` nicht. Minor 7 hat solche
+  gespeicherten Meldungen entfernt und Cloud-Geräte einmal aus dem Verlauf neu aufgebaut (`record["rebuild_events"]`).
 - Batterie: Warn-Sensor neben Prozent (`spec.battery_low`) an → `battery_low_flag` gewinnt (`battery.flag_conflict`);
   Batterie-Entität ≥ 24 h ohne Wert, Rest meldet → `battery_missing` (`record["battery_missing_since"]`).
   Vorhersage einmal am Tag (`_async_daily`, nach Bootstrap): Stundenmittel der Langzeitstatistik
@@ -72,7 +79,7 @@ es hört nur zu (Zustände, „gemeldet ohne Änderung“, Zigbee2MQTT-Nachricht
   Problem + „läuft wieder“ in derselben Nacht heben sich auf, außer es kam vorher schon eine an (`told`); wichtige Geräte
   „Prüfen“ sofort, kritisch nur bei Ausfall; Zusammenfassung wartet Ruhezeit/Heimkommen ab (mehrere Personen); Tag der Zusammenfassung in `store.summary_sent`, kritisch für wichtige
   Geräte, erst beim Heimkommen, keine Wiederholungen über `record["notified"]`, Aktionen aus der App).
-- `store.py` (.storage/pulse.devices: Meldungen, Einstellungen pro Gerät, Mitteilungs-Einstellungen; Minor 6).
+- `store.py` (.storage/pulse.devices: Meldungen, Einstellungen pro Gerät, Mitteilungs-Einstellungen; Minor 7).
   `async_delay_save` plant nur, wenn nichts ansteht (HA verschiebt sonst bei jedem Aufruf – es wurde nie gespeichert).
   Nicht mehr überwachte Geräte (noch in der Registry, mit eigenen Entitäten oder deaktiviert): Pulse-Entitäten
   entfernen, Datensatz gekürzt behalten, `SIGNAL_REMOVED_DEVICES` → Plattformen vergessen sie (kommen neu wieder).

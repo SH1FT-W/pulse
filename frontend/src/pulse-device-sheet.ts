@@ -37,18 +37,21 @@ import './pulse-picker';
 import './pulse-rhythm';
 import './pulse-sheet';
 
-/** Farbe der Stille im Kalender: orange bei Beobachten, sonst rot. */
+/** Length of the settings open animation (matches the CSS transition). */
+const SETTINGS_ANIMATION_MS = 260;
+
+/** Color of the silence in the calendar: orange when watching, otherwise red. */
 function silenceTone(device: Device): 'warn' | 'crit' {
   return tone(device.status) === 'warn' ? 'warn' : 'crit';
 }
 
-/** Striche im Kalender: Problemgeräte neutral (Farbe nur an der Stille), Ignorierte grau. */
+/** Strokes in the calendar: problem devices neutral (color only on the silence), ignored ones gray. */
 function heartbeatTone(device: Device): 'ok' | 'neutral' | 'muted' {
   if (device.ignored) return 'muted';
   return tone(device.status) === 'ok' ? 'ok' : 'neutral';
 }
 
-/** Batterien je Gerät, wie der Server sie annimmt (1–12). */
+/** Batteries per device, as the server accepts them (1–12). */
 const COUNT_OPTIONS: Choice[] = Array.from({ length: 12 }, (_, i) => ({
   value: String(i + 1),
   label: String(i + 1),
@@ -61,9 +64,9 @@ const CHEM_KEYS: Record<string, StringKey> = {
 };
 
 /**
- * Gerätedetail „Puls“: große Schlagzeile („Still seit 4 Tagen.“), Herzschlag-Kalender (ein Strich je
- * Meldung, 7 Tage), Vergleich mit dem Partnergerät, Batterie-Kennzahlen – die Einstellungen liegen
- * eingeklappt darunter.
+ * Device detail "Puls": large headline ("Still seit 4 Tagen.", silent for 4 days), heartbeat calendar
+ * (one stroke per report, 7 days), comparison with the partner device, battery figures; the settings
+ * sit collapsed below.
  */
 export class PulseDeviceSheet extends LitElement {
   static properties = {
@@ -94,25 +97,25 @@ export class PulseDeviceSheet extends LitElement {
   declare now: number;
   declare stripStart: number;
   declare stripDays: number;
-  /** Echte Tagesgrenzen (für die Achse, bis der Kalender geladen ist) */
+  /** Real day boundaries (for the axis, until the calendar is loaded) */
   declare dayStarts: number[];
-  /** Zeitzone von Home Assistant (schon geprüft) */
+  /** Home Assistant time zone (already validated) */
   declare timeZone: string | undefined;
   declare timeFormat: TimeFormat;
   declare bucketHours: number;
-  /** Holt den Herzschlag-Kalender (`pulse/heartbeat`) – vom Panel, das die Verbindung hat */
+  /** Fetches the heartbeat calendar (`pulse/heartbeat`), from the panel, which holds the connection */
   declare fetchHeartbeat: ((ids: string[]) => Promise<unknown>) | null;
   declare beat: HeartbeatData | null;
   declare batteryTypes: string[];
   declare chemistries: string[];
-  /** Zeiten ohne Daten aus dem Snapshot (bis der Kalender geladen ist) */
+  /** Times without data from the snapshot (until the calendar is loaded) */
   declare noData: [number, number][];
   declare open: boolean;
-  /** Nicht-Admin: alles lesbar, aber nichts änderbar */
+  /** Non-admin: everything readable, nothing changeable */
   declare readonly: boolean;
-  /** Einstellungen ausgeklappt – bleibt beim Wechsel des Geräts so */
+  /** Settings expanded; stays that way when switching devices */
   declare settingsOpen: boolean;
-  /** Herzschlag ließ sich nicht laden → Hinweis + „Neu laden“ */
+  /** Heartbeat could not be loaded → notice + "Neu laden" (reload) */
   declare beatError: boolean;
 
   constructor() {
@@ -140,7 +143,7 @@ export class PulseDeviceSheet extends LitElement {
 
   private readonly gapsOf = memoize(gapFractions);
 
-  /** Was den Kalender ändert: Gerät, letzte Meldung, Tag. Nur dann neu holen. */
+  /** What changes the calendar: device, last report, day. Refetch only then. */
   private beatKey = '';
 
   protected willUpdate(changed: PropertyValues<this>): void {
@@ -168,7 +171,7 @@ export class PulseDeviceSheet extends LitElement {
     }
     if (key !== this.beatKey) return;
     if (data) this.beat = data;
-    // Bleibt der alte Kalender stehen, reicht er; sonst Hinweis mit „Neu laden“
+    // If the old calendar stays, it is enough; otherwise a notice with "Neu laden" (reload)
     else if (!this.beat) this.beatError = true;
   }
 
@@ -211,7 +214,7 @@ export class PulseDeviceSheet extends LitElement {
     </div>`;
   }
 
-  /** Ganze Zeile schaltet (≥ 44 px Ziel); der Schalter zeigt nur den Zustand. */
+  /** The whole row toggles (≥ 44 px target); the switch only shows the state. */
   private switchRow(
     label: string,
     hint: string,
@@ -268,7 +271,7 @@ export class PulseDeviceSheet extends LitElement {
       html`<pulse-rhythm .buckets=${x.strip} tone=${rhythmTone(x)} ?learning=${x.status === 'learning' && !x.ignored} .gaps=${gaps} .days=${days} .silentFrom=${silentIndex(x, this.dayStarts)}></pulse-rhythm>`;
     const pairLine = partner ? partnerLine(lang, d, partner) : '';
     const meta = [d.area, d.model].filter(Boolean).join(' · ');
-    // „Akku-Prozent sagt zu wenig“ steht schon unter dem Wert (Akku · ungenau) – nicht doppelt
+    // "Akku-Prozent sagt zu wenig" (percentage says too little) is already under the value (Akku · ungenau); not twice
     const forecast = forecastText(
       lang,
       b.forecast,
@@ -287,7 +290,7 @@ export class PulseDeviceSheet extends LitElement {
         : html`<button class=${primary ? 'pbtn primary' : 'pbtn'} type="button" @click=${() => this.fire('later', { id: d.id })}>
             <ha-icon icon="mdi:bell-sleep-outline"></ha-icon>${t(lang, 'later')}
           </button>`;
-    // Batterie-Grund: „Batterie gewechselt“ zuerst; sonst ist Erinnern die sinnvolle Hauptaktion
+    // Battery reason: "Batterie gewechselt" (battery changed) first; otherwise remind is the sensible main action
     const battery = batteryFirst(d);
     return html`
       <header class="hero">
@@ -382,10 +385,7 @@ export class PulseDeviceSheet extends LitElement {
         )}
       </div>
 
-      <details class="more" ?open=${this.settingsOpen} @toggle=${(e: Event) => {
-        const el = e.currentTarget;
-        if (el instanceof HTMLDetailsElement) this.settingsOpen = el.open;
-      }}>
+      <details class="more" ?open=${this.settingsOpen} @toggle=${this.onSettingsToggle}>
         <summary>
           <span>${t(lang, 'device_settings')}</span>
           <ha-icon icon="mdi:chevron-down"></ha-icon>
@@ -395,7 +395,23 @@ export class PulseDeviceSheet extends LitElement {
     `;
   }
 
-  /** Partner-Vorschläge vom Server (nur Admins, nur ohne Partner): Übernehmen oder Verwerfen. */
+  /**
+   * Settings opened: the sheet grows with them up to its maximum height; anything beyond that lies below the
+   * visible area, so scroll it into view once the opening animation (where supported) is done.
+   */
+  private onSettingsToggle = (event: Event): void => {
+    const el = event.currentTarget;
+    if (!(el instanceof HTMLDetailsElement)) return;
+    this.settingsOpen = el.open;
+    if (!el.open) return;
+    const animated = CSS.supports('interpolate-size', 'allow-keywords');
+    window.setTimeout(
+      () => el.scrollIntoView({ block: 'nearest', behavior: 'smooth' }),
+      animated ? SETTINGS_ANIMATION_MS : 0
+    );
+  };
+
+  /** Partner suggestions from the server (admins only, only without a partner): accept or dismiss. */
   private renderSuggestions(d: Device) {
     const lang = this.language;
     const list = this.readonly ? [] : partnerSuggestions(d);
@@ -414,7 +430,7 @@ export class PulseDeviceSheet extends LitElement {
     </section>`;
   }
 
-  /** Einstellungen des Geräts – eingeklappt unter dem Herzschlag, ruhig und ohne schwere Flächen. */
+  /** Device settings: collapsed under the heartbeat, calm and without heavy surfaces. */
   private renderSettings(d: Device) {
     const lang = this.language;
     const b = d.battery;
@@ -628,7 +644,7 @@ export class PulseDeviceSheet extends LitElement {
         font-size: 12px;
         --mdc-icon-size: 14px;
       }
-      /* Laufzeit-Vorhersage unter den Batterie-Kennzahlen */
+      /* Battery forecast below the battery figures */
       .fc {
         display: flex;
         align-items: flex-start;
@@ -679,7 +695,7 @@ export class PulseDeviceSheet extends LitElement {
         text-align: center;
         font-size: 12px;
       }
-      /* Partner-Vergleich: Haarlinie statt Fläche – im Dunkeln keine graue Kachel */
+      /* Partner comparison: hairline instead of a surface, no grey tile in dark mode */
       .pair {
         display: grid;
         gap: 6px;
@@ -747,9 +763,26 @@ export class PulseDeviceSheet extends LitElement {
         opacity: 0.7;
       }
 
-      /* Einstellungen eingeklappt: eine ruhige Zeile, aufgeklappt leichte Listen ohne Fläche */
+      /* Settings collapsed: one calm row; open: light lists without a surface */
       .more {
         border-top: 1px solid var(--pu-line);
+        interpolate-size: allow-keywords;
+      }
+      /* Open and close smoothly where the browser can animate to auto height (elsewhere it simply jumps) */
+      .more::details-content {
+        block-size: 0;
+        overflow: clip;
+        transition:
+          block-size 240ms cubic-bezier(0.2, 0.8, 0.2, 1),
+          content-visibility 240ms allow-discrete;
+      }
+      .more[open]::details-content {
+        block-size: auto;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .more::details-content {
+          transition: none;
+        }
       }
       summary {
         display: flex;

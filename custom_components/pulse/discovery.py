@@ -1,4 +1,4 @@
-"""Batteriegeräte in Geräte- und Entitäten-Registry finden."""
+"""Find battery devices in the device and entity registries."""
 
 from __future__ import annotations
 
@@ -23,13 +23,13 @@ def _device_class(entry: er.RegistryEntry) -> str | None:
     return entry.device_class or entry.original_device_class
 
 
-# Entitäten, deren Zustandswechsel eine echte Aktion des Geräts sind (für die Gegenprobe)
+# Entities whose state changes are a real action of the device (for the cross-check)
 ACTION_DOMAINS = {"binary_sensor", "lock", "event"}
 
 
 @dataclass
 class DeviceSpec:
-    """Was Pulse aus den Registries über ein Gerät weiß."""
+    """What Pulse knows about a device from the registries."""
 
     device_id: str
     name: str
@@ -39,22 +39,29 @@ class DeviceSpec:
     integration: str
     identifiers: set[tuple[str, str]] = field(default_factory=set)
     connections: set[tuple[str, str]] = field(default_factory=set)
-    entities: list[str] = field(default_factory=list)  # zählen als Lebenszeichen
-    actions: list[str] = field(default_factory=list)  # zählen für die Gegenprobe
+    entities: list[str] = field(default_factory=list)  # count as signs of life
+    actions: list[str] = field(default_factory=list)  # count for the cross-check
     battery: str | None = None
-    battery_low: str | None = None  # Warn-Sensor „Batterie schwach“ neben einem Prozentwert
+    battery_low: str | None = None  # "battery low" warning sensor next to a percentage
     voltage: str | None = None
     critical: bool = False
     ieee: str | None = None
     icon: str = "mdi:battery-heart-variant"
+    # The integration itself knows whether the device is reachable: "matter" (subscription) or a connectivity sensor
+    reachable_via: str | None = None
+
+    @property
+    def connectivity(self) -> str | None:
+        """The integration's reachability sensor (None for Matter, which reports through availability)."""
+        return None if self.reachable_via in (None, "matter") else self.reachable_via
 
     @property
     def cloud(self) -> bool:
-        """Cloud-Integration mit Abfragetakt – ihr Takt ist der der Cloud, nicht der des Geräts."""
+        """Polling cloud integration: its rhythm is the cloud's, not the device's."""
         return self.integration in CLOUD_INTEGRATIONS
 
 
-# Symbol nach dem, was das Gerät misst (erste passende Regel gewinnt)
+# Icon by what the device measures (first matching rule wins)
 ICONS: tuple[tuple[str, str | None, str], ...] = (
     ("lock", None, "mdi:lock-outline"),
     ("binary_sensor", "moisture", "mdi:water-alert-outline"),
@@ -96,8 +103,8 @@ def discover(hass: HomeAssistant) -> dict[str, DeviceSpec]:
     entities = er.async_get(hass)
     areas = ar.async_get(hass)
     found: dict[str, DeviceSpec] = {}
-    # Zubehör von Mediengeräten (z. B. Akku-Rücklautsprecher einer Soundbar) ist kein Batteriesensor:
-    # Geräte unter einem Mediaplayer oder aus einem Eintrag, der Mediaplayer hat (außer Funk-Brücken)
+    # Accessories of media devices (e.g. battery rear speakers of a soundbar) are no battery sensors:
+    # devices under a media player or from an entry that has media players (except radio bridges)
     media_devices: set[str] = set()
     media_entries: set[str] = set()
     for e in entities.entities.values():
@@ -130,12 +137,18 @@ def discover(hass: HomeAssistant) -> dict[str, DeviceSpec]:
         battery = percent or flag
         if battery is None:
             continue
-        # Hauptintegration = die mit den meisten Entitäten (Vorlagen anderer Integrationen am Gerät zählen nicht)
+        # Main integration = the one with the most entities (templates of other integrations on the device don't count)
         counts: dict[str, int] = {}
         for e in own:
             counts[e.platform] = counts.get(e.platform, 0) + 1
         integration = max(counts, key=lambda p: counts[p])
         mine = [e for e in own if e.platform == integration and e.domain not in INACTIVE_DOMAINS]
+        # The integration's own reachability flag tells whether the device is reachable, it is no sign of life
+        connectivity = next(
+            (e.entity_id for e in mine if e.domain == "binary_sensor" and _device_class(e) == "connectivity"),
+            None,
+        )
+        mine = [e for e in mine if e.entity_id != connectivity]
         voltage = next(
             (e.entity_id for e in mine if e.domain == "sensor" and _device_class(e) == "voltage"),
             None,
@@ -166,12 +179,13 @@ def discover(hass: HomeAssistant) -> dict[str, DeviceSpec]:
             critical=critical,
             ieee=ieee_of(device),
             icon=icon_for(own),
+            reachable_via="matter" if integration == "matter" else connectivity,
         )
     return found
 
 
 def _entry_ids(device: dr.DeviceEntry) -> set[str]:
-    """Einträge des Geräts: ab HA 2026.10 genau einer (`config_entry_id`), davor die Menge `config_entries`."""
+    """The device's entries: from HA 2026.10 exactly one (`config_entry_id`), before that the set `config_entries`."""
     if hasattr(device, "config_entry_id"):
         return {device.config_entry_id} if device.config_entry_id else set()
     return set(device.config_entries)

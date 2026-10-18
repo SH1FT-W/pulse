@@ -10,7 +10,7 @@ interface Feature {
   text: StringKey;
 }
 
-/** Erster Besuch: was Pulse ist. */
+/** First visit: what Pulse is. */
 const WELCOME: Feature[] = [
   {
     icon: 'mdi:chart-timeline-variant',
@@ -22,18 +22,20 @@ const WELCOME: Feature[] = [
 ];
 
 /**
- * Nach einem Update: das Neue dieser Version, in Worten der Nutzer. Bei jedem Release ersetzen
- * (1–4 Einträge). Stand: 26.10.4.
+ * After an update: what is new in this version, in the user's words. Replace on every release
+ * (1 to 4 entries). As of 26.10.5.
  */
 export const WHATS_NEW: Feature[] = [
-  { icon: 'mdi:calendar-month-outline', title: 'new_calver_title', text: 'new_calver_text' },
+  { icon: 'mdi:access-point-check', title: 'new_reachable_title', text: 'new_reachable_text' },
+  { icon: 'mdi:restart', title: 'new_restart_title', text: 'new_restart_text' },
+  { icon: 'mdi:tune-variant', title: 'new_sheet_title', text: 'new_sheet_text' },
 ];
 
 const CHANGELOG_URL = 'https://github.com/SH1FT-W/pulse/blob/main/CHANGELOG.md';
 
 export type ZigbeeOffer = 'offer' | 'on' | 'none';
 
-/** „Willkommen bei Pulse“ / „Neu in Pulse x.y“ – wie FLODEs Blatt nach einem iOS-Update. */
+/** "Willkommen bei Pulse" (welcome) / "Neu in Pulse x.y" (new in), like FLODE's sheet after an iOS update. */
 export class PulseWelcome extends LitElement {
   static properties = {
     language: { type: String },
@@ -45,7 +47,7 @@ export class PulseWelcome extends LitElement {
   declare language: string;
   declare mode: WelcomeMode | null;
   declare version: string;
-  /** Zigbee2MQTT gefunden und Lebenszeichen noch aus → Zeile mit Schalter */
+  /** Zigbee2MQTT found and signs of life still off → row with a switch */
   declare zigbee: ZigbeeOffer;
 
   constructor() {
@@ -62,7 +64,7 @@ export class PulseWelcome extends LitElement {
     this.dispatchEvent(new CustomEvent('closed'));
   }
 
-  /** Eine Einstellung, kein Feature: eigene Zeile unter den Punkten, ganze Zeile tippbar. */
+  /** A setting, not a feature: its own row below the items, the whole row is tappable. */
   private renderZigbee() {
     const lang = this.language;
     const on = this.zigbee === 'on';
@@ -91,7 +93,7 @@ export class PulseWelcome extends LitElement {
     </div>`;
   }
 
-  /** EKG-Linie des App-Zeichens, die in Rhythmusleisten übergeht. */
+  /** ECG line of the app icon that turns into rhythm strips. */
   private renderEcg() {
     const bars = [
       24, 38, 18, 44, 30, 40, 22, 46, 34, 26, 42, 20, 36, 44, 28, 40, 24, 34, 46, 30, 22, 38, 42,
@@ -137,7 +139,7 @@ export class PulseWelcome extends LitElement {
           )}
         </ol>
       </div>
-      <!-- Fester Fuß: Schalter und „Weiter“ bleiben immer sichtbar, der Text darüber scrollt -->
+      <!-- Fixed footer: switch and "Weiter" (continue) always stay visible, the text above scrolls -->
       <div slot="footer" class="foot">
         ${welcome && this.zigbee !== 'none' ? this.renderZigbee() : nothing}
         <button class="go" type="button" @click=${() => this.close()}>${t(lang, 'continue')}</button>
@@ -155,7 +157,7 @@ export class PulseWelcome extends LitElement {
     puls,
     css`
       ha-dialog {
-        /* Bühne wie die Seite: im Dunkeln schwarz, damit das EKG leuchtet */
+        /* Stage like the page: black in dark mode so the ECG glows */
         --ha-dialog-surface-background: var(--primary-background-color);
         --mdc-theme-surface: var(--primary-background-color);
         --mdc-dialog-max-width: 480px;
@@ -171,7 +173,7 @@ export class PulseWelcome extends LitElement {
         padding: 4px 4px 4px;
         color: var(--pu-ink);
       }
-      /* Leuchten läuft zu allen Rändern weich aus – keine Kante am Dialogrand */
+      /* The glow fades out softly towards all edges, no hard edge at the dialog border */
       .glow {
         position: absolute;
         inset: 0 0 auto;
@@ -304,7 +306,7 @@ export class PulseWelcome extends LitElement {
         min-height: 52px;
         border: 0;
         border-radius: 26px;
-        /* Einfarbig wie alle Primärknöpfe: Weiß auf dem Flächen-Akzent ≥ 4,5:1 */
+        /* Solid like all primary buttons: white on the surface accent ≥ 4.5:1 */
         background: var(--pu-accent-fill);
         box-shadow: 0 10px 40px -8px color-mix(in srgb, var(--pu-accent-fill) 60%, transparent);
         color: #fff;
@@ -326,7 +328,7 @@ export class PulseWelcome extends LitElement {
       .sheet {
         padding-bottom: 12px;
       }
-      /* Handy: HAs Dialog-Fuß hat dort keinen Innenabstand – bündig mit dem Text darüber */
+      /* Phone: HA's dialog footer has no padding there, flush with the text above */
       @media (max-width: 600px) {
         .foot {
           max-width: none;

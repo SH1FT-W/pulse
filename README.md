@@ -28,7 +28,7 @@ The latest releases teach Pulse to look ahead, to tell a cloud outage from a dea
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme-cards-new-dark.png" />
-  <img src="docs/images/readme-cards-new-light.png" alt="Battery forecast (1.1.0): from Home Assistant's long-term statistics Pulse estimates how long a battery will last, as a rough range, the battery card lists what is due in the next eight weeks. Radio, but no values (1.1.0): with Zigbee2MQTT's health check Pulse notices devices that still talk to the network but no longer send readings, at most Check, never Failed. Cloud outages stay calm (1.1.0): when several devices of one cloud integration go quiet together, that is the cloud, not the batteries, one message instead of an alarm per device. Partner suggestions (1.1.0): devices that were active together on several days, such as a lock and its door contact, show up in the device sheet, accept them and Pulse cross-checks. Missing battery entity (1.1.0): a battery sensor unavailable for a day while the rest keeps reporting gets its own reason, a device's own battery low sensor wins over a fine-looking percentage. New version numbers (26.10.4): versions read year.month.release, 26.10.4 is the fourth release of October 2026, the jump from 1.1.0 is intended." />
+  <img src="docs/images/readme-cards-new-light.png" alt="Reachable means fine (26.10.5): for Matter devices and cloud devices with a connectivity sensor, Pulse asks the integration, a rarely used lock or a rain gauge on a dry day is no longer unusually silent. Restarts no longer fool Pulse (26.10.5): after a Home Assistant restart a silent device briefly looked alive again, the state rows HA rewrites on start no longer count as reports. Battery forecast (1.1.0): from Home Assistant's long-term statistics Pulse estimates how long a battery will last, as a rough range, the battery card lists what is due in the next eight weeks. Radio, but no values (1.1.0): with Zigbee2MQTT's health check Pulse notices devices that still talk to the network but no longer send readings, at most Check, never Failed. Cloud outages stay calm (1.1.0): when several devices of one cloud integration go quiet together, that is the cloud, not the batteries, one message instead of an alarm per device. Partner suggestions (1.1.0): devices that were active together on several days, such as a lock and its door contact, show up in the device sheet, accept them and Pulse cross-checks." />
 </picture>
 
 Every change, release by release, in the [changelog](CHANGELOG.md).
@@ -166,7 +166,7 @@ Every monitored device gets diagnostic entities on the device itself. Status cha
 
 Overall: `sensor.pulse_problems` (count, attribute `devices` with `device_id`, `name`, `status`, `reason_key`, `reason`) and `sensor.pulse_monitored_devices`. Ignored devices are unavailable.
 
-`reason_key` is one of `ok_rhythm`, `learning`, `silent`, `silent_new`, `silent_strays`, `unavailable`, `partner`, `battery_low`, `battery_low_flag`, `battery_soon`, `battery_missing`, `radio_only`, `cloud_outage`, `startup_waiting`, `waiting_first`.
+`reason_key` is one of `ok_rhythm`, `ok_reachable`, `learning`, `silent`, `silent_new`, `silent_strays`, `silent_reachable`, `unavailable`, `partner`, `battery_low`, `battery_low_flag`, `battery_soon`, `battery_missing`, `radio_only`, `cloud_outage`, `startup_waiting`, `waiting_first`.
 
 **Events**
 

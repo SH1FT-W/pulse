@@ -1,7 +1,7 @@
-"""Der Wächter: hört allen Batteriegeräten zu, lernt ihren Takt und bestimmt den Status.
+"""The watcher: listens to all battery devices, learns their rhythm and determines the status.
 
-Rein passiv – Pulse liest nur Zustandsänderungen, „gemeldet ohne Änderung“ (state_reported) und die
-MQTT-Nachrichten von Zigbee2MQTT. Kein Gerät wird je abgefragt.
+Purely passive: Pulse only reads state changes, "reported without change" (state_reported) and the
+MQTT messages from Zigbee2MQTT. No device is ever polled.
 """
 
 from __future__ import annotations
@@ -21,6 +21,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     EVENT_STATE_CHANGED,
     EVENT_STATE_REPORTED,
+    STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
@@ -96,33 +97,33 @@ from .texts import reason_text
 from .z2m import Z2MListener
 
 _LOGGER = logging.getLogger(__name__)
-# Geräte-IDs der Registry (32 Hex-Zeichen) – Hub-Entitäten beginnen mit der Entry-ID und fallen so heraus.
+# Registry device IDs (32 hex chars); hub entities start with the entry ID and are thus left out.
 _DEVICE_ID = re.compile(r"[0-9a-f]{32}")
 
 HOUR_SECONDS = 3600
-# Nach dem Start von Home Assistant kommen Batteriewerte gestaffelt und gerundet herein – so lange
-# wird kein Batteriewechsel erkannt
+# After Home Assistant starts, battery values come in staggered and rounded; during that time
+# no battery change is detected
 STARTUP_GRACE = 5 * 60
 UPTIME_KEEP = 30 * 86400
 UPTIME_MAX = 200
-# Der Laufzeit-Stempel wird nur alle 5 Minuten gespeichert (UPTIME_SLACK ist 10 Minuten), sonst schriebe
-# jeder Takt die ganze Datei mit allen Meldungen
+# The uptime stamp is only saved every 5 minutes (UPTIME_SLACK is 10 minutes), otherwise every
+# tick would write the whole file with all reports
 UPTIME_SAVE_EVERY = 5 * 60
-# Zigbee2MQTT nach einem Fehlstart (Broker noch nicht da) alle 5 Minuten noch einmal versuchen
+# After a failed start (broker not there yet) retry Zigbee2MQTT every 5 minutes
 Z2M_RETRY = 5 * 60
 
 NOT_REAL = {STATE_UNAVAILABLE, STATE_UNKNOWN}
 DAY = 86400.0
-# Verlauf lesen: nach so vielen einsortierten Meldungen den Event-Loop kurz freigeben
+# Reading history: briefly yield the event loop after this many inserted reports
 YIELD_EVERY = 2000
-# Nicht mehr überwachte Geräte: so viele Meldungen bleiben im Datensatz
+# Devices no longer monitored: this many reports stay in the record
 TRIM_KEEP = 100
-# Cloud-Ausfall: mindestens so viele Geräte derselben Cloud, deren Stille so nah beieinander begann
+# Cloud outage: at least this many devices of the same cloud whose silence began this close together
 CLOUD_OUTAGE_MIN = 2
 CLOUD_SPREAD = 2 * 3600.0
-# Vorhersage: höchstens so weit zurück (falls kein Wechsel eingetragen ist)
+# Forecast: at most this far back (if no change is recorded)
 FORECAST_LOOKBACK = 180 * 86400.0
-# Registry-Änderungen, die die Geräteliste betreffen können; Name, Symbol oder Optionen einer Entität nicht
+# Registry changes that can affect the device list; an entity's name, icon or options do not
 DEVICE_CHANGES = frozenset(
     {"name", "name_by_user", "area_id", "disabled_by", "identifiers", "manufacturer", "model", "via_device_id"}
 )
@@ -140,15 +141,15 @@ class Device:
     rhythm: Rhythm = field(default_factory=lambda: Rhythm(None, None, 0))
     unavailable_since: float | None = None
     evaluated: bool = False
-    # Erste Bewertung nach dem Verlauf-Lesen ist der Ausgangspunkt: erst danach gibt es Status-Ereignisse
+    # The first evaluation after reading history is the baseline: only after it are there status events
     baseline: bool = False
-    # Ausreißer-Regel: Beginn der Stille und vereinzelte Meldungen seitdem
+    # Stray rule: start of the silence and sporadic reports since
     silence_start: float | None = None
     strays: int = 0
-    # Zigbee2MQTT-Health: Nachrichtenzähler zuletzt gestiegen (nur im Speicher)
+    # Zigbee2MQTT health: message counter last increased (in memory only)
     radio_last: float | None = None
     radio_rises: list[float] = field(default_factory=list)
-    # Einmal am Tag gerechnet: Laufzeit-Vorhersage und Partner-Vorschläge
+    # Calculated once a day: runtime forecast and partner suggestions
     forecast: Forecast | None = None
     forecast_reason: str | None = None
     suggestions: list[Suggestion] = field(default_factory=list)
@@ -192,12 +193,12 @@ class Device:
 
 
 def _millivolts(state: State | None) -> float | None:
-    """Spannung immer in mV – ZHA und andere melden Volt."""
+    """Voltage always in mV; ZHA and others report volts."""
     value = _float(state)
     if value is None or state is None:
         return None
     unit = state.attributes.get("unit_of_measurement")
-    # Unter 100 kann keine Batteriespannung in mV sein
+    # Below 100 it cannot be a battery voltage in mV
     return value * 1000 if unit == "V" or (unit != "mV" and value < 100) else value
 
 
@@ -216,8 +217,8 @@ class PulseMonitor:
         self.entry = entry
         self.store = store
         self.devices: dict[str, Device] = {}
-        # Alle beobachteten Entitäten → Gerät; Lebenszeichen sind nur die in `spec.entities` (`_alive`),
-        # Batterie-/Warn-Entitäten anderer Plattformen hängen nur für Batteriewerte mit drin
+        # All observed entities → device; signs of life are only those in `spec.entities` (`_alive`),
+        # battery/warning entities of other platforms are only included for battery values
         self._entity_map: dict[str, str] = {}
         self._alive: set[str] = set()
         self._ieee_map: dict[str, str] = {}
@@ -226,31 +227,31 @@ class PulseMonitor:
         self.z2m: Z2MListener | None = None
         self.z2m_active = False
         self.bootstrapped = False
-        # Leisten und Herzschlag-Kalender werden nur neu gerechnet, wenn sich etwas geändert hat
+        # Bars and heartbeat calendar are only recalculated when something changed
         self.bins = BinCache()
         self.rhythms = RhythmCache()
-        # Nach dem Stoppen (Neuladen/Entladen) darf ein noch laufender Start nichts mehr anfangen
+        # After stopping (reload/unload) a still running start must not begin anything
         self._stopped = False
         self._z2m_lock = asyncio.Lock()
         self._no_data_cache: tuple[tuple[float, int, int], list[list[float]]] | None = None
         self._gaps_cache: tuple[tuple[int, float], list[tuple[float, float]]] | None = None
-        # Cloud-Ausfälle des letzten Takts: Integration → {ids, since, count, name}
+        # Cloud outages of the last tick: integration → {ids, since, count, name}
         self.cloud_outages: dict[str, dict[str, Any]] = {}
-        # Einmal am Tag: Vorhersage + Partner-Vorschläge
+        # Once a day: forecast + partner suggestions
         self._daily_at = 0.0
         self._daily_running = False
-        # Snapshot je Sprache einmal je Update (mehrere offene Panels)
+        # Snapshot per language once per update (several open panels)
         self._generation = 0
         self._snapshots: dict[str | None, tuple[int, dict[str, Any]]] = {}
         self.started_at = time.time()
-        self._z2m_tried = self.started_at  # letzter Versuch, Zigbee2MQTT zu abonnieren
-        self._uptime_saved = self.started_at  # Laufzeit-Stempel zuletzt zum Speichern gegeben
+        self._z2m_tried = self.started_at  # last attempt to subscribe to Zigbee2MQTT
+        self._uptime_saved = self.started_at  # uptime stamp last handed over for saving
         self._rediscover_debouncer = Debouncer(
             hass, _LOGGER, cooldown=5, immediate=False, function=self._async_rediscover
         )
         self._update_debouncer = Debouncer(hass, _LOGGER, cooldown=1, immediate=True, function=self._async_push_update)
 
-    # ── Start/Stopp ───────────────────────────────────────────────────────
+    # ── Start/stop ───────────────────────────────────────────────────────
 
     async def async_start(self) -> None:
         self.started_at = time.time()
@@ -284,7 +285,7 @@ class PulseMonitor:
             await self.async_bootstrap()
 
     async def _async_start_z2m(self) -> None:
-        """Zigbee2MQTT (neu) abonnieren – nie zwei Listener gleichzeitig, auch bei schnellen Wechseln."""
+        """(Re)subscribe to Zigbee2MQTT; never two listeners at once, even with quick changes."""
         async with self._z2m_lock:
             if self.z2m:
                 self.z2m.async_stop()
@@ -303,21 +304,21 @@ class PulseMonitor:
             )
             try:
                 active = await listener.async_start()
-            except Exception:  # MQTT ist optional
+            except Exception:  # MQTT is optional
                 _LOGGER.exception("Could not subscribe to Zigbee2MQTT")
                 active = False
             if not active or self._stopped:
-                listener.async_stop()  # auch halb gestartete Abos wieder abmelden
+                listener.async_stop()  # also unsubscribe half-started subscriptions
                 return
             self.z2m, self.z2m_active = listener, True
 
     async def async_restart_z2m(self) -> None:
-        """Anderes Basis-Thema: neu abonnieren."""
+        """Different base topic: resubscribe."""
         await self._async_start_z2m()
         self.async_update()
 
     async def _async_retry_z2m(self) -> None:
-        """MQTT war beim Start noch nicht da (Broker brauchte länger): später noch einmal abonnieren."""
+        """MQTT was not there yet at start (broker took longer): subscribe again later."""
         await self._async_start_z2m()
         if self.z2m is not None:
             _LOGGER.info("Subscribed to Zigbee2MQTT after a delayed MQTT start")
@@ -334,7 +335,7 @@ class PulseMonitor:
         self._rediscover_debouncer.async_shutdown()
         self._update_debouncer.async_shutdown()
 
-    # ── Geräte finden ────────────────────────────────────────────────────
+    # ── Find devices ─────────────────────────────────────────────────────
 
     @callback
     def _registry_changed(self, _event: Event[Any]) -> None:
@@ -343,15 +344,15 @@ class PulseMonitor:
     @staticmethod
     @callback
     def _device_relevant(event_data: Any) -> bool:
-        """Nur Geräte-Änderungen, die die Suche beeinflussen (nicht Labels, Hersteller-URL, Firmware)."""
+        """Only device changes that affect discovery (not labels, manufacturer URL, firmware)."""
         return event_data["action"] != "update" or bool(DEVICE_CHANGES & set(event_data.get("changes") or ()))
 
     @callback
     def _entity_relevant(self, event_data: Any) -> bool:
-        """Eigene Entitäten (drei je Gerät) und kosmetische Änderungen lösen keine Neusuche aus."""
+        """Own entities (three per device) and cosmetic changes do not trigger a new discovery."""
         action = event_data["action"]
         if action == "remove":
-            return True  # der Eintrag ist schon weg, eigene lassen sich hier nicht mehr erkennen
+            return True  # the entry is already gone, own entities can no longer be recognized here
         entry = er.async_get(self.hass).async_get(event_data["entity_id"])
         if entry is not None and entry.platform == DOMAIN:
             return False
@@ -377,6 +378,9 @@ class PulseMonitor:
                 record["battery_type"] = info.type
                 record["battery_count"] = info.count
                 record["chemistry"] = record.get("chemistry") or info.chemistry
+            if record.pop("rebuild_events", False) and spec.cloud:
+                # Before 1.1 every cloud poll counted as a report: history refills them right away with value changes
+                record["events"] = []
             device = Device(spec, record)
             if record.get("last_level") is None and spec.battery:
                 record["last_level"] = self._battery_percent(spec)
@@ -394,7 +398,7 @@ class PulseMonitor:
         self._entity_map = {e: d.device_id for d in self.devices.values() for e in d.spec.entities}
         self._alive = set(self._entity_map)
         for d in self.devices.values():
-            for extra in (d.spec.battery, d.spec.battery_low):
+            for extra in (d.spec.battery, d.spec.battery_low, d.spec.connectivity):
                 if extra:
                     self._entity_map.setdefault(extra, d.device_id)
         self._ieee_map = {d.spec.ieee: d.device_id for d in self.devices.values() if d.spec.ieee}
@@ -406,14 +410,14 @@ class PulseMonitor:
 
     @callback
     def _remove_vanished(self, specs: dict[str, DeviceSpec]) -> None:
-        """Nicht mehr überwachte Geräte aufräumen.
+        """Clean up devices that are no longer monitored.
 
-        - Gerät endgültig weg (z. B. Integration ersetzt): eigene Entitäten und Datensatz entfernen – sonst
-          bleiben die Pulse-Entitäten verwaist und das Nachfolgegerät bekommt `_2`-IDs.
-        - Gerät noch da, aber nicht mehr überwacht (Batterie-Entität weg, Gerät deaktiviert): eigene
-          Entitäten entfernen, Datensatz behalten (Meldungen gekürzt) – kommt es zurück, entstehen sie neu
-          (gleiche unique_id, gleiche Entity-ID).
-        - Gerät ohne eigene Entitäten (Integration gerade nicht geladen/im Umbau): nichts anfassen.
+        - Device gone for good (e.g. integration replaced): remove own entities and record; otherwise
+          the Pulse entities stay orphaned and the successor device gets `_2` IDs.
+        - Device still there but no longer monitored (battery entity gone, device disabled): remove own
+          entities, keep the record (reports trimmed); if it comes back they are recreated
+          (same unique_id, same entity ID).
+        - Device without own entities (integration currently not loaded/being rebuilt): touch nothing.
         """
         devices = dr.async_get(self.hass)
         entities = er.async_get(self.hass)
@@ -446,30 +450,30 @@ class PulseMonitor:
 
     @staticmethod
     def _no_longer_monitored(entities: er.EntityRegistry, device_id: str, disabled: bool) -> bool:
-        """Gerät deaktiviert oder hat noch eigene Entitäten (also bewusst nicht mehr überwacht)."""
+        """Device disabled or still has its own entities (so deliberately no longer monitored)."""
         return disabled or any(
             e.platform != DOMAIN and e.disabled_by is None for e in er.async_entries_for_device(entities, device_id)
         )
 
     def battery_level(self, device: Device) -> float | None:
-        """Aktueller Batteriewert (Prozent, bei Warn-Sensoren 5 = schwach)."""
+        """Current battery value (percent, for warning sensors 5 = low)."""
         return self._battery_level(device.spec)
 
     @staticmethod
     def _battery_flag(spec: DeviceSpec) -> bool:
-        """Nur ein Warn-Sensor („Batterie schwach“ an/aus) – kein Prozentwert."""
+        """Only a warning sensor ("battery low" on/off), no percentage."""
         return bool(spec.battery and spec.battery.startswith("binary_sensor."))
 
     def _battery_percent(self, spec: DeviceSpec) -> float | None:
-        """Echter Prozentwert (Warn-Sensoren: None)."""
+        """Real percentage (warning sensors: None)."""
         return None if self._battery_flag(spec) else self._battery_level(spec)
 
     def voltage(self, device: Device) -> float | None:
-        """Aktuelle Spannung in mV."""
+        """Current voltage in mV."""
         return _millivolts(self.hass.states.get(device.spec.voltage)) if device.spec.voltage else None
 
     def battery_percent(self, device: Device) -> float | None:
-        """Echter Prozentwert (Warn-Sensoren: None)."""
+        """Real percentage (warning sensors: None)."""
         return self._battery_percent(device.spec)
 
     def battery_flag(self, device: Device) -> bool:
@@ -479,13 +483,13 @@ class PulseMonitor:
         return self._strip(device, starts, now)
 
     def flag_on(self, device: Device) -> bool:
-        """Das Gerät meldet selbst „Batterie schwach“ (Warn-Sensor an)."""
+        """The device itself reports "battery low" (warning sensor on)."""
         spec = device.spec
         flag = spec.battery_low or (spec.battery if self._battery_flag(spec) else None)
         return bool(flag and self.hass.states.is_state(flag, STATE_ON))
 
     def _track_battery_missing(self, device: Device, now: float) -> None:
-        """Seit wann die Batterie-Entität keinen Wert hat (gespeichert – auch über Neustarts)."""
+        """Since when the battery entity has had no value (stored, also across restarts)."""
         if not device.spec.battery:
             return
         state = self.hass.states.get(device.spec.battery)
@@ -510,12 +514,13 @@ class PulseMonitor:
             return 5.0 if state.state == STATE_ON else None
         return _float(state)
 
-    # ── Verlauf ──────────────────────────────────────────────────────────
+    # ── History ──────────────────────────────────────────────────────────
 
     async def async_bootstrap(self) -> None:
-        """Die letzten Tage aus dem Verlauf lernen – Pulse kennt den Takt dann sofort."""
+        """Learn the last days from history; Pulse then knows the rhythm right away."""
         entity_ids = sorted(self._alive)
-        result = await async_load_history(self.hass, entity_ids, HISTORY_DAYS)
+        starts = [float(span[0]) for span in self.store.uptime]
+        result = await async_load_history(self.hass, entity_ids, HISTORY_DAYS, starts)
         if self._stopped:
             return
         keep_from = time.time() - KEEP_DAYS * DAY
@@ -523,14 +528,14 @@ class PulseMonitor:
         for entity_id, (reports, actions) in result.items():
             if merged >= YIELD_EVERY:
                 merged = 0
-                await asyncio.sleep(0)  # gesprächige Geräte: den Event-Loop zwischendurch atmen lassen
+                await asyncio.sleep(0)  # chatty devices: let the event loop breathe in between
                 if self._stopped:
                     return
             device = self.devices.get(self._entity_map.get(entity_id, ""))
             if device is None:
                 continue
             merged += len(reports) + len(actions)
-            # Cloud-Geräte: nur echte Wertänderungen – jede Abfrage der Cloud schreibt sonst eine Zeile
+            # Cloud devices: only real value changes; otherwise every cloud poll writes a row
             for ts in actions if device.cloud else reports:
                 merge_event(device.record["events"], ts, keep_from, MAX_EVENTS, THIN_SECONDS)
             if entity_id in device.spec.actions:
@@ -545,7 +550,7 @@ class PulseMonitor:
         _LOGGER.debug("History read: %s entities", len(result))
         self._tick(dt_util.utcnow())
 
-    # ── Meldungen ────────────────────────────────────────────────────────
+    # ── Reports ──────────────────────────────────────────────────────────
 
     @callback
     def _tracked(self, event_data: Any) -> bool:
@@ -556,10 +561,10 @@ class PulseMonitor:
         return bool(self.z2m and ieee and (self.z2m.in_echo_window or self.z2m.echo_marked(ieee)))
 
     def _later(self, device: Device, handler: Callable[[Any], None], event: Any) -> bool:
-        """Zigbee2MQTT-Geräte: erst nach dem Durchlauf der MQTT-Nachricht auswerten.
+        """Zigbee2MQTT devices: evaluate only after the MQTT message has been processed.
 
-        HAs MQTT-Entitäten und Pulses Abo bekommen dieselbe Nachricht in unbekannter Reihenfolge; erst danach
-        ist bekannt, ob sie ein Echo war (`Z2MListener.echo_marked`).
+        HA's MQTT entities and Pulse's subscription get the same message in unknown order; only afterwards
+        is it known whether it was an echo (`Z2MListener.echo_marked`).
         """
         if not (device.spec.ieee and self.z2m):
             return False
@@ -582,15 +587,18 @@ class PulseMonitor:
         old = event.data["old_state"]
         now = time.time()
         self._check_availability(device, now)
+        if entity_id == device.spec.connectivity:
+            self._evaluate(device, now)  # reachability changed, no sign of life
+            return
         if old is None or old.state in NOT_REAL or new.state in NOT_REAL or self._is_echo(device):
             return
         if device.cloud and old.state == new.state:
-            return  # Cloud: eine neue Abfrage ohne neuen Wert ist kein Lebenszeichen des Geräts
-        # Batteriewechsel nur aus echten Übergängen (nie aus Neustart-Echos)
+            return  # Cloud: a new poll without a new value is no sign of life of the device
+        # Battery changes only from real transitions (never from restart echoes)
         if entity_id in (device.spec.battery, device.spec.voltage):
             self._check_battery(device, now, entity_id)
         if entity_id not in self._alive:
-            return  # Batterie-/Warn-Entität einer anderen Plattform: kein Lebenszeichen des Geräts
+            return  # Battery/warning entity of another platform: no sign of life of the device
         action = entity_id in device.spec.actions and old.state != new.state
         self._activity(device, new.last_updated.timestamp(), action)
 
@@ -608,8 +616,8 @@ class PulseMonitor:
         if device is None or new is None or new.state in NOT_REAL or self._is_echo(device) or self._stopped:
             return
         if device.cloud:
-            return  # Cloud: gleicher Wert erneut = nur der Abfragetakt der Cloud
-        # Gleicher Wert erneut gemeldet: bestätigt (oder verwirft) einen vorgemerkten Batteriesprung
+            return  # Cloud: same value again = only the cloud's polling rhythm
+        # Same value reported again: confirms (or discards) a pending battery jump
         if entity_id in (device.spec.battery, device.spec.voltage) and device.record.get("pending_jump"):
             self._check_battery(device, time.time(), entity_id)
         if entity_id in self._alive:
@@ -617,7 +625,7 @@ class PulseMonitor:
 
     def _activity(self, device: Device, ts: float, action: bool) -> None:
         keep_from = time.time() - KEEP_DAYS * DAY
-        # Sehr gesprächige Geräte (BLE alle paar Sekunden) ausdünnen, damit 7 Tage in den Speicher passen
+        # Thin out very chatty devices (BLE every few seconds) so 7 days fit into the store
         added = merge_event(device.record["events"], ts, keep_from, MAX_EVENTS, THIN_SECONDS)
         if action:
             merge_event(device.record["actions"], ts, keep_from, MAX_EVENTS)
@@ -631,26 +639,28 @@ class PulseMonitor:
 
     def _check_availability(self, device: Device, now: float) -> None:
         if device.spec.ieee and self.z2m and self.z2m.availability_enabled:
-            return  # Zigbee2MQTT meldet Verfügbarkeit selbst
+            return  # Zigbee2MQTT reports availability itself
         states = [self.hass.states.get(e) for e in device.spec.entities]
         known = [s for s in states if s is not None]
-        if known and all(s.state == STATE_UNAVAILABLE for s in known):
+        via = device.spec.connectivity
+        offline = via is not None and self.hass.states.is_state(via, STATE_OFF)
+        if offline or (known and all(s.state == STATE_UNAVAILABLE for s in known)):
             if device.unavailable_since is None:
                 device.unavailable_since = now
         else:
             device.unavailable_since = None
 
     def _settled(self, now: float) -> bool:
-        """Home Assistant läuft lange genug, dass Batteriewerte keine Start-Echos mehr sind."""
+        """Home Assistant has been running long enough that battery values are no longer start echoes."""
         return now - self.started_at >= STARTUP_GRACE
 
     def _check_battery(self, device: Device, now: float, entity_id: str | None = None) -> None:
-        """Batteriewechsel am Sprung erkennen – nur aus echten Meldungen und bestätigt.
+        """Detect a battery change by its jump: only from real reports and confirmed.
 
-        Der Vergleichswert ist der letzte stabile echte Wert. Ein Sprung zählt erst, wenn eine spätere echte
-        Meldung (≥ MERGE_SECONDS, nicht dieselbe Funknachricht) ihn bestätigt; in den ersten Minuten nach dem
-        Start wird nur der Vergleichswert nachgeführt. Bewertet wird nur die Entität, die gerade gemeldet hat –
-        der Wert der anderen kann noch aus der vorigen Nachricht stammen.
+        The reference value is the last stable real value. A jump only counts once a later real report
+        (≥ MERGE_SECONDS, not the same radio message) confirms it; in the first minutes after start only
+        the reference value is tracked. Only the entity that just reported is evaluated; the other's
+        value may still come from the previous message.
         """
         record = device.record
         spec = device.spec
@@ -665,11 +675,11 @@ class PulseMonitor:
         if batt.is_replacement(record.get("last_level"), level, record.get("last_voltage"), voltage):
             pending = record.get("pending_jump")
             if pending is None:
-                record["pending_jump"] = now  # erst merken – die nächste echte Meldung muss es bestätigen
+                record["pending_jump"] = now  # remember first; the next real report must confirm it
                 self.store.async_delay_save()
                 return
             if now - pending < MERGE_SECONDS:
-                return  # dieselbe Funknachricht (Batterie + Spannung) bestätigt sich nicht selbst
+                return  # the same radio message (battery + voltage) does not confirm itself
             record["pending_jump"] = None
             self.mark_replaced(device.device_id, "auto")
         else:
@@ -693,7 +703,7 @@ class PulseMonitor:
 
     @callback
     def _z2m_radio(self, ieee: str, ts: float) -> None:
-        """Health-Zähler gestiegen: das Gerät funkt noch – kein Wert, also kein Lebenszeichen für die Stille."""
+        """Health counter increased: the device still transmits; no value, so no sign of life for the silence."""
         device = self.devices.get(self._ieee_map.get(ieee, ""))
         if device is None:
             return
@@ -721,16 +731,16 @@ class PulseMonitor:
         device = self.devices.get(self._ieee_map.get(ieee, ""))
         if device is None or not device.problem or device.reason.get("key") not in SILENT_REASONS:
             return
-        # Ein Bridge-Neustart oder HA-Start lässt viele Geräte sich neu anmelden – das ist kein Wechsel
+        # A bridge restart or HA start makes many devices re-announce; that is no change
         if (self.z2m and self.z2m.in_echo_window) or not self._settled(time.time()):
             return
-        # Neuanmeldung nach echter Stille: fast immer eine neue Batterie
+        # Re-announce after real silence: almost always a new battery
         self.mark_replaced(device.device_id, "announce")
 
-    # ── Bewerten ─────────────────────────────────────────────────────────
+    # ── Evaluate ─────────────────────────────────────────────────────────
 
     def _start_uptime(self, now: float) -> None:
-        """Neuer Lauf: eigene Laufzeit beginnt (alte Läufe älter als 30 Tage fallen weg)."""
+        """New run: own uptime begins (runs older than 30 days are dropped)."""
         keep = now - UPTIME_KEEP
         self.store.uptime = [span for span in self.store.uptime if span[1] >= keep][-UPTIME_MAX:]
         self.store.uptime.append([now, now])
@@ -740,11 +750,11 @@ class PulseMonitor:
     def _tick(self, _now: datetime) -> None:
         now = time.time()
         if self.store.uptime:
-            self.store.uptime[-1][1] = now  # im Speicher immer aktuell, jede Sicherung nimmt ihn mit
+            self.store.uptime[-1][1] = now  # always current in memory, every save takes it along
             if now - self._uptime_saved >= UPTIME_SAVE_EVERY:
                 self._uptime_saved = now
                 self.store.async_delay_save()
-        # Erst der Notifier (abgelaufenes „Später“, Ruhezeit vorbei), dann bewerten – so meldet ein Takt nichts doppelt
+        # Notifier first (expired "Später" (later), quiet time over), then evaluate; so a tick reports nothing twice
         self.notifier.async_tick(now)
         self._cloud_pass(now)
         self.notifier.async_begin_tick()
@@ -771,8 +781,9 @@ class PulseMonitor:
 
     @staticmethod
     def silence_from(device: Device) -> float | None:
-        """Ab wann Stille zählt: letzte Meldung – oder ein späterer „Batterie gewechselt“ (sonst käme sofort
-        wieder „antwortet nicht“; bis zur ersten Meldung „wartet auf die erste Meldung“)."""
+        """When silence starts counting: last report, or a later "Batterie gewechselt" (battery changed) (otherwise
+        "antwortet nicht" (not responding) would return at once; until the first report "wartet auf die erste
+        Meldung" (waiting for the first report))."""
         last = device.last_activity
         replaced = device.record["replaced"]
         if replaced and (last is None or replaced[-1] > last):
@@ -780,11 +791,11 @@ class PulseMonitor:
         return last
 
     def silence_start(self, device: Device) -> float | None:
-        """Beginn der Stille nach der Ausreißer-Regel (ein Bezugspunkt für Status, Panel, `silent_since`)."""
+        """Start of the silence by the stray rule (one reference point for status, panel, `silent_since`)."""
         return device.silence_start if device.evaluated else self.silence_from(device)
 
     def downtime_gaps(self) -> list[tuple[float, float]]:
-        """Zeiten, in denen HA nicht lief (aus der eigenen Laufzeit) – zählen bei der Stille nicht mit."""
+        """Times when HA was not running (from the own uptime); they do not count toward the silence."""
         uptime = self.store.uptime
         key = (len(uptime), float(uptime[0][0]) if uptime else 0.0)
         if self._gaps_cache is None or self._gaps_cache[0] != key:
@@ -833,18 +844,31 @@ class PulseMonitor:
             radio_rises=self._radio_rises(device),
             flag_on=bool(device.spec.battery_low) and self.flag_on(device),
             battery_missing_since=record.get("battery_missing_since"),
+            reachable=self._reachable(device),
         )
+
+    def _reachable(self, device: Device) -> str | None:
+        """Name of the integration if it currently lists the device as reachable itself (Matter sub, cloud flag)."""
+        via = device.spec.reachable_via
+        if via is None or device.unavailable_since is not None:
+            return None
+        if via == "matter":
+            states = [self.hass.states.get(e) for e in device.spec.entities]
+            reachable = any(s is not None and s.state not in NOT_REAL for s in states)
+        else:
+            reachable = self.hass.states.is_state(via, STATE_ON)
+        return self._integration_name(device.spec.integration) if reachable else None
 
     @staticmethod
     def _radio_rises(device: Device) -> int:
-        """Anstiege des Health-Zählers deutlich nach der letzten Meldung (die eigene Nachricht zählt mit)."""
+        """Health counter increases clearly after the last report (the own message counts too)."""
         last = device.last_activity
         return len([ts for ts in device.radio_rises if last is None or ts > last + RADIO_BUFFER])
 
     # ── Cloud ────────────────────────────────────────────────────────────
 
     def _cloud_pass(self, now: float) -> None:
-        """Fallen mehrere Geräte derselben Cloud-Integration gleichzeitig aus, ist es die Cloud."""
+        """If several devices of the same cloud integration drop out at once, it is the cloud."""
         groups: dict[str, list[tuple[Device, float]]] = {}
         for device in self.monitored():
             if not device.cloud:
@@ -860,7 +884,7 @@ class PulseMonitor:
         for integration, members in groups.items():
             since_of = {d.device_id: since for d, since in members}
             held = self.cloud_outages.get(integration)
-            # Größte Gruppe, deren Stille innerhalb von CLOUD_SPREAD begann
+            # Largest group whose silence began within CLOUD_SPREAD
             ordered = sorted(since_of.values())
             best: set[str] = set()
             for i, first in enumerate(ordered):
@@ -871,7 +895,7 @@ class PulseMonitor:
                     break
             ids = best if len(best) >= CLOUD_OUTAGE_MIN else set()
             if held is not None:
-                # Gemeldeter Ausfall hält, solange seine Geräte still sind (keine zweite Mitteilung, kein Zerfallen)
+                # A reported outage holds as long as its devices are silent (no second notification, no breaking apart)
                 ids |= {d for d in held["ids"] if d in since_of}
             if ids:
                 outages[integration] = {
@@ -887,7 +911,7 @@ class PulseMonitor:
 
         try:
             return async_get_loaded_integration(self.hass, domain).name
-        except Exception:  # noqa: BLE001 - nur für den Satz; nicht geladen → Domäne
+        except Exception:  # noqa: BLE001 - only for the sentence; not loaded → domain
             return domain
 
     def _cloud_verdict(self, device: Device, verdict: Verdict) -> Verdict:
@@ -899,12 +923,12 @@ class PulseMonitor:
             or SEVERITY[verdict.status] < SEVERITY[STATUS_WATCH]
         ):
             return verdict
-        # Ein Sammelgrund statt vieler Ausfälle – das Gerät selbst ist vermutlich in Ordnung
+        # One collective reason instead of many outages; the device itself is probably fine
         params = {"integration": outage["name"], "count": outage["count"]}
         return Verdict(STATUS_WATCH, {"key": "cloud_outage", "params": params})
 
     def _announce_cloud_outages(self) -> None:
-        """Eine gedämpfte Mitteilung je Cloud-Ausfall (gemerkt im Store, auch über Neustarts)."""
+        """One muted notification per cloud outage (remembered in the store, also across restarts)."""
         notified = self.store.cloud_notified
         for integration in [i for i in notified if i not in self.cloud_outages]:
             notified.pop(integration)
@@ -917,7 +941,7 @@ class PulseMonitor:
                 self.store.async_delay_save()
                 self.notifier.on_cloud_outage(outage["name"], outage["count"])
 
-    # ── Bewerten ─────────────────────────────────────────────────────────
+    # ── Evaluate ─────────────────────────────────────────────────────────
 
     def _evaluate(self, device: Device, now: float, announce: bool = True) -> None:
         if device.ignored:
@@ -933,7 +957,7 @@ class PulseMonitor:
         changed = verdict.status != previous or verdict.reason.get("key") != device.reason.get("key")
         device.status, device.reason = verdict.status, verdict.reason
         device.evaluated = True
-        # Vor dem Verlauf ist der Status vorläufig; die erste Bewertung danach setzt den Ausgangspunkt
+        # Before history the status is provisional; the first evaluation afterwards sets the baseline
         first = not device.baseline
         if self.bootstrapped:
             device.baseline = True
@@ -951,7 +975,7 @@ class PulseMonitor:
         else:
             ir.async_delete_issue(self.hass, DOMAIN, f"failed_{device.device_id}")
         if self.bootstrapped and device.problem:
-            # Bekanntes einmal melden (der Notifier merkt sich, was gesagt ist – auch über Neustarts)
+            # Report known issues once (the notifier remembers what was said, also across restarts)
             self.notifier.maybe_notify(device)
         observed = announce and self.bootstrapped and changed and verdict.status != previous
         if (
@@ -960,8 +984,8 @@ class PulseMonitor:
             and (not observed or was_cloud)
             and (device.record.get("notified") or device.record.get("told"))
         ):
-            # Erholt, ohne dass Pulse den Übergang gesehen hat (Neustart, Ignorieren aufgehoben, Cloud wieder da):
-            # Merker löschen, sonst bliebe der nächste Ausfall stumm. „Läuft wieder“ nur bei beobachtetem Übergang.
+            # Recovered without Pulse seeing the transition (restart, ignore lifted, cloud back): clear the flag,
+            # otherwise the next outage would stay silent. "Läuft wieder" (running again) only on a seen transition.
             self.notifier.forget(device)
         if not changed or verdict.status == previous:
             if changed:
@@ -979,13 +1003,13 @@ class PulseMonitor:
                     "reason_key": device.reason.get("key"),
                 },
             )
-        # Erste Bewertung nach dem Start: keine Mitteilung für Bekanntes (der Notifier merkt sich Gemeldetes)
-        # Cloud-Ausfall: eine Sammelmitteilung statt je Gerät (`_announce_cloud_outages`)
+        # First evaluation after start: no notification for known issues (the notifier remembers what was reported)
+        # Cloud outage: one collective notification instead of one per device (`_announce_cloud_outages`)
         if announce and self.bootstrapped and not cloud and not was_cloud:
             self.notifier.on_status(device, previous)
         self.async_update()
 
-    # ── Einmal am Tag: Vorhersage und Partner-Vorschläge ─────────────────
+    # ── Once a day: forecast and partner suggestions ─────────────────────
 
     async def _async_daily(self) -> None:
         try:
@@ -999,7 +1023,7 @@ class PulseMonitor:
         self.async_update()
 
     async def _async_forecasts(self) -> None:
-        """Laufzeit aus der Langzeitstatistik (Recorder) – im Executor, der Event-Loop bleibt frei."""
+        """Runtime from long-term statistics (recorder), in the executor so the event loop stays free."""
         if "recorder" not in self.hass.config.components:
             return
         from homeassistant.components.recorder import get_instance
@@ -1036,7 +1060,7 @@ class PulseMonitor:
             device.suggestions = result.get(device.device_id, [])
 
     def dismiss_suggestion(self, device_id: str, partner_id: str) -> None:
-        """Partner-Vorschlag dauerhaft verwerfen."""
+        """Permanently dismiss a partner suggestion."""
         device = self.devices.get(device_id)
         if device is None:
             return
@@ -1051,7 +1075,7 @@ class PulseMonitor:
     def reason(self, device: Device, language: str | None = None) -> str:
         return reason_text(language or self.hass.config.language, device.reason)
 
-    # ── Aktionen ─────────────────────────────────────────────────────────
+    # ── Actions ──────────────────────────────────────────────────────────
 
     def mark_replaced(self, device_id: str, source: str = "manual") -> None:
         device = self.devices.get(device_id)
@@ -1061,8 +1085,8 @@ class PulseMonitor:
         record = device.record
         replaced: list[float] = record["replaced"]
         if replaced and now - replaced[-1] < 6 * 3600 and source != "manual":
-            return  # derselbe Wechsel meldet sich über mehrere Werte
-        # Mitteilung nur, wenn der Wechsel etwas behoben hat: Problem oder schwache Batterie vorher
+            return  # the same change reports through several values
+        # Notification only if the change fixed something: problem or low battery before
         last_level = record.get("last_level")
         worth_push = device.problem or (last_level is not None and last_level <= batt.LEVEL_SOON)
         sources: list[str] = record.setdefault("replaced_source", [])
@@ -1073,9 +1097,9 @@ class PulseMonitor:
         del replaced[:-20]
         del sources[:-20]
         device.record["snooze_until"] = None
-        # Neue Batterie: die alte Vorhersage gilt nicht mehr (raus aus der Einkaufsliste), neu ab dem nächsten Tageslauf
+        # New battery: the old forecast no longer applies (off the shopping list), new from the next daily run
         device.forecast, device.forecast_reason = None, "too_short"
-        # Für „Rückgängig“: was schon gemeldet war, sonst käme nach dem Zurücknehmen dieselbe Mitteilung
+        # For "Rückgängig" (undo): what was already reported, otherwise undoing would bring the same notification
         record["notified_before_replace"] = record.get("notified")
         if source != "manual":
             merge_event(device.record["events"], now, None, MAX_EVENTS)
@@ -1089,7 +1113,7 @@ class PulseMonitor:
         self.async_update()
 
     def undo_replaced(self, device_id: str) -> bool:
-        """Letzten Wechsel zurücknehmen (Rückgängig im Panel) – nur einen frischen (< 1 Std.)."""
+        """Undo the last change ("Rückgängig" in the panel); only a recent one (< 1 h)."""
         device = self.devices.get(device_id)
         if device is None:
             return False
@@ -1100,7 +1124,7 @@ class PulseMonitor:
         sources: list[str] = device.record.get("replaced_source") or []
         source = sources.pop() if sources else "manual"
         if source != "manual":
-            # Automatisch erkannte Wechsel trugen den Zeitpunkt als Meldung ein (`mark_replaced`), auch die weg
+            # Automatically detected changes recorded the time as a report (`mark_replaced`); remove that too
             events: list[float] = device.record["events"]
             idx = bisect_left(events, ts)
             if idx < len(events) and events[idx] == ts:
@@ -1125,7 +1149,7 @@ class PulseMonitor:
             return
         device.record["ignored"] = ignored
         device.evaluated = False
-        device.baseline = False  # wieder beobachtet: der erste Status ist kein Wechsel
+        device.baseline = False  # observed again: the first status is no transition
         self._evaluate(device, time.time(), announce=False)
         self.store.async_delay_save()
         async_dispatcher_send(self.hass, SIGNAL_NEW_DEVICES, [device_id])
@@ -1145,7 +1169,7 @@ class PulseMonitor:
         self.store.async_delay_save()
         self.async_update()
 
-    # ── Für Panel und Entitäten ──────────────────────────────────────────
+    # ── For panel and entities ───────────────────────────────────────────
 
     @callback
     def async_update(self) -> None:
@@ -1164,7 +1188,7 @@ class PulseMonitor:
 
     @staticmethod
     def day_starts() -> list[float]:
-        """Lokale Mitternächte des Fensters plus Ende von heute (Tage mit Zeitumstellung sind kürzer/länger)."""
+        """Local midnights of the window plus end of today (days with a DST change are shorter/longer)."""
         today = dt_util.now().date()
         return [
             dt_util.start_of_local_day(today - timedelta(days=STRIP_DAYS - 1 - i)).timestamp()
@@ -1184,7 +1208,7 @@ class PulseMonitor:
         )
 
     def heartbeats(self, device_ids: list[str]) -> dict[str, Any]:
-        """Herzschlag-Kalender (Meldungen je 15 min, 7 Tage) für die angefragten Geräte."""
+        """Heartbeat calendar (reports per 15 min, 7 days) for the requested devices."""
         now = time.time()
         starts = self.day_starts()
         day_start = starts[0]
@@ -1213,10 +1237,10 @@ class PulseMonitor:
         }
 
     def no_data(self, day_start: float, now: float) -> list[list[float]]:
-        """Zeiten im 7-Tage-Fenster, in denen Pulse keine Daten hatte (HA lief nicht).
+        """Times in the 7-day window when Pulse had no data (HA was not running).
 
-        Höchstens einmal je Minute gerechnet – der Snapshot fragt bei jeder Änderung. Die Meldungen braucht es
-        nur für die Zeit vor der ersten eigenen Laufzeit (die ersten 7 Tage nach der Einrichtung).
+        Calculated at most once per minute; the snapshot asks on every change. The reports are only
+        needed for the time before the first own uptime (the first 7 days after setup).
         """
         key = (day_start, int(now // 60), len(self.store.uptime))
         if self._no_data_cache is not None and self._no_data_cache[0] == key:
@@ -1243,7 +1267,7 @@ class PulseMonitor:
         return snapshot(self, language)
 
     def snapshot_cached(self, language: str | None = None) -> dict[str, Any]:
-        """Snapshot einmal je Update und Sprache – mehrere offene Panels bauen ihn nicht mehrfach."""
+        """Snapshot once per update and language, so several open panels do not build it repeatedly."""
         cached = self._snapshots.get(language)
         if cached is not None and cached[0] == self._generation:
             return cached[1]
@@ -1260,7 +1284,7 @@ class PulseMonitor:
         self.async_update()
 
     async def async_enable_z2m_health(self) -> None:
-        """Health-Prüfung der Bridge einschalten (nur nach Rückfrage im Panel)."""
+        """Enable the bridge health check (only after confirmation in the panel)."""
         if self.z2m is None:
             raise ValueError("no_z2m")
         await self.z2m.async_enable_health()

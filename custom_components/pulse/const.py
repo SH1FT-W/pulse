@@ -1,4 +1,4 @@
-"""Konstanten für Pulse."""
+"""Constants for Pulse."""
 
 from __future__ import annotations
 
@@ -12,22 +12,22 @@ PLATFORMS: Final = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 STORE_KEY: Final = "pulse.devices"
 STORE_VERSION: Final = 1
-# 2: Laufzeit (uptime), 3: Quelle je Batteriewechsel, Fehl-Wechsel verworfen, 4: Volt → mV, Heimkommen als Liste,
-# 5: Tag der Zusammenfassung (summary_sent/summary_pending), 6: verworfene Partner-Vorschläge, Batterie fehlt seit,
-# Cloud-Ausfall gemeldet, Z2M-Health angefragt
-STORE_MINOR: Final = 6
+# 2: uptime, 3: source per battery change, false changes dropped, 4: volts → mV, arrive home as a list,
+# 5: summary day (summary_sent/summary_pending), 6: dismissed partner suggestions, battery missing since,
+# cloud outage reported, Z2M health requested, 7: restart echoes dropped, cloud reports rebuilt
+STORE_MINOR: Final = 7
 
-# Dispatcher: etwas hat sich geändert (Panel neu senden, Entitäten aktualisieren)
+# Dispatcher: something changed (resend the panel, update entities)
 SIGNAL_UPDATE: Final = "pulse_update"
-# Neue überwachte Geräte (Plattformen legen ihre Entitäten an)
+# Newly monitored devices (platforms create their entities)
 SIGNAL_NEW_DEVICES: Final = "pulse_new_devices"
-# Geräte nicht mehr überwacht (Plattformen vergessen sie, damit sie bei Rückkehr neu entstehen)
+# Devices no longer monitored (platforms forget them so they are recreated when they return)
 SIGNAL_REMOVED_DEVICES: Final = "pulse_removed_devices"
 
 EVENT_STATUS_CHANGED: Final = "pulse_device_status_changed"
 EVENT_BATTERY_REPLACED: Final = "pulse_battery_replaced"
 
-# Status, sortiert nach Ernst
+# Status, sorted by severity
 STATUS_OK: Final = "ok"
 STATUS_LEARNING: Final = "learning"
 STATUS_WATCH: Final = "watch"
@@ -36,33 +36,33 @@ STATUS_FAILED: Final = "failed"
 STATUSES: Final = [STATUS_OK, STATUS_LEARNING, STATUS_WATCH, STATUS_CHECK, STATUS_FAILED]
 SEVERITY: Final = {STATUS_OK: 0, STATUS_LEARNING: 0, STATUS_WATCH: 1, STATUS_CHECK: 2, STATUS_FAILED: 3}
 
-# Wie weit Pulse zurückschaut (Lernen) und was die Rhythmusleiste zeigt
+# How far back Pulse looks (learning) and what the rhythm bar shows
 HISTORY_DAYS: Final = 10
 KEEP_DAYS: Final = 14
 STRIP_DAYS: Final = 7
 STRIP_BUCKET_HOURS: Final = 2
-# Herzschlag-Kalender im Gerätedetail: Meldungen je 15 Minuten (nur auf Anfrage, zwischengespeichert)
+# Heartbeat calendar in the device detail: reports per 15 minutes (on request only, cached)
 HEARTBEAT_MINUTES: Final = 15
-# Meldungen, die so dicht aufeinander folgen, zählen als eine (eine Funknachricht ändert mehrere Entitäten)
+# Reports this close together count as one (one radio message changes several entities)
 MERGE_SECONDS: Final = 5.0
-# Gespeicherte Meldungen je Gerät; gesprächige Geräte werden auf eine je THIN_SECONDS ausgedünnt (7 Tage passen)
+# Stored reports per device; chatty devices are thinned to one per THIN_SECONDS (7 days fit)
 MAX_EVENTS: Final = 6000
 THIN_SECONDS: Final = 120.0
-# Rhythmusleiste: Fenster je Kalendertag (2 Stunden, an Tagen mit Zeitumstellung etwas mehr/weniger)
+# Rhythm bar: windows per calendar day (2 hours, slightly more/less on DST change days)
 STRIP_PER_DAY: Final = 12
 
 TICK: Final = timedelta(seconds=60)
-# Nach einem Neustart der Zigbee2MQTT-Bridge schickt sie alte Werte noch einmal – die zählen nicht.
-# Das zweite Echo kam in Prod bis zu 142 s nach „unknown“, daher großzügig.
+# After a restart the Zigbee2MQTT bridge resends old values; those do not count.
+# In prod the second echo came up to 142 s after "unknown", hence generous.
 ECHO_WINDOW: Final = timedelta(seconds=180)
 
 Z2M_BASE: Final = "zigbee2mqtt"
 
-# Integrationen und Gerätearten, die keine Sensoren mit Batterie im Sinne von Pulse sind
+# Integrations and device kinds that are not battery sensors in Pulse's sense
 EXCLUDED_PLATFORMS: Final = {"mobile_app", DOMAIN}
 EXCLUDED_DOMAINS: Final = {"vacuum", "media_player", "lawn_mower", "device_tracker"}
 EXCLUDED_SENSOR_CLASSES: Final = {"power", "energy", "energy_storage"}
-# Funk-Brücken mit vielen fremden Geräten in einem Eintrag: ein Mediaplayer dort sagt nichts über die übrigen Geräte
+# Radio bridges with many unrelated devices in one entry: a media player there says nothing about the other devices
 HUB_PLATFORMS: Final = {
     "mqtt",
     "zha",
@@ -83,8 +83,8 @@ HUB_PLATFORMS: Final = {
     "fritz",
     "fritzbox",
 }
-# Cloud-Integrationen mit Abfragetakt: ihr Takt ist der der Cloud, nicht der des Geräts. Fallen mehrere Geräte
-# derselben Cloud gleichzeitig aus, ist es die Cloud (ein Sammelgrund statt vieler Ausfälle).
+# Polling cloud integrations: their rhythm is the cloud's, not the device's. If several devices of the
+# same cloud drop out at once, it is the cloud (one collective reason instead of many outages).
 CLOUD_INTEGRATIONS: Final = frozenset(
     {
         "netatmo",
@@ -118,12 +118,12 @@ CLOUD_INTEGRATIONS: Final = frozenset(
         "plugwise_cloud",
     }
 )
-# Diese Domänen sagen nichts darüber, ob das Gerät funkt
+# These domains say nothing about whether the device is transmitting
 INACTIVE_DOMAINS: Final = {"update", "button", "scene", "text", "image"}
-# Wichtige Geräte: strengere Grenzen, sofortige (auf Wunsch kritische) Mitteilung
+# Important devices: stricter limits, immediate (optionally critical) notification
 CRITICAL_BINARY_CLASSES: Final = {"moisture", "smoke", "gas", "carbon_monoxide", "safety"}
 
-# Mitteilungs-Stufen
+# Notification levels
 NOTIFY_NOW: Final = "now"
 NOTIFY_DAILY: Final = "daily"
 NOTIFY_OFF: Final = "off"
@@ -132,19 +132,19 @@ ACTION_REPLACED: Final = "PULSE_REPLACED"
 ACTION_LATER: Final = "PULSE_LATER"
 
 DEFAULT_SETTINGS: Final[dict[str, Any]] = {
-    "targets": None,  # None = alle mobile_app-Dienste
+    "targets": None,  # None = all mobile_app services
     "levels": {"failed": NOTIFY_NOW, "check": NOTIFY_DAILY, "battery": NOTIFY_DAILY},
     "summary_time": "18:00",
     "quiet": {"enabled": True, "start": "22:00", "end": "07:30"},
     "critical_alerts": True,
-    "arrive_home": {"enabled": False, "persons": []},  # erst zustellen, wenn eine der Personen zu Hause ist
+    "arrive_home": {"enabled": False, "persons": []},  # deliver only once one of the persons is home
     "recovered": True,
     "z2m_base": Z2M_BASE,
 }
 
-# Begründungen, die von der Stufe „Batterie“ (statt „Prüfen“) gemeldet werden
+# Reasons reported by the "Batterie" (battery) level instead of "Prüfen" (check)
 BATTERY_REASONS: Final = frozenset({"battery_low", "battery_low_flag"})
-# Begründungen, die „still/weg“ bedeuten (Sturm-Bremse: Bridge/Hub; Cloud-Sammelgrund)
+# Reasons that mean "silent/gone" (storm brake: bridge/hub; cloud collective reason)
 SILENT_REASONS: Final = frozenset({"silent", "silent_new", "unavailable"})
-# „Später“ höchstens ein Jahr (sonst landen unendliche Zeitstempel in den Entitäten)
+# "Später" (later) at most one year (otherwise infinite timestamps end up in the entities)
 SNOOZE_MAX_HOURS: Final = 8760

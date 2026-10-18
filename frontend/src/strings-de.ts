@@ -269,6 +269,7 @@ export const DE: Record<keyof typeof EN, string> = {
   dh_startup: 'Seit dem Neustart noch keine Meldung.',
   dh_radio_only: 'Funkt ohne Werte.',
   dh_battery_missing: 'Batteriestand fehlt.',
+  dh_unused: 'Länger nicht benutzt.',
   forecast_too_short: 'Für eine Vorhersage noch zu kurz beobachtet',
   forecast_flat: 'Prozent ändert sich kaum – noch keine Vorhersage',
   forecast_coarse: 'Meldet nur grobe Stufen – keine Vorhersage',
@@ -323,5 +324,14 @@ export const DE: Record<keyof typeof EN, string> = {
   new_calver_title: 'Neue Versionsnummern',
   new_calver_text:
     'Ab jetzt lesen sich Versionen als Jahr.Monat.Release: 26.10.4 ist das vierte Release im Oktober 2026. Der Sprung von 1.1.0 ist gewollt – Updates werden wie gewohnt erkannt.',
+  new_reachable_title: 'Erreichbar heißt in Ordnung',
+  new_reachable_text:
+    'Bei Matter-Geräten und Cloud-Geräten mit Erreichbarkeits-Sensor (z. B. Netatmo) fragt Pulse jetzt die Integration. Ein selten benutztes Schloss oder ein Regenmesser bei Trockenheit gilt nicht mehr als ungewohnt still.',
+  new_restart_title: 'Neustarts täuschen nicht mehr',
+  new_restart_text:
+    'Nach einem Neustart von Home Assistant sah ein stilles Gerät kurz wieder lebendig aus. Diese Scheinmeldungen zählen nicht mehr.',
+  new_sheet_title: 'Einstellungen im Blick',
+  new_sheet_text:
+    'Klappst du im Gerätedetail die Einstellungen auf, wächst das Fenster mit und zeigt sie gleich an.',
   due_untyped: 'Typ offen: {names}',
 };

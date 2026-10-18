@@ -2,9 +2,11 @@
 
 After 1.1.0, releases use calendar versions `YY.M.N` (year, month, number of the release in that month), e.g. `26.10.4`. They count as newer than every 1.x version, so updates through HACS work as before.
 
-## Unreleased
+## 26.10.5 – 2026-10-18
 
 ### Changed
+- Devices whose integration knows if they are reachable (Matter devices and cloud devices with a connectivity sensor, e.g. Netatmo) are no longer judged by silence. A lock that is only used now and then, or a rain gauge on a dry day, stays *OK* as long as the integration reports it reachable; after a week without use it becomes *Watch* ("not used"). When the integration loses the device, Pulse reports it as unreachable as before.
+- The device sheet grows smoothly when *Settings* are opened (where the browser supports it), scrolls them into view and may be taller on large screens.
 - Devices without a learned rhythm (they only report on actions) become *Watch* after two days of silence and *Check* only after a week. They no longer show up in the daily summary after two quiet days; the README and the panel's learning hint say so.
 - `sensor.<device>_pulse_last_report` is disabled by default: every report would be a recorder row. Enable it in the entity settings if an automation needs it.
 - Stored data is written far less often: the uptime stamp is saved every five minutes instead of every minute, new reports wait ten minutes, settings and actions one minute. Stopping still saves immediately.
@@ -14,6 +16,8 @@ After 1.1.0, releases use calendar versions `YY.M.N` (year, month, number of the
 - Log messages are in English.
 
 ### Fixed
+- After every Home Assistant restart, the state rows HA rewrites on start were read back from the recorder as reports, so a silent device looked alive again ("last report" at the restart time). They are ignored now, and stored ones are removed once.
+- Cloud devices still carried the reports of every cloud poll from before 1.1, so Pulse expected a report every few minutes (a Netatmo rain gauge went to *Watch* within an hour without rain). Their reports are rebuilt once from real value changes.
 - `pulse_device_status_changed` fired for the first evaluation after a start when the recorder history changed the verdict.
 - A battery or "battery low" entity provided by another integration (for example a template sensor) counted as a sign of life.
 - Undoing an automatically detected battery change did not remove the report that had been inserted with it.

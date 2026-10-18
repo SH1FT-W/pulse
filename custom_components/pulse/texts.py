@@ -1,6 +1,6 @@
-"""Sätze für Begründungen und Mitteilungen (Deutsch/Englisch) – ohne HA-Abhängigkeit.
+"""Sentences for reasons and notifications (German/English), without HA dependency.
 
-Begründungen entstehen im Server, damit Panel, Mitteilung und Reparatur-Hinweis dasselbe sagen.
+Reasons are built on the server so panel, notification and repair issue say the same thing.
 """
 
 from __future__ import annotations
@@ -17,6 +17,7 @@ TEXTS: dict[str, dict[str, str]] = {
         "battery_missing": "Seit {since} kein Batteriewert, das Gerät meldet sich aber.",
         "cloud_outage": "{integration}: {count} Geräte gleichzeitig still, vermutlich die Cloud.",
         "silent_new": "Seit über {since} keine Meldung.",
+        "silent_reachable": "Seit {since} nicht benutzt, laut {via} aber erreichbar.",
         "unavailable": "Seit {since} nicht erreichbar.",
         "partner": "{partner} war {count}× aktiv, {name} hat sich seitdem nicht gemeldet.",
         "battery_low": "Batterie fast leer ({level} %).",
@@ -25,6 +26,7 @@ TEXTS: dict[str, dict[str, str]] = {
         "waiting_first": "Batterie gewechselt, wartet auf die erste Meldung.",
         "learning": "Lernt noch, wie oft sich das Gerät meldet.",
         "ok_rhythm": "Meldet sich wie gewohnt, etwa {every}.",
+        "ok_reachable": "Laut {via} erreichbar. Stille heißt hier nur: gerade nicht benutzt.",
         "every_minutes": "alle {n} Minuten",
         "every_minute": "jede Minute",
         "every_hours": "alle {n} Stunden",
@@ -37,7 +39,7 @@ TEXTS: dict[str, dict[str, str]] = {
         "since_hour": "einer Stunde",
         "since_days": "{n} Tagen",
         "since_day": "einem Tag",
-        # Mitteilungen
+        # Notifications
         "push_failed": "{name} antwortet nicht",
         "push_check": "{name} prüfen",
         "push_battery": "{name}: Batterie fast leer",
@@ -70,6 +72,7 @@ TEXTS: dict[str, dict[str, str]] = {
         "battery_missing": "No battery value for {since}, but the device still reports.",
         "cloud_outage": "{integration}: {count} devices went silent at once, probably the cloud.",
         "silent_new": "No report for more than {since}.",
+        "silent_reachable": "Not used for {since}, but {via} reports it as reachable.",
         "unavailable": "Unreachable for {since}.",
         "partner": "{partner} was active {count}×, {name} hasn't reported since.",
         "battery_low": "Battery almost empty ({level}%).",
@@ -78,6 +81,7 @@ TEXTS: dict[str, dict[str, str]] = {
         "waiting_first": "Battery replaced, waiting for the first report.",
         "learning": "Still learning how often this device reports.",
         "ok_rhythm": "Reporting as usual, about {every}.",
+        "ok_reachable": "Reachable according to {via}. Silence here only means it is not in use.",
         "every_minutes": "every {n} minutes",
         "every_minute": "every minute",
         "every_hours": "every {n} hours",
@@ -126,7 +130,7 @@ def text(language: str | None, key: str, **params: Any) -> str:
 
 
 def _unit(seconds: float) -> tuple[str, int]:
-    # Grenzen nach dem Runden: 59,6 Minuten sind „1 Stunde“, nicht „60 Minuten“
+    # Limits after rounding: 59.6 minutes are "1 Stunde" (1 hour), not "60 Minuten" (60 minutes)
     if round(seconds / 60) < 60:
         return "minute", max(1, round(seconds / 60))
     if round(seconds / 3600) < 48:
@@ -145,11 +149,11 @@ def since(language: str | None, seconds: float) -> str:
 
 
 def reason_text(language: str | None, reason: Mapping[str, Any]) -> str:
-    """Begründung (Schlüssel + Werte) als Satz."""
+    """Reason (key + values) as a sentence."""
     key = str(reason["key"])
     params: dict[str, Any] = dict(reason.get("params", {}))
     if key == "silent" and params.get("strays") and "last" in params:
-        key = "silent_strays"  # gleicher Grund, nur genauer: ein sterbender Sensor meldet sich vereinzelt
+        key = "silent_strays"  # same reason, just more precise: a dying sensor reports sporadically
     for name in ("since", "every", "last"):
         if name in params and isinstance(params[name], int | float):
             params[name] = (every if name == "every" else since)(language, float(params[name]))
