@@ -8,6 +8,10 @@
 # --pre. Bloße Git-Tags ohne Release zählen nicht. Gibt es schon Releases
 # YY.M.k, zählt zusätzlich das höchste k. Ohne Release im Monat ist N = 1.
 # Damit die Zählung stimmt, jedes Release als GitHub-Release veröffentlichen.
+# Nie eine Nummer überspringen: lokale Stände (Kopie nach Prod zum Ausprobieren,
+# auch drei-, viermal hintereinander) bekommen keine eigene Nummer, die
+# Versionsdatei bleibt auf der nächsten Release-Nummer. Erst das Release
+# vergibt genau die Zahl, die dieses Skript nennt (nicht von Hand hochzählen).
 # Ist gh nicht erreichbar: Warnung und Rückfall auf die Git-Tags des Monats.
 # Schutz gegen doppelte Nummern: steht in der Versionsdatei (--file) schon
 # YY.M.k des laufenden Monats, ist N mindestens k (ein schon veröffentlichtes k
