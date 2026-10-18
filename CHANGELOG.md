@@ -2,6 +2,11 @@
 
 After 1.1.0, releases use calendar versions `YY.M.N` (year, month, number of the release in that month), e.g. `26.10.4`. They count as newer than every 1.x version, so updates through HACS work as before.
 
+## 26.10.6 – 2026-10-18
+
+### Changed
+- Devices that their integration reports as reachable (Matter, cloud connectivity sensor) are never judged by silence anymore, not even after a week. A leak sensor without water has nothing to report, so 26.10.5's *Watch* ("not used") after seven days was wrong. Such devices are *OK*, also before Pulse has learned a rhythm; an outage still shows as unreachable.
+
 ## 26.10.5 – 2026-10-18
 
 ### Changed

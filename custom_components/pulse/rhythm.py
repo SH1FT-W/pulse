@@ -47,10 +47,6 @@ BATTERY_MISSING_AFTER = DAY
 SILENT_NEW_WATCH = 2 * DAY
 SILENT_NEW_CHECK = 7 * DAY
 
-# Reachability comes from the integration (Matter subscription, cloud "reachable" flag): silence then only means
-# "not used" (a lock during vacation, a rain gauge in dry weather); only after a week "im Blick" (watch), never more
-REACHABLE_QUIET = 7 * DAY
-
 # On start HA rewrites every state; in the recorder this row looks like a report. The first row of an
 # entity in this window around an HA start (after a row before it) is no sign of life.
 RESTART_BEFORE = 2 * MINUTE
@@ -286,7 +282,7 @@ def evaluate(facts: Facts) -> Verdict:
     """Status with reason. The worst finding wins."""
     now = facts.now
     rhythm = facts.rhythm
-    if rhythm.known and facts.reachable:
+    if facts.reachable:
         verdict = Verdict(STATUS_OK, {"key": "ok_reachable", "params": {"via": facts.reachable}})
     elif rhythm.known:
         verdict = Verdict(STATUS_OK, {"key": "ok_rhythm", "params": {"every": rhythm.typical}})
@@ -316,16 +312,10 @@ def evaluate(facts: Facts) -> Verdict:
     elif facts.observed_since is not None:
         observed = now - facts.observed_since
         silent = _silent_new(observed, observed - facts.downtime)
-    if silent is not None and facts.reachable:
-        # The integration sees the device: silence here means "not used", not an outage
-        since = silent.reason["params"]["since"]
-        quiet = since - facts.downtime
-        silent = (
-            Verdict(STATUS_WATCH, {"key": "silent_reachable", "params": {"since": since, "via": facts.reachable}})
-            if quiet >= REACHABLE_QUIET
-            else None
-        )
-        waiting = False
+    if facts.reachable:
+        # The integration sees the device (Matter subscription, cloud "reachable" flag): silence only means it had
+        # nothing to report (a leak sensor without water, a lock during vacation), an outage shows as unavailable
+        silent, waiting = None, False
     if (
         silent is not None
         and facts.radio_last is not None

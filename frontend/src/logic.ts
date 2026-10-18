@@ -876,8 +876,6 @@ export function detailHeadline(
     return { text: t(language, 'dh_radio_only'), tone: tone(device.status) };
   if (key === 'battery_missing')
     return { text: t(language, 'dh_battery_missing'), tone: tone(device.status) };
-  if (key === 'silent_reachable')
-    return { text: t(language, 'dh_unused'), tone: tone(device.status) };
   if (key === 'unavailable')
     return { text: t(language, 'dh_unavailable'), tone: tone(device.status) };
   if (key === 'partner') return { text: t(language, 'dh_partner'), tone: tone(device.status) };

@@ -12,7 +12,6 @@ from common import add_device, seed, tick
 from custom_components.pulse.history import real_reports
 from custom_components.pulse.monitor import PulseMonitor
 from custom_components.pulse.rhythm import (
-    REACHABLE_QUIET,
     RESTART_AFTER,
     Facts,
     Rhythm,
@@ -69,21 +68,17 @@ def test_reachable_device_is_only_unused_never_silent():
     # A quiet morning or a weekend away: still fine
     weekend = evaluate(_facts(last_activity=now - 3 * DAY, reachable="Matter"))
     assert weekend.reason["key"] == "ok_reachable"
-    # A week without use: only "watch", never more
-    unused = evaluate(_facts(last_activity=now - REACHABLE_QUIET - HOUR, reachable="Matter"))
-    assert (unused.status, unused.reason["key"]) == ("watch", "silent_reachable")
-    assert reason_text("de", unused.reason) == "Seit 7 Tagen nicht benutzt, laut Matter aber erreichbar."
-    # HA downtime does not count towards the week
-    paused = evaluate(_facts(last_activity=now - REACHABLE_QUIET - HOUR, downtime=2 * HOUR, reachable="Matter"))
-    assert paused.reason["key"] == "ok_reachable"
+    # A leak sensor without water for weeks: still fine, also with HA downtime in between
+    quiet = evaluate(_facts(last_activity=now - 25 * DAY, downtime=2 * HOUR, reachable="Matter"))
+    assert (quiet.status, quiet.reason["key"]) == ("ok", "ok_reachable")
     # Not reachable: the learned rhythm applies as before
     silent = evaluate(_facts(last_activity=now - 14 * HOUR))
     assert (silent.status, silent.reason["key"]) == ("check", "silent")
-    # Without a learned rhythm the reachable device is learning, not silent
+    # Without a learned rhythm the reachable device is fine as well
     learning = evaluate(
         Facts(now=now, last_activity=None, rhythm=Rhythm(None, None, 0), observed_since=now - 3 * DAY, reachable="X")
     )
-    assert learning.status == "learning"
+    assert (learning.status, learning.reason["key"]) == ("ok", "ok_reachable")
     assert reason_text("en", fine.reason).startswith("Reachable according to Matter.")
 
 
