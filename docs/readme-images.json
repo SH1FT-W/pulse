@@ -1,0 +1,37 @@
+{
+  "$comment": "Content of the README pictures. Render with sh1ft-w.github.io/theme/v1/readme-images (node render.mjs <this repo>).",
+  "title": {
+    "name": "Pulse",
+    "eyebrow": "For Home Assistant",
+    "lead": "Every sensor has a <em>rhythm.</em>",
+    "sub": "Pulse learns how often each battery device reports and notices when one goes quiet. It only listens, never polls.",
+    "pills": [["Listens, never polls"], ["Platinum", "v"], ["HACS"]],
+    "logo": "docs/images/logo.png",
+    "shot": { "light": "docs/images/overview-light.png", "dark": "docs/images/overview-dark.png", "srcW": 2560, "winW": 1700, "s": 0.576,
+      "strips": [[0, 1000]], "bar": "Home Assistant › Pulse", "left": 600, "top": 96 }
+  },
+  "colors": {
+    "light": { "bg": "#FAFAFC", "bg2": "#F2F1F7", "ink": "#141320", "ink2": "#4E4C5E", "ink3": "#7A7890", "accentText": "#5A4AE6", "accent": "#6D5DFC", "accent2": "#A78BFA",
+      "glow1": "rgba(109,93,252,0.18)", "glow2": "rgba(167,139,250,0.18)", "frame": "rgba(20,19,32,0.10)", "pillBg": "#ffffff", "pillLine": "rgba(20,19,32,0.08)", "win": "#ffffff", "bar": "linear-gradient(#fff, #F3F1FA)" },
+    "dark": { "bg": "#0E0D14", "bg2": "#15131E", "ink": "#F3F1FA", "ink2": "rgba(243,241,250,0.78)", "ink3": "rgba(243,241,250,0.5)", "accentText": "#B8A8FF", "accent": "#8B7CFF", "accent2": "#B8A8FF",
+      "glow1": "rgba(139,124,255,0.22)", "glow2": "rgba(184,168,255,0.14)", "frame": "rgba(255,255,255,0.10)", "pillBg": "rgba(255,255,255,0.06)", "pillLine": "rgba(255,255,255,0.10)", "win": "#1A1826", "bar": "linear-gradient(#211E30, #1A1826)" }
+  },
+  "cards": {
+    "new": [
+      { "icon": "battery-clock-outline", "title": "Battery forecast", "ver": "1.1.0", "text": "From Home Assistant's long-term statistics Pulse estimates how long a battery will last, as a rough range. The battery card lists what is due in the next eight weeks." },
+      { "icon": "radio-tower", "title": "Radio, but no values", "ver": "1.1.0", "text": "With Zigbee2MQTT's health check Pulse notices devices that still talk to the network but no longer send readings. At most Check, never Failed." },
+      { "icon": "weather-cloudy-alert", "title": "Cloud outages stay calm", "ver": "1.1.0", "text": "When several devices of one cloud integration go quiet together, that is the cloud, not the batteries. One message instead of an alarm per device." },
+      { "icon": "link-variant", "title": "Partner suggestions", "ver": "1.1.0", "text": "Devices that were active together on several days, such as a lock and its door contact, show up in the device sheet. Accept them and Pulse cross-checks." },
+      { "icon": "battery-unknown", "title": "Missing battery entity", "ver": "1.1.0", "text": "A battery sensor unavailable for a day while the rest keeps reporting gets its own reason. A device's own battery low sensor wins over a fine-looking percentage." },
+      { "icon": "calendar-outline", "title": "New version numbers", "ver": "26.10.4", "text": "Versions read year.month.release: 26.10.4 is the fourth release of October 2026. The jump from 1.1.0 is intended, HACS finds updates as usual." }
+    ],
+    "notify": [
+      { "icon": "bell-ring-outline", "title": "Levels", "text": "Failed, Check and Battery each go right away, in the daily summary, or not at all. Important devices send Check right away." },
+      { "icon": "weather-night", "title": "Quiet hours and at home", "text": "Notifications wait for quiet hours and for someone to come home. Only the latest message per device is kept; a device that failed and recovered at night sends nothing." },
+      { "icon": "alert-decagram-outline", "title": "Critical alerts", "text": "Break through Do Not Disturb when an important device fails. iOS needs permission for critical alerts, Android uses the alarm channel." },
+      { "icon": "gesture-tap-button", "title": "Buttons that work", "text": "Battery replaced records a replacement, Remind tomorrow stays quiet for 24 hours. Right in the notification, for everyone." },
+      { "icon": "cloud-alert-outline", "title": "One message for an outage", "text": "Three or more devices silent in the same minute is a hub or bridge, not the batteries: one calm message naming them. The same for a cloud outage." },
+      { "icon": "cart-outline", "title": "Batteries to buy", "text": "The daily summary mentions batteries forecast to run out in the next eight weeks. It only goes out because of a battery when one is due now." }
+    ]
+  }
+}
