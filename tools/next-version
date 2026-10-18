@@ -13,8 +13,8 @@
 # YY.M.k des laufenden Monats, ist N mindestens k (ein schon veröffentlichtes k
 # zählt ohnehin über die Releases mit).
 #
-# Gemeinsame Fassung für alle SH1FT-W-Repos (Quelle: mac-werkzeuge/vorlagen/next-version,
-# in jedem Repo als tools/next-version byteidentisch; Abgleich: mac-werkzeuge/vorlagen/abgleich.sh).
+# Gemeinsame Fassung für alle SH1FT-W-Repos (Quelle: repo-vorlagen/vorlagen/next-version,
+# in jedem Repo als tools/next-version byteidentisch; Abgleich: repo-vorlagen/vorlagen/abgleich.sh).
 # Versionsdatei ohne --file automatisch: custom_components/*/manifest.json, sonst
 # frontend/package.json bzw. package.json, sonst Info.plist (Apps nutzen Präfix "v" per --prefix).
 # Aufruf:  next-version [--prefix P] [--file F] [--app] [--pre] [--tag] [--month YYYY-MM] [--no-fetch]

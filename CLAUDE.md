@@ -142,7 +142,7 @@ Panel-Version kommt aus `manifest.json` (vite.config) – nach dem Versionssprun
 - **Kalender-Versionen `YY.M.N`** ab dem Release nach 1.1.0: Jahr zweistellig, Monat ohne führende Null, N = laufende
   Nummer des Releases im Monat ab 1 (alle veröffentlichten GitHub-Releases des Monats zählen, auch alte X.Y.Z; bloße Tags nicht). Jedes Release – Funktion
   oder Bugfix – bekommt einfach die nächste Nummer, kein Major/Minor/Patch mehr. Nummer: `tools/next-version`
-  (z. B. `26.10.4`; neuer Monat beginnt wieder bei `.1`; gemeinsame Vorlage aus mac-werkzeuge, byteidentisch).
+  (z. B. `26.10.4`; neuer Monat beginnt wieder bei `.1`; gemeinsame Vorlage aus repo-vorlagen, byteidentisch).
   Nie führende Nullen (`26.3.1`, nicht `26.03.1`).
 - Version gleich in `custom_components/pulse/manifest.json` und `frontend/package.json`, Panel danach neu bauen
   (Version kommt über vite.config ins Panel), CHANGELOG-Abschnitt `## <version> – <datum>`, WHATS_NEW in

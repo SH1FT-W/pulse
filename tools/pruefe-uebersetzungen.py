@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Prüft, dass strings.json und alle translations/*.json dieselben Schlüssel haben
-und dass Platzhalter {x} in jeder Sprache gleich sind. Vorlage aus mac-werkzeuge/vorlagen.
+und dass Platzhalter {x} in jeder Sprache gleich sind. Vorlage aus repo-vorlagen/vorlagen.
 Aufruf im Repo-Wurzelverzeichnis: python tools/pruefe-uebersetzungen.py"""
 
 from __future__ import annotations
