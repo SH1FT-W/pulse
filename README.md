@@ -1,13 +1,11 @@
 <div align="center">
 
-<img src="docs/images/logo.png" width="96" alt="Pulse icon" />
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme-title-dark.png" />
+  <img src="docs/images/readme-title-light.png" alt="Pulse: Every sensor has a rhythm. The overview saying 3 devices need you, 7 of 10 in rhythm, with a rhythm strip per device." />
+</picture>
 
-<h1>Pulse</h1>
-
-<p><sub><b>FOR HOME ASSISTANT</b></sub></p>
-
-<p><b>Every sensor has a rhythm.</b><br/>
-Pulse learns how often each battery device reports and notices when one goes quiet.<br/>
+<p>Pulse learns how often each battery device reports and notices when one goes quiet.<br/>
 It only listens, never polls. No battery wasted, no automation left guessing.</p>
 
 [![Version](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2FSH1FT-W%2Fpulse%2Fmain%2Fcustom_components%2Fpulse%2Fmanifest.json&query=%24.version&label=version&style=flat-square&color=6D5DFC&labelColor=0E0D14)](https://github.com/SH1FT-W/pulse/releases/latest)
@@ -17,13 +15,6 @@ It only listens, never polls. No battery wasted, no automation left guessing.</p
 [![License](https://img.shields.io/badge/license-Apache%202.0-6D5DFC?style=flat-square&labelColor=0E0D14)](LICENSE)
 
 <p><a href="https://sh1ft-w.github.io/pulse"><b>Website</b></a> &nbsp;·&nbsp; <a href="#new">New</a> &nbsp;·&nbsp; <a href="#how">How it decides</a> &nbsp;·&nbsp; <a href="#notify">Notifications</a> &nbsp;·&nbsp; <a href="#zigbee">Zigbee</a> &nbsp;·&nbsp; <a href="#automate">Automations</a> &nbsp;·&nbsp; <a href="#install">Install</a> &nbsp;·&nbsp; <a href="CHANGELOG.md">Changelog</a></p>
-
-<br/>
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/images/overview-dark.png" />
-  <img src="docs/images/overview-light.png" alt="The Pulse overview: a big headline saying 3 devices need you, 7 of 10 in rhythm below it, and one rhythm strip per device. A silent aquarium thermometer breaks off into a red dashed line." />
-</picture>
 
 </div>
 
