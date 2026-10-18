@@ -26,14 +26,10 @@ It only listens, never polls. No battery wasted, no automation left guessing.</p
 
 The latest releases teach Pulse to look ahead, to tell a cloud outage from a dead battery, and to count versions by the calendar.
 
-| | |
-|:--|:--|
-| **Battery forecast** <sub>1.1.0</sub> | From Home Assistant's long-term statistics Pulse estimates how long a battery will last, as a rough range such as "about 2 to 5 months". The battery card lists what is due in the next eight weeks, so you know what to buy. Coarse or unreliable levels honestly get no forecast, and the panel says why. |
-| **Radio, but no values** <sub>1.1.0</sub> | With Zigbee2MQTT's health check Pulse notices devices that still talk to the network but no longer send readings. At most *Check*, never *Failed*, and never a sign of life. |
-| **Cloud outages stay calm** <sub>1.1.0</sub> | When several devices of one cloud integration go quiet together, that is the cloud, not the batteries. Pulse shows them as *Watch* and sends one message instead of an alarm per device. |
-| **Partner suggestions** <sub>1.1.0</sub> | Devices that were active together on several days, such as a lock and its door contact, show up in the device sheet. Accept them and Pulse cross-checks: if one keeps reporting and the other falls silent, it notices early. |
-| **Missing battery entity** <sub>1.1.0</sub> | A device whose battery sensor has been unavailable for a day while the rest keeps reporting gets its own reason. And a device's own "battery low" sensor now wins over a percentage that still looks fine. |
-| **New version numbers** <sub>26.10.4</sub> | Versions now read year.month.release: 26.10.4 is the fourth release of October 2026. The jump from 1.1.0 is intended, Home Assistant and HACS find updates as usual. |
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme-cards-new-dark.png" />
+  <img src="docs/images/readme-cards-new-light.png" alt="Battery forecast (1.1.0): from Home Assistant's long-term statistics Pulse estimates how long a battery will last, as a rough range, the battery card lists what is due in the next eight weeks. Radio, but no values (1.1.0): with Zigbee2MQTT's health check Pulse notices devices that still talk to the network but no longer send readings, at most Check, never Failed. Cloud outages stay calm (1.1.0): when several devices of one cloud integration go quiet together, that is the cloud, not the batteries, one message instead of an alarm per device. Partner suggestions (1.1.0): devices that were active together on several days, such as a lock and its door contact, show up in the device sheet, accept them and Pulse cross-checks. Missing battery entity (1.1.0): a battery sensor unavailable for a day while the rest keeps reporting gets its own reason, a device's own battery low sensor wins over a fine-looking percentage. New version numbers (26.10.4): versions read year.month.release, 26.10.4 is the fourth release of October 2026, the jump from 1.1.0 is intended." />
+</picture>
 
 Every change, release by release, in the [changelog](CHANGELOG.md).
 
@@ -51,10 +47,11 @@ Pulse looks at the one thing that never lies: **how often the device talks.** It
 - **10 days** of recorder history are read on the first start. No learning week.
 - **1 click** to set up. Pulse finds every device with a battery sensor itself.
 
-| Device detail | On the phone |
-|:---:|:---:|
-| <img src="docs/images/detail.png" width="420" alt="Device detail: a headline reading Silent for 5 days, the buttons Remind tomorrow and Battery replaced, a heartbeat calendar with one row per day where the silent days are red dashed lines, and the battery with its forecast status." /> | <img src="docs/images/iphone-dark.png" width="300" alt="Pulse on an iPhone in dark mode: the headline, the rhythm strips glowing in the dark, failed devices first." /> |
-| <sub>A headline that puts problems first, a heartbeat calendar per device, the battery with its forecast.</sub> | <sub>On the phone the strips glow in the dark.</sub> |
+<p align="center">
+<img src="docs/images/detail.png" width="46%" alt="Device detail: a headline reading Silent for 5 days, the buttons Remind tomorrow and Battery replaced, a heartbeat calendar with one row per day where the silent days are red dashed lines, and the battery with its forecast status." />
+<img src="docs/images/iphone-dark.png" width="32%" alt="Pulse on an iPhone in dark mode: the headline, the rhythm strips glowing in the dark, failed devices first." />
+<br/><sub>A headline that puts problems first, a heartbeat calendar per device, the battery with its forecast. On the phone the strips glow in the dark.</sub>
+</p>
 
 <br/>
 
@@ -116,13 +113,12 @@ After *Battery replaced* the silence counts from the replacement, and the device
 
 Straight to the Companion app (`notify.mobile_app_*`). Failures right away, the rest in one daily summary, with quiet hours and "only when someone is home". Never the same message twice. As long as you don't change the recipient list, new phones are added automatically.
 
-- **Levels.** *Failed*, *Check* and *Battery* each go right away, in the daily summary, or not at all. Important devices send *Check* right away unless it is off.
-- **Quiet hours and "only when someone is home"** hold notifications back and deliver them afterwards. Only the latest message per device is kept. A device that failed and recovered during the night sends nothing.
-- **Critical alerts** break through Do Not Disturb when an important device fails. On iOS the Companion app needs permission for critical alerts. On Android they use the `alarm_stream` channel.
-- **Buttons** in the notification work for everyone: *Battery replaced* records a replacement, *Remind tomorrow* stays quiet for 24 hours.
-- **One message for an outage.** If three or more devices go silent in the same minute, Pulse sends a single non-critical message naming them, because that is almost always a hub or bridge, not the batteries. The same goes for a cloud outage: one calm message for the integration instead of one alarm per device.
-- **Batteries to buy.** The daily summary mentions batteries that are forecast to run out in the next eight weeks. It only goes out because of a battery when one is due now.
-- **The daily summary** waits for quiet hours and for someone to come home. If Home Assistant was down at summary time, the summary is sent up to two hours late.
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme-cards-notify-dark.png" />
+  <img src="docs/images/readme-cards-notify-light.png" alt="Levels: Failed, Check and Battery each go right away, in the daily summary, or not at all, important devices send Check right away. Quiet hours and at home: notifications wait for quiet hours and for someone to come home, only the latest message per device is kept, a device that failed and recovered at night sends nothing. Critical alerts: break through Do Not Disturb when an important device fails, iOS needs permission for critical alerts, Android uses the alarm channel. Buttons that work: Battery replaced records a replacement, Remind tomorrow stays quiet for 24 hours, right in the notification. One message for an outage: three or more devices silent in the same minute is a hub or bridge, not the batteries, one calm message naming them, the same for a cloud outage. Batteries to buy: the daily summary mentions batteries forecast to run out in the next eight weeks, it only goes out because of a battery when one is due now." />
+</picture>
+
+If Home Assistant was down at summary time, the summary is sent up to two hours late.
 
 <p align="center">
   <img src="docs/images/notifications.png" width="900" alt="Notification settings: recipients, the levels Failed, Check and Battery with Right away or Daily, times for the daily summary and quiet hours, critical alerts, only when someone is home." />
