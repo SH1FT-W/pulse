@@ -71,6 +71,15 @@ def test_reachable_device_is_only_unused_never_silent():
     # A leak sensor without water for weeks: still fine, also with HA downtime in between
     quiet = evaluate(_facts(last_activity=now - 25 * DAY, downtime=2 * HOUR, reachable="Matter"))
     assert (quiet.status, quiet.reason["key"]) == ("ok", "ok_reachable")
+    # Reachable and reporting on its own every half hour (presence sensor): silence still counts, at most check
+    regular = Rhythm(0.5 * HOUR, 0.8 * HOUR, 300)
+    fine_regular = evaluate(Facts(now=now, rhythm=regular, last_activity=now - 0.5 * HOUR, reachable="Matter"))
+    assert (fine_regular.status, fine_regular.reason["key"]) == ("ok", "ok_rhythm")
+    zombie = evaluate(Facts(now=now, rhythm=regular, last_activity=now - 2 * DAY, reachable="Matter"))
+    assert (zombie.status, zombie.reason["key"]) == ("check", "radio_only")
+    early = evaluate(Facts(now=now, rhythm=regular, last_activity=now - 1.5 * HOUR, reachable="Matter"))
+    assert (early.status, early.reason["key"]) == ("watch", "radio_only")
+    assert reason_text("de", zombie.reason) == "Funkt noch, schickt aber seit 2 Tagen keine Werte."
     # Not reachable: the learned rhythm applies as before
     silent = evaluate(_facts(last_activity=now - 14 * HOUR))
     assert (silent.status, silent.reason["key"]) == ("check", "silent")
@@ -120,10 +129,10 @@ async def test_matter_lock_unused_is_fine_until_unavailable(hass: HomeAssistant,
     device = monitor.devices[lock.device_id]
     assert device.spec.reachable_via == "matter"
     assert device.critical
-    seed(monitor, lock.device_id, 3 * HOUR, 60, time.time() - 14 * HOUR)
+    seed(monitor, lock.device_id, 9 * HOUR, 60, time.time() - 14 * HOUR)
     await tick(hass, setup["freezer"], timedelta(minutes=1))
     assert (device.status, device.reason["key"]) == ("ok", "ok_reachable")
-    seed(monitor, lock.device_id, 3 * HOUR, 60, time.time())
+    seed(monitor, lock.device_id, 9 * HOUR, 60, time.time())
     # Matter loses the lock: all entities unavailable → the outage is still noticed
     for entity_id in lock.entities.values():
         hass.states.async_set(entity_id, "unavailable")
@@ -161,7 +170,9 @@ async def test_cloud_connectivity_and_rebuild(hass: HomeAssistant, setup):
     assert device.spec.reachable_via == rain.entities["reachable"]
     assert record["events"] == [] and "rebuild_events" not in record
     # Dry for hours after a learned rain rhythm: reachable, so nothing to report
-    seed(monitor, rain.device_id, 600, 40, time.time() - 20 * HOUR)
+    end = time.time() - 20 * HOUR
+    record["events"] = sorted(end - 600 * i - 12 * HOUR * (i // 10) for i in range(40))
+    record["first_seen"] = record["events"][0]
     await tick(hass, setup["freezer"], timedelta(minutes=1))
     assert (device.status, device.reason["key"]) == ("ok", "ok_reachable")
     # The cloud says the gauge is gone

@@ -47,6 +47,10 @@ BATTERY_MISSING_AFTER = DAY
 SILENT_NEW_WATCH = 2 * DAY
 SILENT_NEW_CHECK = 7 * DAY
 
+# A reachable device whose longest normal gap is at most this reports on its own (presence sensor, outdoor module):
+# its silence still counts. Longer gaps mean it only reports on events (leak sensor, lock), then reachable = fine.
+REGULAR_LONGEST = 3 * HOUR
+
 # On start HA rewrites every state; in the recorder this row looks like a report. The first row of an
 # entity in this window around an HA start (after a row before it) is no sign of life.
 RESTART_BEFORE = 2 * MINUTE
@@ -282,7 +286,8 @@ def evaluate(facts: Facts) -> Verdict:
     """Status with reason. The worst finding wins."""
     now = facts.now
     rhythm = facts.rhythm
-    if facts.reachable:
+    regular = rhythm.known and rhythm.longest is not None and rhythm.longest <= REGULAR_LONGEST
+    if facts.reachable and not regular:
         verdict = Verdict(STATUS_OK, {"key": "ok_reachable", "params": {"via": facts.reachable}})
     elif rhythm.known:
         verdict = Verdict(STATUS_OK, {"key": "ok_rhythm", "params": {"every": rhythm.typical}})
@@ -312,10 +317,15 @@ def evaluate(facts: Facts) -> Verdict:
     elif facts.observed_since is not None:
         observed = now - facts.observed_since
         silent = _silent_new(observed, observed - facts.downtime)
-    if facts.reachable:
-        # The integration sees the device (Matter subscription, cloud "reachable" flag): silence only means it had
-        # nothing to report (a leak sensor without water, a lock during vacation), an outage shows as unavailable
+    if facts.reachable and not regular:
+        # The integration sees the device (Matter subscription, cloud "reachable" flag) and it only reports on
+        # events: silence means it had nothing to report (a leak sensor without water, a lock during vacation)
         silent, waiting = None, False
+    elif facts.reachable and silent is not None:
+        # Reachable, but a device that reports on its own all the time fell silent: it still talks to the network
+        # without sending values. At most "prüfen" (check), never "ausgefallen" (failed), the connection is there
+        status = STATUS_CHECK if SEVERITY[silent.status] >= SEVERITY[STATUS_CHECK] else silent.status
+        silent = Verdict(status, {"key": "radio_only", "params": {"since": silent.reason["params"]["since"]}})
     if (
         silent is not None
         and facts.radio_last is not None
