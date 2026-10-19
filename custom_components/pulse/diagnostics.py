@@ -31,7 +31,12 @@ def _device(monitor: PulseMonitor, device: Device) -> dict[str, Any]:
         "zigbee2mqtt": spec.ieee is not None,
         "status": device.status,
         "reason_key": device.reason.get("key"),
-        "rhythm": {"typical": rhythm.typical, "longest": rhythm.longest, "samples": rhythm.samples},
+        "rhythm": {
+            "typical": rhythm.typical,
+            "longest": rhythm.longest,
+            "quiet": rhythm.quiet,
+            "samples": rhythm.samples,
+        },
         "last_activity": _iso(device.last_activity),
         "silence_from": _iso(monitor.silence_from(device)),
         "unavailable_since": _iso(device.unavailable_since),

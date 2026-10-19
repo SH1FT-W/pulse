@@ -12,6 +12,7 @@ After 1.1.0, releases use calendar versions `YY.M.N` (year, month, number of the
 - **Five languages.** Panel, notifications, reasons and the integration's texts in English, German, French, Spanish and Dutch. Pulse follows the language of your profile (panel) and of Home Assistant (notifications).
 
 ### Changed
+- **Less strict at night.** Pulse now also learns each device's daily pause: the longest gap that comes back on most days (at least three days of data). A sensor that reports every ten minutes by day but not at all at night (a light sensor in the dark, a presence sensor in an empty room) no longer becomes *Watch*, *Check* or even *Failed* every night; its limits start from that pause. A device that stays silent much longer than its usual pause is still reported. Replayed on a real home's last five days: the nightly false alarms of a Matter motion sensor (5× *Failed*, 6× *Check*) and the hourly *Watch* flicker of several sensors are gone, real outages remain.
 - Notifications about a single device start with its room (e.g. "Kitchen · Silent for 7 hours …"), unless the device name already contains it. Helps when several rooms have a device with the same name.
 
 ## 26.10.7 – 2026-10-18

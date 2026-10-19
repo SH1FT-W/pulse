@@ -60,6 +60,7 @@ es hört nur zu (Zustände, „gemeldet ohne Änderung“, Zigbee2MQTT-Nachricht
   Spannung immer in mV (`_millivolts`, Volt-Sensoren werden umgerechnet).
 - Nach „Batterie gewechselt“ zählt die Stille ab dem Wechsel (`silence_from`, auch im Snapshot), Status „wartet auf
   die erste Meldung“ (`waiting_first`, watch); Rückgängig stellt `notified` wieder her (`notified_before_replace`).
+- Tagespause (`rhythm.daily_quiet`, `Rhythm.quiet`): Median des längsten Abstands je 24-h-Scheibe (ab 3 vollen Tagen); `Rhythm.span` = max(longest, quiet) zählt für `limits` und die Ausreißer-Regel, „regelmäßig“ (`REGULAR_LONGEST`) bleibt am Perzentil `longest`. Grund: Lichtsensor nachts still (HWR-Fehlalarme 19.10.).
 - Takt je Gerät aus `RhythmCache` (neu gelernt nur bei neuen Meldungen). Meldungen werden auf eine je 120 s
   ausgedünnt (`THIN_SECONDS`, `MAX_EVENTS` 6000 = 7 Tage auch für BLE). Rhythmusleiste: 12 Fenster je Kalendertag.
 - Start/Stopp: `_stopped` + `_z2m_lock` – ein Neuladen während des Starts hinterlässt keinen zweiten Wächter/Listener.

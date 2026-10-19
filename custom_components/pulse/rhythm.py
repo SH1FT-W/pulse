@@ -74,10 +74,19 @@ class Rhythm:
     typical: float | None
     longest: float | None
     samples: int
+    # Pause that comes back on most days (night, nobody home): one gap per day, so the percentiles miss it
+    quiet: float | None = None
 
     @property
     def known(self) -> bool:
         return self.typical is not None and self.longest is not None
+
+    @property
+    def span(self) -> float | None:
+        """Longest normal silence: the longest usual gap or the daily pause, whichever is longer."""
+        if self.longest is None:
+            return None
+        return max(self.longest, self.quiet or 0.0)
 
 
 @dataclass(frozen=True)
@@ -131,13 +140,37 @@ def merge_event(
     return True
 
 
+# Daily pause: from this many full days of data, the median of the longest gap per day
+QUIET_MIN_DAYS = 3
+
+
+def daily_quiet(events: Sequence[float]) -> float | None:
+    """The pause that recurs: per 24 h slice the longest gap beginning in it, the median over the slices.
+
+    A device that reports every ten minutes by day and not at all at night (a light sensor in the dark) has
+    a twelve-hour pause every day; a single outage is only one slice and does not move the median.
+    """
+    if len(events) < 2 or events[-1] - events[0] < QUIET_MIN_DAYS * DAY:
+        return None
+    start = events[0]
+    longest: dict[int, float] = {}
+    for a, b in itertools.pairwise(events):
+        day = int((a - start) // DAY)
+        longest[day] = max(longest.get(day, 0.0), b - a)
+    full = [gap for day, gap in longest.items() if start + (day + 1) * DAY <= events[-1]]
+    if len(full) < QUIET_MIN_DAYS:
+        return None
+    return percentile(full, 0.5)
+
+
 def learn(events: Sequence[float]) -> Rhythm:
     gaps = sorted(b - a for a, b in itertools.pairwise(events) if b - a >= MERGE_SECONDS)
     if len(gaps) < MIN_GAPS:
         return Rhythm(None, None, len(gaps))
     typical = percentile(gaps, 0.9, presorted=True)
-    longest = percentile(gaps, 0.98, presorted=True) if len(gaps) >= 20 else gaps[-1]
-    return Rhythm(typical, max(longest, typical), len(gaps))
+    longest = max(percentile(gaps, 0.98, presorted=True) if len(gaps) >= 20 else gaps[-1], typical)
+    quiet = daily_quiet(events)
+    return Rhythm(typical, longest, len(gaps), quiet if quiet is not None and quiet > longest else None)
 
 
 class RhythmCache:
@@ -167,7 +200,7 @@ CLOUD_FAILED_MIN = DAY
 def limits(rhythm: Rhythm, critical: bool, cloud: bool = False) -> Limits:
     """Which status applies from which silence on."""
     typical = rhythm.typical or HOUR
-    longest = rhythm.longest or typical
+    longest = rhythm.span or typical
     if critical:
         lim = Limits(
             watch=max(2.0 * typical, 1.1 * longest, 30 * MINUTE),
@@ -224,7 +257,7 @@ def silence_start(
         return replaced_at, 0
     if rhythm.typical is None or len(events) < 2:
         return last, 0
-    limit = max(STRAY_GAP_MIN, 3 * rhythm.typical, rhythm.longest or 0.0)
+    limit = max(STRAY_GAP_MIN, 3 * rhythm.typical, rhythm.span or 0.0)
     n = len(events)
     for k in range(n - 2, max(-1, n - 2 - MAX_STRAYS), -1):
         here, nxt = events[k], events[k + 1]

@@ -148,3 +148,25 @@ def test_five_languages():
     sentence = reason_text("fr", {"key": "silent", "params": {"since": 7 * HOUR, "every": 1800.0}})
     assert "7 heures" in sentence
     assert template_defaults("nl")["failed_title"] != template_defaults("en")["failed_title"]
+
+
+def test_daily_pause_is_learned_and_widens_the_limits():
+    from custom_components.pulse.rhythm import daily_quiet, learn, limits
+
+    # Like the HWR motion sensor: every ten minutes from 8 to 20 o'clock, nothing at night, five days
+    events = [T0 + day * DAY + h * HOUR + m * 600 for day in range(5) for h in range(8, 20) for m in range(6)]
+    rhythm = learn(events)
+    assert rhythm.typical == 600.0 and rhythm.longest < 3 * HOUR  # still regular by day
+    assert rhythm.quiet is not None and 12 * HOUR < rhythm.quiet < 13 * HOUR
+    lim = limits(rhythm, critical=False)
+    assert lim.watch > 13 * HOUR and lim.failed > 30 * HOUR
+    # Silent at night: fine; silent for two whole days: still noticed
+    night = evaluate(Facts(now=events[-1] + 10 * HOUR, rhythm=rhythm, last_activity=events[-1], reachable="Matter"))
+    assert night.status == "ok"
+    gone = evaluate(Facts(now=events[-1] + 2 * DAY, rhythm=rhythm, last_activity=events[-1], reachable="Matter"))
+    assert (gone.status, gone.reason["key"]) == ("check", "radio_only")
+    # One long outage is no daily pause; less than three days: none yet
+    steady = [T0 + i * 600 for i in range(5 * 144)]
+    outage = steady[:300] + [t + 10 * HOUR for t in steady[300:]]
+    assert daily_quiet(outage) is None or daily_quiet(outage) < HOUR
+    assert daily_quiet(events[:100]) is None
