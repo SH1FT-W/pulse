@@ -52,6 +52,7 @@ import {
   quietSince,
   RETRY_FIRST,
   RETRY_MAX,
+  renderTemplate,
   resample,
   rhythmPill,
   rhythmTone,
@@ -69,6 +70,7 @@ import {
   stripHeights,
   stripIndex,
   subtractSpans,
+  templateExample,
   tickHeight,
   timeFormatOf,
   timeFraction,
@@ -95,6 +97,7 @@ function device(id: string, extra: Partial<Device> = {}): Device {
     critical_auto: false,
     critical_manual: null,
     ignored: false,
+    label: null,
     last_activity: null,
     typical: null,
     samples: 0,
@@ -1002,5 +1005,35 @@ describe('nextRetryDelay', () => {
     expect(nextRetryDelay(RETRY_MAX)).toBe(RETRY_MAX);
     // Kleiner als der Start kann der Abstand nie werden
     expect(nextRetryDelay(0)).toBe(4000);
+  });
+});
+
+describe('own notification texts', () => {
+  const known = ['name', 'area', 'reason', 'model', 'manufacturer', 'integration'];
+  it('fills in like the server and drops empty values with their separator', () => {
+    const values = { name: 'Fenster', area: null, reason: 'Seit 7 Stunden still.' };
+    expect(renderTemplate('{area} · {reason}', values, known)).toBe('Seit 7 Stunden still.');
+    expect(renderTemplate('{name} · {area}', { ...values, area: 'Küche' }, known)).toBe(
+      'Fenster · Küche'
+    );
+    expect(renderTemplate('{name} {foo}\n{reason}', values, known)).toBe(
+      'Fenster {foo}\nSeit 7 Stunden still.'
+    );
+  });
+  it('takes the room only if the name does not already say it', () => {
+    expect(templateExample(device('a', { name: 'Lecksensor Bad', area: 'Bad' })).area).toBeNull();
+    expect(templateExample(device('a', { name: 'Fenster', area: 'Bad' })).area).toBe('Bad');
+    expect(templateExample(undefined)).toEqual({});
+  });
+});
+
+describe('mains-powered devices (beta)', () => {
+  it('has its own filter', () => {
+    const list = [
+      device('a', { mains: true }),
+      device('b'),
+      device('c', { mains: true, ignored: true }),
+    ];
+    expect(applyFilter(list, 'mains').map((d) => d.id)).toEqual(['a']);
   });
 });

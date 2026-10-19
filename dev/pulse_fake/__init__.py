@@ -44,6 +44,7 @@ class FakeZigbee:
     silent: bool = False
     battery: int = 80
     voltage: int = 2900
+    mains: bool = False  # Router am Strom (Beta „Netzgeräte“): keine Batterie
     state: dict[str, Any] = field(default_factory=dict)
 
 
@@ -131,6 +132,24 @@ ZIGBEE = [
         battery=41,
         voltage=1120,
     ),
+    FakeZigbee(
+        "Steckdose Kaffeemaschine",
+        "0x00158d0000000009",
+        "IKEA",
+        "INSPELNING smart plug",
+        ["power"],
+        (60, 120),
+        mains=True,
+    ),
+    FakeZigbee(
+        "Schalter Flur",
+        "0x00158d000000000a",
+        "Aqara",
+        "Wall switch H1 (with neutral)",
+        ["switch"],
+        (4 * 3600, 9 * 3600),
+        mains=True,
+    ),
 ]
 
 ENTITY_DEFS: dict[str, list[tuple[str, str, dict[str, Any]]]] = {
@@ -158,6 +177,20 @@ ENTITY_DEFS: dict[str, list[tuple[str, str, dict[str, Any]]]] = {
             "binary_sensor",
             "water_leak",
             {"device_class": "moisture", "payload_on": True, "payload_off": False, "name": "Wasserleck"},
+        )
+    ],
+    "power": [
+        (
+            "sensor",
+            "power",
+            {"device_class": "power", "unit_of_measurement": "W", "state_class": "measurement", "name": "Leistung"},
+        )
+    ],
+    "switch": [
+        (
+            "switch",
+            "state",
+            {"command_topic": "zigbee2mqtt/Schalter Flur/set", "state_on": "ON", "state_off": "OFF", "name": None},
         )
     ],
     "occupancy": [
@@ -236,9 +269,9 @@ class FakeBridge:
             devices.append(
                 {
                     "ieee_address": dev.ieee,
-                    "type": "EndDevice",
+                    "type": "Router" if dev.mains else "EndDevice",
                     "friendly_name": dev.name,
-                    "power_source": "Battery",
+                    "power_source": "Mains (single phase)" if dev.mains else "Battery",
                     "definition": {"vendor": dev.manufacturer, "model": dev.model},
                 }
             )
@@ -261,7 +294,8 @@ class FakeBridge:
             "model": dev.model,
             "via_device": "zigbee2mqtt_bridge_0x00124b0000000000",
         }
-        defs = [d for k in dev.kinds for d in ENTITY_DEFS[k]] + COMMON
+        common = [d for d in COMMON if d[1] == "linkquality"] if dev.mains else COMMON
+        defs = [d for k in dev.kinds for d in ENTITY_DEFS[k]] + common
         for component, key, extra in defs:
             config = {
                 **extra,
@@ -285,8 +319,13 @@ class FakeBridge:
             state["water_leak"] = False
         if "occupancy" in dev.kinds:
             state["occupancy"] = not state.get("occupancy", False)
-        state["battery"] = dev.battery
-        state["voltage"] = dev.voltage
+        if "power" in dev.kinds:
+            state["power"] = round(random.uniform(0.4, 1.2), 1)
+        if "switch" in dev.kinds:
+            state["state"] = "OFF" if state.get("state") == "ON" else "ON"
+        if not dev.mains:
+            state["battery"] = dev.battery
+            state["voltage"] = dev.voltage
         state["linkquality"] = random.randint(40, 180)
         out = dict(state)
         if self.last_seen:

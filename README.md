@@ -118,7 +118,13 @@ Straight to the Companion app (`notify.mobile_app_*`). Failures right away, the 
   <img src="docs/images/readme-cards-notify-light.png" alt="Levels: Failed, Check and Battery each go right away, in the daily summary, or not at all, important devices send Check right away. Quiet hours and at home: notifications wait for quiet hours and for someone to come home, only the latest message per device is kept, a device that failed and recovered at night sends nothing. Critical alerts: break through Do Not Disturb when an important device fails, iOS needs permission for critical alerts, Android uses the alarm channel. Buttons that work: Battery replaced records a replacement, Remind tomorrow stays quiet for 24 hours, right in the notification. One message for an outage: three or more devices silent in the same minute is a hub or bridge, not the batteries, one calm message naming them, the same for a cloud outage. Batteries to buy: the daily summary mentions batteries forecast to run out in the next eight weeks, it only goes out because of a battery when one is due now." />
 </picture>
 
-If Home Assistant was down at summary time, the summary is sent up to two hours late.
+If Home Assistant was down at summary time, the summary is sent up to two hours late. A notification about a single device names its room first, unless the device name already contains it.
+
+**Your own words.** Under *Notifications → Texts* you can rewrite the title and text of each kind of notification (Failed, Check, Battery, Back again). You start from Pulse's sentence and see a live preview on one of your devices. Placeholders: `{name}`, `{area}`, `{reason}`, `{model}`, `{manufacturer}`, `{integration}`. Empty values vanish together with their " · ".
+
+**Beta: mains-powered devices.** Off by default. Turn on *Notifications → Beta → Watch mains-powered devices* and Pulse also watches devices without a battery from local integrations (ZHA, Zigbee2MQTT, Z-Wave, Matter, Hue, deCONZ, ESPHome, Shelly, Tasmota, TP-Link, WLED and a few more). They hang too: Pulse tells you when one is no longer reachable, or when one that usually reports regularly (a plug with a power meter, a Zigbee router) goes silent. A lamp that only reports when it is switched is fine as long as it is reachable.
+
+Pulse speaks English, German, French, Spanish and Dutch.
 
 <p align="center">
   <img src="docs/images/notifications.png" width="900" alt="Notification settings: recipients, the levels Failed, Check and Battery with Right away or Daily, times for the daily summary and quiet hours, critical alerts, only when someone is home." />
@@ -173,7 +179,9 @@ Overall: `sensor.pulse_problems` (count, attribute `devices` with `device_id`, `
 - `pulse_device_status_changed`: `device_id`, `name`, `status`, `previous`, `reason`, `reason_key`. Fired when the status changes, not for the first evaluation after a start.
 - `pulse_battery_replaced`: `device_id`, `name`, `source` (`manual`, `auto` from a voltage or level jump, `announce` from a Zigbee re-join after silence).
 
-**Actions:** `pulse.mark_replaced`, `pulse.snooze` (`hours`, 0 cancels), `pulse.ignore`, `pulse.send_test`.
+**Actions:** `pulse.mark_replaced`, `pulse.snooze` (`hours`, 0 cancels), `pulse.ignore`, `pulse.send_test`, `pulse.send_summary` (sends the daily summary right away, response `sent`).
+
+**Labels:** put the Home Assistant label `pulse_important` or `pulse_ignore` on a device or on one of its entities, and Pulse marks it important or leaves it alone, without opening the panel. A label wins over the switch in the panel, which then shows where the setting comes from; `pulse_ignore` wins over `pulse_important`. Remove the label and the switch counts again.
 
 <details>
 <summary><b>Example: flash a light when an important device fails</b></summary>

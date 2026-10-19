@@ -1,0 +1,105 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Pulse",
+        "description": "Pulse heeft {count} apparaten op batterij gevonden. Het luistert alleen naar wat ze toch al sturen en vraagt ze nooit uit, dus het kost geen batterij. Al het andere stel je in het Pulse-paneel in."
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "Pulse is al ingesteld."
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "problem": {
+        "name": "Pulse-probleem"
+      }
+    },
+    "sensor": {
+      "status": {
+        "name": "Pulse-status",
+        "state": {
+          "ok": "Goed",
+          "learning": "Leert",
+          "watch": "In de gaten",
+          "check": "Controleren",
+          "failed": "Uitgevallen"
+        }
+      },
+      "last_report": {
+        "name": "Laatste melding"
+      },
+      "problems": {
+        "name": "Problemen",
+        "unit_of_measurement": "apparaten"
+      },
+      "monitored": {
+        "name": "Bewaakte apparaten",
+        "unit_of_measurement": "apparaten"
+      }
+    }
+  },
+  "issues": {
+    "device_failed": {
+      "title": "{name} reageert niet",
+      "description": "{reason}\n\nMeestal is de batterij leeg. Kies na het vervangen ‘Batterij vervangen’ in Pulse (zijbalk) of wacht tot het apparaat zich weer meldt. Deze melding verdwijnt dan vanzelf."
+    }
+  },
+  "exceptions": {
+    "not_loaded": {
+      "message": "Pulse is niet ingesteld."
+    },
+    "unknown_device": {
+      "message": "Pulse bewaakt dit apparaat niet."
+    }
+  },
+  "services": {
+    "mark_replaced": {
+      "name": "Batterij vervangen",
+      "description": "Noteert een batterijwissel voor een apparaat.",
+      "fields": {
+        "device_id": {
+          "name": "Apparaat",
+          "description": "Het apparaat waarvan de batterij is vervangen."
+        }
+      }
+    },
+    "snooze": {
+      "name": "Herinnering uitstellen",
+      "description": "Een tijdje geen meldingen voor een apparaat.",
+      "fields": {
+        "device_id": {
+          "name": "Apparaat",
+          "description": "Het apparaat."
+        },
+        "hours": {
+          "name": "Uren",
+          "description": "Hoe lang stil blijven. 0 heft uitstel op."
+        }
+      }
+    },
+    "ignore": {
+      "name": "Apparaat negeren",
+      "description": "Pulse stopt met het bewaken van een apparaat (of hervat).",
+      "fields": {
+        "device_id": {
+          "name": "Apparaat",
+          "description": "Het apparaat."
+        },
+        "ignored": {
+          "name": "Negeren",
+          "description": "Uit hervat de bewaking."
+        }
+      }
+    },
+    "send_test": {
+      "name": "Testmelding sturen",
+      "description": "Stuurt een testmelding naar alle Pulse-ontvangers."
+    },
+    "send_summary": {
+      "name": "Samenvatting nu sturen",
+      "description": "Stuurt de samenvatting meteen in plaats van op het ingestelde tijdstip. Niets te melden, dan wordt niets gestuurd."
+    }
+  }
+}

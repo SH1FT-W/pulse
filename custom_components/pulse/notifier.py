@@ -24,7 +24,7 @@ from .const import (
     STATUS_CHECK,
     STATUS_FAILED,
 )
-from .texts import text
+from .texts import render, template_defaults, text
 
 if TYPE_CHECKING:
     from .monitor import Device, PulseMonitor
@@ -149,13 +149,8 @@ class Notifier:
                 # „läuft wieder“ überflüssig
                 silent = self._drop_queued(device) and not record.get("told")
                 if not silent and self.settings.get("recovered", True):
-                    self._send(
-                        device,
-                        text(self.language, "push_recovered", name=device.name),
-                        text(self.language, "push_recovered_msg"),
-                        critical=False,
-                        actions=False,
-                    )
+                    title, message = self.compose(device, "recovered")
+                    self._send(device, title, message, critical=False, actions=False)
                 record["notified"] = None
                 record["told"] = False
             return
@@ -178,15 +173,35 @@ class Notifier:
         ):
             return
         device.record["notified"] = device.status
-        key = "push_failed" if device.status == STATUS_FAILED else "push_check"
+        kind = "failed" if device.status == STATUS_FAILED else "check"
         if device.reason.get("key") in BATTERY_REASONS:
-            key = "push_battery"
+            kind = "battery"
         # Kritisch (durchbricht „Nicht stören“) nur bei Ausfall eines wichtigen Geräts, nie für Batterie/Prüfen
         critical = (
             device.critical and device.status == STATUS_FAILED and bool(self.settings.get("critical_alerts", True))
         )
-        self._send(device, text(self.language, key, name=device.name), self.monitor.reason(device), critical, True)
+        title, message = self.compose(device, kind)
+        self._send(device, title, message, critical, True)
         self.monitor.store.async_delay_save()
+
+    def compose(self, device: Device, kind: str) -> tuple[str, str]:
+        """Title and text for one device: own template (setting `templates`) or Pulse's sentence."""
+        own = self.settings.get("templates") or {}
+        defaults = template_defaults(self.language)
+        spec = device.spec
+        area = spec.area
+        values = {
+            "name": device.name,
+            # Already in the name ("Lecksensor Bad"): not twice
+            "area": area if area and area.casefold() not in device.name.casefold() else None,
+            "reason": self.monitor.reason(device),
+            "model": spec.model,
+            "manufacturer": spec.manufacturer,
+            "integration": spec.integration,
+        }
+        title = render(own.get(f"{kind}_title") or defaults[f"{kind}_title"], values)
+        message = render(own.get(f"{kind}_message") or defaults[f"{kind}_message"], values)
+        return title or device.name, message
 
     def forget(self, device: Device) -> None:
         """Erholung ohne beobachteten Übergang (Neustart, Ignorieren aufgehoben): Merker und Wartendes weg.
@@ -418,13 +433,13 @@ class Notifier:
             "clickAction": f"/pulse?device={device.device_id}",
         }
         if actions:
-            data["actions"] = [
-                {
-                    "action": f"{ACTION_REPLACED}{SEP}{device.device_id}",
-                    "title": text(self.language, "action_replaced"),
-                },
-                {"action": f"{ACTION_LATER}{SEP}{device.device_id}", "title": text(self.language, "action_later")},
-            ]
+            later = {"action": f"{ACTION_LATER}{SEP}{device.device_id}", "title": text(self.language, "action_later")}
+            replaced = {
+                "action": f"{ACTION_REPLACED}{SEP}{device.device_id}",
+                "title": text(self.language, "action_replaced"),
+            }
+            # Mains-powered (beta): there is no battery to change
+            data["actions"] = [later] if device.spec.mains else [replaced, later]
         if critical:
             data["push"] = {"sound": {"name": "default", "critical": 1, "volume": 1.0}}
             data["channel"] = "alarm_stream"  # Android: klingelt auch bei „Nicht stören“

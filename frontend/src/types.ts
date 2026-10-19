@@ -76,6 +76,10 @@ export interface Device {
   critical_auto: boolean;
   critical_manual: boolean | null;
   ignored: boolean;
+  /** Set by an HA label (pulse_important / pulse_ignore); the panel switch is locked then */
+  label: 'important' | 'ignore' | null;
+  /** Beta: mains-powered, no battery (only with the setting `mains_beta`) */
+  mains?: boolean;
   last_activity: number | null;
   /**
    * Ab hier zählt die Stille: letzte Meldung oder ein späterer manueller Wechsel. Fehlt bei älteren
@@ -114,7 +118,14 @@ export interface Settings {
   arrive_home: { enabled: boolean; persons: string[] };
   recovered: boolean;
   z2m_base: string;
+  /** Beta: also watch mains-powered devices */
+  mains_beta?: boolean;
+  /** Own notification texts; null = Pulse's sentence (`template_defaults`) */
+  templates?: Partial<Record<TemplateKey, string | null>>;
 }
+
+export type TemplateKind = 'failed' | 'check' | 'battery' | 'recovered';
+export type TemplateKey = `${TemplateKind}_${'title' | 'message'}`;
 
 export interface Snapshot {
   loaded?: true;
@@ -156,6 +167,9 @@ export interface Snapshot {
   };
   battery_types: string[];
   chemistries: string[];
+  /** Pulse's own notification sentences as templates, in the language of the notifications */
+  template_defaults?: Record<TemplateKey, string>;
+  template_vars?: string[];
 }
 
 /** Antwort, solange der Pulse-Eintrag nicht geladen ist (z. B. beim Neuladen der Integration). */

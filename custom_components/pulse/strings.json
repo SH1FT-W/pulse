@@ -96,6 +96,10 @@
     "send_test": {
       "name": "Send test notification",
       "description": "Sends a test notification to all Pulse recipients."
+    },
+    "send_summary": {
+      "name": "Send summary now",
+      "description": "Sends the summary right away instead of at the set time. Nothing to report, nothing is sent."
     }
   }
 }

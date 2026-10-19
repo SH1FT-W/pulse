@@ -2,6 +2,18 @@
 
 After 1.1.0, releases use calendar versions `YY.M.N` (year, month, number of the release in that month), e.g. `26.10.4`. They count as newer than every 1.x version, so updates through HACS work as before.
 
+## 26.10.8 – 2026-10-19
+
+### Added
+- Home Assistant labels `pulse_important` and `pulse_ignore` on a device or one of its entities mark it important or ignored, without opening the panel. A label wins over the panel switch (shown as "Set by the Home Assistant label …"); `pulse_ignore` wins over `pulse_important`.
+- Action `pulse.send_summary` sends the daily summary right away (response `sent`), e.g. from a button or a "good morning" automation.
+- **Beta: mains-powered devices.** A switch under *Notifications → Beta* (off by default) lets Pulse also watch devices without a battery from local integrations (Zigbee via ZHA or Zigbee2MQTT, Z-Wave, Matter, Hue, deCONZ, ESPHome, Shelly, Tasmota, TP-Link, WLED and others). Mains-powered devices hang too: Pulse reports one that is no longer reachable, and one that usually reports regularly (e.g. a plug with a power meter) but went silent. A lamp or plug that only reports when used is *OK* while it is reachable. Turning the switch off removes them again.
+- **Own notification texts.** Under *Notifications → Texts* each kind of notification about one device (Failed, Check, Battery, Back again) gets its own title and text, starting from Pulse's sentence. Placeholders `{name}`, `{area}`, `{reason}`, `{model}`, `{manufacturer}`, `{integration}`, with a live preview on one of your devices. Empty values disappear together with their " · " separator.
+- **Five languages.** Panel, notifications, reasons and the integration's texts in English, German, French, Spanish and Dutch. Pulse follows the language of your profile (panel) and of Home Assistant (notifications).
+
+### Changed
+- Notifications about a single device start with its room (e.g. "Kitchen · Silent for 7 hours …"), unless the device name already contains it. Helps when several rooms have a device with the same name.
+
 ## 26.10.7 – 2026-10-18
 
 ### Changed

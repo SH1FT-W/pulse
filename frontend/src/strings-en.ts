@@ -31,6 +31,7 @@ export const EN = {
   snoozed_until: 'Reminds {when}',
   details: 'Details',
   ignore: 'Not monitored',
+  label_set: 'Set by the Home Assistant label “{label}”.',
   ignore_hint: 'Pulse leaves this device alone.',
   ignored_done: '{name} is no longer monitored',
   resume: 'Monitor again',
@@ -321,14 +322,42 @@ export const EN = {
   new_calver_title: 'New version numbers',
   new_calver_text:
     'From now on versions read year.month.release: 26.10.4 is the fourth release in October 2026. The jump from 1.1.0 is intended – updates are found as usual.',
-  new_reachable_title: 'Reachable means fine',
-  new_reachable_text:
-    'For Matter devices and cloud devices with a connectivity sensor (e.g. Netatmo), Pulse now asks the integration. A leak sensor without water or a rarely used lock no longer counts as silent. Devices that report on their own are still checked: if they go quiet despite the connection, you get Check.',
-  new_restart_title: 'Restarts no longer fool Pulse',
-  new_restart_text:
-    'After a Home Assistant restart, a silent device briefly looked alive again. These fake reports no longer count.',
-  new_sheet_title: 'Settings in view',
-  new_sheet_text:
-    'Opening the settings in the device sheet now grows the sheet and shows them right away.',
   due_untyped: 'type unknown: {names}',
+  beta: 'Beta',
+  mains_beta: 'Watch mains-powered devices',
+  mains_beta_hint:
+    'Also devices on the mains (Zigbee, Z-Wave, Matter, Shelly, ESPHome …). Pulse tells you when one is no longer reachable or goes silent although it usually reports regularly. Still being tested.',
+  mains_devices: 'Mains-powered devices',
+  filter_mains: 'Mains-powered',
+  mains_chip: 'Mains · Beta',
+  mains_note:
+    'Powered from the mains, no battery. Pulse watches whether it is reachable and, if it reports regularly, whether it goes silent.',
+  texts: 'Texts',
+  texts_hint:
+    'Your own titles and texts for notifications about one device. Summaries stay as they are.',
+  tpl_failed: 'Failed',
+  tpl_check: 'Check',
+  tpl_battery: 'Battery',
+  tpl_recovered: 'Back again',
+  tpl_default: 'Default',
+  tpl_custom: 'Custom',
+  tpl_title_field: 'Title',
+  tpl_message_field: 'Text',
+  tpl_vars: 'Placeholders',
+  tpl_vars_hint:
+    'Tap to insert. {area} stays empty when the room is already in the name; empty values vanish with their “ · ”.',
+  tpl_preview: 'Preview',
+  tpl_reset: 'Use default',
+  tpl_save: 'Save',
+  new_mains_title: 'Mains-powered devices in beta',
+  new_mains_text:
+    'Plugs, lamps and switches on the mains can hang too. Turn it on under Notifications → Beta.',
+  new_texts_title: 'Your own words',
+  new_texts_text:
+    'Change the title and text of every notification, with placeholders and a preview.',
+  new_labels_title: 'Labels instead of clicks',
+  new_labels_text:
+    'The HA label pulse_important or pulse_ignore on a device is enough. Notifications now name the room.',
+  new_languages_title: 'Five languages',
+  new_languages_text: 'Pulse speaks English, German, French, Spanish and Dutch.',
 };

@@ -138,6 +138,7 @@ export class PulseDevices extends LitElement {
     if (filter === 'ignored') return t(lang, 'ignored');
     if (filter === 'important') return t(lang, 'filter_important');
     if (filter === 'battery') return t(lang, 'filter_battery');
+    if (filter === 'mains') return t(lang, 'filter_mains');
     return t(lang, statusKey(filter));
   }
 
@@ -166,16 +167,20 @@ export class PulseDevices extends LitElement {
             <ha-icon icon="mdi:dots-vertical"></ha-icon>
           </ha-icon-button>
           <ha-dropdown-item value="details"><ha-icon slot="icon" icon="mdi:information-outline"></ha-icon>${t(lang, 'details')}</ha-dropdown-item>
-          <ha-dropdown-item value="replaced"><ha-icon slot="icon" icon="mdi:battery-sync-outline"></ha-icon>${t(lang, 'replaced')}</ha-dropdown-item>
+          ${d.mains ? nothing : html`<ha-dropdown-item value="replaced"><ha-icon slot="icon" icon="mdi:battery-sync-outline"></ha-icon>${t(lang, 'replaced')}</ha-dropdown-item>`}
           ${needsAction(d) ? html`<ha-dropdown-item value="later"><ha-icon slot="icon" icon="mdi:bell-sleep-outline"></ha-icon>${t(lang, 'later')}</ha-dropdown-item>` : nothing}
           ${
-            d.ignored
+            d.ignored || d.label
               ? nothing
               : html`<ha-dropdown-item value="important"><ha-icon slot="icon" icon=${d.critical ? 'mdi:star-off-outline' : 'mdi:star-outline'}></ha-icon>${t(lang, d.critical ? 'unmark_important' : 'mark_important')}</ha-dropdown-item>`
           }
-          <ha-dropdown-item value="ignore">
+          ${
+            d.label === 'ignore'
+              ? nothing
+              : html`<ha-dropdown-item value="ignore">
             <ha-icon slot="icon" icon=${d.ignored ? 'mdi:eye-outline' : 'mdi:eye-off-outline'}></ha-icon>${t(lang, d.ignored ? 'resume' : 'ignore_action')}
-          </ha-dropdown-item>
+          </ha-dropdown-item>`
+          }
         </ha-dropdown></span>`;
     return html`<div class="mrow">
       <button class="main rowgrid" type="button" @click=${() => this.fire('open', { id: d.id })}>

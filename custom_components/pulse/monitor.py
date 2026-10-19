@@ -125,10 +125,29 @@ CLOUD_SPREAD = 2 * 3600.0
 FORECAST_LOOKBACK = 180 * 86400.0
 # Registry changes that can affect the device list; an entity's name, icon or options do not
 DEVICE_CHANGES = frozenset(
-    {"name", "name_by_user", "area_id", "disabled_by", "identifiers", "manufacturer", "model", "via_device_id"}
+    {
+        "name",
+        "name_by_user",
+        "area_id",
+        "disabled_by",
+        "identifiers",
+        "manufacturer",
+        "model",
+        "via_device_id",
+        "labels",
+    }
 )
 ENTITY_CHANGES = frozenset(
-    {"device_id", "disabled_by", "device_class", "original_device_class", "entity_category", "platform", "entity_id"}
+    {
+        "device_id",
+        "disabled_by",
+        "device_class",
+        "original_device_class",
+        "entity_category",
+        "platform",
+        "entity_id",
+        "labels",
+    }
 )
 
 
@@ -164,10 +183,14 @@ class Device:
 
     @property
     def ignored(self) -> bool:
+        if self.spec.label == "ignore":
+            return True
         return bool(self.record.get("ignored"))
 
     @property
     def critical(self) -> bool:
+        if self.spec.label == "important":
+            return True
         manual = self.record.get("critical")
         return self.spec.critical if manual is None else bool(manual)
 
@@ -344,19 +367,25 @@ class PulseMonitor:
     @staticmethod
     @callback
     def _device_relevant(event_data: Any) -> bool:
-        """Only device changes that affect discovery (not labels, manufacturer URL, firmware)."""
+        """Only device changes that affect discovery (not manufacturer URL, firmware); labels do (pulse_*)."""
         return event_data["action"] != "update" or bool(DEVICE_CHANGES & set(event_data.get("changes") or ()))
 
     @callback
     def _entity_relevant(self, event_data: Any) -> bool:
-        """Own entities (three per device) and cosmetic changes do not trigger a new discovery."""
+        """Own entities (three per device, except for labels) and cosmetic changes do not trigger a new discovery."""
         action = event_data["action"]
         if action == "remove":
             return True  # the entry is already gone, own entities can no longer be recognized here
         entry = er.async_get(self.hass).async_get(event_data["entity_id"])
         if entry is not None and entry.platform == DOMAIN:
-            return False
+            return action == "update" and "labels" in (event_data.get("changes") or ())
         return action != "update" or bool(ENTITY_CHANGES & set(event_data.get("changes") or ()))
+
+    @callback
+    def async_rediscover(self) -> None:
+        """Find devices again now (setting `mains_beta` switched)."""
+        if not self._stopped:
+            self._rediscover()
 
     async def _async_rediscover(self) -> None:
         if not self._stopped:
@@ -364,12 +393,17 @@ class PulseMonitor:
 
     @callback
     def _rediscover(self) -> None:
-        specs = discover(self.hass)
+        specs = discover(self.hass, mains=bool(self.store.settings.get("mains_beta")))
         now = time.time()
         new: list[str] = []
+        relabeled: list[str] = []
         for device_id, spec in specs.items():
             if device_id in self.devices:
-                self.devices[device_id].spec = spec
+                device = self.devices[device_id]
+                was_ignored = device.ignored
+                device.spec = spec
+                if device.ignored != was_ignored:
+                    relabeled.append(device_id)
                 continue
             record = self.store.record(device_id)
             if record.get("first_seen") is None:
@@ -404,8 +438,10 @@ class PulseMonitor:
         self._ieee_map = {d.spec.ieee: d.device_id for d in self.devices.values() if d.spec.ieee}
         for device_id in new:
             self._evaluate(self.devices[device_id], now, announce=False)
-        if new:
-            async_dispatcher_send(self.hass, SIGNAL_NEW_DEVICES, new)
+        for device_id in relabeled:
+            self._reobserve(self.devices[device_id], now)
+        if new or relabeled:
+            async_dispatcher_send(self.hass, SIGNAL_NEW_DEVICES, new + relabeled)
         self.async_update()
 
     @callback
@@ -845,6 +881,7 @@ class PulseMonitor:
             flag_on=bool(device.spec.battery_low) and self.flag_on(device),
             battery_missing_since=record.get("battery_missing_since"),
             reachable=self._reachable(device),
+            mains=device.spec.mains,
         )
 
     def _reachable(self, device: Device) -> str | None:
@@ -1148,12 +1185,16 @@ class PulseMonitor:
         if device is None:
             return
         device.record["ignored"] = ignored
-        device.evaluated = False
-        device.baseline = False  # observed again: the first status is no transition
-        self._evaluate(device, time.time(), announce=False)
+        self._reobserve(device, time.time())
         self.store.async_delay_save()
         async_dispatcher_send(self.hass, SIGNAL_NEW_DEVICES, [device_id])
         self.async_update()
+
+    def _reobserve(self, device: Device, now: float) -> None:
+        """Ignored or watched again (switch or label): the first status after that is no transition."""
+        device.evaluated = False
+        device.baseline = False
+        self._evaluate(device, now, announce=False)
 
     def update_device(self, device_id: str, changes: dict[str, Any]) -> None:
         device = self.devices.get(device_id)

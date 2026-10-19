@@ -65,7 +65,10 @@ async def test_registry_filters_skip_own_and_cosmetic_changes(hass: HomeAssistan
     # Geräte: Erstellen/Entfernen immer, Änderungen nur an Name, Raum, Deaktivierung usw.
     assert monitor._device_relevant({"action": "create", "device_id": "x"})
     assert monitor._device_relevant({"action": "update", "device_id": "x", "changes": {"name_by_user": "alt"}})
-    assert not monitor._device_relevant({"action": "update", "device_id": "x", "changes": {"labels": set()}})
+    assert not monitor._device_relevant({"action": "update", "device_id": "x", "changes": {"sw_version": "1"}})
+    # Labels schon (pulse_important/pulse_ignore), auch an eigenen Entitäten
+    assert monitor._device_relevant({"action": "update", "device_id": "x", "changes": {"labels": set()}})
+    assert monitor._entity_relevant({"action": "update", "entity_id": own, "changes": {"labels": set()}})
     # Entitäten: eigene nie, kosmetische Änderungen nicht, Zuordnung/Deaktivierung schon
     assert not monitor._entity_relevant({"action": "create", "entity_id": own})
     assert not monitor._entity_relevant({"action": "update", "entity_id": own, "changes": {"device_id": None}})

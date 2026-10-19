@@ -1,4 +1,4 @@
-"""Aktionen: Wechsel eintragen, später erinnern, ignorieren, Testmitteilung."""
+"""Aktionen: Wechsel eintragen, später erinnern, ignorieren, Testmitteilung, Zusammenfassung."""
 
 from __future__ import annotations
 
@@ -55,9 +55,15 @@ def async_register_services(hass: HomeAssistant) -> None:
         targets: list[Any] = list(get_monitor(hass).notifier.send_test())
         return {"targets": targets}
 
+    async def send_summary(call: ServiceCall) -> ServiceResponse:
+        return {"sent": get_monitor(hass).notifier.send_summary()}
+
     hass.services.async_register(DOMAIN, "mark_replaced", mark_replaced, schema=DEVICE_SCHEMA)
     hass.services.async_register(DOMAIN, "snooze", snooze, schema=SNOOZE_SCHEMA)
     hass.services.async_register(DOMAIN, "ignore", ignore, schema=IGNORE_SCHEMA)
     hass.services.async_register(
         DOMAIN, "send_test", send_test, schema=vol.Schema({}), supports_response=SupportsResponse.OPTIONAL
+    )
+    hass.services.async_register(
+        DOMAIN, "send_summary", send_summary, schema=vol.Schema({}), supports_response=SupportsResponse.OPTIONAL
     )

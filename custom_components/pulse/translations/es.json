@@ -1,0 +1,105 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Pulse",
+        "description": "Pulse ha encontrado {count} dispositivos con pila. Solo escucha lo que envían de todos modos y nunca los consulta, así que no gasta pila. Todo lo demás se configura en el panel de Pulse."
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "Pulse ya está configurado."
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "problem": {
+        "name": "Problema de Pulse"
+      }
+    },
+    "sensor": {
+      "status": {
+        "name": "Estado de Pulse",
+        "state": {
+          "ok": "Bien",
+          "learning": "Aprendiendo",
+          "watch": "En observación",
+          "check": "Revisar",
+          "failed": "Sin respuesta"
+        }
+      },
+      "last_report": {
+        "name": "Última señal"
+      },
+      "problems": {
+        "name": "Problemas",
+        "unit_of_measurement": "dispositivos"
+      },
+      "monitored": {
+        "name": "Dispositivos supervisados",
+        "unit_of_measurement": "dispositivos"
+      }
+    }
+  },
+  "issues": {
+    "device_failed": {
+      "title": "{name} no responde",
+      "description": "{reason}\n\nNormalmente la pila está agotada. Después de cambiarla, elige «Pila cambiada» en Pulse (barra lateral) o espera a que el dispositivo vuelva a dar señales. Este aviso desaparecerá solo."
+    }
+  },
+  "exceptions": {
+    "not_loaded": {
+      "message": "Pulse no está configurado."
+    },
+    "unknown_device": {
+      "message": "Pulse no supervisa este dispositivo."
+    }
+  },
+  "services": {
+    "mark_replaced": {
+      "name": "Pila cambiada",
+      "description": "Registra un cambio de pila de un dispositivo.",
+      "fields": {
+        "device_id": {
+          "name": "Dispositivo",
+          "description": "El dispositivo al que se le cambió la pila."
+        }
+      }
+    },
+    "snooze": {
+      "name": "Posponer recordatorio",
+      "description": "Sin notificaciones de un dispositivo durante un tiempo.",
+      "fields": {
+        "device_id": {
+          "name": "Dispositivo",
+          "description": "El dispositivo."
+        },
+        "hours": {
+          "name": "Horas",
+          "description": "Cuánto tiempo guardar silencio. 0 cancela un aplazamiento."
+        }
+      }
+    },
+    "ignore": {
+      "name": "Ignorar dispositivo",
+      "description": "Pulse deja de supervisar un dispositivo (o lo retoma).",
+      "fields": {
+        "device_id": {
+          "name": "Dispositivo",
+          "description": "El dispositivo."
+        },
+        "ignored": {
+          "name": "Ignorar",
+          "description": "Desactivado retoma la supervisión."
+        }
+      }
+    },
+    "send_test": {
+      "name": "Enviar notificación de prueba",
+      "description": "Envía una notificación de prueba a todos los destinatarios de Pulse."
+    },
+    "send_summary": {
+      "name": "Enviar resumen ahora",
+      "description": "Envía el resumen al momento en lugar de a la hora fijada. Si no hay nada que informar, no se envía nada."
+    }
+  }
+}

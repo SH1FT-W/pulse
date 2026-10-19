@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any
 from . import battery as batt
 from .const import SEVERITY, STATUS_LEARNING, STRIP_BUCKET_HOURS, STRIP_DAYS, STRIP_PER_DAY
 from .rhythm import BATTERY_MISSING_AFTER
+from .texts import TEMPLATE_VARS, template_defaults
 
 if TYPE_CHECKING:
     from .monitor import Device, PulseMonitor
@@ -79,6 +80,8 @@ def serialize(
         "critical_auto": device.spec.critical,
         "critical_manual": record.get("critical"),
         "ignored": device.ignored,
+        "label": device.spec.label,
+        "mains": device.spec.mains,
         "last_activity": device.last_activity,
         "silence_from": monitor.silence_from(device),
         "silence_start": monitor.silence_start(device),
@@ -142,6 +145,9 @@ def snapshot(monitor: PulseMonitor, language: str | None = None) -> dict[str, An
             ],
         },
         "settings": monitor.store.settings,
+        # Own notification texts start from these (in the language of the notifications, not of the panel)
+        "template_defaults": template_defaults(monitor.notifier.language),
+        "template_vars": list(TEMPLATE_VARS),
         "targets": notifier.available_targets(),
         "persons": sorted(monitor.hass.states.async_entity_ids("person")),
         "z2m": {

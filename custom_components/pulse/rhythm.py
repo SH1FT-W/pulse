@@ -267,6 +267,7 @@ class Facts:
     flag_on: bool = False  # "battery low" warning sensor on (in addition to the percentage)
     battery_missing_since: float | None = None  # battery entity permanently without a value
     reachable: str | None = None  # integration currently reports the device reachable (its name), otherwise None
+    mains: bool = False  # beta: mains-powered, an unused lamp is not broken
 
 
 def _worse(a: Verdict, b: Verdict) -> Verdict:
@@ -289,6 +290,8 @@ def evaluate(facts: Facts) -> Verdict:
     regular = rhythm.known and rhythm.longest is not None and rhythm.longest <= REGULAR_LONGEST
     if facts.reachable and not regular:
         verdict = Verdict(STATUS_OK, {"key": "ok_reachable", "params": {"via": facts.reachable}})
+    elif facts.mains and not regular:
+        verdict = Verdict(STATUS_OK, {"key": "ok_mains", "params": {}})
     elif rhythm.known:
         verdict = Verdict(STATUS_OK, {"key": "ok_rhythm", "params": {"every": rhythm.typical}})
     else:
@@ -317,7 +320,8 @@ def evaluate(facts: Facts) -> Verdict:
     elif facts.observed_since is not None:
         observed = now - facts.observed_since
         silent = _silent_new(observed, observed - facts.downtime)
-    if facts.reachable and not regular:
+    if (facts.reachable or facts.mains) and not regular:
+        # Mains-powered and only reporting on use: silence is no finding, only "unavailable" counts.
         # The integration sees the device (Matter subscription, cloud "reachable" flag) and it only reports on
         # events: silence means it had nothing to report (a leak sensor without water, a lock during vacation)
         silent, waiting = None, False

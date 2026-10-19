@@ -219,11 +219,13 @@ export class PulseDeviceSheet extends LitElement {
     label: string,
     hint: string,
     checked: boolean,
-    onToggle: (on: boolean) => void
+    onToggle: (on: boolean) => void,
+    locked?: string
   ) {
-    if (this.readonly)
+    // locked: set by an HA label – shown like read-only, with where it comes from
+    if (this.readonly || locked)
       return html`<div class="row">
-        <span class="label">${label}<small>${hint}</small></span>
+        <span class="label">${label}<small>${locked ?? hint}</small></span>
         <span class="value">${t(this.language, checked ? 'on' : 'off')}</span>
       </div>`;
     return html`<div
@@ -292,13 +294,18 @@ export class PulseDeviceSheet extends LitElement {
           </button>`;
     // Battery reason: "Batterie gewechselt" (battery changed) first; otherwise remind is the sensible main action
     const battery = batteryFirst(d);
+    const mains = d.mains === true;
     return html`
       <header class="hero">
         ${
-          meta || d.cloud
+          meta || d.cloud || mains
             ? html`<p class="dname"><ha-icon .icon=${d.icon}></ha-icon><span>${meta}</span>${
                 d.cloud
                   ? html`<span class="chip-cloud"><ha-icon icon="mdi:cloud-outline"></ha-icon>${t(lang, 'cloud_device')}</span>`
+                  : nothing
+              }${
+                mains
+                  ? html`<span class="chip-cloud"><ha-icon icon="mdi:power-plug-outline"></ha-icon>${t(lang, 'mains_chip')}</span>`
                   : nothing
               }</p>`
             : nothing
@@ -311,7 +318,13 @@ export class PulseDeviceSheet extends LitElement {
       ${
         needsAction(d) && !this.readonly
           ? html`<div class="buttons">
-              ${battery ? html`${replaceButton(true)}${laterButton(false)}` : html`${laterButton(!snoozed)}${replaceButton(false)}`}
+              ${
+                mains
+                  ? laterButton(!snoozed)
+                  : battery
+                    ? html`${replaceButton(true)}${laterButton(false)}`
+                    : html`${laterButton(!snoozed)}${replaceButton(false)}`
+              }
             </div>`
           : nothing
       }
@@ -359,7 +372,10 @@ export class PulseDeviceSheet extends LitElement {
           : nothing
       }
 
-      <section class="stats">
+      ${
+        mains
+          ? html`<p class="fc muted"><ha-icon icon="mdi:power-plug-outline"></ha-icon><span>${t(lang, 'mains_note')}</span></p>`
+          : html`<section class="stats">
         <div>
           <span>${t(lang, 'battery')}</span>
           <b class=${b.trusted ? '' : 'faint'}>${level}</b>
@@ -368,20 +384,25 @@ export class PulseDeviceSheet extends LitElement {
         <div><span>${t(lang, 'battery_type')}</span><b>${typeText}</b></div>
         <div><span>${t(lang, 'stat_changed')}</span><b>${lastChange !== undefined ? shortDate(lang, lastChange, this.now, zone) : t(lang, 'unknown')}</b></div>
       </section>
-      ${forecast ? html`<p class=${b.forecast ? 'fc' : 'fc muted'}><ha-icon icon=${b.forecast ? 'mdi:battery-clock-outline' : 'mdi:battery-unknown'}></ha-icon><span>${forecast}</span></p>` : nothing}
+      ${forecast ? html`<p class=${b.forecast ? 'fc' : 'fc muted'}><ha-icon icon=${b.forecast ? 'mdi:battery-clock-outline' : 'mdi:battery-unknown'}></ha-icon><span>${forecast}</span></p>` : nothing}`
+      }
 
       ${this.renderSuggestions(d)}
 
       <div class="list quick">
         ${
-          needsAction(d) || this.readonly
+          needsAction(d) || this.readonly || mains
             ? nothing
             : html`<button class="row action" type="button" @click=${() => this.fire('replaced', { id: d.id })}>
                 <span class="label">${t(lang, 'replaced_now')}</span>
               </button>`
         }
-        ${this.switchRow(t(lang, 'important'), t(lang, 'important_hint'), d.critical, (on) =>
-          this.change({ critical: criticalChange(d, on) })
+        ${this.switchRow(
+          t(lang, 'important'),
+          t(lang, 'important_hint'),
+          d.critical,
+          (on) => this.change({ critical: criticalChange(d, on) }),
+          d.label === 'important' ? t(lang, 'label_set', { label: 'pulse_important' }) : undefined
         )}
       </div>
 
@@ -430,27 +451,10 @@ export class PulseDeviceSheet extends LitElement {
     </section>`;
   }
 
-  /** Device settings: collapsed under the heartbeat, calm and without heavy surfaces. */
-  private renderSettings(d: Device) {
+  private renderBatterySettings(d: Device, typeOptions: Choice[], chemOptions: Choice[]) {
     const lang = this.language;
     const b = d.battery;
-    const typeOptions: Choice[] = [
-      { value: '', label: t(lang, 'type_unknown') },
-      ...this.batteryTypes.map((type) => ({ value: type, label: type })),
-    ];
-    const chemOptions: Choice[] = [
-      { value: '', label: t(lang, 'chem_unknown') },
-      ...this.chemistries.map((c) => ({
-        value: c,
-        label: t(lang, CHEM_KEYS[c] ?? 'chem_unknown'),
-      })),
-    ];
-    const partners: Choice[] = [
-      { value: '', label: t(lang, 'partner_none') },
-      ...partnerOptions(this.devices, d).map((p) => ({ value: p.id, label: p.name })),
-    ];
-    return html`<div class="settings">
-      <section class="section">
+    return html`<section class="section">
         <h4 class="section-title">${t(lang, 'battery')}</h4>
         <div class="list">
           ${this.picker(t(lang, 'battery_type'), b.type ?? '', typeOptions, (v) => this.change({ battery_type: v || null }))}
@@ -475,8 +479,30 @@ export class PulseDeviceSheet extends LitElement {
               : html`<div class="row"><span class="label muted">${t(lang, 'never_replaced')}</span></div>`
           }
         </div>
-      </section>
+      </section>`;
+  }
 
+  /** Device settings: collapsed under the heartbeat, calm and without heavy surfaces. */
+  private renderSettings(d: Device) {
+    const lang = this.language;
+    const typeOptions: Choice[] = [
+      { value: '', label: t(lang, 'type_unknown') },
+      ...this.batteryTypes.map((type) => ({ value: type, label: type })),
+    ];
+    const chemOptions: Choice[] = [
+      { value: '', label: t(lang, 'chem_unknown') },
+      ...this.chemistries.map((c) => ({
+        value: c,
+        label: t(lang, CHEM_KEYS[c] ?? 'chem_unknown'),
+      })),
+    ];
+    const partners: Choice[] = [
+      { value: '', label: t(lang, 'partner_none') },
+      ...partnerOptions(this.devices, d).map((p) => ({ value: p.id, label: p.name })),
+    ];
+    const mains = d.mains === true;
+    return html`<div class="settings">
+      ${mains ? nothing : this.renderBatterySettings(d, typeOptions, chemOptions)}
       <section class="section">
         <h4 class="section-title">${t(lang, 'partner')}</h4>
         <div class="list">
@@ -488,8 +514,12 @@ export class PulseDeviceSheet extends LitElement {
       <section class="section">
         <h4 class="section-title">${t(lang, 'monitoring')}</h4>
         <div class="list">
-          ${this.switchRow(t(lang, 'ignore'), t(lang, 'ignore_hint'), d.ignored, (on) =>
-            this.change({ ignored: on })
+          ${this.switchRow(
+            t(lang, 'ignore'),
+            t(lang, 'ignore_hint'),
+            d.ignored,
+            (on) => this.change({ ignored: on }),
+            d.label === 'ignore' ? t(lang, 'label_set', { label: 'pulse_ignore' }) : undefined
           )}
           ${
             this.readonly

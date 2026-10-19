@@ -33,6 +33,7 @@ export const DE: Record<keyof typeof EN, string> = {
   snoozed_until: 'Erinnert {when}',
   details: 'Details',
   ignore: 'Nicht überwacht',
+  label_set: 'Festgelegt über das Home-Assistant-Label „{label}“.',
   ignore_hint: 'Pulse lässt dieses Gerät in Ruhe.',
   ignored_done: '{name} wird nicht mehr überwacht',
   resume: 'Wieder überwachen',
@@ -323,14 +324,42 @@ export const DE: Record<keyof typeof EN, string> = {
   new_calver_title: 'Neue Versionsnummern',
   new_calver_text:
     'Ab jetzt lesen sich Versionen als Jahr.Monat.Release: 26.10.4 ist das vierte Release im Oktober 2026. Der Sprung von 1.1.0 ist gewollt – Updates werden wie gewohnt erkannt.',
-  new_reachable_title: 'Erreichbar heißt in Ordnung',
-  new_reachable_text:
-    'Bei Matter-Geräten und Cloud-Geräten mit Erreichbarkeits-Sensor (z. B. Netatmo) fragt Pulse jetzt die Integration. Ein Lecksensor ohne Wasser oder ein selten benutztes Schloss gilt nicht mehr als still. Geräte, die von selbst regelmäßig melden, prüft Pulse weiter: schweigen sie trotz Verbindung, kommt „Prüfen“.',
-  new_restart_title: 'Neustarts täuschen nicht mehr',
-  new_restart_text:
-    'Nach einem Neustart von Home Assistant sah ein stilles Gerät kurz wieder lebendig aus. Diese Scheinmeldungen zählen nicht mehr.',
-  new_sheet_title: 'Einstellungen im Blick',
-  new_sheet_text:
-    'Klappst du im Gerätedetail die Einstellungen auf, wächst das Fenster mit und zeigt sie gleich an.',
   due_untyped: 'Typ offen: {names}',
+  beta: 'Beta',
+  mains_beta: 'Netzgeräte überwachen',
+  mains_beta_hint:
+    'Auch Geräte am Strom (Zigbee, Z-Wave, Matter, Shelly, ESPHome …). Pulse meldet, wenn eines nicht mehr erreichbar ist oder trotz sonst regelmäßiger Meldungen still wird. Noch in Erprobung.',
+  mains_devices: 'Netzgeräte',
+  filter_mains: 'Netzgeräte',
+  mains_chip: 'Netzstrom · Beta',
+  mains_note:
+    'Hängt am Strom, keine Batterie. Pulse achtet darauf, ob es erreichbar ist und, wenn es sich regelmäßig meldet, ob es still wird.',
+  texts: 'Texte',
+  texts_hint:
+    'Eigene Titel und Texte für Mitteilungen zu einem Gerät. Zusammenfassungen bleiben, wie sie sind.',
+  tpl_failed: 'Ausgefallen',
+  tpl_check: 'Prüfen',
+  tpl_battery: 'Batterie',
+  tpl_recovered: 'Läuft wieder',
+  tpl_default: 'Standard',
+  tpl_custom: 'Eigener Text',
+  tpl_title_field: 'Titel',
+  tpl_message_field: 'Text',
+  tpl_vars: 'Platzhalter',
+  tpl_vars_hint:
+    'Tippen fügt ein. {area} bleibt leer, wenn der Raum schon im Namen steht; leere Werte verschwinden samt „ · “.',
+  tpl_preview: 'Vorschau',
+  tpl_reset: 'Standard verwenden',
+  tpl_save: 'Sichern',
+  new_mains_title: 'Netzgeräte als Beta',
+  new_mains_text:
+    'Auch Steckdosen, Lampen und Schalter am Strom können hängen. Unter Mitteilungen → Beta einschalten.',
+  new_texts_title: 'Deine eigenen Worte',
+  new_texts_text:
+    'Titel und Text jeder Mitteilung lassen sich anpassen, mit Platzhaltern und Vorschau.',
+  new_labels_title: 'Labels statt Klicks',
+  new_labels_text:
+    'Das HA-Label pulse_important oder pulse_ignore an einem Gerät reicht. Mitteilungen nennen jetzt den Raum.',
+  new_languages_title: 'Fünf Sprachen',
+  new_languages_text: 'Pulse spricht Deutsch, Englisch, Französisch, Spanisch und Niederländisch.',
 };

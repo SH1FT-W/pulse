@@ -1,0 +1,105 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Pulse",
+        "description": "Pulse a trouvé {count} appareils sur pile. Il écoute seulement ce qu’ils envoient de toute façon et ne les interroge jamais, il ne coûte donc aucune pile. Tout le reste se configure dans le panneau Pulse."
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "Pulse est déjà configuré."
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "problem": {
+        "name": "Problème Pulse"
+      }
+    },
+    "sensor": {
+      "status": {
+        "name": "État Pulse",
+        "state": {
+          "ok": "Bon",
+          "learning": "Apprend",
+          "watch": "À surveiller",
+          "check": "À vérifier",
+          "failed": "En panne"
+        }
+      },
+      "last_report": {
+        "name": "Dernier signal"
+      },
+      "problems": {
+        "name": "Problèmes",
+        "unit_of_measurement": "appareils"
+      },
+      "monitored": {
+        "name": "Appareils surveillés",
+        "unit_of_measurement": "appareils"
+      }
+    }
+  },
+  "issues": {
+    "device_failed": {
+      "title": "{name} ne répond pas",
+      "description": "{reason}\n\nLe plus souvent, la pile est vide. Après l’avoir remplacée, choisissez « Pile remplacée » dans Pulse (barre latérale) ou attendez que l’appareil se signale à nouveau. Ce message disparaît alors de lui-même."
+    }
+  },
+  "exceptions": {
+    "not_loaded": {
+      "message": "Pulse n’est pas configuré."
+    },
+    "unknown_device": {
+      "message": "Pulse ne surveille pas cet appareil."
+    }
+  },
+  "services": {
+    "mark_replaced": {
+      "name": "Pile remplacée",
+      "description": "Enregistre un changement de pile pour un appareil.",
+      "fields": {
+        "device_id": {
+          "name": "Appareil",
+          "description": "L’appareil dont la pile a été remplacée."
+        }
+      }
+    },
+    "snooze": {
+      "name": "Reporter le rappel",
+      "description": "Plus de notifications pour un appareil pendant un moment.",
+      "fields": {
+        "device_id": {
+          "name": "Appareil",
+          "description": "L’appareil."
+        },
+        "hours": {
+          "name": "Heures",
+          "description": "Durée du silence. 0 annule un report."
+        }
+      }
+    },
+    "ignore": {
+      "name": "Ignorer l’appareil",
+      "description": "Pulse arrête de surveiller un appareil (ou reprend).",
+      "fields": {
+        "device_id": {
+          "name": "Appareil",
+          "description": "L’appareil."
+        },
+        "ignored": {
+          "name": "Ignorer",
+          "description": "Désactivé reprend la surveillance."
+        }
+      }
+    },
+    "send_test": {
+      "name": "Envoyer une notification de test",
+      "description": "Envoie une notification de test à tous les destinataires de Pulse."
+    },
+    "send_summary": {
+      "name": "Envoyer le résumé maintenant",
+      "description": "Envoie le résumé tout de suite au lieu de l’heure définie. S’il n’y a rien à signaler, rien n’est envoyé."
+    }
+  }
+}

@@ -58,7 +58,7 @@ var e = globalThis, t = e.ShadowRoot && (e.ShadyCSS === void 0 || e.ShadyCSS.nat
 		}
 		return n;
 	}
-}, ne = (e, t) => !l(e, t), re = {
+}, ne = (e, t) => !l(e, t), y = {
 	attribute: !0,
 	type: String,
 	converter: v,
@@ -67,14 +67,14 @@ var e = globalThis, t = e.ShadowRoot && (e.ShadyCSS === void 0 || e.ShadyCSS.nat
 	hasChanged: ne
 };
 Symbol.metadata ??= Symbol("metadata"), h.litPropertyMetadata ??= /* @__PURE__ */ new WeakMap();
-var y = class extends HTMLElement {
+var b = class extends HTMLElement {
 	static addInitializer(e) {
 		this._$Ei(), (this.l ??= []).push(e);
 	}
 	static get observedAttributes() {
 		return this.finalize(), this._$Eh && [...this._$Eh.keys()];
 	}
-	static createProperty(e, t = re) {
+	static createProperty(e, t = y) {
 		if (t.state && (t.attribute = !1), this._$Ei(), this.prototype.hasOwnProperty(e) && ((t = Object.create(t)).wrapped = !0), this.elementProperties.set(e, t), !t.noAccessor) {
 			let n = Symbol(), r = this.getPropertyDescriptor(e, n, t);
 			r !== void 0 && u(this.prototype, e, r);
@@ -100,7 +100,7 @@ var y = class extends HTMLElement {
 		};
 	}
 	static getPropertyOptions(e) {
-		return this.elementProperties.get(e) ?? re;
+		return this.elementProperties.get(e) ?? y;
 	}
 	static _$Ei() {
 		if (this.hasOwnProperty(_("elementProperties"))) return;
@@ -251,89 +251,89 @@ var y = class extends HTMLElement {
 	updated(e) {}
 	firstUpdated(e) {}
 };
-y.elementStyles = [], y.shadowRootOptions = { mode: "open" }, y[_("elementProperties")] = /* @__PURE__ */ new Map(), y[_("finalized")] = /* @__PURE__ */ new Map(), te?.({ ReactiveElement: y }), (h.reactiveElementVersions ??= []).push("2.1.2");
+b.elementStyles = [], b.shadowRootOptions = { mode: "open" }, b[_("elementProperties")] = /* @__PURE__ */ new Map(), b[_("finalized")] = /* @__PURE__ */ new Map(), te?.({ ReactiveElement: b }), (h.reactiveElementVersions ??= []).push("2.1.2");
 //#endregion
 //#region node_modules/lit-html/lit-html.js
-var ie = globalThis, ae = (e) => e, oe = ie.trustedTypes, se = oe ? oe.createPolicy("lit-html", { createHTML: (e) => e }) : void 0, ce = "$lit$", b = `lit$${Math.random().toFixed(9).slice(2)}$`, le = "?" + b, ue = `<${le}>`, x = document, S = () => x.createComment(""), C = (e) => e === null || typeof e != "object" && typeof e != "function", de = Array.isArray, fe = (e) => de(e) || typeof e?.[Symbol.iterator] == "function", pe = "[ 	\n\f\r]", me = /<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g, he = /-->/g, ge = />/g, w = RegExp(`>|${pe}(?:([^\\s"'>=/]+)(${pe}*=${pe}*(?:[^ \t\n\f\r"'\`<>=]|("|')|))|$)`, "g"), _e = /'/g, ve = /"/g, ye = /^(?:script|style|textarea|title)$/i, be = (e) => (t, ...n) => ({
+var re = globalThis, ie = (e) => e, ae = re.trustedTypes, oe = ae ? ae.createPolicy("lit-html", { createHTML: (e) => e }) : void 0, se = "$lit$", x = `lit$${Math.random().toFixed(9).slice(2)}$`, ce = "?" + x, le = `<${ce}>`, S = document, C = () => S.createComment(""), w = (e) => e === null || typeof e != "object" && typeof e != "function", ue = Array.isArray, de = (e) => ue(e) || typeof e?.[Symbol.iterator] == "function", fe = "[ 	\n\f\r]", pe = /<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g, me = /-->/g, he = />/g, T = RegExp(`>|${fe}(?:([^\\s"'>=/]+)(${fe}*=${fe}*(?:[^ \t\n\f\r"'\`<>=]|("|')|))|$)`, "g"), ge = /'/g, _e = /"/g, ve = /^(?:script|style|textarea|title)$/i, ye = (e) => (t, ...n) => ({
 	_$litType$: e,
 	strings: t,
 	values: n
-}), T = be(1), E = be(2), D = Symbol.for("lit-noChange"), O = Symbol.for("lit-nothing"), xe = /* @__PURE__ */ new WeakMap(), k = x.createTreeWalker(x, 129);
-function Se(e, t) {
-	if (!de(e) || !e.hasOwnProperty("raw")) throw Error("invalid template strings array");
-	return se === void 0 ? t : se.createHTML(t);
+}), E = ye(1), D = ye(2), O = Symbol.for("lit-noChange"), k = Symbol.for("lit-nothing"), be = /* @__PURE__ */ new WeakMap(), A = S.createTreeWalker(S, 129);
+function xe(e, t) {
+	if (!ue(e) || !e.hasOwnProperty("raw")) throw Error("invalid template strings array");
+	return oe === void 0 ? t : oe.createHTML(t);
 }
-var Ce = (e, t) => {
-	let n = e.length - 1, r = [], i, a = t === 2 ? "<svg>" : t === 3 ? "<math>" : "", o = me;
+var Se = (e, t) => {
+	let n = e.length - 1, r = [], i, a = t === 2 ? "<svg>" : t === 3 ? "<math>" : "", o = pe;
 	for (let t = 0; t < n; t++) {
 		let n = e[t], s, c, l = -1, u = 0;
-		for (; u < n.length && (o.lastIndex = u, c = o.exec(n), c !== null);) u = o.lastIndex, o === me ? c[1] === "!--" ? o = he : c[1] === void 0 ? c[2] === void 0 ? c[3] !== void 0 && (o = w) : (ye.test(c[2]) && (i = RegExp("</" + c[2], "g")), o = w) : o = ge : o === w ? c[0] === ">" ? (o = i ?? me, l = -1) : c[1] === void 0 ? l = -2 : (l = o.lastIndex - c[2].length, s = c[1], o = c[3] === void 0 ? w : c[3] === "\"" ? ve : _e) : o === ve || o === _e ? o = w : o === he || o === ge ? o = me : (o = w, i = void 0);
-		let d = o === w && e[t + 1].startsWith("/>") ? " " : "";
-		a += o === me ? n + ue : l >= 0 ? (r.push(s), n.slice(0, l) + ce + n.slice(l) + b + d) : n + b + (l === -2 ? t : d);
+		for (; u < n.length && (o.lastIndex = u, c = o.exec(n), c !== null);) u = o.lastIndex, o === pe ? c[1] === "!--" ? o = me : c[1] === void 0 ? c[2] === void 0 ? c[3] !== void 0 && (o = T) : (ve.test(c[2]) && (i = RegExp("</" + c[2], "g")), o = T) : o = he : o === T ? c[0] === ">" ? (o = i ?? pe, l = -1) : c[1] === void 0 ? l = -2 : (l = o.lastIndex - c[2].length, s = c[1], o = c[3] === void 0 ? T : c[3] === "\"" ? _e : ge) : o === _e || o === ge ? o = T : o === me || o === he ? o = pe : (o = T, i = void 0);
+		let d = o === T && e[t + 1].startsWith("/>") ? " " : "";
+		a += o === pe ? n + le : l >= 0 ? (r.push(s), n.slice(0, l) + se + n.slice(l) + x + d) : n + x + (l === -2 ? t : d);
 	}
-	return [Se(e, a + (e[n] || "<?>") + (t === 2 ? "</svg>" : t === 3 ? "</math>" : "")), r];
-}, we = class e {
+	return [xe(e, a + (e[n] || "<?>") + (t === 2 ? "</svg>" : t === 3 ? "</math>" : "")), r];
+}, Ce = class e {
 	constructor({ strings: t, _$litType$: n }, r) {
 		let i;
 		this.parts = [];
-		let a = 0, o = 0, s = t.length - 1, c = this.parts, [l, u] = Ce(t, n);
-		if (this.el = e.createElement(l, r), k.currentNode = this.el.content, n === 2 || n === 3) {
+		let a = 0, o = 0, s = t.length - 1, c = this.parts, [l, u] = Se(t, n);
+		if (this.el = e.createElement(l, r), A.currentNode = this.el.content, n === 2 || n === 3) {
 			let e = this.el.content.firstChild;
 			e.replaceWith(...e.childNodes);
 		}
-		for (; (i = k.nextNode()) !== null && c.length < s;) {
+		for (; (i = A.nextNode()) !== null && c.length < s;) {
 			if (i.nodeType === 1) {
-				if (i.hasAttributes()) for (let e of i.getAttributeNames()) if (e.endsWith(ce)) {
-					let t = u[o++], n = i.getAttribute(e).split(b), r = /([.?@])?(.*)/.exec(t);
+				if (i.hasAttributes()) for (let e of i.getAttributeNames()) if (e.endsWith(se)) {
+					let t = u[o++], n = i.getAttribute(e).split(x), r = /([.?@])?(.*)/.exec(t);
 					c.push({
 						type: 1,
 						index: a,
 						name: r[2],
 						strings: n,
-						ctor: r[1] === "." ? De : r[1] === "?" ? Oe : r[1] === "@" ? ke : j
+						ctor: r[1] === "." ? Ee : r[1] === "?" ? De : r[1] === "@" ? Oe : M
 					}), i.removeAttribute(e);
-				} else e.startsWith(b) && (c.push({
+				} else e.startsWith(x) && (c.push({
 					type: 6,
 					index: a
 				}), i.removeAttribute(e));
-				if (ye.test(i.tagName)) {
-					let e = i.textContent.split(b), t = e.length - 1;
+				if (ve.test(i.tagName)) {
+					let e = i.textContent.split(x), t = e.length - 1;
 					if (t > 0) {
-						i.textContent = oe ? oe.emptyScript : "";
-						for (let n = 0; n < t; n++) i.append(e[n], S()), k.nextNode(), c.push({
+						i.textContent = ae ? ae.emptyScript : "";
+						for (let n = 0; n < t; n++) i.append(e[n], C()), A.nextNode(), c.push({
 							type: 2,
 							index: ++a
 						});
-						i.append(e[t], S());
+						i.append(e[t], C());
 					}
 				}
 			} else if (i.nodeType === 8) {
-				if (i.data === le) c.push({
+				if (i.data === ce) c.push({
 					type: 2,
 					index: a
 				});
 				else {
 					let e = -1;
-					for (; (e = i.data.indexOf(b, e + 1)) !== -1;) c.push({
+					for (; (e = i.data.indexOf(x, e + 1)) !== -1;) c.push({
 						type: 7,
 						index: a
-					}), e += b.length - 1;
+					}), e += x.length - 1;
 				}
 			}
 			a++;
 		}
 	}
 	static createElement(e, t) {
-		let n = x.createElement("template");
+		let n = S.createElement("template");
 		return n.innerHTML = e, n;
 	}
 };
-function A(e, t, n = e, r) {
-	if (t === D) return t;
-	let i = r === void 0 ? n._$Cl : n._$Co?.[r], a = C(t) ? void 0 : t._$litDirective$;
-	return i?.constructor !== a && (i?._$AO?.(!1), a === void 0 ? i = void 0 : (i = new a(e), i._$AT(e, n, r)), r === void 0 ? n._$Cl = i : (n._$Co ??= [])[r] = i), i !== void 0 && (t = A(e, i._$AS(e, t.values), i, r)), t;
+function j(e, t, n = e, r) {
+	if (t === O) return t;
+	let i = r === void 0 ? n._$Cl : n._$Co?.[r], a = w(t) ? void 0 : t._$litDirective$;
+	return i?.constructor !== a && (i?._$AO?.(!1), a === void 0 ? i = void 0 : (i = new a(e), i._$AT(e, n, r)), r === void 0 ? n._$Cl = i : (n._$Co ??= [])[r] = i), i !== void 0 && (t = j(e, i._$AS(e, t.values), i, r)), t;
 }
-var Te = class {
+var we = class {
 	constructor(e, t) {
 		this._$AV = [], this._$AN = void 0, this._$AD = e, this._$AM = t;
 	}
@@ -344,28 +344,28 @@ var Te = class {
 		return this._$AM._$AU;
 	}
 	u(e) {
-		let { el: { content: t }, parts: n } = this._$AD, r = (e?.creationScope ?? x).importNode(t, !0);
-		k.currentNode = r;
-		let i = k.nextNode(), a = 0, o = 0, s = n[0];
+		let { el: { content: t }, parts: n } = this._$AD, r = (e?.creationScope ?? S).importNode(t, !0);
+		A.currentNode = r;
+		let i = A.nextNode(), a = 0, o = 0, s = n[0];
 		for (; s !== void 0;) {
 			if (a === s.index) {
 				let t;
-				s.type === 2 ? t = new Ee(i, i.nextSibling, this, e) : s.type === 1 ? t = new s.ctor(i, s.name, s.strings, this, e) : s.type === 6 && (t = new Ae(i, this, e)), this._$AV.push(t), s = n[++o];
+				s.type === 2 ? t = new Te(i, i.nextSibling, this, e) : s.type === 1 ? t = new s.ctor(i, s.name, s.strings, this, e) : s.type === 6 && (t = new ke(i, this, e)), this._$AV.push(t), s = n[++o];
 			}
-			a !== s?.index && (i = k.nextNode(), a++);
+			a !== s?.index && (i = A.nextNode(), a++);
 		}
-		return k.currentNode = x, r;
+		return A.currentNode = S, r;
 	}
 	p(e) {
 		let t = 0;
 		for (let n of this._$AV) n !== void 0 && (n.strings === void 0 ? n._$AI(e[t]) : (n._$AI(e, n, t), t += n.strings.length - 2)), t++;
 	}
-}, Ee = class e {
+}, Te = class e {
 	get _$AU() {
 		return this._$AM?._$AU ?? this._$Cv;
 	}
 	constructor(e, t, n, r) {
-		this.type = 2, this._$AH = O, this._$AN = void 0, this._$AA = e, this._$AB = t, this._$AM = n, this.options = r, this._$Cv = r?.isConnected ?? !0;
+		this.type = 2, this._$AH = k, this._$AN = void 0, this._$AA = e, this._$AB = t, this._$AM = n, this.options = r, this._$Cv = r?.isConnected ?? !0;
 	}
 	get parentNode() {
 		let e = this._$AA.parentNode, t = this._$AM;
@@ -378,7 +378,7 @@ var Te = class {
 		return this._$AB;
 	}
 	_$AI(e, t = this) {
-		e = A(this, e, t), C(e) ? e === O || e == null || e === "" ? (this._$AH !== O && this._$AR(), this._$AH = O) : e !== this._$AH && e !== D && this._(e) : e._$litType$ === void 0 ? e.nodeType === void 0 ? fe(e) ? this.k(e) : this._(e) : this.T(e) : this.$(e);
+		e = j(this, e, t), w(e) ? e === k || e == null || e === "" ? (this._$AH !== k && this._$AR(), this._$AH = k) : e !== this._$AH && e !== O && this._(e) : e._$litType$ === void 0 ? e.nodeType === void 0 ? de(e) ? this.k(e) : this._(e) : this.T(e) : this.$(e);
 	}
 	O(e) {
 		return this._$AA.parentNode.insertBefore(e, this._$AB);
@@ -387,36 +387,36 @@ var Te = class {
 		this._$AH !== e && (this._$AR(), this._$AH = this.O(e));
 	}
 	_(e) {
-		this._$AH !== O && C(this._$AH) ? this._$AA.nextSibling.data = e : this.T(x.createTextNode(e)), this._$AH = e;
+		this._$AH !== k && w(this._$AH) ? this._$AA.nextSibling.data = e : this.T(S.createTextNode(e)), this._$AH = e;
 	}
 	$(e) {
-		let { values: t, _$litType$: n } = e, r = typeof n == "number" ? this._$AC(e) : (n.el === void 0 && (n.el = we.createElement(Se(n.h, n.h[0]), this.options)), n);
+		let { values: t, _$litType$: n } = e, r = typeof n == "number" ? this._$AC(e) : (n.el === void 0 && (n.el = Ce.createElement(xe(n.h, n.h[0]), this.options)), n);
 		if (this._$AH?._$AD === r) this._$AH.p(t);
 		else {
-			let e = new Te(r, this), n = e.u(this.options);
+			let e = new we(r, this), n = e.u(this.options);
 			e.p(t), this.T(n), this._$AH = e;
 		}
 	}
 	_$AC(e) {
-		let t = xe.get(e.strings);
-		return t === void 0 && xe.set(e.strings, t = new we(e)), t;
+		let t = be.get(e.strings);
+		return t === void 0 && be.set(e.strings, t = new Ce(e)), t;
 	}
 	k(t) {
-		de(this._$AH) || (this._$AH = [], this._$AR());
+		ue(this._$AH) || (this._$AH = [], this._$AR());
 		let n = this._$AH, r, i = 0;
-		for (let a of t) i === n.length ? n.push(r = new e(this.O(S()), this.O(S()), this, this.options)) : r = n[i], r._$AI(a), i++;
+		for (let a of t) i === n.length ? n.push(r = new e(this.O(C()), this.O(C()), this, this.options)) : r = n[i], r._$AI(a), i++;
 		i < n.length && (this._$AR(r && r._$AB.nextSibling, i), n.length = i);
 	}
 	_$AR(e = this._$AA.nextSibling, t) {
 		for (this._$AP?.(!1, !0, t); e !== this._$AB;) {
-			let t = ae(e).nextSibling;
-			ae(e).remove(), e = t;
+			let t = ie(e).nextSibling;
+			ie(e).remove(), e = t;
 		}
 	}
 	setConnected(e) {
 		this._$AM === void 0 && (this._$Cv = e, this._$AP?.(e));
 	}
-}, j = class {
+}, M = class {
 	get tagName() {
 		return this.element.tagName;
 	}
@@ -424,47 +424,47 @@ var Te = class {
 		return this._$AM._$AU;
 	}
 	constructor(e, t, n, r, i) {
-		this.type = 1, this._$AH = O, this._$AN = void 0, this.element = e, this.name = t, this._$AM = r, this.options = i, n.length > 2 || n[0] !== "" || n[1] !== "" ? (this._$AH = Array(n.length - 1).fill(/* @__PURE__ */ new String()), this.strings = n) : this._$AH = O;
+		this.type = 1, this._$AH = k, this._$AN = void 0, this.element = e, this.name = t, this._$AM = r, this.options = i, n.length > 2 || n[0] !== "" || n[1] !== "" ? (this._$AH = Array(n.length - 1).fill(/* @__PURE__ */ new String()), this.strings = n) : this._$AH = k;
 	}
 	_$AI(e, t = this, n, r) {
 		let i = this.strings, a = !1;
-		if (i === void 0) e = A(this, e, t, 0), a = !C(e) || e !== this._$AH && e !== D, a && (this._$AH = e);
+		if (i === void 0) e = j(this, e, t, 0), a = !w(e) || e !== this._$AH && e !== O, a && (this._$AH = e);
 		else {
 			let r = e, o, s;
-			for (e = i[0], o = 0; o < i.length - 1; o++) s = A(this, r[n + o], t, o), s === D && (s = this._$AH[o]), a ||= !C(s) || s !== this._$AH[o], s === O ? e = O : e !== O && (e += (s ?? "") + i[o + 1]), this._$AH[o] = s;
+			for (e = i[0], o = 0; o < i.length - 1; o++) s = j(this, r[n + o], t, o), s === O && (s = this._$AH[o]), a ||= !w(s) || s !== this._$AH[o], s === k ? e = k : e !== k && (e += (s ?? "") + i[o + 1]), this._$AH[o] = s;
 		}
 		a && !r && this.j(e);
 	}
 	j(e) {
-		e === O ? this.element.removeAttribute(this.name) : this.element.setAttribute(this.name, e ?? "");
+		e === k ? this.element.removeAttribute(this.name) : this.element.setAttribute(this.name, e ?? "");
 	}
-}, De = class extends j {
+}, Ee = class extends M {
 	constructor() {
 		super(...arguments), this.type = 3;
 	}
 	j(e) {
-		this.element[this.name] = e === O ? void 0 : e;
+		this.element[this.name] = e === k ? void 0 : e;
 	}
-}, Oe = class extends j {
+}, De = class extends M {
 	constructor() {
 		super(...arguments), this.type = 4;
 	}
 	j(e) {
-		this.element.toggleAttribute(this.name, !!e && e !== O);
+		this.element.toggleAttribute(this.name, !!e && e !== k);
 	}
-}, ke = class extends j {
+}, Oe = class extends M {
 	constructor(e, t, n, r, i) {
 		super(e, t, n, r, i), this.type = 5;
 	}
 	_$AI(e, t = this) {
-		if ((e = A(this, e, t, 0) ?? O) === D) return;
-		let n = this._$AH, r = e === O && n !== O || e.capture !== n.capture || e.once !== n.once || e.passive !== n.passive, i = e !== O && (n === O || r);
+		if ((e = j(this, e, t, 0) ?? k) === O) return;
+		let n = this._$AH, r = e === k && n !== k || e.capture !== n.capture || e.once !== n.once || e.passive !== n.passive, i = e !== k && (n === k || r);
 		r && this.element.removeEventListener(this.name, this, n), i && this.element.addEventListener(this.name, this, e), this._$AH = e;
 	}
 	handleEvent(e) {
 		typeof this._$AH == "function" ? this._$AH.call(this.options?.host ?? this.element, e) : this._$AH.handleEvent(e);
 	}
-}, Ae = class {
+}, ke = class {
 	constructor(e, t, n) {
 		this.element = e, this.type = 6, this._$AN = void 0, this._$AM = t, this.options = n;
 	}
@@ -472,33 +472,33 @@ var Te = class {
 		return this._$AM._$AU;
 	}
 	_$AI(e) {
-		A(this, e);
+		j(this, e);
 	}
-}, je = {
-	M: ce,
-	P: b,
-	A: le,
+}, Ae = {
+	M: se,
+	P: x,
+	A: ce,
 	C: 1,
-	L: Ce,
-	R: Te,
-	D: fe,
-	V: A,
-	I: Ee,
-	H: j,
-	N: Oe,
-	U: ke,
-	B: De,
-	F: Ae
-}, Me = ie.litHtmlPolyfillSupport;
-Me?.(we, Ee), (ie.litHtmlVersions ??= []).push("3.3.3");
-var Ne = (e, t, n) => {
+	L: Se,
+	R: we,
+	D: de,
+	V: j,
+	I: Te,
+	H: M,
+	N: De,
+	U: Oe,
+	B: Ee,
+	F: ke
+}, je = re.litHtmlPolyfillSupport;
+je?.(Ce, Te), (re.litHtmlVersions ??= []).push("3.3.3");
+var Me = (e, t, n) => {
 	let r = n?.renderBefore ?? t, i = r._$litPart$;
 	if (i === void 0) {
 		let e = n?.renderBefore ?? null;
-		r._$litPart$ = i = new Ee(t.insertBefore(S(), e), e, void 0, n ?? {});
+		r._$litPart$ = i = new Te(t.insertBefore(C(), e), e, void 0, n ?? {});
 	}
 	return i._$AI(e), i;
-}, Pe = globalThis, M = class extends y {
+}, Ne = globalThis, N = class extends b {
 	constructor() {
 		super(...arguments), this.renderOptions = { host: this }, this._$Do = void 0;
 	}
@@ -508,7 +508,7 @@ var Ne = (e, t, n) => {
 	}
 	update(e) {
 		let t = this.render();
-		this.hasUpdated || (this.renderOptions.isConnected = this.isConnected), super.update(e), this._$Do = Ne(t, this.renderRoot, this.renderOptions);
+		this.hasUpdated || (this.renderOptions.isConnected = this.isConnected), super.update(e), this._$Do = Me(t, this.renderRoot, this.renderOptions);
 	}
 	connectedCallback() {
 		super.connectedCallback(), this._$Do?.setConnected(!0);
@@ -517,18 +517,18 @@ var Ne = (e, t, n) => {
 		super.disconnectedCallback(), this._$Do?.setConnected(!1);
 	}
 	render() {
-		return D;
+		return O;
 	}
 };
-M._$litElement$ = !0, M.finalized = !0, Pe.litElementHydrateSupport?.({ LitElement: M });
-var Fe = Pe.litElementPolyfillSupport;
-Fe?.({ LitElement: M }), (Pe.litElementVersions ??= []).push("4.2.2");
+N._$litElement$ = !0, N.finalized = !0, Ne.litElementHydrateSupport?.({ LitElement: N });
+var Pe = Ne.litElementPolyfillSupport;
+Pe?.({ LitElement: N }), (Ne.litElementVersions ??= []).push("4.2.2");
 //#endregion
 //#region src/ha.ts
-function Ie(e, t) {
+function Fe(e, t) {
 	return e?.kioskMode !== !0 && (t || e?.dockedSidebar === "always_hidden");
 }
-function N(e, t, n) {
+function P(e, t, n) {
 	let r = n ? {
 		message: t,
 		action: n,
@@ -540,35 +540,35 @@ function N(e, t, n) {
 		composed: !0
 	}));
 }
-function P(e, t = !1) {
+function F(e, t = !1) {
 	t ? history.replaceState(null, "", e) : history.pushState(null, "", e), window.dispatchEvent(new CustomEvent("location-changed", { detail: { replace: t } }));
 }
-function F(e, t) {
+function I(e, t) {
 	customElements.get(e) || customElements.define(e, t);
 }
-function Le(e) {
+function Ie(e) {
 	return e instanceof Error ? e.message : typeof e == "object" && e && "message" in e ? String(e.message) : String(e);
 }
-function Re(e) {
+function Le(e) {
 	let t = e.target;
 	return t instanceof HTMLSelectElement || t instanceof HTMLInputElement ? t.value : "";
 }
-function ze(e) {
+function Re(e) {
 	let t = Reflect.get(Object(Reflect.get(e, "detail")), "item"), n = Reflect.get(Object(t), "value");
 	return typeof n == "string" ? n : null;
 }
-var Be = "pointer", Ve = !1;
-function He() {
-	Ve || (Ve = !0, window.addEventListener("pointerdown", () => Be = "pointer", !0), window.addEventListener("keydown", () => Be = "keyboard", !0));
+var ze = "pointer", Be = !1;
+function Ve() {
+	Be || (Be = !0, window.addEventListener("pointerdown", () => ze = "pointer", !0), window.addEventListener("keydown", () => ze = "keyboard", !0));
 }
-function Ue() {
+function He() {
 	let e = document.activeElement;
 	for (; e?.shadowRoot?.activeElement;) e = e.shadowRoot.activeElement;
 	return e;
 }
-function We() {
-	Be === "pointer" && window.setTimeout(() => {
-		let e = Ue();
+function Ue() {
+	ze === "pointer" && window.setTimeout(() => {
+		let e = He();
 		e instanceof HTMLElement && e.blur();
 		let t = document.activeElement;
 		t instanceof HTMLElement && t.tagName !== "BODY" && t.blur();
@@ -576,7 +576,7 @@ function We() {
 }
 //#endregion
 //#region src/strings-de.ts
-var Ge = {
+var We = {
 	title: "Pulse",
 	subtitle: "Merkt, wenn ein Batteriesensor still wird – hört nur zu und kostet keine Batterie.",
 	tab_overview: "Übersicht",
@@ -608,6 +608,7 @@ var Ge = {
 	snoozed_until: "Erinnert {when}",
 	details: "Details",
 	ignore: "Nicht überwacht",
+	label_set: "Festgelegt über das Home-Assistant-Label „{label}“.",
 	ignore_hint: "Pulse lässt dieses Gerät in Ruhe.",
 	ignored_done: "{name} wird nicht mehr überwacht",
 	resume: "Wieder überwachen",
@@ -878,14 +879,38 @@ var Ge = {
 	new_cloud_text: "Antwortet eine Cloud nicht, gibt es einen Sammelhinweis statt vieler Alarme. Dazu schlägt Pulse passende Partnergeräte vor.",
 	new_calver_title: "Neue Versionsnummern",
 	new_calver_text: "Ab jetzt lesen sich Versionen als Jahr.Monat.Release: 26.10.4 ist das vierte Release im Oktober 2026. Der Sprung von 1.1.0 ist gewollt – Updates werden wie gewohnt erkannt.",
-	new_reachable_title: "Erreichbar heißt in Ordnung",
-	new_reachable_text: "Bei Matter-Geräten und Cloud-Geräten mit Erreichbarkeits-Sensor (z. B. Netatmo) fragt Pulse jetzt die Integration. Ein Lecksensor ohne Wasser oder ein selten benutztes Schloss gilt nicht mehr als still. Geräte, die von selbst regelmäßig melden, prüft Pulse weiter: schweigen sie trotz Verbindung, kommt „Prüfen“.",
-	new_restart_title: "Neustarts täuschen nicht mehr",
-	new_restart_text: "Nach einem Neustart von Home Assistant sah ein stilles Gerät kurz wieder lebendig aus. Diese Scheinmeldungen zählen nicht mehr.",
-	new_sheet_title: "Einstellungen im Blick",
-	new_sheet_text: "Klappst du im Gerätedetail die Einstellungen auf, wächst das Fenster mit und zeigt sie gleich an.",
-	due_untyped: "Typ offen: {names}"
-}, Ke = {
+	due_untyped: "Typ offen: {names}",
+	beta: "Beta",
+	mains_beta: "Netzgeräte überwachen",
+	mains_beta_hint: "Auch Geräte am Strom (Zigbee, Z-Wave, Matter, Shelly, ESPHome …). Pulse meldet, wenn eines nicht mehr erreichbar ist oder trotz sonst regelmäßiger Meldungen still wird. Noch in Erprobung.",
+	mains_devices: "Netzgeräte",
+	filter_mains: "Netzgeräte",
+	mains_chip: "Netzstrom · Beta",
+	mains_note: "Hängt am Strom, keine Batterie. Pulse achtet darauf, ob es erreichbar ist und, wenn es sich regelmäßig meldet, ob es still wird.",
+	texts: "Texte",
+	texts_hint: "Eigene Titel und Texte für Mitteilungen zu einem Gerät. Zusammenfassungen bleiben, wie sie sind.",
+	tpl_failed: "Ausgefallen",
+	tpl_check: "Prüfen",
+	tpl_battery: "Batterie",
+	tpl_recovered: "Läuft wieder",
+	tpl_default: "Standard",
+	tpl_custom: "Eigener Text",
+	tpl_title_field: "Titel",
+	tpl_message_field: "Text",
+	tpl_vars: "Platzhalter",
+	tpl_vars_hint: "Tippen fügt ein. {area} bleibt leer, wenn der Raum schon im Namen steht; leere Werte verschwinden samt „ · “.",
+	tpl_preview: "Vorschau",
+	tpl_reset: "Standard verwenden",
+	tpl_save: "Sichern",
+	new_mains_title: "Netzgeräte als Beta",
+	new_mains_text: "Auch Steckdosen, Lampen und Schalter am Strom können hängen. Unter Mitteilungen → Beta einschalten.",
+	new_texts_title: "Deine eigenen Worte",
+	new_texts_text: "Titel und Text jeder Mitteilung lassen sich anpassen, mit Platzhaltern und Vorschau.",
+	new_labels_title: "Labels statt Klicks",
+	new_labels_text: "Das HA-Label pulse_important oder pulse_ignore an einem Gerät reicht. Mitteilungen nennen jetzt den Raum.",
+	new_languages_title: "Fünf Sprachen",
+	new_languages_text: "Pulse spricht Deutsch, Englisch, Französisch, Spanisch und Niederländisch."
+}, Ge = {
 	title: "Pulse",
 	subtitle: "Notices when a battery sensor goes quiet – it only listens and costs no battery.",
 	tab_overview: "Overview",
@@ -918,6 +943,7 @@ var Ge = {
 	snoozed_until: "Reminds {when}",
 	details: "Details",
 	ignore: "Not monitored",
+	label_set: "Set by the Home Assistant label “{label}”.",
 	ignore_hint: "Pulse leaves this device alone.",
 	ignored_done: "{name} is no longer monitored",
 	resume: "Monitor again",
@@ -1187,22 +1213,1051 @@ var Ge = {
 	new_cloud_text: "If a cloud stops responding, you get one summary instead of many alerts. Pulse also suggests matching partner devices.",
 	new_calver_title: "New version numbers",
 	new_calver_text: "From now on versions read year.month.release: 26.10.4 is the fourth release in October 2026. The jump from 1.1.0 is intended – updates are found as usual.",
-	new_reachable_title: "Reachable means fine",
-	new_reachable_text: "For Matter devices and cloud devices with a connectivity sensor (e.g. Netatmo), Pulse now asks the integration. A leak sensor without water or a rarely used lock no longer counts as silent. Devices that report on their own are still checked: if they go quiet despite the connection, you get Check.",
-	new_restart_title: "Restarts no longer fool Pulse",
-	new_restart_text: "After a Home Assistant restart, a silent device briefly looked alive again. These fake reports no longer count.",
-	new_sheet_title: "Settings in view",
-	new_sheet_text: "Opening the settings in the device sheet now grows the sheet and shows them right away.",
-	due_untyped: "type unknown: {names}"
+	due_untyped: "type unknown: {names}",
+	beta: "Beta",
+	mains_beta: "Watch mains-powered devices",
+	mains_beta_hint: "Also devices on the mains (Zigbee, Z-Wave, Matter, Shelly, ESPHome …). Pulse tells you when one is no longer reachable or goes silent although it usually reports regularly. Still being tested.",
+	mains_devices: "Mains-powered devices",
+	filter_mains: "Mains-powered",
+	mains_chip: "Mains · Beta",
+	mains_note: "Powered from the mains, no battery. Pulse watches whether it is reachable and, if it reports regularly, whether it goes silent.",
+	texts: "Texts",
+	texts_hint: "Your own titles and texts for notifications about one device. Summaries stay as they are.",
+	tpl_failed: "Failed",
+	tpl_check: "Check",
+	tpl_battery: "Battery",
+	tpl_recovered: "Back again",
+	tpl_default: "Default",
+	tpl_custom: "Custom",
+	tpl_title_field: "Title",
+	tpl_message_field: "Text",
+	tpl_vars: "Placeholders",
+	tpl_vars_hint: "Tap to insert. {area} stays empty when the room is already in the name; empty values vanish with their “ · ”.",
+	tpl_preview: "Preview",
+	tpl_reset: "Use default",
+	tpl_save: "Save",
+	new_mains_title: "Mains-powered devices in beta",
+	new_mains_text: "Plugs, lamps and switches on the mains can hang too. Turn it on under Notifications → Beta.",
+	new_texts_title: "Your own words",
+	new_texts_text: "Change the title and text of every notification, with placeholders and a preview.",
+	new_labels_title: "Labels instead of clicks",
+	new_labels_text: "The HA label pulse_important or pulse_ignore on a device is enough. Notifications now name the room.",
+	new_languages_title: "Five languages",
+	new_languages_text: "Pulse speaks English, German, French, Spanish and Dutch."
+}, Ke = {
+	de: We,
+	fr: {
+		title: "Pulse",
+		subtitle: "Remarque quand un capteur sur pile se tait – il ne fait qu’écouter et ne coûte aucune pile.",
+		tab_overview: "Vue d’ensemble",
+		tab_devices: "Appareils",
+		tab_notify: "Notifications",
+		close: "Fermer",
+		more: "Plus",
+		loading: "Chargement de Pulse …",
+		not_loaded: "Pulse n’est pas encore configuré. Ajoutez l’intégration sous Paramètres → Appareils et services.",
+		status_ok: "En rythme",
+		status_learning: "Apprend",
+		status_watch: "À surveiller",
+		status_check: "À vérifier",
+		status_failed: "En panne",
+		ignored: "Non surveillé",
+		batteries: "Piles",
+		nothing_due: "Rien à changer",
+		last_change: "Dernier changement",
+		zigbee: "Zigbee2MQTT",
+		zigbee_hint: "Horodatage sur chaque message – sans consommation supplémentaire.",
+		zigbee_devices: "Appareils Zigbee",
+		zigbee_sent: "Envoyé à Zigbee2MQTT",
+		recipients: "Destinataires",
+		quiet: "Heures calmes",
+		off: "Désactivé",
+		replaced: "Pile remplacée",
+		replaced_done: "Changement enregistré",
+		later: "Rappeler demain",
+		later_done: "Pulse vous le rappellera demain",
+		snoozed_until: "Rappel {when}",
+		details: "Détails",
+		ignore: "Non surveillé",
+		label_set: "Défini par l’étiquette Home Assistant « {label} ».",
+		ignore_hint: "Pulse laisse cet appareil tranquille.",
+		ignored_done: "{name} n’est plus surveillé",
+		resume: "Surveiller à nouveau",
+		undo: "Annuler",
+		search: "Rechercher parmi {count} appareils",
+		search_one: "Rechercher parmi 1 appareil",
+		group_by: "Grouper par {what}",
+		group_area: "pièce",
+		group_status: "état",
+		group_none: "Sans regroupement",
+		col_last: "Dernier signal",
+		no_area: "Sans pièce",
+		no_results: "Aucun appareil ne correspond à « {query} ».",
+		battery: "Pile",
+		voltage: "Tension",
+		battery_type: "Type",
+		battery_count: "Nombre",
+		chemistry: "Sorte",
+		chem_nimh: "Accu (NiMH)",
+		chem_alkaline: "Alcaline",
+		chem_lithium: "Lithium",
+		chem_unknown: "Inconnue",
+		type_unknown: "Non défini",
+		replaced_history: "Changements de pile",
+		never_replaced: "Aucun changement enregistré",
+		monitoring: "Surveillance",
+		important: "Appareil important",
+		important_hint: "Limites plus strictes, « À vérifier » arrive aussitôt, pannes en alerte critique si vous le souhaitez.",
+		partner: "Appareil partenaire",
+		partner_hint: "Se déclenchent souvent ensemble, p. ex. serrure et contact de porte. Si l’un se tait, Pulse le remarque plus tôt.",
+		partner_none: "Aucun",
+		open_device: "Ouvrir la page de l’appareil",
+		just_now: "à l’instant",
+		minutes_ago: "il y a {n} min",
+		hours_ago: "il y a {n} h",
+		days_ago: "il y a {n} jours",
+		day_ago: "hier",
+		every_minutes: "toutes les {n} min",
+		every_hours: "toutes les {n} h",
+		every_days: "tous les {n} jours",
+		unknown: "—",
+		today: "aujourd’hui",
+		recipients_none: "Aucun téléphone avec l’app Home Assistant trouvé.",
+		when: "Quand notifier",
+		level_failed: "En panne",
+		level_check: "À vérifier",
+		level_battery: "Pile bientôt vide",
+		level_now: "Immédiatement",
+		level_daily: "Chaque jour",
+		level_off: "Désactivé",
+		times: "Horaires",
+		summary_time: "Résumé quotidien",
+		quiet_from: "De",
+		quiet_to: "À",
+		quiet_hint: "Les notifications pendant les heures calmes arrivent ensuite. Les critiques passent toujours.",
+		special: "Cas particuliers",
+		critical: "Alertes critiques",
+		critical_hint: "Détecteurs de fuite, détecteurs de fumée, serrures – passent outre le mode silencieux et la concentration",
+		arrive: "Seulement si quelqu’un est à la maison",
+		recovered: "Quand un appareil est de retour",
+		try_it: "Essayer",
+		test: "Envoyer une notification de test",
+		test_done: "Test envoyé à {count} téléphone(s)",
+		test_none: "Aucun destinataire sélectionné",
+		summary_now: "Envoyer le résumé maintenant",
+		summary_sent: "Résumé envoyé",
+		summary_empty: "Rien à résumer pour le moment",
+		show_welcome: "Afficher l’accueil",
+		open_integration: "Paramètres de l’intégration",
+		whats_new_title: "Nouveautés de Pulse {version}",
+		welcome_rhythm_title: "Connaît chaque rythme",
+		welcome_rhythm_text: "Pulse a déjà appris des 10 derniers jours à quelle fréquence chaque appareil se signale.",
+		welcome_listen_title: "Ne fait qu’écouter",
+		welcome_listen_text: "Pulse n’interroge jamais un appareil. Cela ne coûte ni pile ni trafic radio.",
+		welcome_notify_title: "Vous prévient à temps",
+		welcome_notify_text: "L’important tout de suite, le reste une fois par jour – avec des heures calmes.",
+		welcome_zigbee_title: "Signes de vie Zigbee",
+		welcome_zigbee_text: "Zigbee2MQTT ajoute alors un horodatage à chaque message.",
+		continue: "Continuer",
+		version: "Version {version}",
+		today_cap: "Aujourd’hui",
+		yesterday_cap: "Hier",
+		zigbee_active: "Actif",
+		zigbee_requested: "Demandé",
+		zigbee_confirm_title: "Activer les signes de vie Zigbee ?",
+		zigbee_confirm_text: "Pulse active « last_seen » et « availability » dans Zigbee2MQTT. Pulse remarque alors aussi les signaux sans nouvelle valeur et détecte plus vite les coupures radio.",
+		zigbee_confirm_side: "Les appareils Zigbee devenus silencieux apparaissent alors comme indisponibles dans Home Assistant. Les appareils sur pile n’envoient rien de plus. Vous pouvez revenir en arrière à tout moment dans les paramètres de Zigbee2MQTT.",
+		zigbee_confirm_go: "Activer",
+		cancel: "Annuler",
+		level_unreliable: "Accu – le pourcentage dit peu, Pulse suit le rythme",
+		replaced_undone: "Changement supprimé",
+		filter_clear: "Retirer le filtre",
+		filter_label: "Seulement : {what}",
+		whats_new_all: "Toutes les nouveautés",
+		replaced_now: "Enregistrer un changement de pile",
+		battery_none_low: "Aucune faible",
+		battery_low_one: "1 faible",
+		battery_low_many: "{count} faibles",
+		hero_all: "Les {count} appareils",
+		hero_some: "{ok} appareils sur {total}",
+		hero_some_short: "{ok} sur {total}",
+		hero_beat: "sont en rythme.",
+		hero_beat_short: "en rythme.",
+		hero_one: "Votre seul appareil",
+		hero_beat_one: "est en rythme.",
+		hero_beat_off: "est silencieux.",
+		hero_learn1: "Pulse",
+		hero_learn2: "apprend encore.",
+		hero_none1: "Aucun appareil",
+		hero_none2: "sur pile pour l’instant.",
+		sent_silent_for: "{name} est silencieux depuis {span}.",
+		sent_silent_since: "{name} est silencieux depuis {day}.",
+		sent_battery: "{name} aura bientôt besoin d’une pile neuve.",
+		sent_battery_low: "{name} a besoin d’une pile neuve.",
+		sent_unavailable: "{name} est injoignable.",
+		sent_partner: "{name} est silencieux alors que {partner} est actif.",
+		sent_other: "{name} : {reason}",
+		sent_more: "Et {count} de plus.",
+		sent_all_good: "Tous les appareils se signalent comme d’habitude.",
+		sent_learning: "Pulse apprend à quelle fréquence chaque appareil se signale.",
+		span_minutes: "{n} minutes",
+		span_hours: "{n} heures",
+		span_hour: "1 heure",
+		span_days: "{n} jours",
+		span_day: "1 jour",
+		yesterday: "hier",
+		flag_silent: "Silencieux depuis {span}",
+		group_need: "À traiter",
+		group_watch: "À surveiller",
+		group_rhythm: "En rythme",
+		group_learning: "Apprend",
+		monitor_head: "{count} appareils · 7 jours",
+		monitor_head_one: "1 appareil · 7 jours",
+		day_title: "Votre journée avec Pulse",
+		day_to: "À {names}",
+		day_nobody: "Aucun destinataire pour l’instant",
+		status_battery: "Pile {level} %",
+		new_battery: "Pile neuve",
+		dh_silent: "Silencieux depuis {span}.",
+		dh_unavailable: "Injoignable.",
+		dh_partner: "Silencieux, partenaire actif.",
+		dh_battery: "Pile à {level} %.",
+		dh_learning: "Apprend encore.",
+		dh_ok: "En rythme.",
+		dh_ignored: "Non surveillé.",
+		dh_watch: "Inhabituellement calme.",
+		detail_every: "Se signale d’habitude {every}. Dernier signal {when}.",
+		heartbeat_title: "Battements · 7 jours",
+		heartbeat_legend: "Trait = signal · plus haut = plusieurs",
+		with_partner: "Avec l’appareil partenaire",
+		partner_quiet: "{partner} continue de se signaler – seul {name} est silencieux.",
+		partner_both: "Les deux se signalent comme d’habitude.",
+		stat_changed: "Remplacée",
+		welcome_head1: "Pulse",
+		welcome_head2: "écoute.",
+		welcome_lead: "Chaque appareil sur pile a son rythme. Pulse le connaît – et remarque quand il saute un battement.",
+		ignored_count: "{count} non surveillés",
+		show_list: "Afficher la liste",
+		device_settings: "Paramètres",
+		no_data_legend: "Pas de données – Pulse ne fonctionnait pas",
+		stat_rechargeable: "Accu · approximatif",
+		set_head: "Pulse fait le point à {time}.",
+		set_quiet: "Calme {start}–{end}.",
+		set_no_quiet: "Sans heures calmes.",
+		set_failed: "appareils en panne",
+		set_check: "« À vérifier »",
+		set_battery: "piles",
+		set_group: "{names} {level}",
+		set_level_now: "immédiatement",
+		set_level_daily: "dans le résumé",
+		set_level_off: "jamais",
+		unit_volt: "{value} V",
+		unit_millivolt: "{value} mV",
+		unit_percent: "{value} %",
+		battery_flag_low: "Faible",
+		battery_flag_ok: "OK",
+		battery_count_type: "{count} × {type}",
+		hour_label: "{h}:00",
+		filter_empty: "Aucun appareil dans ce filtre.",
+		heartbeat_aria: "{count} signaux en {days} jours",
+		replaced_undo_failed: "Impossible d’annuler le changement",
+		more_for: "Plus pour {name}",
+		z2m_base: "Topic Zigbee2MQTT",
+		z2m_base_hint: "Topic de base MQTT, zigbee2mqtt par défaut. À modifier seulement si votre Zigbee2MQTT en utilise un autre.",
+		z2m_base_invalid: "Topic invalide : non vide, sans # ni +, sans barre oblique au début ou à la fin.",
+		on: "Activé",
+		advanced: "Topic de base",
+		snooze_cancel: "Annuler le rappel",
+		snooze_cancelled: "Rappel annulé",
+		read_only: "Seuls les administrateurs peuvent modifier.",
+		levels_hint: "En panne : silencieux bien plus longtemps que d’habitude ou injoignable. À vérifier : inhabituellement calme ou pile sous 10 %. « À surveiller » reste dans le panneau.",
+		recipients_hint: "Les nouveaux téléphones sont ajoutés automatiquement tant que vous ne changez rien ici.",
+		recovered_hint: "Aussi les changements de pile détectés.",
+		arrive_hint: "Les notifications attendent qu’une des personnes choisies soit à la maison. S’applique à tous les destinataires.",
+		persons_none: "Aucune personne trouvée dans Home Assistant.",
+		learning_hint: "Apprend encore : il faut environ 7 signaux pour connaître le rythme. Un appareil qui ne se signale que lors d’actions met plus de temps.",
+		learning_one: "Pulse apprend encore à connaître 1 appareil.",
+		learning_many: "Pulse apprend encore à connaître {count} appareils.",
+		pill_learning: "Apprend",
+		pill_waiting: "En attente",
+		status_waiting: "En attente",
+		dh_waiting: "En attente du premier signal.",
+		sent_waiting: "{name} attend son premier signal après le changement de pile.",
+		day_line_summary: "Résumé {time}",
+		day_line_quiet: "Calme de {start} à {end}",
+		day_line_no_quiet: "Sans heures calmes",
+		hero_need1: "{count} appareils",
+		hero_need1_one: "Un appareil",
+		hero_need: "ont besoin de vous.",
+		hero_need_one: "a besoin de vous.",
+		hero_sub: "{ok} sur {total} en rythme.",
+		sent_strays_since: "{name} ne se signale presque plus depuis {day}, dernier signal {last}.",
+		sent_strays_for: "{name} ne se signale presque plus depuis {span}, dernier signal {last}.",
+		sent_startup: "{name} ne s’est pas signalé depuis le redémarrage.",
+		sent_radio_only: "{name} émet, mais n’envoie aucune valeur.",
+		sent_battery_missing: "{name} n’indique plus son niveau de pile.",
+		flag_strays: "Presque rien depuis {span}",
+		status_cloud: "Cloud silencieux",
+		dh_strays: "Presque rien depuis {span}.",
+		dh_cloud: "Le cloud ne répond pas.",
+		dh_startup: "Aucun signal depuis le redémarrage.",
+		dh_radio_only: "Émet, sans valeurs.",
+		dh_battery_missing: "Niveau de pile manquant.",
+		forecast_too_short: "Pas encore observé assez longtemps pour une prévision",
+		forecast_flat: "Le pourcentage bouge à peine – pas encore de prévision",
+		forecast_coarse: "N’indique que des paliers grossiers – pas de prévision",
+		forecast_untrusted: "Le pourcentage d’un accu dit trop peu – pas de prévision",
+		forecast_noisy: "Les valeurs varient trop – pas de prévision",
+		forecast_days: "Plus que quelques jours",
+		forecast_weeks: "Tient encore environ {lo}–{hi} semaines",
+		forecast_months: "Tient encore environ {lo}–{hi} mois",
+		forecast_years: "Tient encore environ {lo}–{hi} ans",
+		due_line: "À changer dans les 8 prochaines semaines : {items}",
+		battery_due_many: "{count} bientôt à changer",
+		battery_due_one: "1 bientôt à changer",
+		cloud_outage_one: "Le cloud {name} ne répond pas – 1 appareil concerné",
+		cloud_outage_many: "Le cloud {name} ne répond pas – {count} appareils concernés",
+		cloud_device: "Appareil cloud",
+		important_badge: "Important",
+		mark_important: "Marquer comme important",
+		unmark_important: "Plus important",
+		important_devices: "Appareils importants",
+		filter_important: "Importants",
+		filter_battery: "Pile",
+		ignore_action: "Ne plus surveiller",
+		no_devices: "Aucun appareil sur pile trouvé pour l’instant.",
+		connection_lost: "Connexion perdue – Pulse affiche le dernier état et se reconnecte.",
+		heartbeat_failed: "Impossible de charger les battements.",
+		reload: "Recharger",
+		search_label: "Rechercher des appareils",
+		health_title: "Compteur radio",
+		health_hint: "Repère les appareils qui émettent mais n’envoient plus de valeurs.",
+		health_confirm_title: "Activer le compteur radio ?",
+		health_confirm_text: "Pulse active le contrôle de santé (health) dans Zigbee2MQTT. Zigbee2MQTT compte alors combien de fois chaque appareil émet – Pulse peut ainsi repérer les appareils qui émettent encore mais n’envoient plus de valeurs.",
+		health_confirm_side: "Les appareils sur pile n’envoient rien de plus. Vous pouvez le désactiver à tout moment dans les paramètres de Zigbee2MQTT.",
+		partner_suggest: "Suggestion : {name}",
+		partner_suggest_why: "souvent actifs ensemble",
+		partner_accept: "Utiliser",
+		partner_dismiss: "Ignorer",
+		new_forecast_title: "Prévision des piles",
+		new_forecast_text: "Chaque appareil indique à peu près combien de temps sa pile tiendra encore. La vue d’ensemble liste les piles à changer dans les semaines à venir.",
+		new_hero_title: "Les problèmes d’abord",
+		new_hero_text: "Quand un appareil a besoin de vous, le titre le dit. Les appareils importants portent une étoile.",
+		new_radio_title: "Émet, sans valeurs",
+		new_radio_text: "Avec le compteur radio de Zigbee2MQTT, Pulse remarque quand un appareil émet encore mais ne mesure plus rien.",
+		new_cloud_title: "Calme pendant les pannes du cloud",
+		new_cloud_text: "Si un cloud ne répond plus, vous recevez un seul résumé au lieu de nombreuses alertes. Pulse suggère aussi des appareils partenaires adaptés.",
+		new_calver_title: "Nouveaux numéros de version",
+		new_calver_text: "Désormais, les versions se lisent année.mois.version : 26.10.4 est la quatrième version d’octobre 2026. Le saut depuis 1.1.0 est voulu – les mises à jour sont détectées comme d’habitude.",
+		due_untyped: "type inconnu : {names}",
+		beta: "Bêta",
+		mains_beta: "Surveiller les appareils sur secteur",
+		mains_beta_hint: "Aussi les appareils sur secteur (Zigbee, Z-Wave, Matter, Shelly, ESPHome …). Pulse vous prévient quand l’un d’eux n’est plus joignable ou se tait alors qu’il se signale d’habitude régulièrement. Encore en test.",
+		mains_devices: "Appareils sur secteur",
+		filter_mains: "Sur secteur",
+		mains_chip: "Secteur · Bêta",
+		mains_note: "Alimenté par le secteur, sans pile. Pulse vérifie s’il est joignable et, s’il se signale régulièrement, s’il se tait.",
+		texts: "Textes",
+		texts_hint: "Vos propres titres et textes pour les notifications concernant un appareil. Les résumés restent tels quels.",
+		tpl_failed: "En panne",
+		tpl_check: "À vérifier",
+		tpl_battery: "Pile",
+		tpl_recovered: "De retour",
+		tpl_default: "Par défaut",
+		tpl_custom: "Personnalisé",
+		tpl_title_field: "Titre",
+		tpl_message_field: "Texte",
+		tpl_vars: "Variables",
+		tpl_vars_hint: "Touchez pour insérer. {area} reste vide si la pièce figure déjà dans le nom ; les valeurs vides disparaissent avec leur « · ».",
+		tpl_preview: "Aperçu",
+		tpl_reset: "Rétablir par défaut",
+		tpl_save: "Enregistrer",
+		new_mains_title: "Appareils sur secteur en bêta",
+		new_mains_text: "Prises, lampes et interrupteurs sur secteur peuvent aussi se bloquer. À activer sous Notifications → Bêta.",
+		new_texts_title: "Vos propres mots",
+		new_texts_text: "Modifiez le titre et le texte de chaque notification, avec des variables et un aperçu.",
+		new_labels_title: "Des labels plutôt que des clics",
+		new_labels_text: "Le label HA pulse_important ou pulse_ignore sur un appareil suffit. Les notifications indiquent désormais la pièce.",
+		new_languages_title: "Cinq langues",
+		new_languages_text: "Pulse parle anglais, allemand, français, espagnol et néerlandais."
+	},
+	es: {
+		title: "Pulse",
+		subtitle: "Se da cuenta cuando un sensor con pila se queda en silencio – solo escucha y no gasta pila.",
+		tab_overview: "Resumen",
+		tab_devices: "Dispositivos",
+		tab_notify: "Notificaciones",
+		close: "Cerrar",
+		more: "Más",
+		loading: "Cargando Pulse …",
+		not_loaded: "Pulse aún no está configurado. Añade la integración en Ajustes → Dispositivos y servicios.",
+		status_ok: "En ritmo",
+		status_learning: "Aprendiendo",
+		status_watch: "En observación",
+		status_check: "Revisar",
+		status_failed: "Sin respuesta",
+		ignored: "No supervisado",
+		batteries: "Pilas",
+		nothing_due: "Nada pendiente",
+		last_change: "Último cambio",
+		zigbee: "Zigbee2MQTT",
+		zigbee_hint: "Marca de tiempo en cada mensaje – sin gasto extra de pila.",
+		zigbee_devices: "Dispositivos Zigbee",
+		zigbee_sent: "Enviado a Zigbee2MQTT",
+		recipients: "Destinatarios",
+		quiet: "Horas de silencio",
+		off: "Desactivado",
+		replaced: "Pila cambiada",
+		replaced_done: "Cambio registrado",
+		later: "Recordar mañana",
+		later_done: "Pulse te lo recordará mañana",
+		snoozed_until: "Recordará {when}",
+		details: "Detalles",
+		ignore: "No supervisado",
+		label_set: "Definido por la etiqueta de Home Assistant «{label}».",
+		ignore_hint: "Pulse deja este dispositivo en paz.",
+		ignored_done: "{name} ya no se supervisa",
+		resume: "Volver a supervisar",
+		undo: "Deshacer",
+		search: "Buscar en {count} dispositivos",
+		search_one: "Buscar en 1 dispositivo",
+		group_by: "Agrupar por {what}",
+		group_area: "área",
+		group_status: "estado",
+		group_none: "Sin agrupar",
+		col_last: "Última señal",
+		no_area: "Sin área",
+		no_results: "Ningún dispositivo coincide con «{query}».",
+		battery: "Pila",
+		voltage: "Tensión",
+		battery_type: "Tipo",
+		battery_count: "Cantidad",
+		chemistry: "Clase",
+		chem_nimh: "Recargable (NiMH)",
+		chem_alkaline: "Alcalina",
+		chem_lithium: "Litio",
+		chem_unknown: "Desconocida",
+		type_unknown: "Sin definir",
+		replaced_history: "Cambios de pila",
+		never_replaced: "Aún no hay cambios registrados",
+		monitoring: "Supervisión",
+		important: "Dispositivo importante",
+		important_hint: "Límites más estrictos, «Revisar» llega al momento y, si quieres, los fallos como alertas críticas.",
+		partner: "Dispositivo compañero",
+		partner_hint: "Suelen activarse juntos, p. ej. cerradura y contacto de puerta. Si uno se queda en silencio, Pulse lo nota antes.",
+		partner_none: "Ninguno",
+		open_device: "Abrir página del dispositivo",
+		just_now: "ahora mismo",
+		minutes_ago: "hace {n} min",
+		hours_ago: "hace {n} h",
+		days_ago: "hace {n} días",
+		day_ago: "ayer",
+		every_minutes: "cada {n} min",
+		every_hours: "cada {n} h",
+		every_days: "cada {n} días",
+		unknown: "—",
+		today: "hoy",
+		recipients_none: "No se encontró ningún teléfono con la app de Home Assistant.",
+		when: "Cuándo notificar",
+		level_failed: "Sin respuesta",
+		level_check: "Revisar",
+		level_battery: "Pila casi agotada",
+		level_now: "Al momento",
+		level_daily: "A diario",
+		level_off: "Desactivado",
+		times: "Horarios",
+		summary_time: "Resumen diario",
+		quiet_from: "Desde",
+		quiet_to: "Hasta",
+		quiet_hint: "Las notificaciones en horas de silencio llegan después. Las críticas siempre llegan.",
+		special: "Casos especiales",
+		critical: "Alertas críticas",
+		critical_hint: "Sensores de fugas, detectores de humo, cerraduras – se saltan el modo silencio y la concentración",
+		arrive: "Solo cuando haya alguien en casa",
+		recovered: "Cuando un dispositivo vuelve",
+		try_it: "Probar",
+		test: "Enviar notificación de prueba",
+		test_done: "Prueba enviada a {count} teléfono(s)",
+		test_none: "Ningún destinatario seleccionado",
+		summary_now: "Enviar resumen ahora",
+		summary_sent: "Resumen enviado",
+		summary_empty: "Ahora mismo no hay nada que resumir",
+		show_welcome: "Mostrar bienvenida",
+		open_integration: "Ajustes de la integración",
+		whats_new_title: "Novedades de Pulse {version}",
+		welcome_rhythm_title: "Conoce cada ritmo",
+		welcome_rhythm_text: "Pulse ya ha aprendido de los últimos 10 días con qué frecuencia da señales cada dispositivo.",
+		welcome_listen_title: "Solo escucha",
+		welcome_listen_text: "Nunca consulta un dispositivo. No gasta pila ni genera tráfico de radio.",
+		welcome_notify_title: "Te avisa a tiempo",
+		welcome_notify_text: "Lo importante al momento, lo demás una vez al día – con horas de silencio.",
+		welcome_zigbee_title: "Señales de vida Zigbee",
+		welcome_zigbee_text: "Deja que Zigbee2MQTT añada una marca de tiempo a cada mensaje.",
+		continue: "Continuar",
+		version: "Versión {version}",
+		today_cap: "Hoy",
+		yesterday_cap: "Ayer",
+		zigbee_active: "Activo",
+		zigbee_requested: "Solicitado",
+		zigbee_confirm_title: "¿Activar las señales de vida Zigbee?",
+		zigbee_confirm_text: "Pulse activa «last_seen» y «availability» en Zigbee2MQTT. Así Pulse también detecta señales sin valor nuevo y nota antes los cortes de radio.",
+		zigbee_confirm_side: "Los dispositivos Zigbee que se queden en silencio aparecerán como no disponibles en Home Assistant. Los dispositivos con pila no envían nada extra. Puedes deshacerlo cuando quieras en los ajustes de Zigbee2MQTT.",
+		zigbee_confirm_go: "Activar",
+		cancel: "Cancelar",
+		level_unreliable: "Recargable – el porcentaje dice poco, Pulse vigila el ritmo",
+		replaced_undone: "Cambio eliminado",
+		filter_clear: "Quitar filtro",
+		filter_label: "Solo: {what}",
+		whats_new_all: "Todas las novedades",
+		replaced_now: "Registrar cambio de pila",
+		battery_none_low: "Ninguna baja",
+		battery_low_one: "1 baja",
+		battery_low_many: "{count} bajas",
+		hero_all: "Los {count} dispositivos",
+		hero_some: "{ok} de {total} dispositivos",
+		hero_some_short: "{ok} de {total}",
+		hero_beat: "están en ritmo.",
+		hero_beat_short: "en ritmo.",
+		hero_one: "Tu único dispositivo",
+		hero_beat_one: "está en ritmo.",
+		hero_beat_off: "está en silencio.",
+		hero_learn1: "Pulse",
+		hero_learn2: "está aprendiendo.",
+		hero_none1: "Aún no hay",
+		hero_none2: "dispositivos con pila.",
+		sent_silent_for: "{name} lleva {span} en silencio.",
+		sent_silent_since: "{name} está en silencio desde {day}.",
+		sent_battery: "{name} pronto necesitará una pila nueva.",
+		sent_battery_low: "{name} necesita una pila nueva.",
+		sent_unavailable: "{name} no está disponible.",
+		sent_partner: "{name} está en silencio mientras {partner} está activo.",
+		sent_other: "{name}: {reason}",
+		sent_more: "Y {count} más.",
+		sent_all_good: "Todos los dispositivos dan señales como siempre.",
+		sent_learning: "Pulse está aprendiendo con qué frecuencia da señales cada dispositivo.",
+		span_minutes: "{n} minutos",
+		span_hours: "{n} horas",
+		span_hour: "1 hora",
+		span_days: "{n} días",
+		span_day: "1 día",
+		yesterday: "ayer",
+		flag_silent: "En silencio desde hace {span}",
+		group_need: "Te necesitan",
+		group_watch: "En observación",
+		group_rhythm: "En ritmo",
+		group_learning: "Aprendiendo",
+		monitor_head: "{count} dispositivos · 7 días",
+		monitor_head_one: "1 dispositivo · 7 días",
+		day_title: "Tu día con Pulse",
+		day_to: "Para {names}",
+		day_nobody: "Aún sin destinatario",
+		status_battery: "Pila {level} %",
+		new_battery: "Pila nueva",
+		dh_silent: "En silencio desde hace {span}.",
+		dh_unavailable: "No disponible.",
+		dh_partner: "En silencio, compañero activo.",
+		dh_battery: "Pila al {level} %.",
+		dh_learning: "Aún aprendiendo.",
+		dh_ok: "En ritmo.",
+		dh_ignored: "No supervisado.",
+		dh_watch: "Inusualmente callado.",
+		detail_every: "Suele dar señales {every}. Última señal {when}.",
+		heartbeat_title: "Latidos · 7 días",
+		heartbeat_legend: "Marca = señal · más alta = varias",
+		with_partner: "Con dispositivo compañero",
+		partner_quiet: "{partner} sigue dando señales – solo {name} está en silencio.",
+		partner_both: "Ambos dan señales como siempre.",
+		stat_changed: "Cambiada",
+		welcome_head1: "Pulse",
+		welcome_head2: "escucha.",
+		welcome_lead: "Cada dispositivo con pila tiene un ritmo. Pulse lo conoce – y nota cuando se salta un latido.",
+		ignored_count: "{count} no supervisados",
+		show_list: "Mostrar lista",
+		device_settings: "Ajustes",
+		no_data_legend: "Sin datos – Pulse no estaba en marcha",
+		stat_rechargeable: "Recargable · aproximado",
+		set_head: "Pulse te informa a las {time}.",
+		set_quiet: "Silencio {start}–{end}.",
+		set_no_quiet: "Sin horas de silencio.",
+		set_failed: "dispositivos sin respuesta",
+		set_check: "«Revisar»",
+		set_battery: "pilas",
+		set_group: "{names} {level}",
+		set_level_now: "al momento",
+		set_level_daily: "en el resumen",
+		set_level_off: "nunca",
+		unit_volt: "{value} V",
+		unit_millivolt: "{value} mV",
+		unit_percent: "{value} %",
+		battery_flag_low: "Baja",
+		battery_flag_ok: "OK",
+		battery_count_type: "{count} × {type}",
+		hour_label: "{h}:00",
+		filter_empty: "Ningún dispositivo en este filtro.",
+		heartbeat_aria: "{count} señales en {days} días",
+		replaced_undo_failed: "No se pudo deshacer el cambio",
+		more_for: "Más sobre {name}",
+		z2m_base: "Tema de Zigbee2MQTT",
+		z2m_base_hint: "Tema base de MQTT, por defecto zigbee2mqtt. Cámbialo solo si tu Zigbee2MQTT usa otro.",
+		z2m_base_invalid: "Tema no válido: no vacío, sin # ni +, sin barra al principio ni al final.",
+		on: "Activado",
+		advanced: "Tema base",
+		snooze_cancel: "Cancelar recordatorio",
+		snooze_cancelled: "Recordatorio cancelado",
+		read_only: "Solo los administradores pueden hacer cambios.",
+		levels_hint: "Sin respuesta: en silencio mucho más tiempo de lo habitual o no disponible. Revisar: inusualmente callado o pila por debajo del 10 %. «En observación» se queda en el panel.",
+		recipients_hint: "Los teléfonos nuevos se añaden solos hasta que cambies algo aquí.",
+		recovered_hint: "También los cambios de pila detectados.",
+		arrive_hint: "Las notificaciones esperan hasta que una de las personas elegidas esté en casa. Se aplica a todos los destinatarios.",
+		persons_none: "No se encontró ninguna persona en Home Assistant.",
+		learning_hint: "Aún aprendiendo: necesita unas 7 señales para conocer el ritmo. Un dispositivo que solo da señales al usarse tarda más.",
+		learning_one: "Pulse aún está conociendo 1 dispositivo.",
+		learning_many: "Pulse aún está conociendo {count} dispositivos.",
+		pill_learning: "Aprendiendo",
+		pill_waiting: "Esperando",
+		status_waiting: "Esperando",
+		dh_waiting: "Esperando la primera señal.",
+		sent_waiting: "{name} espera su primera señal tras el cambio de pila.",
+		day_line_summary: "Resumen {time}",
+		day_line_quiet: "Silencio de {start} a {end}",
+		day_line_no_quiet: "Sin horas de silencio",
+		hero_need1: "{count} dispositivos",
+		hero_need1_one: "Un dispositivo",
+		hero_need: "te necesitan.",
+		hero_need_one: "te necesita.",
+		hero_sub: "{ok} de {total} en ritmo.",
+		sent_strays_since: "{name} apenas da señales desde {day}, la última {last}.",
+		sent_strays_for: "{name} apenas da señales desde hace {span}, la última {last}.",
+		sent_startup: "{name} no ha dado señales desde el reinicio.",
+		sent_radio_only: "{name} emite, pero no envía valores.",
+		sent_battery_missing: "{name} ya no informa de su nivel de pila.",
+		flag_strays: "Casi nada desde hace {span}",
+		status_cloud: "Nube en silencio",
+		dh_strays: "Casi nada desde hace {span}.",
+		dh_cloud: "La nube no responde.",
+		dh_startup: "Sin señales desde el reinicio.",
+		dh_radio_only: "Emite, sin valores.",
+		dh_battery_missing: "Falta el nivel de pila.",
+		forecast_too_short: "Aún no se ha observado lo suficiente para una previsión",
+		forecast_flat: "El porcentaje apenas cambia – aún sin previsión",
+		forecast_coarse: "Solo informa en pasos gruesos – sin previsión",
+		forecast_untrusted: "El porcentaje de un recargable dice demasiado poco – sin previsión",
+		forecast_noisy: "Los valores varían demasiado – sin previsión",
+		forecast_days: "Solo le quedan unos días",
+		forecast_weeks: "Durará unas {lo}–{hi} semanas más",
+		forecast_months: "Durará unos {lo}–{hi} meses más",
+		forecast_years: "Durará unos {lo}–{hi} años más",
+		due_line: "Por cambiar en las próximas 8 semanas: {items}",
+		battery_due_many: "{count} por cambiar pronto",
+		battery_due_one: "1 por cambiar pronto",
+		cloud_outage_one: "La nube de {name} no responde – 1 dispositivo afectado",
+		cloud_outage_many: "La nube de {name} no responde – {count} dispositivos afectados",
+		cloud_device: "Dispositivo en la nube",
+		important_badge: "Importante",
+		mark_important: "Marcar como importante",
+		unmark_important: "Ya no es importante",
+		important_devices: "Dispositivos importantes",
+		filter_important: "Importantes",
+		filter_battery: "Pila",
+		ignore_action: "Dejar de supervisar",
+		no_devices: "Aún no se han encontrado dispositivos con pila.",
+		connection_lost: "Conexión perdida – Pulse muestra el último estado y se está reconectando.",
+		heartbeat_failed: "No se pudieron cargar los latidos.",
+		reload: "Recargar",
+		search_label: "Buscar dispositivos",
+		health_title: "Contador de radio",
+		health_hint: "Detecta dispositivos que emiten pero ya no envían valores.",
+		health_confirm_title: "¿Activar el contador de radio?",
+		health_confirm_text: "Pulse activa la comprobación de estado (health) en Zigbee2MQTT. Zigbee2MQTT cuenta entonces cuántas veces emite cada dispositivo – así Pulse detecta dispositivos que siguen emitiendo pero ya no envían valores.",
+		health_confirm_side: "Los dispositivos con pila no envían nada extra. Puedes desactivarlo cuando quieras en los ajustes de Zigbee2MQTT.",
+		partner_suggest: "Sugerencia: {name}",
+		partner_suggest_why: "a menudo activos juntos",
+		partner_accept: "Usar",
+		partner_dismiss: "Descartar",
+		new_forecast_title: "Previsión de pilas",
+		new_forecast_text: "Cada dispositivo muestra más o menos cuánto le durará la pila. El resumen indica qué pilas tocará cambiar en las próximas semanas.",
+		new_hero_title: "Primero los problemas",
+		new_hero_text: "Cuando un dispositivo te necesita, el titular lo dice. Los dispositivos importantes llevan una estrella.",
+		new_radio_title: "Emite, sin valores",
+		new_radio_text: "Con el contador de radio de Zigbee2MQTT, Pulse nota cuando un dispositivo sigue emitiendo pero ya no mide nada.",
+		new_cloud_title: "Calma en las caídas de la nube",
+		new_cloud_text: "Si una nube deja de responder, recibes un solo resumen en lugar de muchas alertas. Además, Pulse sugiere dispositivos compañeros adecuados.",
+		new_calver_title: "Nuevos números de versión",
+		new_calver_text: "A partir de ahora las versiones se leen año.mes.versión: 26.10.4 es la cuarta versión de octubre de 2026. El salto desde 1.1.0 es intencionado – las actualizaciones se detectan como siempre.",
+		due_untyped: "tipo desconocido: {names}",
+		beta: "Beta",
+		mains_beta: "Supervisar dispositivos conectados a la red",
+		mains_beta_hint: "También dispositivos conectados a la red eléctrica (Zigbee, Z-Wave, Matter, Shelly, ESPHome …). Pulse te avisa cuando uno deja de estar disponible o se queda en silencio aunque suele dar señales con regularidad. Aún en pruebas.",
+		mains_devices: "Dispositivos conectados a la red",
+		filter_mains: "Conectados a la red",
+		mains_chip: "Red · Beta",
+		mains_note: "Alimentado por la red eléctrica, sin pila. Pulse vigila si está disponible y, si da señales con regularidad, si se queda en silencio.",
+		texts: "Textos",
+		texts_hint: "Tus propios títulos y textos para las notificaciones de un dispositivo. Los resúmenes no cambian.",
+		tpl_failed: "Sin respuesta",
+		tpl_check: "Revisar",
+		tpl_battery: "Pila",
+		tpl_recovered: "De vuelta",
+		tpl_default: "Predeterminado",
+		tpl_custom: "Personalizado",
+		tpl_title_field: "Título",
+		tpl_message_field: "Texto",
+		tpl_vars: "Variables",
+		tpl_vars_hint: "Toca para insertar. {area} queda vacío si la habitación ya está en el nombre; los valores vacíos desaparecen con su «·».",
+		tpl_preview: "Vista previa",
+		tpl_reset: "Usar predeterminado",
+		tpl_save: "Guardar",
+		new_mains_title: "Dispositivos a la red en beta",
+		new_mains_text: "Enchufes, lámparas e interruptores conectados a la red también se cuelgan. Actívalo en Notificaciones → Beta.",
+		new_texts_title: "Tus propias palabras",
+		new_texts_text: "Cambia el título y el texto de cada notificación, con marcadores y vista previa.",
+		new_labels_title: "Etiquetas en vez de clics",
+		new_labels_text: "Basta con la etiqueta de HA pulse_important o pulse_ignore en un dispositivo. Las notificaciones ya indican el área.",
+		new_languages_title: "Cinco idiomas",
+		new_languages_text: "Pulse habla inglés, alemán, francés, español y neerlandés."
+	},
+	nl: {
+		title: "Pulse",
+		subtitle: "Merkt het als een batterijsensor stil wordt – luistert alleen en kost geen batterij.",
+		tab_overview: "Overzicht",
+		tab_devices: "Apparaten",
+		tab_notify: "Meldingen",
+		close: "Sluiten",
+		more: "Meer",
+		loading: "Pulse laden …",
+		not_loaded: "Pulse is nog niet ingesteld. Voeg de integratie toe via Instellingen → Apparaten & diensten.",
+		status_ok: "In ritme",
+		status_learning: "Leert",
+		status_watch: "In de gaten",
+		status_check: "Controleren",
+		status_failed: "Uitgevallen",
+		ignored: "Niet bewaakt",
+		batteries: "Batterijen",
+		nothing_due: "Niets aan de beurt",
+		last_change: "Laatst vervangen",
+		zigbee: "Zigbee2MQTT",
+		zigbee_hint: "Tijdstempel bij elk bericht – zonder extra verbruik.",
+		zigbee_devices: "Zigbee-apparaten",
+		zigbee_sent: "Naar Zigbee2MQTT gestuurd",
+		recipients: "Ontvangers",
+		quiet: "Rusttijd",
+		off: "Uit",
+		replaced: "Batterij vervangen",
+		replaced_done: "Wissel genoteerd",
+		later: "Morgen herinneren",
+		later_done: "Pulse herinnert je morgen",
+		snoozed_until: "Herinnert {when}",
+		details: "Details",
+		ignore: "Niet bewaakt",
+		label_set: "Ingesteld via het Home Assistant-label ‘{label}’.",
+		ignore_hint: "Pulse laat dit apparaat met rust.",
+		ignored_done: "{name} wordt niet meer bewaakt",
+		resume: "Weer bewaken",
+		undo: "Ongedaan maken",
+		search: "{count} apparaten doorzoeken",
+		search_one: "1 apparaat doorzoeken",
+		group_by: "Groeperen op {what}",
+		group_area: "ruimte",
+		group_status: "status",
+		group_none: "Niet gegroepeerd",
+		col_last: "Laatste melding",
+		no_area: "Geen ruimte",
+		no_results: "Geen apparaat komt overeen met ‘{query}’.",
+		battery: "Batterij",
+		voltage: "Spanning",
+		battery_type: "Type",
+		battery_count: "Aantal",
+		chemistry: "Soort",
+		chem_nimh: "Oplaadbaar (NiMH)",
+		chem_alkaline: "Alkaline",
+		chem_lithium: "Lithium",
+		chem_unknown: "Onbekend",
+		type_unknown: "Niet ingesteld",
+		replaced_history: "Batterijwissels",
+		never_replaced: "Nog geen wissel genoteerd",
+		monitoring: "Bewaking",
+		important: "Belangrijk apparaat",
+		important_hint: "Strengere grenzen, ‘Controleren’ komt meteen, uitval desgewenst als kritieke melding.",
+		partner: "Partnerapparaat",
+		partner_hint: "Gaan meestal samen af, bijv. slot en deurcontact. Valt er een stil, dan merkt Pulse het eerder.",
+		partner_none: "Geen",
+		open_device: "Apparaatpagina openen",
+		just_now: "zojuist",
+		minutes_ago: "{n} min geleden",
+		hours_ago: "{n} u geleden",
+		days_ago: "{n} dagen geleden",
+		day_ago: "gisteren",
+		every_minutes: "elke {n} min",
+		every_hours: "elke {n} u",
+		every_days: "elke {n} dagen",
+		unknown: "—",
+		today: "vandaag",
+		recipients_none: "Geen telefoon met de Home Assistant-app gevonden.",
+		when: "Wanneer melden",
+		level_failed: "Uitgevallen",
+		level_check: "Controleren",
+		level_battery: "Batterij bijna leeg",
+		level_now: "Meteen",
+		level_daily: "Dagelijks",
+		level_off: "Uit",
+		times: "Tijden",
+		summary_time: "Dagelijkse samenvatting",
+		quiet_from: "Van",
+		quiet_to: "Tot",
+		quiet_hint: "Meldingen tijdens de rusttijd komen daarna. Kritieke komen altijd door.",
+		special: "Bijzondere gevallen",
+		critical: "Kritieke meldingen",
+		critical_hint: "Lekdetectoren, rookmelders, sloten – doorbreken stille modus en focus",
+		arrive: "Pas als er iemand thuis is",
+		recovered: "Als een apparaat terug is",
+		try_it: "Uitproberen",
+		test: "Testmelding sturen",
+		test_done: "Test naar {count} telefoon(s) gestuurd",
+		test_none: "Geen ontvanger gekozen",
+		summary_now: "Samenvatting nu sturen",
+		summary_sent: "Samenvatting gestuurd",
+		summary_empty: "Er is nu niets om samen te vatten",
+		show_welcome: "Welkom tonen",
+		open_integration: "Integratie-instellingen",
+		whats_new_title: "Nieuw in Pulse {version}",
+		welcome_rhythm_title: "Kent elk ritme",
+		welcome_rhythm_text: "Hoe vaak elk apparaat zich meldt, heeft Pulse al geleerd uit de laatste 10 dagen.",
+		welcome_listen_title: "Luistert alleen",
+		welcome_listen_text: "Pulse vraagt nooit een apparaat uit. Dat kost geen batterij en geen radioverkeer.",
+		welcome_notify_title: "Laat het op tijd weten",
+		welcome_notify_text: "Belangrijke dingen meteen, de rest eens per dag – met rusttijd.",
+		welcome_zigbee_title: "Zigbee-levenstekens",
+		welcome_zigbee_text: "Laat Zigbee2MQTT een tijdstempel aan elk bericht toevoegen.",
+		continue: "Doorgaan",
+		version: "Versie {version}",
+		today_cap: "Vandaag",
+		yesterday_cap: "Gisteren",
+		zigbee_active: "Actief",
+		zigbee_requested: "Aangevraagd",
+		zigbee_confirm_title: "Zigbee-levenstekens inschakelen?",
+		zigbee_confirm_text: "Pulse schakelt ‘last_seen’ en ‘availability’ in Zigbee2MQTT in. Zo merkt Pulse ook meldingen zonder nieuwe waarde op en ziet het radio-onderbrekingen sneller.",
+		zigbee_confirm_side: "Stil geworden Zigbee-apparaten verschijnen in Home Assistant dan als niet beschikbaar. Batterijapparaten sturen daardoor niets extra. Je kunt dit altijd terugzetten in de instellingen van Zigbee2MQTT.",
+		zigbee_confirm_go: "Inschakelen",
+		cancel: "Annuleren",
+		level_unreliable: "Oplaadbaar – percentage zegt weinig, Pulse let op het ritme",
+		replaced_undone: "Wissel verwijderd",
+		filter_clear: "Filter wissen",
+		filter_label: "Alleen: {what}",
+		whats_new_all: "Alle nieuwigheden",
+		replaced_now: "Batterijwissel noteren",
+		battery_none_low: "Geen zwak",
+		battery_low_one: "1 zwak",
+		battery_low_many: "{count} zwak",
+		hero_all: "Alle {count} apparaten",
+		hero_some: "{ok} van {total} apparaten",
+		hero_some_short: "{ok} van {total}",
+		hero_beat: "zijn in ritme.",
+		hero_beat_short: "in ritme.",
+		hero_one: "Je enige apparaat",
+		hero_beat_one: "is in ritme.",
+		hero_beat_off: "is stil.",
+		hero_learn1: "Pulse",
+		hero_learn2: "leert nog.",
+		hero_none1: "Nog geen",
+		hero_none2: "batterijapparaten.",
+		sent_silent_for: "{name} is al {span} stil.",
+		sent_silent_since: "{name} is sinds {day} stil.",
+		sent_battery: "{name} heeft binnenkort een nieuwe batterij nodig.",
+		sent_battery_low: "{name} heeft een nieuwe batterij nodig.",
+		sent_unavailable: "{name} is onbereikbaar.",
+		sent_partner: "{name} is stil terwijl {partner} actief is.",
+		sent_other: "{name}: {reason}",
+		sent_more: "En nog {count}.",
+		sent_all_good: "Alle apparaten melden zich zoals gewoonlijk.",
+		sent_learning: "Pulse leert hoe vaak elk apparaat zich meldt.",
+		span_minutes: "{n} minuten",
+		span_hours: "{n} uur",
+		span_hour: "1 uur",
+		span_days: "{n} dagen",
+		span_day: "1 dag",
+		yesterday: "gisteren",
+		flag_silent: "Al {span} stil",
+		group_need: "Heeft je nodig",
+		group_watch: "In de gaten",
+		group_rhythm: "In ritme",
+		group_learning: "Leert nog",
+		monitor_head: "{count} apparaten · 7 dagen",
+		monitor_head_one: "1 apparaat · 7 dagen",
+		day_title: "Je dag met Pulse",
+		day_to: "Aan {names}",
+		day_nobody: "Nog geen ontvanger",
+		status_battery: "Batterij {level}%",
+		new_battery: "Nieuwe batterij",
+		dh_silent: "Al {span} stil.",
+		dh_unavailable: "Onbereikbaar.",
+		dh_partner: "Stil, partner actief.",
+		dh_battery: "Batterij op {level}%.",
+		dh_learning: "Leert nog.",
+		dh_ok: "In ritme.",
+		dh_ignored: "Niet bewaakt.",
+		dh_watch: "Ongewoon stil.",
+		detail_every: "Meldt zich normaal {every}. Laatste melding {when}.",
+		heartbeat_title: "Hartslag · 7 dagen",
+		heartbeat_legend: "Streepje = melding · hoger = meerdere",
+		with_partner: "Met partnerapparaat",
+		partner_quiet: "{partner} meldt zich nog – alleen {name} is stil.",
+		partner_both: "Beide melden zich zoals gewoonlijk.",
+		stat_changed: "Vervangen",
+		welcome_head1: "Pulse",
+		welcome_head2: "luistert.",
+		welcome_lead: "Elk batterijapparaat heeft een ritme. Pulse kent het – en merkt het als het hapert.",
+		ignored_count: "{count} niet bewaakt",
+		show_list: "Lijst tonen",
+		device_settings: "Instellingen",
+		no_data_legend: "Geen gegevens – Pulse draaide niet",
+		stat_rechargeable: "Oplaadbaar · globaal",
+		set_head: "Pulse meldt zich om {time}.",
+		set_quiet: "Rust {start}–{end}.",
+		set_no_quiet: "Geen rusttijd.",
+		set_failed: "uitgevallen apparaten",
+		set_check: "‘Controleren’",
+		set_battery: "batterijen",
+		set_group: "{names} {level}",
+		set_level_now: "meteen",
+		set_level_daily: "in de samenvatting",
+		set_level_off: "nooit",
+		unit_volt: "{value} V",
+		unit_millivolt: "{value} mV",
+		unit_percent: "{value}%",
+		battery_flag_low: "Zwak",
+		battery_flag_ok: "OK",
+		battery_count_type: "{count} × {type}",
+		hour_label: "{h}:00",
+		filter_empty: "Geen apparaat in dit filter.",
+		heartbeat_aria: "{count} meldingen in {days} dagen",
+		replaced_undo_failed: "Wissel kon niet ongedaan worden gemaakt",
+		more_for: "Meer voor {name}",
+		z2m_base: "Zigbee2MQTT-topic",
+		z2m_base_hint: "MQTT-basistopic, standaard zigbee2mqtt. Alleen wijzigen als je Zigbee2MQTT een andere gebruikt.",
+		z2m_base_invalid: "Ongeldige topic: niet leeg, geen # of +, geen schuine streep aan het begin of eind.",
+		on: "Aan",
+		advanced: "Basistopic",
+		snooze_cancel: "Herinnering annuleren",
+		snooze_cancelled: "Herinnering geannuleerd",
+		read_only: "Alleen beheerders kunnen iets wijzigen.",
+		levels_hint: "Uitgevallen: veel langer stil dan normaal of onbereikbaar. Controleren: opvallend stil of batterij onder 10%. ‘In de gaten’ blijft in het paneel.",
+		recipients_hint: "Nieuwe telefoons komen er automatisch bij, tot je hier iets wijzigt.",
+		recovered_hint: "Ook herkende batterijwissels.",
+		arrive_hint: "Meldingen wachten tot een van de gekozen personen thuis is. Geldt voor alle ontvangers.",
+		persons_none: "Geen persoon gevonden in Home Assistant.",
+		learning_hint: "Leert nog: heeft ongeveer 7 meldingen nodig om het ritme te kennen. Een apparaat dat alleen bij acties meldt, heeft meer tijd nodig.",
+		learning_one: "Pulse leert 1 apparaat nog kennen.",
+		learning_many: "Pulse leert {count} apparaten nog kennen.",
+		pill_learning: "Leert nog",
+		pill_waiting: "Wacht",
+		status_waiting: "Wacht",
+		dh_waiting: "Wacht op de eerste melding.",
+		sent_waiting: "{name} wacht op de eerste melding na de batterijwissel.",
+		day_line_summary: "Samenvatting {time}",
+		day_line_quiet: "Rust van {start} tot {end}",
+		day_line_no_quiet: "Geen rusttijd",
+		hero_need1: "{count} apparaten",
+		hero_need1_one: "Eén apparaat",
+		hero_need: "hebben je nodig.",
+		hero_need_one: "heeft je nodig.",
+		hero_sub: "{ok} van {total} in ritme.",
+		sent_strays_since: "{name} meldt zich sinds {day} nauwelijks nog, laatst {last}.",
+		sent_strays_for: "{name} meldt zich al {span} nauwelijks nog, laatst {last}.",
+		sent_startup: "{name} heeft zich sinds de herstart nog niet gemeld.",
+		sent_radio_only: "{name} zendt, maar stuurt geen waarden.",
+		sent_battery_missing: "{name} meldt zijn batterijniveau niet meer.",
+		flag_strays: "Al {span} nauwelijks iets",
+		status_cloud: "Cloud stil",
+		dh_strays: "Al {span} nauwelijks iets.",
+		dh_cloud: "Cloud reageert niet.",
+		dh_startup: "Geen melding sinds de herstart.",
+		dh_radio_only: "Zendt zonder waarden.",
+		dh_battery_missing: "Batterijniveau ontbreekt.",
+		forecast_too_short: "Nog te kort bekeken voor een voorspelling",
+		forecast_flat: "Percentage verandert nauwelijks – nog geen voorspelling",
+		forecast_coarse: "Meldt alleen grove stappen – geen voorspelling",
+		forecast_untrusted: "Percentage van een oplaadbare zegt te weinig – geen voorspelling",
+		forecast_noisy: "Waarden schommelen te veel – geen voorspelling",
+		forecast_days: "Nog maar een paar dagen",
+		forecast_weeks: "Gaat nog ca. {lo}–{hi} weken mee",
+		forecast_months: "Gaat nog ca. {lo}–{hi} maanden mee",
+		forecast_years: "Gaat nog ca. {lo}–{hi} jaar mee",
+		due_line: "Aan de beurt in de komende 8 weken: {items}",
+		battery_due_many: "{count} binnenkort aan de beurt",
+		battery_due_one: "1 binnenkort aan de beurt",
+		cloud_outage_one: "{name}-cloud reageert niet – 1 apparaat getroffen",
+		cloud_outage_many: "{name}-cloud reageert niet – {count} apparaten getroffen",
+		cloud_device: "Cloudapparaat",
+		important_badge: "Belangrijk",
+		mark_important: "Als belangrijk markeren",
+		unmark_important: "Niet meer belangrijk",
+		important_devices: "Belangrijke apparaten",
+		filter_important: "Belangrijk",
+		filter_battery: "Batterij",
+		ignore_action: "Niet meer bewaken",
+		no_devices: "Nog geen batterijapparaten gevonden.",
+		connection_lost: "Verbinding verbroken – Pulse toont de laatste stand en maakt opnieuw verbinding.",
+		heartbeat_failed: "De hartslag kon niet worden geladen.",
+		reload: "Opnieuw laden",
+		search_label: "Apparaten doorzoeken",
+		health_title: "Radioteller",
+		health_hint: "Herkent apparaten die zenden, maar geen waarden meer sturen.",
+		health_confirm_title: "Radioteller inschakelen?",
+		health_confirm_text: "Pulse schakelt de health-controle in Zigbee2MQTT in. Zigbee2MQTT telt dan hoe vaak elk apparaat zendt – zo herkent Pulse apparaten die nog zenden, maar geen waarden meer sturen.",
+		health_confirm_side: "Batterijapparaten sturen daardoor niets extra. Je kunt het altijd uitschakelen in de instellingen van Zigbee2MQTT.",
+		partner_suggest: "Suggestie: {name}",
+		partner_suggest_why: "vaak samen actief",
+		partner_accept: "Gebruiken",
+		partner_dismiss: "Negeren",
+		new_forecast_title: "Batterijvoorspelling",
+		new_forecast_text: "Elk apparaat toont ongeveer hoe lang de batterij nog meegaat. Het overzicht laat zien welke batterijen de komende weken aan de beurt zijn.",
+		new_hero_title: "Problemen eerst",
+		new_hero_text: "Heeft een apparaat je nodig, dan staat dat groot bovenaan. Belangrijke apparaten hebben een ster.",
+		new_radio_title: "Zendt zonder waarden",
+		new_radio_text: "Met de radioteller van Zigbee2MQTT merkt Pulse wanneer een apparaat nog zendt, maar niets meer meet.",
+		new_cloud_title: "Rustig bij cloudstoringen",
+		new_cloud_text: "Reageert een cloud niet meer, dan krijg je één samenvatting in plaats van veel meldingen. Ook stelt Pulse passende partnerapparaten voor.",
+		new_calver_title: "Nieuwe versienummers",
+		new_calver_text: "Vanaf nu lezen versies als jaar.maand.release: 26.10.4 is de vierde release in oktober 2026. De sprong vanaf 1.1.0 is bewust – updates worden zoals gewoonlijk gevonden.",
+		due_untyped: "type onbekend: {names}",
+		beta: "Bèta",
+		mains_beta: "Apparaten op netstroom bewaken",
+		mains_beta_hint: "Ook apparaten op netstroom (Zigbee, Z-Wave, Matter, Shelly, ESPHome …). Pulse laat het je weten als er een niet meer bereikbaar is of stil wordt terwijl het zich normaal regelmatig meldt. Wordt nog getest.",
+		mains_devices: "Apparaten op netstroom",
+		filter_mains: "Netstroom",
+		mains_chip: "Netstroom · Bèta",
+		mains_note: "Werkt op netstroom, geen batterij. Pulse let op of het bereikbaar is en, als het zich regelmatig meldt, of het stil wordt.",
+		texts: "Teksten",
+		texts_hint: "Eigen titels en teksten voor meldingen over één apparaat. Samenvattingen blijven zoals ze zijn.",
+		tpl_failed: "Uitgevallen",
+		tpl_check: "Controleren",
+		tpl_battery: "Batterij",
+		tpl_recovered: "Weer terug",
+		tpl_default: "Standaard",
+		tpl_custom: "Eigen",
+		tpl_title_field: "Titel",
+		tpl_message_field: "Tekst",
+		tpl_vars: "Variabelen",
+		tpl_vars_hint: "Tik om in te voegen. {area} blijft leeg als de ruimte al in de naam staat; lege waarden verdwijnen met hun ‘ · ’.",
+		tpl_preview: "Voorbeeld",
+		tpl_reset: "Standaard gebruiken",
+		tpl_save: "Opslaan",
+		new_mains_title: "Apparaten op netstroom in bèta",
+		new_mains_text: "Ook stekkers, lampen en schakelaars op netstroom kunnen vastlopen. Zet het aan onder Meldingen → Bèta.",
+		new_texts_title: "Je eigen woorden",
+		new_texts_text: "Pas de titel en tekst van elke melding aan, met placeholders en een voorbeeld.",
+		new_labels_title: "Labels in plaats van klikken",
+		new_labels_text: "Het HA-label pulse_important of pulse_ignore op een apparaat is genoeg. Meldingen noemen nu de ruimte.",
+		new_languages_title: "Vijf talen",
+		new_languages_text: "Pulse spreekt Engels, Duits, Frans, Spaans en Nederlands."
+	}
 };
-//#endregion
-//#region src/strings.ts
-function I(e, t, n = {}) {
-	return (e.startsWith("de") ? Ge : Ke)[t].replace(/\{(\w+)\}/g, (e, t) => t in n ? String(n[t]) : e);
+function L(e, t, n = {}) {
+	return (Ke[e.slice(0, 2).toLowerCase()] ?? Ge)[t].replace(/\{(\w+)\}/g, (e, t) => t in n ? String(n[t]) : e);
 }
 //#endregion
 //#region src/logic.ts
-function L(e) {
+function R(e) {
 	let t = null;
 	return (...n) => {
 		if (t !== null && t.args.length === n.length && t.args.every((e, t) => Object.is(e, n[t]))) return t.value;
@@ -1213,20 +2268,20 @@ function L(e) {
 		}, r;
 	};
 }
-var R = {
+var z = {
 	ok: 0,
 	learning: 0,
 	watch: 1,
 	check: 2,
 	failed: 3
 };
-function z(e) {
+function B(e) {
 	return e === "failed" ? "crit" : e === "check" || e === "watch" ? "warn" : e === "learning" ? "muted" : "ok";
 }
-function B(e) {
-	return e.ignored || V(e) ? "muted" : z(e.status);
-}
 function V(e) {
+	return e.ignored || H(e) ? "muted" : B(e.status);
+}
+function H(e) {
 	return !e.ignored && e.reason_key === "cloud_outage";
 }
 function qe(e) {
@@ -1238,15 +2293,15 @@ function qe(e) {
 		failed: "status_failed"
 	}[e];
 }
-function H(e) {
+function U(e) {
 	return e.filter((e) => !e.ignored);
 }
 function Je(e) {
-	return H(e).filter((e) => R[e.status] >= 2 && !V(e)).sort((e, t) => R[t.status] - R[e.status] || e.name.localeCompare(t.name));
+	return U(e).filter((e) => z[e.status] >= 2 && !H(e)).sort((e, t) => z[t.status] - z[e.status] || e.name.localeCompare(t.name));
 }
 function Ye(e, t) {
 	let n = /* @__PURE__ */ new Map();
-	for (let r of H(e)) {
+	for (let r of U(e)) {
 		let e = r.area ?? t, i = n.get(e) ?? [];
 		i.push(r), n.set(e, i);
 	}
@@ -1256,16 +2311,16 @@ function Ye(e, t) {
 	}));
 }
 function Xe(e, t, n) {
-	if (t === null) return I(e, "unknown");
+	if (t === null) return L(e, "unknown");
 	let r = Math.max(0, n - t);
-	if (r < 60) return I(e, "just_now");
-	if (r < 3600) return I(e, "minutes_ago", { n: Math.round(r / 60) });
-	if (r < 86400) return I(e, "hours_ago", { n: Math.round(r / 3600) });
+	if (r < 60) return L(e, "just_now");
+	if (r < 3600) return L(e, "minutes_ago", { n: Math.round(r / 60) });
+	if (r < 86400) return L(e, "hours_ago", { n: Math.round(r / 3600) });
 	let i = Math.round(r / 86400);
-	return i === 1 ? I(e, "day_ago") : I(e, "days_ago", { n: i });
+	return i === 1 ? L(e, "day_ago") : L(e, "days_ago", { n: i });
 }
 function Ze(e, t) {
-	return t === null ? I(e, "unknown") : t < 3600 ? I(e, "every_minutes", { n: Math.max(1, Math.round(t / 60)) }) : t < 172800 ? I(e, "every_hours", { n: Math.round(t / 3600) }) : I(e, "every_days", { n: Math.round(t / 86400) });
+	return t === null ? L(e, "unknown") : t < 3600 ? L(e, "every_minutes", { n: Math.max(1, Math.round(t / 60)) }) : t < 172800 ? L(e, "every_hours", { n: Math.round(t / 3600) }) : L(e, "every_days", { n: Math.round(t / 86400) });
 }
 function Qe(e) {
 	let t = e.filter((e) => e !== null && e > 0).sort((e, t) => e - t);
@@ -1284,7 +2339,7 @@ function et(e) {
 		hour: "numeric",
 		minute: "numeric",
 		hourCycle: "h23",
-		...U(e)
+		...W(e)
 	});
 	return $e.set(t, r), r;
 }
@@ -1302,7 +2357,7 @@ function nt(e) {
 	}
 	return t ? e : void 0;
 }
-function U(e) {
+function W(e) {
 	let t = nt(e);
 	return t ? { timeZone: t } : {};
 }
@@ -1320,7 +2375,7 @@ function rt(e, t) {
 	}
 	return n;
 }
-function W(e, t) {
+function G(e, t) {
 	let n = rt(e, t);
 	return Date.UTC(n.year, n.month - 1, n.day) / 864e5;
 }
@@ -1337,9 +2392,9 @@ function ot(e, t, n) {
 function st(e, t, n) {
 	let r = new Intl.DateTimeFormat(e, {
 		weekday: "short",
-		...U(n)
+		...W(n)
 	}), i = Math.max(0, t.length - 1);
-	return Array.from({ length: i }, (n, a) => a === i - 1 ? I(e, "today") : r.format(/* @__PURE__ */ new Date(((t[a] ?? 0) + (t[a + 1] ?? 0)) / 2 * 1e3)));
+	return Array.from({ length: i }, (n, a) => a === i - 1 ? L(e, "today") : r.format(/* @__PURE__ */ new Date(((t[a] ?? 0) + (t[a + 1] ?? 0)) / 2 * 1e3)));
 }
 function ct(e) {
 	return `repeat(${Math.max(1, e.length - 1)}, minmax(0, 1fr))`;
@@ -1383,7 +2438,7 @@ function ft(e, t, n) {
 		day: "numeric",
 		month: "long",
 		year: "numeric",
-		...U(n)
+		...W(n)
 	}).format(/* @__PURE__ */ new Date(t * 1e3));
 }
 function pt(e) {
@@ -1391,7 +2446,7 @@ function pt(e) {
 	if (e === "24") return "24";
 }
 function mt(e, t, n, r, i) {
-	let a = Math.abs(W(n, r) - W(t, r)), o = a === 0 ? {} : a < 6 ? { weekday: "short" } : {
+	let a = Math.abs(G(n, r) - G(t, r)), o = a === 0 ? {} : a < 6 ? { weekday: "short" } : {
 		day: "2-digit",
 		month: "2-digit"
 	}, s = i ? { hourCycle: i === "12" ? "h12" : "h23" } : {};
@@ -1400,21 +2455,21 @@ function mt(e, t, n, r, i) {
 		hour: "numeric",
 		minute: "2-digit",
 		...s,
-		...U(r)
+		...W(r)
 	}).format(/* @__PURE__ */ new Date(t * 1e3));
 }
 function ht(e, t) {
-	return Math.abs(t) >= 1e3 ? I(e, "unit_volt", { value: new Intl.NumberFormat(e, {
+	return Math.abs(t) >= 1e3 ? L(e, "unit_volt", { value: new Intl.NumberFormat(e, {
 		minimumFractionDigits: 2,
 		maximumFractionDigits: 2
-	}).format(t / 1e3) }) : I(e, "unit_millivolt", { value: Math.round(t) });
+	}).format(t / 1e3) }) : L(e, "unit_millivolt", { value: Math.round(t) });
 }
 function gt(e) {
 	let t = e.trim();
 	return !t || t.includes("#") || t.includes("+") || t.startsWith("/") || t.endsWith("/") ? null : t;
 }
 function _t(e, t) {
-	return H(e).filter((e) => e.id !== t.id).sort((e, t) => e.name.localeCompare(t.name));
+	return U(e).filter((e) => e.id !== t.id).sort((e, t) => e.name.localeCompare(t.name));
 }
 function vt(e, t) {
 	let n = t.trim().toLowerCase();
@@ -1437,8 +2492,8 @@ function bt(e, t, n, r) {
 		area: "",
 		devices: [...e].sort((e, t) => e.name.localeCompare(t.name))
 	}] : t === "area" ? Ye(e, r) : yt.map((t) => ({
-		area: I(n, qe(t)),
-		devices: H(e).filter((e) => e.status === t).sort((e, t) => e.name.localeCompare(t.name))
+		area: L(n, qe(t)),
+		devices: U(e).filter((e) => e.status === t).sort((e, t) => e.name.localeCompare(t.name))
 	})).filter((e) => e.devices.length > 0);
 }
 function xt(e) {
@@ -1461,28 +2516,28 @@ function Ct(e, t) {
 	return e > 120 || e > 24 && t > .5;
 }
 function wt(e, t = []) {
-	return H(e).filter((e) => t.includes(e.id) || e.battery.flag && e.battery.low || R[e.status] >= 1 && (e.reason_key ?? "").startsWith("battery")).sort((e, t) => e.name.localeCompare(t.name));
+	return U(e).filter((e) => t.includes(e.id) || e.battery.flag && e.battery.low || z[e.status] >= 1 && (e.reason_key ?? "").startsWith("battery")).sort((e, t) => e.name.localeCompare(t.name));
 }
 function Tt(e, t, n = []) {
-	return t === null ? e : t === "ignored" ? e.filter((e) => e.ignored) : t === "important" ? H(e).filter((e) => e.critical) : t === "battery" ? wt(e, n) : H(e).filter((e) => e.status === t);
+	return t === null ? e : t === "ignored" ? e.filter((e) => e.ignored) : t === "important" ? U(e).filter((e) => e.critical) : t === "battery" ? wt(e, n) : t === "mains" ? U(e).filter((e) => e.mains) : U(e).filter((e) => e.status === t);
 }
 function Et(e) {
-	return H(e).filter((e) => e.critical).length;
+	return U(e).filter((e) => e.critical).length;
 }
 function Dt(e, t, n, r) {
-	let i = W(n, r) - W(t, r);
-	if (i === 0) return I(e, "today_cap");
-	if (i === 1) return I(e, "yesterday_cap");
+	let i = G(n, r) - G(t, r);
+	if (i === 0) return L(e, "today_cap");
+	if (i === 1) return L(e, "yesterday_cap");
 	let a = rt(t, r).year === rt(n, r).year;
 	return new Intl.DateTimeFormat(e, {
 		day: "numeric",
 		month: "short",
 		...a ? {} : { year: "numeric" },
-		...U(r)
+		...W(r)
 	}).format(/* @__PURE__ */ new Date(t * 1e3));
 }
 function Ot(e) {
-	return !e.ignored && R[e.status] >= 2;
+	return !e.ignored && z[e.status] >= 2;
 }
 var kt = /* @__PURE__ */ new Set(["battery_low", "battery_low_flag"]);
 function At(e) {
@@ -1494,11 +2549,11 @@ function jt(e, t) {
 }
 function Mt(e, t) {
 	return t.length ? {
-		label: I(e, t.length === 1 ? "battery_low_one" : "battery_low_many", { count: t.length }),
+		label: L(e, t.length === 1 ? "battery_low_one" : "battery_low_many", { count: t.length }),
 		value: t.join(", "),
 		tone: "warn"
 	} : {
-		label: I(e, "battery_none_low"),
+		label: L(e, "battery_none_low"),
 		value: "",
 		tone: "ok"
 	};
@@ -1527,28 +2582,28 @@ var Rt = /* @__PURE__ */ new Set([
 ]), zt = /* @__PURE__ */ new Set(["silent", "silent_new"]);
 function Bt(e, t) {
 	let n = Math.max(0, t);
-	if (Math.round(n / 60) < 60) return I(e, "span_minutes", { n: Math.max(1, Math.round(n / 60)) });
+	if (Math.round(n / 60) < 60) return L(e, "span_minutes", { n: Math.max(1, Math.round(n / 60)) });
 	if (Math.round(n / 3600) < 48) {
 		let t = Math.round(n / 3600);
-		return t <= 1 ? I(e, "span_hour") : I(e, "span_hours", { n: t });
+		return t <= 1 ? L(e, "span_hour") : L(e, "span_hours", { n: t });
 	}
 	let r = Math.round(n / 86400);
-	return r <= 1 ? I(e, "span_day") : I(e, "span_days", { n: r });
+	return r <= 1 ? L(e, "span_day") : L(e, "span_days", { n: r });
 }
 function Vt(e, t, n, r) {
-	let i = W(n, r) - W(t, r);
-	return i === 1 ? I(e, "yesterday") : i >= 2 && i <= 6 ? new Intl.DateTimeFormat(e, {
+	let i = G(n, r) - G(t, r);
+	return i === 1 ? L(e, "yesterday") : i >= 2 && i <= 6 ? new Intl.DateTimeFormat(e, {
 		weekday: "long",
-		...U(r)
+		...W(r)
 	}).format(/* @__PURE__ */ new Date(t * 1e3)) : null;
 }
-function G(e) {
-	return !e.ignored && R[e.status] >= 1 && Ft(e) !== null && zt.has(e.reason_key ?? "");
+function K(e) {
+	return !e.ignored && z[e.status] >= 1 && Ft(e) !== null && zt.has(e.reason_key ?? "");
 }
 function Ht(e) {
-	return R[e.status] >= 1 && Rt.has(e.reason_key ?? "");
+	return z[e.status] >= 1 && Rt.has(e.reason_key ?? "");
 }
-function K(e, t, n, r = "") {
+function Ut(e, t, n, r = "") {
 	return {
 		line1: e,
 		line1Short: e,
@@ -1558,26 +2613,26 @@ function K(e, t, n, r = "") {
 		sub: r
 	};
 }
-function Ut(e, t) {
-	let n = H(t), r = n.filter((e) => e.status !== "learning");
-	if (!n.length) return K(I(e, "hero_none1"), I(e, "hero_none2"), "accent");
-	if (!r.length) return K(I(e, "hero_learn1"), I(e, "hero_learn2"), "accent");
+function Wt(e, t) {
+	let n = U(t), r = n.filter((e) => e.status !== "learning");
+	if (!n.length) return Ut(L(e, "hero_none1"), L(e, "hero_none2"), "accent");
+	if (!r.length) return Ut(L(e, "hero_learn1"), L(e, "hero_learn2"), "accent");
 	let i = r.filter(Ht).length, a = r.length - i, o = Je(r), s = o.some((e) => e.status === "failed") ? "crit" : "warn";
 	if (r.length === 1) {
-		let t = I(e, "hero_one");
-		return o.length ? K(t, I(e, "hero_need_one"), s) : K(t, I(e, i ? "hero_beat_off" : "hero_beat_one"), i ? "plain" : "accent");
+		let t = L(e, "hero_one");
+		return o.length ? Ut(t, L(e, "hero_need_one"), s) : Ut(t, L(e, i ? "hero_beat_off" : "hero_beat_one"), i ? "plain" : "accent");
 	}
-	let c = I(e, "hero_sub", {
+	let c = L(e, "hero_sub", {
 		ok: a,
 		total: r.length
 	});
 	if (o.length) {
 		let t = o.length === 1;
-		return K(t ? I(e, "hero_need1_one") : I(e, "hero_need1", { count: o.length }), I(e, t ? "hero_need_one" : "hero_need"), s, c);
+		return Ut(t ? L(e, "hero_need1_one") : L(e, "hero_need1", { count: o.length }), L(e, t ? "hero_need_one" : "hero_need"), s, c);
 	}
-	let l = I(e, "hero_beat"), u = I(e, "hero_beat_short");
+	let l = L(e, "hero_beat"), u = L(e, "hero_beat_short");
 	if (!i) {
-		let t = I(e, "hero_all", { count: r.length });
+		let t = L(e, "hero_all", { count: r.length });
 		return {
 			line1: t,
 			line1Short: t,
@@ -1588,11 +2643,11 @@ function Ut(e, t) {
 		};
 	}
 	return {
-		line1: I(e, "hero_some", {
+		line1: L(e, "hero_some", {
 			ok: a,
 			total: r.length
 		}),
-		line1Short: I(e, "hero_some_short", {
+		line1Short: L(e, "hero_some_short", {
 			ok: a,
 			total: r.length
 		}),
@@ -1602,25 +2657,25 @@ function Ut(e, t) {
 		sub: ""
 	};
 }
-var Wt = "\0";
+var Gt = "\0";
 function q(e, t, n, r) {
-	let [i = "", a = ""] = I(e, t, {
+	let [i = "", a = ""] = L(e, t, {
 		...r,
-		name: Wt
-	}).split(Wt);
+		name: Gt
+	}).split(Gt);
 	return {
 		before: i,
 		name: n.name,
 		after: a,
-		tone: z(n.status)
+		tone: B(n.status)
 	};
 }
-function Gt(e, t, n, r) {
-	let i = H(t).filter((e) => R[e.status] >= 1 && !V(e)).sort((e, t) => R[t.status] - R[e.status] || e.name.localeCompare(t.name)), a = H(t), o = a.filter((e) => e.status === "learning").length, s = o ? Kt(e, o) : "";
+function Kt(e, t, n, r) {
+	let i = U(t).filter((e) => z[e.status] >= 1 && !H(e)).sort((e, t) => z[t.status] - z[e.status] || e.name.localeCompare(t.name)), a = U(t), o = a.filter((e) => e.status === "learning").length, s = o ? qt(e, o) : "";
 	if (!i.length) return {
 		mentions: [],
 		more: 0,
-		text: o > 0 && o === a.length ? I(e, "sent_learning") : [o < a.length ? I(e, "sent_all_good") : "", s].filter(Boolean).join(" ")
+		text: o > 0 && o === a.length ? L(e, "sent_learning") : [o < a.length ? L(e, "sent_all_good") : "", s].filter(Boolean).join(" ")
 	};
 	let c = i.slice(0, 2).map((t) => {
 		let i = t.reason_key ?? "", a = Ft(t);
@@ -1643,23 +2698,23 @@ function Gt(e, t, n, r) {
 	return {
 		mentions: c,
 		more: l,
-		text: [l ? I(e, "sent_more", { count: l }) : "", s].filter(Boolean).join(" ")
+		text: [l ? L(e, "sent_more", { count: l }) : "", s].filter(Boolean).join(" ")
 	};
 }
-function Kt(e, t) {
-	return t === 1 ? I(e, "learning_one") : I(e, "learning_many", { count: t });
+function qt(e, t) {
+	return t === 1 ? L(e, "learning_one") : L(e, "learning_many", { count: t });
 }
-var qt = {
+var Jt = {
 	need: "group_need",
 	watch: "group_watch",
 	rhythm: "group_rhythm",
 	learning: "group_learning"
 };
-function Jt(e) {
-	return qt[e];
-}
 function Yt(e) {
-	let t = H(e), n = (e, t) => e.name.localeCompare(t.name);
+	return Jt[e];
+}
+function Xt(e) {
+	let t = U(e), n = (e, t) => e.name.localeCompare(t.name);
 	return [
 		{
 			key: "need",
@@ -1667,7 +2722,7 @@ function Yt(e) {
 		},
 		{
 			key: "watch",
-			devices: t.filter((e) => e.status === "watch" || V(e)).sort(n)
+			devices: t.filter((e) => e.status === "watch" || H(e)).sort(n)
 		},
 		{
 			key: "rhythm",
@@ -1679,46 +2734,46 @@ function Yt(e) {
 		}
 	].filter((e) => e.devices.length > 0);
 }
-function Xt(e, t, n) {
-	let r = Ft(t);
-	return !G(t) || r === null ? null : I(e, It(t) ? "flag_strays" : "flag_silent", { span: Bt(e, n - r) });
-}
 function Zt(e, t, n) {
-	return t.ignored ? "" : Xt(e, t, n) || (Lt(t) ? I(e, "pill_waiting") : t.status === "learning" ? I(e, "pill_learning") : "");
+	let r = Ft(t);
+	return !K(t) || r === null ? null : L(e, It(t) ? "flag_strays" : "flag_silent", { span: Bt(e, n - r) });
 }
 function Qt(e, t, n) {
+	return t.ignored ? "" : Zt(e, t, n) || (Lt(t) ? L(e, "pill_waiting") : t.status === "learning" ? L(e, "pill_learning") : "");
+}
+function $t(e, t, n) {
 	if (t.ignored) return {
-		text: I(e, "ignored"),
+		text: L(e, "ignored"),
 		tone: "muted"
 	};
-	if (V(t)) return {
-		text: I(e, "status_cloud"),
+	if (H(t)) return {
+		text: L(e, "status_cloud"),
 		tone: "muted"
 	};
 	if (Lt(t)) return {
-		text: I(e, "status_waiting"),
+		text: L(e, "status_waiting"),
 		tone: "warn"
 	};
 	let r = t.battery.level;
 	if (t.status === "watch" && t.reason_key?.startsWith("battery") && r !== null) return {
-		text: I(e, "status_battery", { level: Math.round(r) }),
+		text: L(e, "status_battery", { level: Math.round(r) }),
 		tone: "warn"
 	};
-	if (R[t.status] >= 1) return {
-		text: I(e, qe(t.status)),
-		tone: z(t.status)
+	if (z[t.status] >= 1) return {
+		text: L(e, qe(t.status)),
+		tone: B(t.status)
 	};
 	if (t.status === "learning") return {
-		text: I(e, "status_learning"),
+		text: L(e, "status_learning"),
 		tone: "muted"
 	};
 	let i = t.battery.replaced.at(-1);
 	return i !== void 0 && n - i < 172800 ? {
-		text: I(e, "new_battery"),
+		text: L(e, "new_battery"),
 		tone: "ok"
 	} : null;
 }
-function $t(e, t) {
+function en(e, t) {
 	if (t <= 0 || e.length <= t) return e;
 	let n = Math.ceil(e.length / t), r = [];
 	for (let t = 0; t < e.length; t += n) {
@@ -1727,98 +2782,98 @@ function $t(e, t) {
 	}
 	return r;
 }
-function en(e) {
+function tn(e) {
 	let [t = "0", n = "0"] = e.split(":");
 	return Number(t) + Number(n) / 60;
 }
-function tn(e, t) {
-	let n = en(e), r = en(t);
+function nn(e, t) {
+	let n = tn(e), r = tn(t);
 	return n === r ? [] : n < r ? [[n, r]] : [[0, r], [n, 24]];
 }
-function nn(e, t, n) {
+function rn(e, t, n) {
 	if (t.ignored) return {
-		text: I(e, "dh_ignored"),
+		text: L(e, "dh_ignored"),
 		tone: "muted"
 	};
 	let r = t.reason_key ?? "", i = Ft(t);
-	return G(t) && i !== null ? {
-		text: R[t.status] >= 2 ? I(e, It(t) ? "dh_strays" : "dh_silent", { span: Bt(e, n - i) }) : I(e, "dh_watch"),
-		tone: z(t.status)
-	} : V(t) ? {
-		text: I(e, "dh_cloud"),
+	return K(t) && i !== null ? {
+		text: z[t.status] >= 2 ? L(e, It(t) ? "dh_strays" : "dh_silent", { span: Bt(e, n - i) }) : L(e, "dh_watch"),
+		tone: B(t.status)
+	} : H(t) ? {
+		text: L(e, "dh_cloud"),
 		tone: "muted"
 	} : Lt(t) ? {
-		text: I(e, "dh_waiting"),
+		text: L(e, "dh_waiting"),
 		tone: "warn"
 	} : r === "startup_waiting" ? {
-		text: I(e, "dh_startup"),
+		text: L(e, "dh_startup"),
 		tone: "warn"
 	} : r === "radio_only" ? {
-		text: I(e, "dh_radio_only"),
-		tone: z(t.status)
+		text: L(e, "dh_radio_only"),
+		tone: B(t.status)
 	} : r === "battery_missing" ? {
-		text: I(e, "dh_battery_missing"),
-		tone: z(t.status)
+		text: L(e, "dh_battery_missing"),
+		tone: B(t.status)
 	} : r === "unavailable" ? {
-		text: I(e, "dh_unavailable"),
-		tone: z(t.status)
+		text: L(e, "dh_unavailable"),
+		tone: B(t.status)
 	} : r === "partner" ? {
-		text: I(e, "dh_partner"),
-		tone: z(t.status)
+		text: L(e, "dh_partner"),
+		tone: B(t.status)
 	} : r.startsWith("battery") && t.battery.level !== null ? {
-		text: I(e, "dh_battery", { level: Math.round(t.battery.level) }),
-		tone: z(t.status)
+		text: L(e, "dh_battery", { level: Math.round(t.battery.level) }),
+		tone: B(t.status)
 	} : t.status === "learning" ? {
-		text: I(e, "dh_learning"),
+		text: L(e, "dh_learning"),
 		tone: "muted"
 	} : {
-		text: I(e, "dh_ok"),
+		text: L(e, "dh_ok"),
 		tone: "accent"
 	};
 }
-function rn(e, t, n, r, i) {
-	return G(t) && t.typical !== null && t.last_activity !== null ? I(e, "detail_every", {
+function an(e, t, n, r, i) {
+	return K(t) && t.typical !== null && t.last_activity !== null ? L(e, "detail_every", {
 		every: Ze(e, t.typical).replace(/\.$/, ""),
 		when: mt(e, t.last_activity, n, r, i)
-	}) : t.status === "learning" && !t.ignored ? I(e, "learning_hint") : t.reason;
+	}) : t.status === "learning" && !t.ignored ? L(e, "learning_hint") : t.reason;
 }
-function an(e, t, n) {
-	return G(t) && !Ht(n) ? I(e, "partner_quiet", {
+function on(e, t, n) {
+	return K(t) && !Ht(n) ? L(e, "partner_quiet", {
 		partner: n.name,
 		name: t.name
-	}) : !Ht(t) && !Ht(n) ? I(e, "partner_both") : "";
-}
-function on(e) {
-	return Array.isArray(e) && e.length === 2 && typeof e[0] == "number" && typeof e[1] == "number";
+	}) : !Ht(t) && !Ht(n) ? L(e, "partner_both") : "";
 }
 function sn(e) {
-	return Array.isArray(e) ? e.filter(on) : [];
+	return Array.isArray(e) && e.length === 2 && typeof e[0] == "number" && typeof e[1] == "number";
 }
-function cn(e, t) {
+function cn(e) {
+	return Array.isArray(e) ? e.filter(sn) : [];
+}
+function ln(e, t) {
 	return t.length < 2 ? [] : e.map(([e, n]) => [ut(e, t), ut(n, t)]).filter(([e, t]) => t > e);
 }
-function ln(e) {
+function un(e) {
 	return Array.isArray(e) && e.every((e) => e === null || typeof e == "number");
 }
-function un(e) {
-	return Array.isArray(e) && e.every(ln);
-}
 function dn(e) {
+	return Array.isArray(e) && e.every(un);
+}
+function fn(e) {
 	if (typeof e != "object" || !e) return null;
 	let t = Reflect.get(e, "start"), n = Reflect.get(e, "days"), r = Reflect.get(e, "bin_minutes"), i = Reflect.get(e, "devices");
 	if (typeof t != "number" || typeof n != "number" || typeof r != "number" || r <= 0 || typeof i != "object" || !i) return null;
 	let a = {};
-	for (let [e, t] of Object.entries(i)) un(t) && (a[e] = t);
+	for (let [e, t] of Object.entries(i)) dn(t) && (a[e] = t);
 	return {
 		start: t,
 		days: n,
 		binMinutes: r,
 		dayStarts: ot(Reflect.get(e, "day_starts"), t, n),
 		devices: a,
-		noData: sn(Reflect.get(e, "no_data"))
+		noData: cn(Reflect.get(e, "no_data"))
 	};
 }
-function fn(e, t, n) {
+function pn(e, t, n) {
 	let r = n * 60, i = [];
 	return t <= 0 || e.forEach((e, n) => {
 		e && i.push({
@@ -1827,13 +2882,13 @@ function fn(e, t, n) {
 		});
 	}), i;
 }
-function pn(e) {
+function mn(e) {
 	return e >= 3 ? 22 : e === 2 ? 18 : 12;
 }
-var mn = 2;
-function hn(e, t) {
+var hn = 2;
+function gn(e, t) {
 	let n = Pt(e);
-	if (!G(e) || n === null || t.length < 2) return -1;
+	if (!K(e) || n === null || t.length < 2) return -1;
 	if (typeof e.silence_start == "number") {
 		let n = lt(e.silence_start, t);
 		return n < 0 ? 0 : n + 1;
@@ -1845,16 +2900,16 @@ function hn(e, t) {
 		e && t <= a && o.push(t);
 	});
 	let s = Math.max(3, Math.ceil(3 * (e.typical ?? 0) / i));
-	for (let e = o.length - 2; e >= 0 && o.length - 1 - e <= mn; e--) {
+	for (let e = o.length - 2; e >= 0 && o.length - 1 - e <= hn; e--) {
 		let t = o[e], n = o[e + 1];
 		if (t === void 0 || n === void 0) break;
 		if (n - t - 1 >= s) return t + 1;
 	}
 	return a + 1;
 }
-function gn(e, t, n, r) {
+function _n(e, t, n, r) {
 	let i = Pt(e);
-	if (!G(e) || i === null) return -1;
+	if (!K(e) || i === null) return -1;
 	let a = r * 60, o = -1;
 	return t.forEach((e, t) => {
 		let r = n[t], i = n[t + 1];
@@ -1863,25 +2918,25 @@ function gn(e, t, n, r) {
 		});
 	}), Math.max(i, o);
 }
-var _n = {
+var vn = {
 	now: "set_level_now",
 	daily: "set_level_daily",
 	off: "set_level_off"
 };
-function vn(e, t) {
+function yn(e, t) {
 	let n = t.quiet;
-	return [I(e, "day_line_summary", { time: t.summary_time }), n.enabled ? I(e, "day_line_quiet", {
+	return [L(e, "day_line_summary", { time: t.summary_time }), n.enabled ? L(e, "day_line_quiet", {
 		start: n.start,
 		end: n.end
-	}) : I(e, "day_line_no_quiet")].join(" · ");
+	}) : L(e, "day_line_no_quiet")].join(" · ");
 }
-function yn(e) {
+function bn(e) {
 	let t = Reflect.get(e.arrive_home, "persons");
 	if (Array.isArray(t)) return t.filter((e) => typeof e == "string");
 	let n = Reflect.get(e.arrive_home, "person");
 	return typeof n == "string" ? [n] : [];
 }
-function bn(e, t) {
+function xn(e, t) {
 	let n = t.quiet, r = {
 		failed: "set_failed",
 		check: "set_check",
@@ -1893,22 +2948,22 @@ function bn(e, t) {
 		"battery"
 	]) {
 		let a = t.levels[n];
-		i.set(a, [...i.get(a) ?? [], I(e, r[n])]);
+		i.set(a, [...i.get(a) ?? [], L(e, r[n])]);
 	}
-	let a = new Intl.ListFormat(e, { type: "conjunction" }), o = [...i].map(([t, n]) => I(e, "set_group", {
+	let a = new Intl.ListFormat(e, { type: "conjunction" }), o = [...i].map(([t, n]) => L(e, "set_group", {
 		names: a.format(n),
-		level: I(e, _n[t])
+		level: L(e, vn[t])
 	})).join(", "), s = `${o.charAt(0).toUpperCase()}${o.slice(1)}.`;
 	return {
-		line1: I(e, "set_head", { time: t.summary_time }),
-		line2: n.enabled ? I(e, "set_quiet", {
+		line1: L(e, "set_head", { time: t.summary_time }),
+		line2: n.enabled ? L(e, "set_quiet", {
 			start: n.start,
 			end: n.end
-		}) : I(e, "set_no_quiet"),
+		}) : L(e, "set_no_quiet"),
 		sub: s
 	};
 }
-function xn(e, t, n) {
+function Sn(e, t, n) {
 	let r = t > e ? [[e, t]] : [];
 	for (let [e, t] of n) r = r.flatMap(([n, r]) => {
 		if (t <= n || e >= r) return [[n, r]];
@@ -1917,17 +2972,17 @@ function xn(e, t, n) {
 	});
 	return r;
 }
-var Sn = {
+var Cn = {
 	too_short: "forecast_too_short",
 	flat: "forecast_flat",
 	coarse: "forecast_coarse",
 	untrusted: "forecast_untrusted",
 	noisy: "forecast_noisy"
 };
-function Cn(e, t, n) {
-	if (!t) return n && n in Sn ? I(e, Sn[n]) : "";
+function wn(e, t, n) {
+	if (!t) return n && n in Cn ? L(e, Cn[n]) : "";
 	let r = Math.max(0, Math.min(t.days_min, t.days_max)), i = Math.max(t.days_min, t.days_max);
-	if (i <= 10) return I(e, "forecast_days");
+	if (i <= 10) return L(e, "forecast_days");
 	let a = (e) => {
 		let t = Math.max(1, Math.floor(r / e));
 		return {
@@ -1935,34 +2990,50 @@ function Cn(e, t, n) {
 			hi: Math.max(t + 1, Math.ceil(i / e))
 		};
 	};
-	return i <= 70 ? I(e, "forecast_weeks", a(7)) : i <= 540 ? I(e, "forecast_months", a(30.44)) : I(e, "forecast_years", a(365.25));
+	return i <= 70 ? L(e, "forecast_weeks", a(7)) : i <= 540 ? L(e, "forecast_months", a(30.44)) : L(e, "forecast_years", a(365.25));
 }
-function wn(e, t) {
+function Tn(e, t) {
 	if (!t?.length) return "";
 	let n = /* @__PURE__ */ new Map(), r = [];
 	for (let e of t) e.type ? n.set(e.type, (n.get(e.type) ?? 0) + Math.max(1, e.count ?? 1)) : r.push(e.name);
-	let i = [...n.entries()].sort(([e, t], [n, r]) => r - t || e.localeCompare(n)).map(([t, n]) => I(e, "battery_count_type", {
+	let i = [...n.entries()].sort(([e, t], [n, r]) => r - t || e.localeCompare(n)).map(([t, n]) => L(e, "battery_count_type", {
 		count: n,
 		type: t
 	}));
-	return r.length && i.push(I(e, "due_untyped", { names: r.join(", ") })), I(e, "due_line", { items: i.join(", ") });
+	return r.length && i.push(L(e, "due_untyped", { names: r.join(", ") })), L(e, "due_line", { items: i.join(", ") });
 }
-function Tn(e) {
+function En(e) {
 	let t = e.replaceAll("_", " ").trim();
 	return t ? `${t.charAt(0).toUpperCase()}${t.slice(1)}` : e;
 }
-function En(e, t) {
-	return (t ?? []).filter((e) => e.count > 0).map((t) => I(e, t.count === 1 ? "cloud_outage_one" : "cloud_outage_many", {
-		name: Tn(t.integration),
+function Dn(e, t) {
+	return (t ?? []).filter((e) => e.count > 0).map((t) => L(e, t.count === 1 ? "cloud_outage_one" : "cloud_outage_many", {
+		name: En(t.integration),
 		count: t.count
 	}));
 }
-function Dn(e) {
+function On(e) {
 	return e.partner || e.ignored ? [] : (e.partner_suggestions ?? []).slice(0, 1);
 }
-var On = 2e3, kn = 6e4;
-function An(e) {
-	return Math.min(Math.max(e, On) * 2, kn);
+var kn = 2e3, An = 6e4;
+function jn(e) {
+	return Math.min(Math.max(e, kn) * 2, An);
+}
+var Mn = " · ";
+function Nn(e, t, n) {
+	return e.replace(/\{(\w+)\}/g, (e, r) => n.includes(r) ? t[r] ?? "" : e).split("\n").map((e) => e.split(Mn).filter((e) => e.trim()).join(Mn)).join("\n").trim();
+}
+function Pn(e) {
+	if (!e) return {};
+	let t = e.area && !e.name.toLocaleLowerCase().includes(e.area.toLocaleLowerCase()) ? e.area : null;
+	return {
+		name: e.name,
+		area: t,
+		reason: e.reason,
+		model: e.model,
+		manufacturer: e.manufacturer,
+		integration: e.integration
+	};
 }
 //#endregion
 //#region src/styles.ts
@@ -2236,7 +3307,7 @@ var J = o`
   .t-muted {
     color: var(--pu-muted);
   }
-`, jn = o`
+`, Fn = o`
   .axis,
   .rowgrid {
     display: grid;
@@ -2407,7 +3478,7 @@ var J = o`
       content: none;
     }
   }
-`, Mn = [
+`, In = [
 	{
 		icon: "mdi:chart-timeline-variant",
 		title: "welcome_rhythm_title",
@@ -2423,24 +3494,29 @@ var J = o`
 		title: "welcome_notify_title",
 		text: "welcome_notify_text"
 	}
-], Nn = [
+], Ln = [
 	{
-		icon: "mdi:access-point-check",
-		title: "new_reachable_title",
-		text: "new_reachable_text"
+		icon: "mdi:power-plug-outline",
+		title: "new_mains_title",
+		text: "new_mains_text"
 	},
 	{
-		icon: "mdi:restart",
-		title: "new_restart_title",
-		text: "new_restart_text"
+		icon: "mdi:text-box-edit-outline",
+		title: "new_texts_title",
+		text: "new_texts_text"
 	},
 	{
-		icon: "mdi:tune-variant",
-		title: "new_sheet_title",
-		text: "new_sheet_text"
+		icon: "mdi:label-outline",
+		title: "new_labels_title",
+		text: "new_labels_text"
+	},
+	{
+		icon: "mdi:translate",
+		title: "new_languages_title",
+		text: "new_languages_text"
 	}
-], Pn = "https://github.com/SH1FT-W/pulse/blob/main/CHANGELOG.md";
-F("pulse-welcome", class extends M {
+], Rn = "https://github.com/SH1FT-W/pulse/blob/main/CHANGELOG.md";
+I("pulse-welcome", class extends N {
 	static {
 		this.properties = {
 			language: { type: String },
@@ -2459,22 +3535,22 @@ F("pulse-welcome", class extends M {
 		let e = this.language, t = this.zigbee === "on", n = () => {
 			t || this.dispatchEvent(new CustomEvent("enable-z2m"));
 		};
-		return T`<div
+		return E`<div
       class=${t ? "zig" : "zig tappable"}
-      role=${t ? O : "switch"}
-      aria-checked=${t ? O : "false"}
-      tabindex=${t ? O : "0"}
+      role=${t ? k : "switch"}
+      aria-checked=${t ? k : "false"}
+      tabindex=${t ? k : "0"}
       @click=${n}
       @keydown=${(e) => {
 			(e.key === "Enter" || e.key === " ") && (e.preventDefault(), n());
 		}}
     >
-      <span><b>${I(e, "welcome_zigbee_title")}</b><small>${I(e, "welcome_zigbee_text")}</small></span>
-      ${t ? T`<span class="on"><ha-icon icon="mdi:check-circle"></ha-icon>${I(e, "zigbee_active")}</span>` : T`<ha-switch tabindex="-1" aria-hidden="true"></ha-switch>`}
+      <span><b>${L(e, "welcome_zigbee_title")}</b><small>${L(e, "welcome_zigbee_text")}</small></span>
+      ${t ? E`<span class="on"><ha-icon icon="mdi:check-circle"></ha-icon>${L(e, "zigbee_active")}</span>` : E`<ha-switch tabindex="-1" aria-hidden="true"></ha-switch>`}
     </div>`;
 	}
 	renderEcg() {
-		return T`<svg class="ecg" viewBox="0 0 390 160" aria-hidden="true">
+		return E`<svg class="ecg" viewBox="0 0 390 160" aria-hidden="true">
       <defs>
         <linearGradient id="pulse-wl" x1="0" x2="1">
           <stop offset="0" stop-color="#b9b0ff"></stop>
@@ -2507,31 +3583,31 @@ F("pulse-welcome", class extends M {
 			38,
 			42,
 			26
-		].map((e, t) => E`<rect x=${166 + t * 9.4} y=${80 - e / 2} width="4.6" height=${e} rx="2.3" fill="url(#pulse-wl)" opacity=${(1 - t / 34).toFixed(2)}></rect>`)}
+		].map((e, t) => D`<rect x=${166 + t * 9.4} y=${80 - e / 2} width="4.6" height=${e} rx="2.3" fill="url(#pulse-wl)" opacity=${(1 - t / 34).toFixed(2)}></rect>`)}
       <circle class="end" cx="150" cy="80" r="6"></circle>
     </svg>`;
 	}
 	render() {
-		if (!this.mode) return O;
-		let e = this.language, t = this.mode === "welcome", n = t ? Mn : Nn;
-		return T`<ha-dialog open @closed=${() => this.close()}>
+		if (!this.mode) return k;
+		let e = this.language, t = this.mode === "welcome", n = t ? In : Ln;
+		return E`<ha-dialog open @closed=${() => this.close()}>
       <div class="sheet">
         <div class="glow" aria-hidden="true"></div>
         ${this.renderEcg()}
-        ${t ? T`<h2>${I(e, "welcome_head1")}<br /><span class="grad">${I(e, "welcome_head2")}</span></h2>
-                <p class="lead">${I(e, "welcome_lead")}</p>` : T`<h2 class="news">${I(e, "whats_new_title", { version: this.version })}</h2>`}
+        ${t ? E`<h2>${L(e, "welcome_head1")}<br /><span class="grad">${L(e, "welcome_head2")}</span></h2>
+                <p class="lead">${L(e, "welcome_lead")}</p>` : E`<h2 class="news">${L(e, "whats_new_title", { version: this.version })}</h2>`}
         <ol>
-          ${n.map((t, n) => T`<li>
+          ${n.map((t, n) => E`<li>
               <em class="mono">${String(n + 1).padStart(2, "0")}</em>
-              <span><b>${I(e, t.title)}.</b> ${I(e, t.text)}</span>
+              <span><b>${L(e, t.title)}.</b> ${L(e, t.text)}</span>
             </li>`)}
         </ol>
       </div>
       <!-- Fixed footer: switch and "Weiter" (continue) always stay visible, the text above scrolls -->
       <div slot="footer" class="foot">
-        ${t && this.zigbee !== "none" ? this.renderZigbee() : O}
-        <button class="go" type="button" @click=${() => this.close()}>${I(e, "continue")}</button>
-        ${t ? O : T`<a class="all" href=${Pn} target="_blank" rel="noreferrer">${I(e, "whats_new_all")}</a>`}
+        ${t && this.zigbee !== "none" ? this.renderZigbee() : k}
+        <button class="go" type="button" @click=${() => this.close()}>${L(e, "continue")}</button>
+        ${t ? k : E`<a class="all" href=${Rn} target="_blank" rel="noreferrer">${L(e, "whats_new_all")}</a>`}
       </div>
     </ha-dialog>`;
 	}
@@ -2725,17 +3801,17 @@ F("pulse-welcome", class extends M {
 });
 //#endregion
 //#region src/welcome.ts
-var Fn = "pulse.seenVersion", In = "", Ln = "pulse.welcome";
-function Rn(e, t, n = !0) {
-	let r = e.getItem(Fn);
-	return r === t ? null : r === In ? "welcome" : r !== null || e.getItem(Ln) !== null ? n ? "whatsNew" : (zn(e, t), null) : (e.setItem(Fn, In), "welcome");
+var zn = "pulse.seenVersion", Bn = "", Vn = "pulse.welcome";
+function Hn(e, t, n = !0) {
+	let r = e.getItem(zn);
+	return r === t ? null : r === Bn ? "welcome" : r !== null || e.getItem(Vn) !== null ? n ? "whatsNew" : (Un(e, t), null) : (e.setItem(zn, Bn), "welcome");
 }
-function zn(e, t) {
-	e.setItem(Fn, t);
+function Un(e, t) {
+	e.setItem(zn, t);
 }
 //#endregion
 //#region src/pulse-heartbeat.ts
-var Bn = 1e3, Vn = 24, Hn = [
+var Wn = 1e3, Gn = 24, Kn = [
 	3,
 	6,
 	9,
@@ -2744,10 +3820,10 @@ var Bn = 1e3, Vn = 24, Hn = [
 	18,
 	21
 ];
-function Un(e) {
+function qn(e) {
 	return e.reduce((e, t) => e + t.reduce((e, t) => e + (t ?? 0), 0), 0);
 }
-F("pulse-heartbeat", class extends M {
+I("pulse-heartbeat", class extends N {
 	static {
 		this.properties = {
 			bins: { attribute: !1 },
@@ -2778,15 +3854,15 @@ F("pulse-heartbeat", class extends M {
 	willUpdate(e) {
 		if (!e.has("bins")) return;
 		let t = e.get("bins");
-		Array.isArray(t) && t.length === this.bins.length && Un(this.bins) > Un(t) && (this.beating = !0);
+		Array.isArray(t) && t.length === this.bins.length && qn(this.bins) > qn(t) && (this.beating = !0);
 	}
 	row(e, t, n) {
-		let r = n - t, i = (e) => `${(e / r * 100).toFixed(2)}%`, a = (e) => (e / r * Bn).toFixed(1), o = dt(t, n, Hn, this.timeZone).map((e) => {
-			let t = (e * Bn).toFixed(1);
-			return E`<line class="grid" x1=${t} x2=${t} y1="3" y2=${21}></line>`;
-		}), s = O;
-		this.silentSince > 0 && this.silentSince < n && this.now > t && (s = xn(Math.max(this.silentSince, t) - t, Math.min(this.now, n) - t, this.noData.map(([e, n]) => [e - t, n - t])).map(([e, t]) => E`<line class="silent" x1=${a(e)} x2=${a(t)} y1=${Vn / 2} y2=${Vn / 2}></line>`));
-		let c = fn(this.bins[e] ?? [], r, this.binMinutes).map((e) => T`<i class="tk" style=${`left: ${(e.at * 100).toFixed(2)}%; height: ${pn(e.count)}px`}></i>`), l = this.noData.map(([e, r]) => [Math.max(e, t), Math.min(r, n)]).filter(([e, t]) => t > e).map(([e, n]) => T`<span class="gap" style=${`left: ${i(e - t)}; width: ${i(n - e)}`}></span>`), u = this.now >= t && this.now < n, d = u ? T`<span
+		let r = n - t, i = (e) => `${(e / r * 100).toFixed(2)}%`, a = (e) => (e / r * Wn).toFixed(1), o = dt(t, n, Kn, this.timeZone).map((e) => {
+			let t = (e * Wn).toFixed(1);
+			return D`<line class="grid" x1=${t} x2=${t} y1="3" y2=${21}></line>`;
+		}), s = k;
+		this.silentSince > 0 && this.silentSince < n && this.now > t && (s = Sn(Math.max(this.silentSince, t) - t, Math.min(this.now, n) - t, this.noData.map(([e, n]) => [e - t, n - t])).map(([e, t]) => D`<line class="silent" x1=${a(e)} x2=${a(t)} y1=${Gn / 2} y2=${Gn / 2}></line>`));
+		let c = pn(this.bins[e] ?? [], r, this.binMinutes).map((e) => E`<i class="tk" style=${`left: ${(e.at * 100).toFixed(2)}%; height: ${mn(e.count)}px`}></i>`), l = this.noData.map(([e, r]) => [Math.max(e, t), Math.min(r, n)]).filter(([e, t]) => t > e).map(([e, n]) => E`<span class="gap" style=${`left: ${i(e - t)}; width: ${i(n - e)}`}></span>`), u = this.now >= t && this.now < n, d = u ? E`<span
           class=${[
 			"now",
 			this.silentSince > 0 ? "silent" : "",
@@ -2796,23 +3872,23 @@ F("pulse-heartbeat", class extends M {
           @animationend=${() => {
 			this.beating = !1;
 		}}
-        ></span>` : O, f = new Intl.DateTimeFormat(this.language, {
+        ></span>` : k, f = new Intl.DateTimeFormat(this.language, {
 			weekday: "short",
 			...this.timeZone ? { timeZone: this.timeZone } : {}
 		}).format(/* @__PURE__ */ new Date((t + n) / 2 * 1e3)).replace(".", "");
-		return T`<div class="r">
+		return E`<div class="r">
       <span class=${u ? "mono today" : "mono"}>${f}</span>
       <div class="track">
         ${l}
-        <svg viewBox="0 0 ${Bn} ${Vn}" preserveAspectRatio="none" aria-hidden="true">${o}${s}</svg>
+        <svg viewBox="0 0 ${Wn} ${Gn}" preserveAspectRatio="none" aria-hidden="true">${o}${s}</svg>
         <div class="ticks">${c}</div>
         ${d}
       </div>
     </div>`;
 	}
 	render() {
-		let e = Math.max(0, this.dayStarts.length - 1), t = Un(this.bins), n = Array.from({ length: e }, (e, t) => this.row(t, this.dayStarts[t] ?? 0, this.dayStarts[t + 1] ?? 0));
-		return T`<div class="cal" role="img" aria-label=${I(this.language, "heartbeat_aria", {
+		let e = Math.max(0, this.dayStarts.length - 1), t = qn(this.bins), n = Array.from({ length: e }, (e, t) => this.row(t, this.dayStarts[t] ?? 0, this.dayStarts[t + 1] ?? 0));
+		return E`<div class="cal" role="img" aria-label=${L(this.language, "heartbeat_aria", {
 			count: t,
 			days: e
 		})}>
@@ -2950,12 +4026,12 @@ F("pulse-heartbeat", class extends M {
 });
 //#endregion
 //#region src/pulse-sheet.ts
-var Wn = "(pointer: coarse), (max-width: 600px)", Gn = 6, Kn = 0, qn = "";
-function Jn(e) {
+var Jn = "(pointer: coarse), (max-width: 600px)", Yn = 6, Xn = 0, Zn = "";
+function Qn(e) {
 	let t = document.documentElement;
-	e ? (Kn === 0 && (qn = t.style.overflow, t.style.overflow = "hidden"), Kn += 1) : Kn > 0 && (--Kn, Kn === 0 && (t.style.overflow = qn));
+	e ? (Xn === 0 && (Zn = t.style.overflow, t.style.overflow = "hidden"), Xn += 1) : Xn > 0 && (--Xn, Xn === 0 && (t.style.overflow = Zn));
 }
-F("pulse-sheet", class extends M {
+I("pulse-sheet", class extends N {
 	static {
 		this.properties = {
 			open: {
@@ -2972,7 +4048,7 @@ F("pulse-sheet", class extends M {
 		};
 	}
 	setLocked(e) {
-		e !== this.locked && (this.locked = e, Jn(e));
+		e !== this.locked && (this.locked = e, Qn(e));
 	}
 	disconnectedCallback() {
 		super.disconnectedCallback(), this.setLocked(!1);
@@ -3011,7 +4087,7 @@ F("pulse-sheet", class extends M {
 		t !== null && e.composedPath().includes(t) || e.preventDefault();
 	}
 	sheetMode() {
-		return window.matchMedia(Wn).matches;
+		return window.matchMedia(Jn).matches;
 	}
 	onPointerDown(e) {
 		this.sheetMode() && e.button === 0 && (this.drag = {
@@ -3027,7 +4103,7 @@ F("pulse-sheet", class extends M {
 		if (!t || t.id !== e.pointerId || !n) return;
 		let r = e.clientY - t.startY;
 		if (!t.active) {
-			if (Math.abs(r) < Gn) return;
+			if (Math.abs(r) < Yn) return;
 			t.active = !0;
 			let i = e.currentTarget;
 			i instanceof HTMLElement && i.setPointerCapture(e.pointerId), n.style.transition = "none";
@@ -3041,10 +4117,10 @@ F("pulse-sheet", class extends M {
 		n.style.transition = "transform 260ms cubic-bezier(0.2, 0.8, 0.2, 1)", Ct(t.dy, r) ? (n.style.transform = "translateY(100%)", window.setTimeout(() => n.close(), 220)) : n.style.transform = "";
 	}
 	render() {
-		return T`<dialog
+		return E`<dialog
       tabindex="-1"
       autofocus
-      aria-label=${this.heading || O}
+      aria-label=${this.heading || k}
       @close=${() => this.onClose()}
       @click=${(e) => this.onClick(e)}
       @wheel=${(e) => this.onWheel(e)}
@@ -3060,7 +4136,7 @@ F("pulse-sheet", class extends M {
           <div class="grab" aria-hidden="true"></div>
           <header>
             <h2>${this.heading}</h2>
-            ${this.noClose ? O : T`<ha-icon-button .label=${I(this.language, "close")} @click=${() => this.dialog?.close()}>
+            ${this.noClose ? k : E`<ha-icon-button .label=${L(this.language, "close")} @click=${() => this.dialog?.close()}>
                   <ha-icon icon="mdi:close"></ha-icon>
                 </ha-icon-button>`}
           </header>
@@ -3238,8 +4314,8 @@ F("pulse-sheet", class extends M {
 });
 //#endregion
 //#region src/pulse-picker.ts
-var Yn = 12;
-F("pulse-picker", class extends M {
+var $n = 12;
+I("pulse-picker", class extends N {
 	static {
 		this.properties = {
 			options: { attribute: !1 },
@@ -3262,20 +4338,20 @@ F("pulse-picker", class extends M {
 	}
 	trigger(e) {
 		let t = this.options.find((e) => e.value === this.value);
-		return T`<button
-      slot=${e ? "trigger" : O}
+		return E`<button
+      slot=${e ? "trigger" : k}
       class="trigger"
       type="button"
       aria-label=${this.label}
       aria-haspopup=${e ? "menu" : "dialog"}
-      @click=${e ? O : () => void this.openSheet()}
+      @click=${e ? k : () => void this.openSheet()}
     >
       <span>${t?.label ?? this.value}</span>
       <ha-icon icon="mdi:unfold-more-horizontal"></ha-icon>
     </button>`;
 	}
 	renderSheet() {
-		return T`${this.trigger(!1)}
+		return E`${this.trigger(!1)}
       <pulse-sheet
         .open=${this.sheetOpen}
         .heading=${this.label}
@@ -3285,7 +4361,7 @@ F("pulse-picker", class extends M {
 		}}
       >
         <div class="list" role="radiogroup" aria-label=${this.label}>
-          ${this.options.map((e) => T`<button
+          ${this.options.map((e) => E`<button
               class="row choice"
               type="button"
               role="radio"
@@ -3293,15 +4369,15 @@ F("pulse-picker", class extends M {
               @click=${() => this.pick(e.value)}
             >
               <span class="label">${e.label}</span>
-              ${e.value === this.value ? T`<ha-icon class="check" icon="mdi:check"></ha-icon>` : O}
+              ${e.value === this.value ? E`<ha-icon class="check" icon="mdi:check"></ha-icon>` : k}
             </button>`)}
         </div>
       </pulse-sheet>`;
 	}
 	render() {
-		return this.options.length > Yn ? this.renderSheet() : T`<ha-dropdown placement="bottom-end" @wa-select=${(e) => this.pick(ze(e))}>
+		return this.options.length > $n ? this.renderSheet() : E`<ha-dropdown placement="bottom-end" @wa-select=${(e) => this.pick(Re(e))}>
       ${this.trigger(!0)}
-      ${this.options.map((e) => T`<ha-dropdown-item .value=${e.value}>
+      ${this.options.map((e) => E`<ha-dropdown-item .value=${e.value}>
           <ha-icon
             slot="icon"
             class=${e.value === this.value ? "check" : "check hidden"}
@@ -3377,11 +4453,11 @@ F("pulse-picker", class extends M {
 });
 //#endregion
 //#region src/pulse-rhythm.ts
-var Xn = 480, Z = 1e3, Q = 26;
-function Zn(e) {
+var er = 480, Z = 1e3, Q = 26;
+function tr(e) {
 	return e.reduce((e, t) => e + (t ?? 0), 0);
 }
-F("pulse-rhythm", class extends M {
+I("pulse-rhythm", class extends N {
 	static {
 		this.properties = {
 			buckets: { attribute: !1 },
@@ -3409,7 +4485,7 @@ F("pulse-rhythm", class extends M {
 	}
 	connectedCallback() {
 		super.connectedCallback(), this.observer = new ResizeObserver((e) => {
-			let t = e[0]?.contentRect.width ?? 0, n = t > 0 && t < Xn;
+			let t = e[0]?.contentRect.width ?? 0, n = t > 0 && t < er;
 			n !== this.narrow && (this.narrow = n), Math.abs(t - this.width) >= 8 && (this.width = t);
 		}), this.observer.observe(this);
 	}
@@ -3419,10 +4495,10 @@ F("pulse-rhythm", class extends M {
 	willUpdate(e) {
 		if (!e.has("buckets")) return;
 		let t = e.get("buckets");
-		Array.isArray(t) && t.length === this.buckets.length ? Zn(this.buckets) > Zn(t) && (this.growAt = this.buckets.findLastIndex((e) => (e ?? 0) > 0)) : this.growAt = -1;
+		Array.isArray(t) && t.length === this.buckets.length ? tr(this.buckets) > tr(t) && (this.growAt = this.buckets.findLastIndex((e) => (e ?? 0) > 0)) : this.growAt = -1;
 	}
 	render() {
-		let e = this.narrow && this.buckets.length > 48 ? 2 : 1, t = e > 1 ? $t(this.buckets, Math.ceil(this.buckets.length / 2)) : this.buckets, n = t.length || 1, r = this.silentFrom >= 0 ? Math.ceil(this.silentFrom / e) : -1, i = Qe(t), a = Z / n, o = a * .56, s = i.indexOf(null), c = s < 0 ? n : s, l = this.tone === "warn" || this.tone === "crit", u = this.growAt >= 0 ? Math.floor(this.growAt / e) : -1, d = -1;
+		let e = this.narrow && this.buckets.length > 48 ? 2 : 1, t = e > 1 ? en(this.buckets, Math.ceil(this.buckets.length / 2)) : this.buckets, n = t.length || 1, r = this.silentFrom >= 0 ? Math.ceil(this.silentFrom / e) : -1, i = Qe(t), a = Z / n, o = a * .56, s = i.indexOf(null), c = s < 0 ? n : s, l = this.tone === "warn" || this.tone === "crit", u = this.growAt >= 0 ? Math.floor(this.growAt / e) : -1, d = -1;
 		if (l && r >= 0) for (let e = 0; e < Math.min(r, n); e++) (i[e] ?? 0) > 0 && (d = e);
 		let f = l && r < 0 && c > 0 ? c - 1 : -1, p = (e) => {
 			let t = (e + .5) / n;
@@ -3432,28 +4508,28 @@ F("pulse-rhythm", class extends M {
 			if (e === null || t === f || r >= 0 && t >= r && e === 0 || e === 0 && p(t)) return;
 			let n = (t * a + (a - o) / 2).toFixed(1);
 			if (e === 0) {
-				m.push(E`<rect class="zero" x=${n} y=${(Q / 2 - 1.5).toFixed(1)} width=${o.toFixed(1)} height="3" rx="1.5"></rect>`);
+				m.push(D`<rect class="zero" x=${n} y=${(Q / 2 - 1.5).toFixed(1)} width=${o.toFixed(1)} height="3" rx="1.5"></rect>`);
 				return;
 			}
-			let i = Math.max(4, 6 + e * 20), s = l ? t === d || r >= 0 && t >= r : this.tone === "ok", c = E`<rect class=${[
+			let i = Math.max(4, 6 + e * 20), s = l ? t === d || r >= 0 && t >= r : this.tone === "ok", c = D`<rect class=${[
 				l && !s ? "n" : "",
 				this.learning ? "dash" : "",
 				t === u ? "grow" : ""
 			].join(" ")} x=${n} y=${((Q - i) / 2).toFixed(1)} width=${o.toFixed(1)} height=${i.toFixed(1)} rx=${(o / 2).toFixed(1)}></rect>`;
 			(s ? h : m).push(c);
-		}), f >= 0 && h.push(E`<rect class="mark" x=${(f * a + (a - o) / 2).toFixed(1)} y="1" width=${o.toFixed(1)} height=${24} rx=${(o / 2).toFixed(1)}></rect>`), r >= 0 && r < c) for (let [e, t] of xn(r / n, c / n, this.gaps)) h.push(E`<line class="silent" x1=${(e * Z).toFixed(1)} x2=${(t * Z).toFixed(1)} y1=${Q / 2} y2=${Q / 2}></line>`);
+		}), f >= 0 && h.push(D`<rect class="mark" x=${(f * a + (a - o) / 2).toFixed(1)} y="1" width=${o.toFixed(1)} height=${24} rx=${(o / 2).toFixed(1)}></rect>`), r >= 0 && r < c) for (let [e, t] of Sn(r / n, c / n, this.gaps)) h.push(D`<line class="silent" x1=${(e * Z).toFixed(1)} x2=${(t * Z).toFixed(1)} y1=${Q / 2} y2=${Q / 2}></line>`);
 		let g = Array.from({ length: Math.max(0, this.days - 1) }, (e, t) => {
 			let n = ((t + 1) / this.days * Z).toFixed(1);
-			return E`<line class="day" x1=${n} x2=${n} y1="1" y2=${25}></line>`;
+			return D`<line class="day" x1=${n} x2=${n} y1="1" y2=${25}></line>`;
 		});
-		return T`${this.gaps.map(([e, t]) => T`<span class="gap" style=${`left: ${(e * 100).toFixed(2)}%; width: ${((t - e) * 100).toFixed(2)}%`}></span>`)}<svg class="base" viewBox="0 0 ${Z} ${Q}" preserveAspectRatio="none" aria-hidden="true">${g}${m}</svg><svg class="hot" viewBox="0 0 ${Z} ${Q}" preserveAspectRatio="none" aria-hidden="true">${h}</svg>${this.renderFlag(r, c, n, (e) => `${(e / n * 100).toFixed(2)}%`)}`;
+		return E`${this.gaps.map(([e, t]) => E`<span class="gap" style=${`left: ${(e * 100).toFixed(2)}%; width: ${((t - e) * 100).toFixed(2)}%`}></span>`)}<svg class="base" viewBox="0 0 ${Z} ${Q}" preserveAspectRatio="none" aria-hidden="true">${g}${m}</svg><svg class="hot" viewBox="0 0 ${Z} ${Q}" preserveAspectRatio="none" aria-hidden="true">${h}</svg>${this.renderFlag(r, c, n, (e) => `${(e / n * 100).toFixed(2)}%`)}`;
 	}
 	renderFlag(e, t, n, r) {
-		return this.flag ? e >= 0 ? (t - e) / n * this.width < 140 ? O : T`<span class="flag-area" style=${`left: max(0px, min(${r(e)}, calc(${r(t)} - 176px))); right: calc(100% - ${r(t)})`}>
+		return this.flag ? e >= 0 ? (t - e) / n * this.width < 140 ? k : E`<span class="flag-area" style=${`left: max(0px, min(${r(e)}, calc(${r(t)} - 176px))); right: calc(100% - ${r(t)})`}>
         <span class="flag">${this.flag}</span>
-      </span>` : this.width < 300 ? O : T`<span class="flag-area at-end" style=${`right: calc(100% - ${r(t)})`}>
+      </span>` : this.width < 300 ? k : E`<span class="flag-area at-end" style=${`right: calc(100% - ${r(t)})`}>
       <span class="flag">${this.flag}</span>
-    </span>` : O;
+    </span>` : k;
 	}
 	static {
 		this.styles = [J, o`
@@ -3578,22 +4654,22 @@ F("pulse-rhythm", class extends M {
 });
 //#endregion
 //#region src/pulse-device-sheet.ts
-var Qn = 260;
-function $n(e) {
-	return z(e.status) === "warn" ? "warn" : "crit";
+var nr = 260;
+function rr(e) {
+	return B(e.status) === "warn" ? "warn" : "crit";
 }
-function er(e) {
-	return e.ignored ? "muted" : z(e.status) === "ok" ? "ok" : "neutral";
+function ir(e) {
+	return e.ignored ? "muted" : B(e.status) === "ok" ? "ok" : "neutral";
 }
-var tr = Array.from({ length: 12 }, (e, t) => ({
+var ar = Array.from({ length: 12 }, (e, t) => ({
 	value: String(t + 1),
 	label: String(t + 1)
-})), nr = {
+})), or = {
 	nimh: "chem_nimh",
 	alkaline: "chem_alkaline",
 	lithium: "chem_lithium"
 };
-F("pulse-device-sheet", class extends M {
+I("pulse-device-sheet", class extends N {
 	static {
 		this.properties = {
 			device: { attribute: !1 },
@@ -3618,14 +4694,14 @@ F("pulse-device-sheet", class extends M {
 		};
 	}
 	constructor() {
-		super(), this.gapsOf = L(cn), this.beatKey = "", this.onSettingsToggle = (e) => {
+		super(), this.gapsOf = R(ln), this.beatKey = "", this.onSettingsToggle = (e) => {
 			let t = e.currentTarget;
 			if (!(t instanceof HTMLDetailsElement) || (this.settingsOpen = t.open, !t.open)) return;
 			let n = CSS.supports("interpolate-size", "allow-keywords");
 			window.setTimeout(() => t.scrollIntoView({
 				block: "nearest",
 				behavior: "smooth"
-			}), n ? Qn : 0);
+			}), n ? nr : 0);
 		}, this.device = null, this.devices = [], this.language = "en", this.now = 0, this.stripStart = 0, this.stripDays = 7, this.dayStarts = [], this.timeZone = void 0, this.timeFormat = void 0, this.bucketHours = 2, this.fetchHeartbeat = null, this.beat = null, this.batteryTypes = [], this.chemistries = [], this.noData = [], this.open = !1, this.readonly = !1, this.settingsOpen = !1, this.beatError = !1;
 	}
 	willUpdate(e) {
@@ -3642,7 +4718,7 @@ F("pulse-device-sheet", class extends M {
 		if (!this.fetchHeartbeat) return;
 		let n = null;
 		try {
-			n = dn(await this.fetchHeartbeat([e]));
+			n = fn(await this.fetchHeartbeat([e]));
 		} catch {
 			n = null;
 		}
@@ -3667,13 +4743,13 @@ F("pulse-device-sheet", class extends M {
 	picker(e, t, n, r, i) {
 		if (this.readonly) {
 			let r = n.find((e) => e.value === t)?.label ?? t;
-			return T`<div class="row">
-        <span class="label">${e}${i ? T`<small>${i}</small>` : O}</span>
+			return E`<div class="row">
+        <span class="label">${e}${i ? E`<small>${i}</small>` : k}</span>
         <span class="value">${r}</span>
       </div>`;
 		}
-		return T`<div class="row">
-      <span class="label">${e}${i ? T`<small>${i}</small>` : O}</span>
+		return E`<div class="row">
+      <span class="label">${e}${i ? E`<small>${i}</small>` : k}</span>
       <pulse-picker
         .language=${this.language}
         .label=${e}
@@ -3683,11 +4759,11 @@ F("pulse-device-sheet", class extends M {
       ></pulse-picker>
     </div>`;
 	}
-	switchRow(e, t, n, r) {
-		return this.readonly ? T`<div class="row">
-        <span class="label">${e}<small>${t}</small></span>
-        <span class="value">${I(this.language, n ? "on" : "off")}</span>
-      </div>` : T`<div
+	switchRow(e, t, n, r, i) {
+		return this.readonly || i ? E`<div class="row">
+        <span class="label">${e}<small>${i ?? t}</small></span>
+        <span class="value">${L(this.language, n ? "on" : "off")}</span>
+      </div>` : E`<div
       class="row tappable"
       role="switch"
       tabindex="0"
@@ -3702,85 +4778,85 @@ F("pulse-device-sheet", class extends M {
     </div>`;
 	}
 	renderBody(e) {
-		let t = this.language, n = e.battery, r = e.snooze_until !== null && e.snooze_until > this.now, i = n.flag ? I(t, n.low ? "battery_flag_low" : "battery_flag_ok") : n.level === null ? I(t, "unknown") : I(t, "unit_percent", { value: Math.round(n.level) }), a = n.type ? (n.count ?? 1) > 1 ? I(t, "battery_count_type", {
+		let t = this.language, n = e.battery, r = e.snooze_until !== null && e.snooze_until > this.now, i = n.flag ? L(t, n.low ? "battery_flag_low" : "battery_flag_ok") : n.level === null ? L(t, "unknown") : L(t, "unit_percent", { value: Math.round(n.level) }), a = n.type ? (n.count ?? 1) > 1 ? L(t, "battery_count_type", {
 			count: n.count ?? 1,
 			type: n.type
-		}) : n.type : I(t, "unknown"), o = this.timeZone, s = nn(t, e, this.now), c = e.partner ? this.devices.find((t) => t.id === e.partner) ?? null : null, l = n.replaced.at(-1), u = this.beat, d = u?.devices[e.id] ?? null, f = u?.noData ?? this.noData, p = this.gapsOf(f, this.dayStarts), m = Math.max(1, this.dayStarts.length - 1), h = (e) => T`<pulse-rhythm .buckets=${e.strip} tone=${B(e)} ?learning=${e.status === "learning" && !e.ignored} .gaps=${p} .days=${m} .silentFrom=${hn(e, this.dayStarts)}></pulse-rhythm>`, g = c ? an(t, e, c) : "", ee = [e.area, e.model].filter(Boolean).join(" · "), te = Cn(t, n.forecast, n.forecast_reason === "untrusted" && !n.trusted ? null : n.forecast_reason), _ = (n) => T`<button class=${n ? "pbtn primary" : "pbtn"} type="button" @click=${() => this.fire("replaced", { id: e.id })}>
-        <ha-icon icon="mdi:battery-sync-outline"></ha-icon>${I(t, "replaced")}
-      </button>`, v = (n) => r && e.snooze_until !== null ? T`<span class="snoozed">
-            <span class="muted small">${I(t, "snoozed_until", { when: mt(t, e.snooze_until, this.now, o, this.timeFormat) })}</span>
-            <button class="pbtn" type="button" @click=${() => this.fire("snooze-cancel", { id: e.id })}>${I(t, "snooze_cancel")}</button>
-          </span>` : T`<button class=${n ? "pbtn primary" : "pbtn"} type="button" @click=${() => this.fire("later", { id: e.id })}>
-            <ha-icon icon="mdi:bell-sleep-outline"></ha-icon>${I(t, "later")}
-          </button>`, ne = At(e);
-		return T`
+		}) : n.type : L(t, "unknown"), o = this.timeZone, s = rn(t, e, this.now), c = e.partner ? this.devices.find((t) => t.id === e.partner) ?? null : null, l = n.replaced.at(-1), u = this.beat, d = u?.devices[e.id] ?? null, f = u?.noData ?? this.noData, p = this.gapsOf(f, this.dayStarts), m = Math.max(1, this.dayStarts.length - 1), h = (e) => E`<pulse-rhythm .buckets=${e.strip} tone=${V(e)} ?learning=${e.status === "learning" && !e.ignored} .gaps=${p} .days=${m} .silentFrom=${gn(e, this.dayStarts)}></pulse-rhythm>`, g = c ? on(t, e, c) : "", ee = [e.area, e.model].filter(Boolean).join(" · "), te = wn(t, n.forecast, n.forecast_reason === "untrusted" && !n.trusted ? null : n.forecast_reason), _ = (n) => E`<button class=${n ? "pbtn primary" : "pbtn"} type="button" @click=${() => this.fire("replaced", { id: e.id })}>
+        <ha-icon icon="mdi:battery-sync-outline"></ha-icon>${L(t, "replaced")}
+      </button>`, v = (n) => r && e.snooze_until !== null ? E`<span class="snoozed">
+            <span class="muted small">${L(t, "snoozed_until", { when: mt(t, e.snooze_until, this.now, o, this.timeFormat) })}</span>
+            <button class="pbtn" type="button" @click=${() => this.fire("snooze-cancel", { id: e.id })}>${L(t, "snooze_cancel")}</button>
+          </span>` : E`<button class=${n ? "pbtn primary" : "pbtn"} type="button" @click=${() => this.fire("later", { id: e.id })}>
+            <ha-icon icon="mdi:bell-sleep-outline"></ha-icon>${L(t, "later")}
+          </button>`, ne = At(e), y = e.mains === !0;
+		return E`
       <header class="hero">
-        ${ee || e.cloud ? T`<p class="dname"><ha-icon .icon=${e.icon}></ha-icon><span>${ee}</span>${e.cloud ? T`<span class="chip-cloud"><ha-icon icon="mdi:cloud-outline"></ha-icon>${I(t, "cloud_device")}</span>` : O}</p>` : O}
+        ${ee || e.cloud || y ? E`<p class="dname"><ha-icon .icon=${e.icon}></ha-icon><span>${ee}</span>${e.cloud ? E`<span class="chip-cloud"><ha-icon icon="mdi:cloud-outline"></ha-icon>${L(t, "cloud_device")}</span>` : k}${y ? E`<span class="chip-cloud"><ha-icon icon="mdi:power-plug-outline"></ha-icon>${L(t, "mains_chip")}</span>` : k}</p>` : k}
         <h3 class=${`dhl ${s.tone === "accent" ? "grad" : `t-${s.tone}`}`}>${s.text}</h3>
-        <p class="dtx">${rn(t, e, this.now, o, this.timeFormat)}</p>
+        <p class="dtx">${an(t, e, this.now, o, this.timeFormat)}</p>
       </header>
 
-      ${this.readonly ? T`<p class="ro muted small"><ha-icon icon="mdi:lock-outline"></ha-icon>${I(t, "read_only")}</p>` : O}
-      ${Ot(e) && !this.readonly ? T`<div class="buttons">
-              ${ne ? T`${_(!0)}${v(!1)}` : T`${v(!r)}${_(!1)}`}
-            </div>` : O}
+      ${this.readonly ? E`<p class="ro muted small"><ha-icon icon="mdi:lock-outline"></ha-icon>${L(t, "read_only")}</p>` : k}
+      ${Ot(e) && !this.readonly ? E`<div class="buttons">
+              ${y ? v(!r) : ne ? E`${_(!0)}${v(!1)}` : E`${v(!r)}${_(!1)}`}
+            </div>` : k}
 
       <section class="cal">
         <div class="hd">
-          <span class="cap">${I(t, "heartbeat_title")}</span>
+          <span class="cap">${L(t, "heartbeat_title")}</span>
           <span class="legend">
-            <span>${I(t, "heartbeat_legend")}</span>
-            ${p.length ? T`<span class="lg-gap"><i aria-hidden="true"></i>${I(t, "no_data_legend")}</span>` : O}
+            <span>${L(t, "heartbeat_legend")}</span>
+            ${p.length ? E`<span class="lg-gap"><i aria-hidden="true"></i>${L(t, "no_data_legend")}</span>` : k}
           </span>
         </div>
-        ${d && u ? T`<pulse-heartbeat
+        ${d && u ? E`<pulse-heartbeat
                 .bins=${d}
                 .dayStarts=${u.dayStarts}
                 .binMinutes=${u.binMinutes}
                 .timeZone=${o}
                 .now=${this.now}
-                .silentSince=${gn(e, d, u.dayStarts, u.binMinutes)}
+                .silentSince=${_n(e, d, u.dayStarts, u.binMinutes)}
                 .noData=${f}
-                silence=${$n(e)}
+                silence=${rr(e)}
                 .language=${t}
-                tone=${er(e)}
-              ></pulse-heartbeat>` : this.beatError ? T`<div class="cal-err">
-                  <span class="muted">${I(t, "heartbeat_failed")}</span>
-                  <button class="pbtn" type="button" @click=${() => this.reloadBeat(e.id)}>${I(t, "reload")}</button>
-                </div>` : T`<div class="cal-wait"><pulse-rhythm .buckets=${e.strip} tone=${B(e)} ?learning=${e.status === "learning" && !e.ignored} .gaps=${p} .days=${m} .silentFrom=${hn(e, this.dayStarts)} .flag=${Zt(t, e, this.now)}></pulse-rhythm>
-                <div class="axis muted" aria-hidden="true" style=${`grid-template-columns: ${ct(this.dayStarts)}`}>${st(t, this.dayStarts, o).map((e) => T`<span>${e}</span>`)}</div></div>`}
+                tone=${ir(e)}
+              ></pulse-heartbeat>` : this.beatError ? E`<div class="cal-err">
+                  <span class="muted">${L(t, "heartbeat_failed")}</span>
+                  <button class="pbtn" type="button" @click=${() => this.reloadBeat(e.id)}>${L(t, "reload")}</button>
+                </div>` : E`<div class="cal-wait"><pulse-rhythm .buckets=${e.strip} tone=${V(e)} ?learning=${e.status === "learning" && !e.ignored} .gaps=${p} .days=${m} .silentFrom=${gn(e, this.dayStarts)} .flag=${Qt(t, e, this.now)}></pulse-rhythm>
+                <div class="axis muted" aria-hidden="true" style=${`grid-template-columns: ${ct(this.dayStarts)}`}>${st(t, this.dayStarts, o).map((e) => E`<span>${e}</span>`)}</div></div>`}
       </section>
 
-      ${c ? T`<section class="pair">
-              <span class="cap">${I(t, "with_partner")}</span>
+      ${c ? E`<section class="pair">
+              <span class="cap">${L(t, "with_partner")}</span>
               <div class="l"><span>${c.name}</span>${h(c)}</div>
               <div class="l"><span>${e.name}</span>${h(e)}</div>
-              ${g ? T`<p>${g}</p>` : O}
-            </section>` : O}
+              ${g ? E`<p>${g}</p>` : k}
+            </section>` : k}
 
-      <section class="stats">
+      ${y ? E`<p class="fc muted"><ha-icon icon="mdi:power-plug-outline"></ha-icon><span>${L(t, "mains_note")}</span></p>` : E`<section class="stats">
         <div>
-          <span>${I(t, "battery")}</span>
+          <span>${L(t, "battery")}</span>
           <b class=${n.trusted ? "" : "faint"}>${i}</b>
-          ${n.trusted ? O : T`<small>${I(t, "stat_rechargeable")}</small>`}
+          ${n.trusted ? k : E`<small>${L(t, "stat_rechargeable")}</small>`}
         </div>
-        <div><span>${I(t, "battery_type")}</span><b>${a}</b></div>
-        <div><span>${I(t, "stat_changed")}</span><b>${l === void 0 ? I(t, "unknown") : Dt(t, l, this.now, o)}</b></div>
+        <div><span>${L(t, "battery_type")}</span><b>${a}</b></div>
+        <div><span>${L(t, "stat_changed")}</span><b>${l === void 0 ? L(t, "unknown") : Dt(t, l, this.now, o)}</b></div>
       </section>
-      ${te ? T`<p class=${n.forecast ? "fc" : "fc muted"}><ha-icon icon=${n.forecast ? "mdi:battery-clock-outline" : "mdi:battery-unknown"}></ha-icon><span>${te}</span></p>` : O}
+      ${te ? E`<p class=${n.forecast ? "fc" : "fc muted"}><ha-icon icon=${n.forecast ? "mdi:battery-clock-outline" : "mdi:battery-unknown"}></ha-icon><span>${te}</span></p>` : k}`}
 
       ${this.renderSuggestions(e)}
 
       <div class="list quick">
-        ${Ot(e) || this.readonly ? O : T`<button class="row action" type="button" @click=${() => this.fire("replaced", { id: e.id })}>
-                <span class="label">${I(t, "replaced_now")}</span>
+        ${Ot(e) || this.readonly || y ? k : E`<button class="row action" type="button" @click=${() => this.fire("replaced", { id: e.id })}>
+                <span class="label">${L(t, "replaced_now")}</span>
               </button>`}
-        ${this.switchRow(I(t, "important"), I(t, "important_hint"), e.critical, (t) => this.change({ critical: jt(e, t) }))}
+        ${this.switchRow(L(t, "important"), L(t, "important_hint"), e.critical, (t) => this.change({ critical: jt(e, t) }), e.label === "important" ? L(t, "label_set", { label: "pulse_important" }) : void 0)}
       </div>
 
       <details class="more" ?open=${this.settingsOpen} @toggle=${this.onSettingsToggle}>
         <summary>
-          <span>${I(t, "device_settings")}</span>
+          <span>${L(t, "device_settings")}</span>
           <ha-icon icon="mdi:chevron-down"></ha-icon>
         </summary>
         ${this.renderSettings(e)}
@@ -3788,73 +4864,76 @@ F("pulse-device-sheet", class extends M {
     `;
 	}
 	renderSuggestions(e) {
-		let t = this.language, n = this.readonly ? [] : Dn(e);
-		return n.length ? T`<section class="suggest">
-      <span class="cap">${I(t, "partner")}</span>
-      ${n.map((n) => T`<div class="sg">
-          <span class="sg-t"><b>${I(t, "partner_suggest", { name: n.name })}</b><small>${I(t, "partner_suggest_why")}</small></span>
+		let t = this.language, n = this.readonly ? [] : On(e);
+		return n.length ? E`<section class="suggest">
+      <span class="cap">${L(t, "partner")}</span>
+      ${n.map((n) => E`<div class="sg">
+          <span class="sg-t"><b>${L(t, "partner_suggest", { name: n.name })}</b><small>${L(t, "partner_suggest_why")}</small></span>
           <span class="sg-b">
             <button class="pbtn" type="button" @click=${() => this.fire("partner-dismiss", {
 			id: e.id,
 			partner: n.id
-		})}>${I(t, "partner_dismiss")}</button>
-            <button class="pbtn primary" type="button" @click=${() => this.change({ partner: n.id })}>${I(t, "partner_accept")}</button>
+		})}>${L(t, "partner_dismiss")}</button>
+            <button class="pbtn primary" type="button" @click=${() => this.change({ partner: n.id })}>${L(t, "partner_accept")}</button>
           </span>
         </div>`)}
-    </section>` : O;
+    </section>` : k;
+	}
+	renderBatterySettings(e, t, n) {
+		let r = this.language, i = e.battery;
+		return E`<section class="section">
+        <h4 class="section-title">${L(r, "battery")}</h4>
+        <div class="list">
+          ${this.picker(L(r, "battery_type"), i.type ?? "", t, (e) => this.change({ battery_type: e || null }))}
+          ${this.picker(L(r, "battery_count"), String(i.count ?? 1), ar, (e) => this.change({ battery_count: Number(e) }))}
+          ${this.picker(L(r, "chemistry"), i.chemistry ?? "", n, (e) => this.change({ chemistry: e || null }), i.trusted ? void 0 : L(r, "level_unreliable"))}
+          ${i.voltage === null ? k : E`<div class="row"><span class="label">${L(r, "voltage")}</span><span class="value">${ht(r, i.voltage)}</span></div>`}
+        </div>
+      </section>
+
+      <section class="section">
+        <h4 class="section-title">${L(r, "replaced_history")}</h4>
+        <div class="list">
+          ${i.replaced.length ? [...i.replaced].reverse().slice(0, 3).map((e) => E`<div class="row"><span class="label">${ft(r, e, this.timeZone)}</span><span class="value">${Xe(r, e, this.now)}</span></div>`) : E`<div class="row"><span class="label muted">${L(r, "never_replaced")}</span></div>`}
+        </div>
+      </section>`;
 	}
 	renderSettings(e) {
-		let t = this.language, n = e.battery, r = [{
+		let t = this.language, n = [{
 			value: "",
-			label: I(t, "type_unknown")
+			label: L(t, "type_unknown")
 		}, ...this.batteryTypes.map((e) => ({
 			value: e,
 			label: e
-		}))], i = [{
+		}))], r = [{
 			value: "",
-			label: I(t, "chem_unknown")
+			label: L(t, "chem_unknown")
 		}, ...this.chemistries.map((e) => ({
 			value: e,
-			label: I(t, nr[e] ?? "chem_unknown")
-		}))], a = [{
+			label: L(t, or[e] ?? "chem_unknown")
+		}))], i = [{
 			value: "",
-			label: I(t, "partner_none")
+			label: L(t, "partner_none")
 		}, ..._t(this.devices, e).map((e) => ({
 			value: e.id,
 			label: e.name
 		}))];
-		return T`<div class="settings">
+		return E`<div class="settings">
+      ${e.mains === !0 ? k : this.renderBatterySettings(e, n, r)}
       <section class="section">
-        <h4 class="section-title">${I(t, "battery")}</h4>
+        <h4 class="section-title">${L(t, "partner")}</h4>
         <div class="list">
-          ${this.picker(I(t, "battery_type"), n.type ?? "", r, (e) => this.change({ battery_type: e || null }))}
-          ${this.picker(I(t, "battery_count"), String(n.count ?? 1), tr, (e) => this.change({ battery_count: Number(e) }))}
-          ${this.picker(I(t, "chemistry"), n.chemistry ?? "", i, (e) => this.change({ chemistry: e || null }), n.trusted ? void 0 : I(t, "level_unreliable"))}
-          ${n.voltage === null ? O : T`<div class="row"><span class="label">${I(t, "voltage")}</span><span class="value">${ht(t, n.voltage)}</span></div>`}
+          ${this.picker(L(t, "partner"), e.partner ?? "", i, (e) => this.change({ partner: e || null }))}
         </div>
+        <p class="section-foot">${L(t, "partner_hint")}</p>
       </section>
 
       <section class="section">
-        <h4 class="section-title">${I(t, "replaced_history")}</h4>
+        <h4 class="section-title">${L(t, "monitoring")}</h4>
         <div class="list">
-          ${n.replaced.length ? [...n.replaced].reverse().slice(0, 3).map((e) => T`<div class="row"><span class="label">${ft(t, e, this.timeZone)}</span><span class="value">${Xe(t, e, this.now)}</span></div>`) : T`<div class="row"><span class="label muted">${I(t, "never_replaced")}</span></div>`}
-        </div>
-      </section>
-
-      <section class="section">
-        <h4 class="section-title">${I(t, "partner")}</h4>
-        <div class="list">
-          ${this.picker(I(t, "partner"), e.partner ?? "", a, (e) => this.change({ partner: e || null }))}
-        </div>
-        <p class="section-foot">${I(t, "partner_hint")}</p>
-      </section>
-
-      <section class="section">
-        <h4 class="section-title">${I(t, "monitoring")}</h4>
-        <div class="list">
-          ${this.switchRow(I(t, "ignore"), I(t, "ignore_hint"), e.ignored, (e) => this.change({ ignored: e }))}
-          ${this.readonly ? O : T`<button class="row action" type="button" @click=${() => P(`/config/devices/device/${e.id}`)}>
-                  <span class="label">${I(t, "open_device")}</span>
+          ${this.switchRow(L(t, "ignore"), L(t, "ignore_hint"), e.ignored, (e) => this.change({ ignored: e }), e.label === "ignore" ? L(t, "label_set", { label: "pulse_ignore" }) : void 0)}
+          ${this.readonly ? k : E`<button class="row action" type="button" @click=${() => F(`/config/devices/device/${e.id}`)}>
+                  <span class="label">${L(t, "open_device")}</span>
                   <ha-icon class="chev" icon="mdi:chevron-right"></ha-icon>
                 </button>`}
         </div>
@@ -3863,13 +4942,13 @@ F("pulse-device-sheet", class extends M {
 	}
 	render() {
 		let e = this.device;
-		return T`<pulse-sheet
+		return E`<pulse-sheet
       .open=${this.open && e !== null}
       .heading=${e?.name ?? ""}
       .language=${this.language}
       @closed=${() => this.fire("sheet-closed", {})}
     >
-      ${e ? T`<div class="body">${this.renderBody(e)}</div>` : O}
+      ${e ? E`<div class="body">${this.renderBody(e)}</div>` : k}
     </pulse-sheet>`;
 	}
 	static {
@@ -4186,9 +5265,9 @@ F("pulse-device-sheet", class extends M {
     `
 		];
 	}
-}), F("pulse-mark", class extends M {
+}), I("pulse-mark", class extends N {
 	render() {
-		return T`<svg viewBox="0 0 100 100" aria-hidden="true">
+		return E`<svg viewBox="0 0 100 100" aria-hidden="true">
       <defs>
         <linearGradient id="pulse-mark-bg" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0" stop-color="#1c1838" />
@@ -4232,12 +5311,12 @@ F("pulse-device-sheet", class extends M {
 });
 //#endregion
 //#region src/pulse-devices.ts
-var rr = {
+var sr = {
 	area: "group_area",
 	status: "group_status",
 	none: "group_none"
 };
-F("pulse-devices", class extends M {
+I("pulse-devices", class extends N {
 	static {
 		this.properties = {
 			devices: { attribute: !1 },
@@ -4259,7 +5338,7 @@ F("pulse-devices", class extends M {
 		};
 	}
 	constructor() {
-		super(), this.gapsOf = L(cn), this.gaps = [], this.devices = [], this.language = "en", this.now = 0, this.start = 0, this.days = 7, this.dayStarts = [], this.timeZone = void 0, this.timeFormat = void 0, this.bucketHours = 2, this.noData = [], this.groupBy = "area", this.filter = null, this.dueIds = [], this.readonly = !1, this.query = "", this.collapsed = /* @__PURE__ */ new Set();
+		super(), this.gapsOf = R(ln), this.gaps = [], this.devices = [], this.language = "en", this.now = 0, this.start = 0, this.days = 7, this.dayStarts = [], this.timeZone = void 0, this.timeFormat = void 0, this.bucketHours = 2, this.noData = [], this.groupBy = "area", this.filter = null, this.dueIds = [], this.readonly = !1, this.query = "", this.collapsed = /* @__PURE__ */ new Set();
 	}
 	fire(e, t) {
 		this.dispatchEvent(new CustomEvent(e, {
@@ -4276,7 +5355,7 @@ F("pulse-devices", class extends M {
 		(e === "area" || e === "status" || e === "none") && (this.groupBy = e, this.collapsed = /* @__PURE__ */ new Set(), this.fire("group-change", { group: e }));
 	}
 	onMenu(e, t) {
-		let n = ze(t);
+		let n = Re(t);
 		n === "details" ? this.fire("open", { id: e.id }) : n === "replaced" ? this.fire("replaced", { id: e.id }) : n === "later" ? this.fire("later", { id: e.id }) : n === "important" ? this.fire("device-change", {
 			id: e.id,
 			changes: { critical: jt(e, !e.critical) }
@@ -4287,60 +5366,60 @@ F("pulse-devices", class extends M {
 	}
 	filterName(e) {
 		let t = this.language;
-		return e === "ignored" ? I(t, "ignored") : e === "important" ? I(t, "filter_important") : e === "battery" ? I(t, "filter_battery") : I(t, qe(e));
+		return e === "ignored" ? L(t, "ignored") : e === "important" ? L(t, "filter_important") : e === "battery" ? L(t, "filter_battery") : e === "mains" ? L(t, "filter_mains") : L(t, qe(e));
 	}
 	emptyText() {
 		let e = this.language;
-		return this.devices.length ? this.query.trim() ? I(e, "no_results", { query: this.query }) : I(e, "filter_empty") : I(e, "no_devices");
+		return this.devices.length ? this.query.trim() ? L(e, "no_results", { query: this.query }) : L(e, "filter_empty") : L(e, "no_devices");
 	}
 	renderRow(e) {
-		let t = this.language, n = Qt(t, e, this.now), r = G(e) && e.last_activity !== null ? mt(t, e.last_activity, this.now, this.timeZone, this.timeFormat) : Xe(t, e.last_activity, this.now), i = e.ignored ? "ok" : B(e), a = this.readonly ? O : T`<span class="menu"><ha-dropdown placement="bottom-end" @wa-select=${(t) => this.onMenu(e, t)}>
-          <ha-icon-button slot="trigger" .label=${I(t, "more_for", { name: e.name })}>
+		let t = this.language, n = $t(t, e, this.now), r = K(e) && e.last_activity !== null ? mt(t, e.last_activity, this.now, this.timeZone, this.timeFormat) : Xe(t, e.last_activity, this.now), i = e.ignored ? "ok" : V(e), a = this.readonly ? k : E`<span class="menu"><ha-dropdown placement="bottom-end" @wa-select=${(t) => this.onMenu(e, t)}>
+          <ha-icon-button slot="trigger" .label=${L(t, "more_for", { name: e.name })}>
             <ha-icon icon="mdi:dots-vertical"></ha-icon>
           </ha-icon-button>
-          <ha-dropdown-item value="details"><ha-icon slot="icon" icon="mdi:information-outline"></ha-icon>${I(t, "details")}</ha-dropdown-item>
-          <ha-dropdown-item value="replaced"><ha-icon slot="icon" icon="mdi:battery-sync-outline"></ha-icon>${I(t, "replaced")}</ha-dropdown-item>
-          ${Ot(e) ? T`<ha-dropdown-item value="later"><ha-icon slot="icon" icon="mdi:bell-sleep-outline"></ha-icon>${I(t, "later")}</ha-dropdown-item>` : O}
-          ${e.ignored ? O : T`<ha-dropdown-item value="important"><ha-icon slot="icon" icon=${e.critical ? "mdi:star-off-outline" : "mdi:star-outline"}></ha-icon>${I(t, e.critical ? "unmark_important" : "mark_important")}</ha-dropdown-item>`}
-          <ha-dropdown-item value="ignore">
-            <ha-icon slot="icon" icon=${e.ignored ? "mdi:eye-outline" : "mdi:eye-off-outline"}></ha-icon>${I(t, e.ignored ? "resume" : "ignore_action")}
-          </ha-dropdown-item>
+          <ha-dropdown-item value="details"><ha-icon slot="icon" icon="mdi:information-outline"></ha-icon>${L(t, "details")}</ha-dropdown-item>
+          ${e.mains ? k : E`<ha-dropdown-item value="replaced"><ha-icon slot="icon" icon="mdi:battery-sync-outline"></ha-icon>${L(t, "replaced")}</ha-dropdown-item>`}
+          ${Ot(e) ? E`<ha-dropdown-item value="later"><ha-icon slot="icon" icon="mdi:bell-sleep-outline"></ha-icon>${L(t, "later")}</ha-dropdown-item>` : k}
+          ${e.ignored || e.label ? k : E`<ha-dropdown-item value="important"><ha-icon slot="icon" icon=${e.critical ? "mdi:star-off-outline" : "mdi:star-outline"}></ha-icon>${L(t, e.critical ? "unmark_important" : "mark_important")}</ha-dropdown-item>`}
+          ${e.label === "ignore" ? k : E`<ha-dropdown-item value="ignore">
+            <ha-icon slot="icon" icon=${e.ignored ? "mdi:eye-outline" : "mdi:eye-off-outline"}></ha-icon>${L(t, e.ignored ? "resume" : "ignore_action")}
+          </ha-dropdown-item>`}
         </ha-dropdown></span>`;
-		return T`<div class="mrow">
+		return E`<div class="mrow">
       <button class="main rowgrid" type="button" @click=${() => this.fire("open", { id: e.id })}>
         <span class="nm">
           <ha-icon class=${`t-${i}`} .icon=${e.icon}></ha-icon>
           <span class="who">
-            <span class="title"><b>${e.name}</b>${e.critical && !e.ignored ? T`<span class="star" role="img" aria-label=${I(t, "important_badge")} title=${I(t, "important_badge")}><ha-icon icon="mdi:star"></ha-icon></span>` : O}</span>
-            ${this.groupBy !== "area" && e.area ? T`<span class="room">${e.area}</span>` : O}
+            <span class="title"><b>${e.name}</b>${e.critical && !e.ignored ? E`<span class="star" role="img" aria-label=${L(t, "important_badge")} title=${L(t, "important_badge")}><ha-icon icon="mdi:star"></ha-icon></span>` : k}</span>
+            ${this.groupBy !== "area" && e.area ? E`<span class="room">${e.area}</span>` : k}
           </span>
         </span>
         <pulse-rhythm
           .buckets=${e.strip}
-          tone=${B(e)}
+          tone=${V(e)}
           ?learning=${e.status === "learning" && !e.ignored}
           .gaps=${this.gaps}
           .days=${Math.max(1, this.dayStarts.length - 1)}
-          .silentFrom=${hn(e, this.dayStarts)}
-          .flag=${Zt(t, e, this.now)}
+          .silentFrom=${gn(e, this.dayStarts)}
+          .flag=${Qt(t, e, this.now)}
         ></pulse-rhythm>
         <span class="st">
-          ${n ? T`<b class=${`t-${n.tone}`}>${n.text}</b><span class="sep"> · </span>` : O}<span class="num time">${r}</span>
+          ${n ? E`<b class=${`t-${n.tone}`}>${n.text}</b><span class="sep"> · </span>` : k}<span class="num time">${r}</span>
         </span>
       </button>
       ${a}
     </div>`;
 	}
 	render() {
-		let e = this.language, t = vt(Tt(this.devices, this.filter, this.dueIds), this.query), n = this.groupBy === "area", r = t.filter((e) => !e.ignored), i = t.filter((e) => e.ignored), a = bt(r, this.groupBy, e, I(e, "no_area"));
+		let e = this.language, t = vt(Tt(this.devices, this.filter, this.dueIds), this.query), n = this.groupBy === "area", r = t.filter((e) => !e.ignored), i = t.filter((e) => e.ignored), a = bt(r, this.groupBy, e, L(e, "no_area"));
 		this.gaps = this.gapsOf(this.noData, this.dayStarts);
 		let o = st(e, this.dayStarts, this.timeZone);
 		i.length && a.push({
-			area: I(e, "ignored"),
+			area: L(e, "ignored"),
 			devices: i
 		});
-		let s = this.filter ? I(e, "filter_label", { what: this.filterName(this.filter) }) : "";
-		return T`<div class=${[
+		let s = this.filter ? L(e, "filter_label", { what: this.filterName(this.filter) }) : "";
+		return E`<div class=${[
 			"monitor",
 			n ? "by-area" : "",
 			this.readonly ? "readonly" : ""
@@ -4351,45 +5430,45 @@ F("pulse-devices", class extends M {
           <input
             id="search"
             type="search"
-            aria-label=${I(e, "search_label")}
+            aria-label=${L(e, "search_label")}
             .value=${this.query}
-            placeholder=${this.devices.length === 1 ? I(e, "search_one") : I(e, "search", { count: this.devices.length })}
+            placeholder=${this.devices.length === 1 ? L(e, "search_one") : L(e, "search", { count: this.devices.length })}
             @input=${(e) => {
-			this.query = Re(e);
+			this.query = Le(e);
 		}}
           />
         </label>
-        <ha-dropdown placement="bottom-end" @wa-select=${(e) => this.setGroup(ze(e) ?? "")}>
+        <ha-dropdown placement="bottom-end" @wa-select=${(e) => this.setGroup(Re(e) ?? "")}>
           <button slot="trigger" class="chip" type="button">
-            ${I(e, "group_by", { what: I(e, rr[this.groupBy]) })}
+            ${L(e, "group_by", { what: L(e, sr[this.groupBy]) })}
             <ha-icon icon="mdi:menu-down"></ha-icon>
           </button>
           ${[
 			"area",
 			"status",
 			"none"
-		].map((t) => T`<ha-dropdown-item value=${t}>
+		].map((t) => E`<ha-dropdown-item value=${t}>
               <ha-icon slot="icon" class=${t === this.groupBy ? "check" : "check hidden"} icon="mdi:check"></ha-icon>
-              ${I(e, rr[t])}
+              ${L(e, sr[t])}
             </ha-dropdown-item>`)}
         </ha-dropdown>
-        ${s ? T`<button class="chip filter" type="button" @click=${() => this.fire("filter-clear", {})} aria-label=${`${s}, ${I(e, "filter_clear")}`}>
+        ${s ? E`<button class="chip filter" type="button" @click=${() => this.fire("filter-clear", {})} aria-label=${`${s}, ${L(e, "filter_clear")}`}>
                 ${s}
                 <ha-icon icon="mdi:close"></ha-icon>
-              </button>` : O}
+              </button>` : k}
       </div>
       <div class="axis" aria-hidden="true">
-        <span>${t.length === 1 ? I(e, "monitor_head_one") : I(e, "monitor_head", { count: t.length })}</span>
-        <div class="days mono" style=${`grid-template-columns: ${ct(this.dayStarts)}`}>${o.map((e) => T`<span>${e.replace(".", "")}</span>`)}</div>
-        <span class="right">${I(e, "col_last")}</span>
+        <span>${t.length === 1 ? L(e, "monitor_head_one") : L(e, "monitor_head", { count: t.length })}</span>
+        <div class="days mono" style=${`grid-template-columns: ${ct(this.dayStarts)}`}>${o.map((e) => E`<span>${e.replace(".", "")}</span>`)}</div>
+        <span class="right">${L(e, "col_last")}</span>
       </div>
       ${t.length ? a.map((e) => {
 			let t = this.collapsed.has(e.area);
-			return T`${e.area ? T`<button class="group" type="button" aria-expanded=${t ? "false" : "true"} @click=${() => this.toggle(e.area)}>
+			return E`${e.area ? E`<button class="group" type="button" aria-expanded=${t ? "false" : "true"} @click=${() => this.toggle(e.area)}>
               <ha-icon icon=${t ? "mdi:chevron-right" : "mdi:chevron-down"}></ha-icon>
               <span>${e.area}</span><span class="count">${e.devices.length}</span>
-            </button>` : O}${t ? O : e.devices.map((e) => this.renderRow(e))}`;
-		}) : T`<p class="empty muted">${this.emptyText()}</p>`}
+            </button>` : k}${t ? k : e.devices.map((e) => this.renderRow(e))}`;
+		}) : E`<p class="empty muted">${this.emptyText()}</p>`}
     </div>`;
 	}
 	static {
@@ -4397,7 +5476,7 @@ F("pulse-devices", class extends M {
 			J,
 			Y,
 			X,
-			jn,
+			Fn,
 			o`
       :host {
         display: block;
@@ -4579,8 +5658,8 @@ F("pulse-devices", class extends M {
 });
 //#endregion
 //#region src/pulse-dayband.ts
-var ir = (e) => `${(e / 24 * 100).toFixed(2)}%`;
-F("pulse-dayband", class extends M {
+var cr = (e) => `${(e / 24 * 100).toFixed(2)}%`;
+I("pulse-dayband", class extends N {
 	static {
 		this.properties = {
 			settings: { attribute: !1 },
@@ -4594,17 +5673,17 @@ F("pulse-dayband", class extends M {
 		super(), this.language = "en", this.now = 0, this.recipients = "", this.timeZone = void 0;
 	}
 	render() {
-		let e = this.language, t = this.settings, n = it(this.now, this.timeZone), r = en(t.summary_time), i = t.quiet.enabled ? tn(t.quiet.start, t.quiet.end) : [], a = vn(e, t);
-		return T`<div class="top">
-        <span class="cap">${I(e, "day_title")}</span>
+		let e = this.language, t = this.settings, n = it(this.now, this.timeZone), r = tn(t.summary_time), i = t.quiet.enabled ? nn(t.quiet.start, t.quiet.end) : [], a = yn(e, t);
+		return E`<div class="top">
+        <span class="cap">${L(e, "day_title")}</span>
         <span class="to">${this.recipients}</span>
       </div>
       <p class="line">${a}</p>
-      <div class="band" role="img" aria-label=${`${I(e, "day_title")}: ${a}`}>
+      <div class="band" role="img" aria-label=${`${L(e, "day_title")}: ${a}`}>
         <div class="track" aria-hidden="true">
-          ${i.map(([e, t]) => T`<span class="quiet" style=${`left: ${ir(e)}; width: ${ir(t - e)}`}></span>`)}
-          <span class="nowline" style=${`left: ${ir(n)}`}></span>
-          <span class="dot" style=${`left: ${ir(r)}`}></span>
+          ${i.map(([e, t]) => E`<span class="quiet" style=${`left: ${cr(e)}; width: ${cr(t - e)}`}></span>`)}
+          <span class="nowline" style=${`left: ${cr(n)}`}></span>
+          <span class="dot" style=${`left: ${cr(r)}`}></span>
         </div>
         <div class="hours mono" aria-hidden="true">
           ${[
@@ -4613,7 +5692,7 @@ F("pulse-dayband", class extends M {
 			12,
 			18,
 			24
-		].map((t) => T`<span>${I(e, "hour_label", { h: t })}</span>`)}
+		].map((t) => E`<span>${L(e, "hour_label", { h: t })}</span>`)}
         </div>
       </div>`;
 	}
@@ -4700,21 +5779,21 @@ F("pulse-dayband", class extends M {
 });
 //#endregion
 //#region src/pulse-overview.ts
-var ar = "pulse.closedRooms";
-function or() {
+var lr = "pulse.closedRooms";
+function ur() {
 	try {
-		let e = JSON.parse(window.localStorage.getItem(ar) ?? "[]");
+		let e = JSON.parse(window.localStorage.getItem(lr) ?? "[]");
 		return new Set(Array.isArray(e) ? e.filter((e) => typeof e == "string") : []);
 	} catch {
 		return /* @__PURE__ */ new Set();
 	}
 }
-function sr(e) {
+function dr(e) {
 	try {
-		window.localStorage.setItem(ar, JSON.stringify([...e]));
+		window.localStorage.setItem(lr, JSON.stringify([...e]));
 	} catch {}
 }
-F("pulse-overview", class extends M {
+I("pulse-overview", class extends N {
 	static {
 		this.properties = {
 			snapshot: { attribute: !1 },
@@ -4730,7 +5809,7 @@ F("pulse-overview", class extends M {
 		};
 	}
 	constructor() {
-		super(), this.gapsOf = L(cn), this.gaps = [], this.language = "en", this.now = 0, this.recipients = "", this.timeZone = void 0, this.timeFormat = void 0, this.dayStarts = [], this.noData = [], this.readonly = !1, this.closed = or();
+		super(), this.gapsOf = R(ln), this.gaps = [], this.language = "en", this.now = 0, this.recipients = "", this.timeZone = void 0, this.timeFormat = void 0, this.dayStarts = [], this.noData = [], this.readonly = !1, this.closed = ur();
 	}
 	fire(e, t = {}) {
 		this.dispatchEvent(new CustomEvent(e, {
@@ -4744,51 +5823,51 @@ F("pulse-overview", class extends M {
 	}
 	toggleRoom(e) {
 		let t = new Set(this.closed);
-		t.has(e) ? t.delete(e) : t.add(e), this.closed = t, sr(t);
+		t.has(e) ? t.delete(e) : t.add(e), this.closed = t, dr(t);
 	}
 	renderRow(e) {
-		let t = this.language, n = Qt(t, e, this.now), r = G(e) && e.last_activity !== null ? mt(t, e.last_activity, this.now, this.timeZone, this.timeFormat) : Xe(t, e.last_activity, this.now);
-		return T`<button class="mrow rowgrid" type="button" @click=${() => this.fire("open", { id: e.id })}>
+		let t = this.language, n = $t(t, e, this.now), r = K(e) && e.last_activity !== null ? mt(t, e.last_activity, this.now, this.timeZone, this.timeFormat) : Xe(t, e.last_activity, this.now);
+		return E`<button class="mrow rowgrid" type="button" @click=${() => this.fire("open", { id: e.id })}>
       <span class="nm">
-        <ha-icon class=${`t-${e.ignored ? "ok" : B(e)}`} .icon=${e.icon}></ha-icon>
+        <ha-icon class=${`t-${e.ignored ? "ok" : V(e)}`} .icon=${e.icon}></ha-icon>
         <span class="who">
-          <span class="title"><b>${e.name}</b>${e.critical && !e.ignored ? T`<span class="star" role="img" aria-label=${I(t, "important_badge")} title=${I(t, "important_badge")}><ha-icon icon="mdi:star"></ha-icon></span>` : O}</span>
-          ${e.area ? T`<span class="room">${e.area}</span>` : O}
+          <span class="title"><b>${e.name}</b>${e.critical && !e.ignored ? E`<span class="star" role="img" aria-label=${L(t, "important_badge")} title=${L(t, "important_badge")}><ha-icon icon="mdi:star"></ha-icon></span>` : k}</span>
+          ${e.area ? E`<span class="room">${e.area}</span>` : k}
         </span>
       </span>
       <pulse-rhythm
         .buckets=${e.strip}
-        tone=${B(e)}
+        tone=${V(e)}
         ?learning=${e.status === "learning" && !e.ignored}
         .gaps=${this.gaps}
         .days=${Math.max(1, this.dayStarts.length - 1)}
-        .silentFrom=${hn(e, this.dayStarts)}
-        .flag=${Zt(t, e, this.now)}
+        .silentFrom=${gn(e, this.dayStarts)}
+        .flag=${Qt(t, e, this.now)}
       ></pulse-rhythm>
       <span class="st">
-        ${n ? T`<b class=${`t-${n.tone}`}>${n.text}</b><span class="sep"> · </span>` : O}<span class="num time">${r}</span>
+        ${n ? E`<b class=${`t-${n.tone}`}>${n.text}</b><span class="sep"> · </span>` : k}<span class="num time">${r}</span>
       </span>
     </button>`;
 	}
 	renderSection(e, t) {
-		let n = this.language, r = T`<div class="grp">
-      <span>${I(n, Jt(e))}</span><span class="count">${t.length}</span>
+		let n = this.language, r = E`<div class="grp">
+      <span>${L(n, Yt(e))}</span><span class="count">${t.length}</span>
     </div>`;
-		return e !== "rhythm" || t.length <= 12 ? T`${r}${t.map((e) => this.renderRow(e))}` : T`${r}${Ye(t, I(n, "no_area")).map((e) => {
+		return e !== "rhythm" || t.length <= 12 ? E`${r}${t.map((e) => this.renderRow(e))}` : E`${r}${Ye(t, L(n, "no_area")).map((e) => {
 			let t = this.closed.has(e.area);
-			return T`<button class="room-head" type="button" aria-expanded=${t ? "false" : "true"} @click=${() => this.toggleRoom(e.area)}>
+			return E`<button class="room-head" type="button" aria-expanded=${t ? "false" : "true"} @click=${() => this.toggleRoom(e.area)}>
           <ha-icon icon=${t ? "mdi:chevron-right" : "mdi:chevron-down"}></ha-icon>
           <span>${e.area}</span><span class="count">${e.devices.length}</span>
         </button>
-        ${t ? O : e.devices.map((e) => this.renderRow(e))}`;
+        ${t ? k : e.devices.map((e) => this.renderRow(e))}`;
 		})}`;
 	}
 	renderZigbee() {
-		let e = this.language, t = this.snapshot.z2m, n = T`<span class="cap">${I(e, "welcome_zigbee_title")}</span>`;
-		if (!t.present) return O;
-		if (t.last_seen && t.availability) return T`<div class="fact zig">${n}<b class="t-ok on"><ha-icon icon="mdi:check-circle"></ha-icon>${I(e, "zigbee_active")}</b><span class="sub">${I(e, "zigbee_devices")}: ${t.devices}</span></div>`;
+		let e = this.language, t = this.snapshot.z2m, n = E`<span class="cap">${L(e, "welcome_zigbee_title")}</span>`;
+		if (!t.present) return k;
+		if (t.last_seen && t.availability) return E`<div class="fact zig">${n}<b class="t-ok on"><ha-icon icon="mdi:check-circle"></ha-icon>${L(e, "zigbee_active")}</b><span class="sub">${L(e, "zigbee_devices")}: ${t.devices}</span></div>`;
 		let r = t.requested_at !== null && this.now - t.requested_at < 120;
-		return this.readonly ? T`<div class="fact zig">${n}<b>${r ? I(e, "zigbee_requested") : I(e, "off")}</b><span class="sub">${I(e, "zigbee_hint")}</span></div>` : T`<div
+		return this.readonly ? E`<div class="fact zig">${n}<b>${r ? L(e, "zigbee_requested") : L(e, "off")}</b><span class="sub">${L(e, "zigbee_hint")}</span></div>` : E`<div
       class="fact zig tappable"
       role="switch"
       aria-checked="false"
@@ -4800,49 +5879,49 @@ F("pulse-overview", class extends M {
     >
       ${n}
       <span class="line">
-        <b>${r ? I(e, "zigbee_requested") : I(e, "off")}</b>
-        ${r ? O : T`<ha-switch tabindex="-1" aria-hidden="true"></ha-switch>`}
+        <b>${r ? L(e, "zigbee_requested") : L(e, "off")}</b>
+        ${r ? k : E`<ha-switch tabindex="-1" aria-hidden="true"></ha-switch>`}
       </span>
-      <span class="sub">${I(e, "zigbee_hint")}</span>
+      <span class="sub">${L(e, "zigbee_hint")}</span>
     </div>`;
 	}
 	renderBattery() {
-		let e = this.language, t = this.snapshot, n = t.summary.due_batteries, r = Mt(e, t.summary.low_batteries ?? []), i = t.summary.low_batteries ?? [], a = n === void 0 ? t.summary.next_battery ?? "" : wn(e, n.filter((e) => !i.includes(e.name))), o = r.tone === "ok" && n?.length ? I(e, n.length === 1 ? "battery_due_one" : "battery_due_many", { count: n.length }) : r.label, s = wt(t.devices, (n ?? []).map((e) => e.id)), c = T`<span class="cap">${I(e, "batteries")}</span>
+		let e = this.language, t = this.snapshot, n = t.summary.due_batteries, r = Mt(e, t.summary.low_batteries ?? []), i = t.summary.low_batteries ?? [], a = n === void 0 ? t.summary.next_battery ?? "" : Tn(e, n.filter((e) => !i.includes(e.name))), o = r.tone === "ok" && n?.length ? L(e, n.length === 1 ? "battery_due_one" : "battery_due_many", { count: n.length }) : r.label, s = wt(t.devices, (n ?? []).map((e) => e.id)), c = E`<span class="cap">${L(e, "batteries")}</span>
       <b class=${r.tone === "warn" ? "t-warn" : ""}>${o}</b>
-      ${r.value ? T`<span class="sub">${r.value}</span>` : O}
-      <span class="sub">${a || (r.value ? "" : I(e, "nothing_due"))}</span>`;
-		return s.length ? T`<button class="fact tappable" type="button" @click=${() => {
+      ${r.value ? E`<span class="sub">${r.value}</span>` : k}
+      <span class="sub">${a || (r.value ? "" : L(e, "nothing_due"))}</span>`;
+		return s.length ? E`<button class="fact tappable" type="button" @click=${() => {
 			let [e] = s;
 			s.length === 1 && e ? this.fire("open", { id: e.id }) : this.show("battery");
-		}}>${c}</button>` : T`<div class="fact">${c}</div>`;
+		}}>${c}</button>` : E`<div class="fact">${c}</div>`;
 	}
 	renderFacts() {
 		let e = this.language, t = this.snapshot, n = St(t.devices), r = t.devices.filter((e) => e.ignored).length;
-		return T`<section class="facts">
+		return E`<section class="facts">
       ${this.renderBattery()}
-      ${n ? T`<button class="fact tappable" type="button" @click=${() => this.fire("open", { id: n.device.id })}>
-              <span class="cap">${I(e, "last_change")}</span>
+      ${n ? E`<button class="fact tappable" type="button" @click=${() => this.fire("open", { id: n.device.id })}>
+              <span class="cap">${L(e, "last_change")}</span>
               <b>${Dt(e, n.at, this.now, this.timeZone)}</b>
               <span class="sub">${n.device.name}</span>
-            </button>` : T`<div class="fact"><span class="cap">${I(e, "last_change")}</span><b>${I(e, "unknown")}</b><span class="sub">${I(e, "never_replaced")}</span></div>`}
+            </button>` : E`<div class="fact"><span class="cap">${L(e, "last_change")}</span><b>${L(e, "unknown")}</b><span class="sub">${L(e, "never_replaced")}</span></div>`}
       ${this.renderZigbee()}
-      ${r ? T`<button class="fact tappable" type="button" @click=${() => this.show("ignored")}>
-              <span class="cap">${I(e, "ignored")}</span>
-              <b>${I(e, "ignored_count", { count: r })}</b>
-              <span class="sub">${I(e, "show_list")}</span>
-            </button>` : O}
+      ${r ? E`<button class="fact tappable" type="button" @click=${() => this.show("ignored")}>
+              <span class="cap">${L(e, "ignored")}</span>
+              <b>${L(e, "ignored_count", { count: r })}</b>
+              <span class="sub">${L(e, "show_list")}</span>
+            </button>` : k}
     </section>`;
 	}
 	render() {
-		let e = this.language, t = this.snapshot, n = Ut(e, t.devices), r = En(e, t.summary.cloud_outages), i = {
+		let e = this.language, t = this.snapshot, n = Wt(e, t.devices), r = Dn(e, t.summary.cloud_outages), i = {
 			accent: "grad",
 			warn: "t-warn",
 			crit: "t-crit",
 			plain: ""
-		}[n.tone], a = Gt(e, t.devices, this.now, this.timeZone), o = Yt(t.devices);
+		}[n.tone], a = Kt(e, t.devices, this.now, this.timeZone), o = Xt(t.devices);
 		this.gaps = this.gapsOf(this.noData, this.dayStarts);
-		let s = t.devices.filter((e) => !e.ignored).length, c = s === 1 ? I(e, "monitor_head_one") : I(e, "monitor_head", { count: s }), l = st(e, this.dayStarts, this.timeZone);
-		return T`<div class="page">
+		let s = t.devices.filter((e) => !e.ignored).length, c = s === 1 ? L(e, "monitor_head_one") : L(e, "monitor_head", { count: s }), l = st(e, this.dayStarts, this.timeZone);
+		return E`<div class="page">
       <section class="hero">
         <div class="words">
           <h2 class="hl">
@@ -4850,18 +5929,18 @@ F("pulse-overview", class extends M {
             <span class=${`l2 long ${i}`}>${n.line2}</span><span class=${`l2 short ${i}`}>${n.line2Short}</span>
           </h2>
           <p class="hsub">
-            ${n.sub ? T`<span class="ok-line">${n.sub}</span>` : O}
-            ${a.mentions.map((e) => T`${e.before}<b class=${`t-${e.tone}`}>${e.name}</b>${e.after} `)}${a.text}
+            ${n.sub ? E`<span class="ok-line">${n.sub}</span>` : k}
+            ${a.mentions.map((e) => E`${e.before}<b class=${`t-${e.tone}`}>${e.name}</b>${e.after} `)}${a.text}
           </p>
-          ${r.map((e) => T`<p class="cloud"><ha-icon icon="mdi:cloud-off-outline"></ha-icon><span>${e}</span></p>`)}
+          ${r.map((e) => E`<p class="cloud"><ha-icon icon="mdi:cloud-off-outline"></ha-icon><span>${e}</span></p>`)}
         </div>
-        ${this.readonly ? T`<pulse-dayband
+        ${this.readonly ? E`<pulse-dayband
                 .settings=${t.settings}
                 .language=${e}
                 .timeZone=${this.timeZone}
                 .now=${this.now}
                 .recipients=${this.recipients}
-              ></pulse-dayband>` : T`<pulse-dayband
+              ></pulse-dayband>` : E`<pulse-dayband
                 class="tappable"
                 role="button"
                 tabindex="0"
@@ -4880,8 +5959,8 @@ F("pulse-overview", class extends M {
       <section class="monitor" aria-label=${c}>
         <div class="axis">
           <span>${c}</span>
-          <div class="days mono" style=${`grid-template-columns: ${ct(this.dayStarts)}`}>${l.map((e) => T`<span>${e.replace(".", "")}</span>`)}</div>
-          <span class="right">${I(e, "col_last")}</span>
+          <div class="days mono" style=${`grid-template-columns: ${ct(this.dayStarts)}`}>${l.map((e) => E`<span>${e.replace(".", "")}</span>`)}</div>
+          <span class="right">${L(e, "col_last")}</span>
         </div>
         ${o.map((e) => this.renderSection(e.key, e.devices))}
       </section>
@@ -4894,7 +5973,7 @@ F("pulse-overview", class extends M {
 			J,
 			Y,
 			X,
-			jn,
+			Fn,
 			o`
       :host {
         display: block;
@@ -5168,7 +6247,7 @@ F("pulse-overview", class extends M {
     `
 		];
 	}
-}), F("pulse-segmented", class extends M {
+}), I("pulse-segmented", class extends N {
 	static {
 		this.properties = {
 			options: { attribute: !1 },
@@ -5183,10 +6262,10 @@ F("pulse-overview", class extends M {
 		e !== this.value && this.dispatchEvent(new CustomEvent("change", { detail: { value: e } }));
 	}
 	render() {
-		return T`<nav aria-label=${this.label}>
-      ${this.options.map((e) => T`<button
+		return E`<nav aria-label=${this.label}>
+      ${this.options.map((e) => E`<button
           type="button"
-          aria-current=${e.value === this.value ? "page" : O}
+          aria-current=${e.value === this.value ? "page" : k}
           class=${e.value === this.value ? "active" : ""}
           @click=${() => this.pick(e.value)}
         >
@@ -5268,10 +6347,10 @@ var $ = {
 	BOOLEAN_ATTRIBUTE: 4,
 	EVENT: 5,
 	ELEMENT: 6
-}, cr = (e) => (...t) => ({
+}, fr = (e) => (...t) => ({
 	_$litDirective$: e,
 	values: t
-}), lr = class {
+}), pr = class {
 	constructor(e) {}
 	get _$AU() {
 		return this._$AM._$AU;
@@ -5285,26 +6364,215 @@ var $ = {
 	update(e, t) {
 		return this.render(...t);
 	}
-}, { I: ur } = je, dr = (e) => e.strings === void 0, fr = {}, pr = (e, t = fr) => e._$AH = t, mr = cr(class extends lr {
+}, { I: mr } = Ae, hr = (e) => e.strings === void 0, gr = {}, _r = (e, t = gr) => e._$AH = t, vr = fr(class extends pr {
 	constructor(e) {
 		if (super(e), e.type !== $.PROPERTY && e.type !== $.ATTRIBUTE && e.type !== $.BOOLEAN_ATTRIBUTE) throw Error("The `live` directive is not allowed on child or event bindings");
-		if (!dr(e)) throw Error("`live` bindings can only contain a single expression");
+		if (!hr(e)) throw Error("`live` bindings can only contain a single expression");
 	}
 	render(e) {
 		return e;
 	}
 	update(e, [t]) {
-		if (t === D || t === O) return t;
+		if (t === O || t === k) return t;
 		let n = e.element, r = e.name;
 		if (e.type === $.PROPERTY) {
-			if (t === n[r]) return D;
+			if (t === n[r]) return O;
 		} else if (e.type === $.BOOLEAN_ATTRIBUTE) {
-			if (!!t === n.hasAttribute(r)) return D;
-		} else if (e.type === $.ATTRIBUTE && n.getAttribute(r) === t + "") return D;
-		return pr(e), t;
+			if (!!t === n.hasAttribute(r)) return O;
+		} else if (e.type === $.ATTRIBUTE && n.getAttribute(r) === t + "") return O;
+		return _r(e), t;
 	}
-});
-F("pulse-settings", class extends M {
+}), yr = [
+	"failed",
+	"check",
+	"battery",
+	"recovered"
+], br = {
+	failed: "tpl_failed",
+	check: "tpl_check",
+	battery: "tpl_battery",
+	recovered: "tpl_recovered"
+};
+I("pulse-template-sheet", class extends N {
+	static {
+		this.properties = {
+			open: { type: Boolean },
+			kind: { type: String },
+			language: { type: String },
+			current: { attribute: !1 },
+			defaults: { attribute: !1 },
+			vars: { attribute: !1 },
+			example: { attribute: !1 },
+			draftTitle: { state: !0 },
+			draftMessage: { state: !0 }
+		};
+	}
+	constructor() {
+		super(), this.focused = "message", this.open = !1, this.kind = "failed", this.language = "en", this.current = {}, this.defaults = {}, this.vars = [], this.example = {}, this.draftTitle = "", this.draftMessage = "";
+	}
+	willUpdate(e) {
+		(e.has("open") || e.has("kind")) && this.open && (this.draftTitle = this.value("title"), this.draftMessage = this.value("message"));
+	}
+	value(e) {
+		let t = `${this.kind}_${e}`;
+		return this.current[t] ?? this.defaults[t] ?? "";
+	}
+	insert(e) {
+		let t = `{${e}}`, n = this.focused, r = this.renderRoot.querySelector(n === "title" ? "input" : "textarea"), i = n === "title" ? this.draftTitle : this.draftMessage, a = r?.selectionStart ?? i.length, o = r?.selectionEnd ?? i.length, s = i.slice(0, a) + t + i.slice(o);
+		n === "title" ? this.draftTitle = s : this.draftMessage = s, this.updateComplete.then(() => {
+			r?.focus(), r?.setSelectionRange(a + t.length, a + t.length);
+		});
+	}
+	save(e) {
+		let t = (t, n) => {
+			let r = n.trim();
+			return e || !r || r === this.defaults[`${this.kind}_${t}`] ? null : r;
+		};
+		this.dispatchEvent(new CustomEvent("template-save", {
+			detail: { templates: {
+				[`${this.kind}_title`]: t("title", this.draftTitle),
+				[`${this.kind}_message`]: t("message", this.draftMessage)
+			} },
+			bubbles: !0,
+			composed: !0
+		})), this.close();
+	}
+	close() {
+		this.dispatchEvent(new CustomEvent("closed", {
+			bubbles: !0,
+			composed: !0
+		}));
+	}
+	render() {
+		let e = this.language, t = (e) => Nn(e, this.example, this.vars), n = this.current[`${this.kind}_title`] != null || this.current[`${this.kind}_message`] != null;
+		return E`<pulse-sheet
+      no-close
+      .open=${this.open}
+      .heading=${L(e, br[this.kind])}
+      .language=${e}
+      @closed=${() => this.close()}
+    >
+      <div class="body">
+        <label class="field">
+          <span class="cap">${L(e, "tpl_title_field")}</span>
+          <input
+            type="text"
+            maxlength="300"
+            .value=${vr(this.draftTitle)}
+            @focus=${() => {
+			this.focused = "title";
+		}}
+            @input=${(e) => {
+			e.target instanceof HTMLInputElement && (this.draftTitle = e.target.value);
+		}}
+          />
+        </label>
+        <label class="field">
+          <span class="cap">${L(e, "tpl_message_field")}</span>
+          <textarea
+            rows="3"
+            maxlength="300"
+            .value=${vr(this.draftMessage)}
+            @focus=${() => {
+			this.focused = "message";
+		}}
+            @input=${(e) => {
+			e.target instanceof HTMLTextAreaElement && (this.draftMessage = e.target.value);
+		}}
+          ></textarea>
+        </label>
+        <div>
+          <span class="cap">${L(e, "tpl_vars")}</span>
+          <div class="chips">
+            ${this.vars.map((e) => E`<button class="chip" type="button" @mousedown=${(e) => e.preventDefault()} @click=${() => this.insert(e)}>{${e}}</button>`)}
+          </div>
+          <p class="hint">${L(e, "tpl_vars_hint")}</p>
+        </div>
+        ${Object.keys(this.example).length ? E`<div class="preview" aria-live="polite">
+                <span class="cap">${L(e, "tpl_preview")}</span>
+                <div class="bubble">
+                  <b>${t(this.draftTitle) || this.example.name}</b>
+                  <span>${t(this.draftMessage)}</span>
+                </div>
+              </div>` : k}
+      </div>
+      ${n ? E`<button slot="footer" class="pbtn" type="button" @click=${() => this.save(!0)}>${L(e, "tpl_reset")}</button>` : k}
+      <button slot="footer" class="pbtn" type="button" @click=${() => this.close()}>${L(e, "cancel")}</button>
+      <button slot="footer" class="pbtn primary" type="button" @click=${() => this.save(!1)}>${L(e, "tpl_save")}</button>
+    </pulse-sheet>`;
+	}
+	static {
+		this.styles = [
+			J,
+			Y,
+			X,
+			o`
+      .body {
+        display: grid;
+        gap: 18px;
+      }
+      .cap {
+        display: block;
+        margin-bottom: 6px;
+        font-size: var(--pu-fs-13);
+        color: var(--pu-muted);
+      }
+      input,
+      textarea {
+        width: 100%;
+        box-sizing: border-box;
+        min-height: var(--pu-hit);
+        padding: 10px 12px;
+        border: 1px solid transparent;
+        border-radius: 10px;
+        background: var(--pu-fill);
+        color: var(--primary-text-color);
+        font: inherit;
+        font-size: var(--pu-fs-15);
+        resize: vertical;
+      }
+      input:focus,
+      textarea:focus {
+        outline: none;
+        border-color: var(--pu-accent);
+      }
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .chip {
+        min-height: 32px;
+        padding: 0 10px;
+        border: 0;
+        border-radius: 999px;
+        background: var(--pu-fill);
+        color: var(--primary-text-color);
+        font: inherit;
+        font-size: var(--pu-fs-13);
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        cursor: pointer;
+      }
+      .hint {
+        margin: 8px 0 0;
+        font-size: var(--pu-fs-13);
+        line-height: 1.4;
+        color: var(--pu-muted);
+      }
+      .bubble {
+        display: grid;
+        gap: 2px;
+        padding: 12px 14px;
+        border-radius: 14px;
+        background: var(--pu-fill);
+        font-size: var(--pu-fs-15);
+        line-height: 1.35;
+        white-space: pre-line;
+      }
+    `
+		];
+	}
+}), I("pulse-settings", class extends N {
 	static {
 		this.properties = {
 			snapshot: { attribute: !1 },
@@ -5312,11 +6580,12 @@ F("pulse-settings", class extends M {
 			now: { type: Number },
 			recipients: { type: String },
 			names: { attribute: !1 },
-			timeZone: { attribute: !1 }
+			timeZone: { attribute: !1 },
+			editing: { state: !0 }
 		};
 	}
 	constructor() {
-		super(), this.language = "en", this.now = 0, this.recipients = "", this.names = {}, this.timeZone = void 0;
+		super(), this.language = "en", this.now = 0, this.recipients = "", this.names = {}, this.timeZone = void 0, this.editing = null;
 	}
 	save(e) {
 		this.dispatchEvent(new CustomEvent("settings-change", {
@@ -5333,22 +6602,22 @@ F("pulse-settings", class extends M {
 		}));
 	}
 	linkRow(e, t, n) {
-		return T`<button class="row link" type="button" @click=${n}>
+		return E`<button class="row link" type="button" @click=${n}>
       <span class="label">${e}</span>
       <span class="value">${t}</span>
       <ha-icon class="chev" icon="mdi:chevron-right"></ha-icon>
     </button>`;
 	}
 	z2mOptionRow(e, t, n, r, i) {
-		let a = this.language, o = T`<span class="label">${I(a, e)}<small>${I(a, t)}</small></span>`;
-		return n ? T`<div class="row">${o}<span class="value t-ok on"><ha-icon icon="mdi:check-circle"></ha-icon>${I(a, "zigbee_active")}</span></div>` : typeof r == "number" && this.now - r < 120 ? T`<div class="row">${o}<span class="value">${I(a, "zigbee_requested")}</span></div>` : this.toggleRow(o, !1, () => this.fire(i));
+		let a = this.language, o = E`<span class="label">${L(a, e)}<small>${L(a, t)}</small></span>`;
+		return n ? E`<div class="row">${o}<span class="value t-ok on"><ha-icon icon="mdi:check-circle"></ha-icon>${L(a, "zigbee_active")}</span></div>` : typeof r == "number" && this.now - r < 120 ? E`<div class="row">${o}<span class="value">${L(a, "zigbee_requested")}</span></div>` : this.toggleRow(o, !1, () => this.fire(i));
 	}
 	onZ2mBase(e) {
 		let t = e.target;
 		if (!(t instanceof HTMLInputElement)) return;
 		let n = this.snapshot.settings.z2m_base, r = gt(t.value);
 		if (r === null) {
-			N(this, I(this.language, "z2m_base_invalid")), t.value = n;
+			P(this, L(this.language, "z2m_base_invalid")), t.value = n;
 			return;
 		}
 		t.value = r, r !== n && this.save({ z2m_base: r });
@@ -5367,17 +6636,17 @@ F("pulse-settings", class extends M {
 		}));
 	}
 	togglePerson(e, t) {
-		let n = yn(this.snapshot.settings), r = t ? [.../* @__PURE__ */ new Set([...n, e])] : n.filter((t) => t !== e);
+		let n = bn(this.snapshot.settings), r = t ? [.../* @__PURE__ */ new Set([...n, e])] : n.filter((t) => t !== e);
 		this.save({ arrive_home: { persons: r } });
 	}
 	pickerRow(e, t, n, r, i) {
 		let a = this.language;
-		return T`<div class=${i ? "row has-icon" : "row"}>
-      ${i ? T`<ha-icon class=${`ico ${i.tone}`} icon=${i.icon}></ha-icon>` : O}
-      <span class="label">${I(a, e)}</span>
+		return E`<div class=${i ? "row has-icon" : "row"}>
+      ${i ? E`<ha-icon class=${`ico ${i.tone}`} icon=${i.icon}></ha-icon>` : k}
+      <span class="label">${L(a, e)}</span>
       <pulse-picker
         .language=${a}
-        .label=${I(a, e)}
+        .label=${L(a, e)}
         .value=${t}
         .options=${n}
         @change=${(e) => r(e.detail.value)}
@@ -5385,7 +6654,7 @@ F("pulse-settings", class extends M {
     </div>`;
 	}
 	toggleRow(e, t, n, r = !1) {
-		return T`<div
+		return E`<div
       class=${r ? "row has-icon tappable" : "row tappable"}
       role="switch"
       tabindex="0"
@@ -5401,27 +6670,27 @@ F("pulse-settings", class extends M {
 	}
 	switchRow(e, t, n, r) {
 		let i = this.language;
-		return this.toggleRow(T`<span class="label">${I(i, e)}${r ? T`<small>${I(i, r)}</small>` : O}</span>`, t, n);
+		return this.toggleRow(E`<span class="label">${L(i, e)}${r ? E`<small>${L(i, r)}</small>` : k}</span>`, t, n);
 	}
 	render() {
 		let e = this.language, t = this.snapshot, n = t.settings, r = n.targets ?? t.targets, i = [
 			{
 				value: "now",
-				label: I(e, "level_now")
+				label: L(e, "level_now")
 			},
 			{
 				value: "daily",
-				label: I(e, "level_daily")
+				label: L(e, "level_daily")
 			},
 			{
 				value: "off",
-				label: I(e, "level_off")
+				label: L(e, "level_off")
 			}
 		], a = (e, t, r, a) => this.pickerRow(t, n.levels[e], i, (t) => this.save({ levels: { [e]: t } }), {
 			icon: r,
 			tone: a
-		}), o = yn(n), s = bn(e, n), c = Et(t.devices), l = t.z2m;
-		return T`
+		}), o = bn(n), s = xn(e, n), c = Et(t.devices), l = t.z2m, u = n.templates ?? {}, d = U(t.devices), f = d.filter((e) => e.mains).length, p = d.find((e) => e.area && !e.mains) ?? d[0];
+		return E`
       <section class="hero">
         <div class="words">
           <h2 class="hl">${s.line1}<br /><span class="grad">${s.line2}</span></h2>
@@ -5439,63 +6708,63 @@ F("pulse-settings", class extends M {
       <div class="cols">
 
       <section class="section">
-        <h3 class="section-title">${I(e, "recipients")}</h3>
+        <h3 class="section-title">${L(e, "recipients")}</h3>
         <div class="list">
-          ${t.targets.length ? t.targets.map((e) => this.toggleRow(T`<ha-icon class="ico" icon="mdi:cellphone"></ha-icon>
-                      <span class=${this.names[e] ? "label" : "label capname"}>${this.targetLabel(e)}</span>`, r.includes(e), (t) => this.toggleTarget(e, t), !0)) : T`<div class="row"><span class="label muted">${I(e, "recipients_none")}</span></div>`}
+          ${t.targets.length ? t.targets.map((e) => this.toggleRow(E`<ha-icon class="ico" icon="mdi:cellphone"></ha-icon>
+                      <span class=${this.names[e] ? "label" : "label capname"}>${this.targetLabel(e)}</span>`, r.includes(e), (t) => this.toggleTarget(e, t), !0)) : E`<div class="row"><span class="label muted">${L(e, "recipients_none")}</span></div>`}
         </div>
-        ${t.targets.length ? T`<p class="section-foot">${I(e, "recipients_hint")}</p>` : O}
+        ${t.targets.length ? E`<p class="section-foot">${L(e, "recipients_hint")}</p>` : k}
       </section>
 
       <section class="section">
-        <h3 class="section-title">${I(e, "when")}</h3>
+        <h3 class="section-title">${L(e, "when")}</h3>
         <div class="list">
           ${a("failed", "level_failed", "mdi:heart-broken-outline", "t-crit")}
           ${a("check", "level_check", "mdi:alert-circle-outline", "t-warn")}
           ${a("battery", "level_battery", "mdi:battery-low", "")}
         </div>
-        <p class="section-foot">${I(e, "levels_hint")}</p>
+        <p class="section-foot">${L(e, "levels_hint")}</p>
       </section>
 
       <section class="section">
-        <h3 class="section-title">${I(e, "times")}</h3>
+        <h3 class="section-title">${L(e, "times")}</h3>
         <div class="list">
           ${this.pickerRow("summary_time", n.summary_time, this.times(n.summary_time), (e) => this.save({ summary_time: e }))}
           ${this.switchRow("quiet", n.quiet.enabled, (e) => this.save({ quiet: { enabled: e } }))}
-          ${n.quiet.enabled ? T`${this.pickerRow("quiet_from", n.quiet.start, this.times(n.quiet.start), (e) => this.save({ quiet: { start: e } }))}
-                ${this.pickerRow("quiet_to", n.quiet.end, this.times(n.quiet.end), (e) => this.save({ quiet: { end: e } }))}` : O}
+          ${n.quiet.enabled ? E`${this.pickerRow("quiet_from", n.quiet.start, this.times(n.quiet.start), (e) => this.save({ quiet: { start: e } }))}
+                ${this.pickerRow("quiet_to", n.quiet.end, this.times(n.quiet.end), (e) => this.save({ quiet: { end: e } }))}` : k}
         </div>
-        ${n.quiet.enabled ? T`<p class="section-foot">${I(e, "quiet_hint")}</p>` : O}
+        ${n.quiet.enabled ? E`<p class="section-foot">${L(e, "quiet_hint")}</p>` : k}
       </section>
 
       <section class="section">
-        <h3 class="section-title">${I(e, "special")}</h3>
+        <h3 class="section-title">${L(e, "special")}</h3>
         <div class="list">
           ${this.switchRow("critical", n.critical_alerts, (e) => this.save({ critical_alerts: e }), "critical_hint")}
-          ${this.linkRow(I(e, "important_devices"), String(c), () => this.fire("show-devices", { filter: "important" }))}
+          ${this.linkRow(L(e, "important_devices"), String(c), () => this.fire("show-devices", { filter: "important" }))}
           ${this.switchRow("arrive", n.arrive_home.enabled, (e) => this.save({ arrive_home: {
 			enabled: e,
 			persons: o.length || !e ? o : t.persons.slice(0, 1)
 		} }), "arrive_hint")}
-          ${n.arrive_home.enabled ? t.persons.length ? t.persons.map((e) => this.toggleRow(T`<ha-icon class="ico" icon="mdi:account-outline"></ha-icon>
-                        <span class="label">${this.names[e] ?? e}</span>`, o.includes(e), (t) => this.togglePerson(e, t), !0)) : T`<div class="row"><span class="label muted">${I(e, "persons_none")}</span></div>` : O}
+          ${n.arrive_home.enabled ? t.persons.length ? t.persons.map((e) => this.toggleRow(E`<ha-icon class="ico" icon="mdi:account-outline"></ha-icon>
+                        <span class="label">${this.names[e] ?? e}</span>`, o.includes(e), (t) => this.togglePerson(e, t), !0)) : E`<div class="row"><span class="label muted">${L(e, "persons_none")}</span></div>` : k}
           ${this.switchRow("recovered", n.recovered, (e) => this.save({ recovered: e }), "recovered_hint")}
         </div>
       </section>
 
       <section class="section">
-        <h3 class="section-title">${I(e, "zigbee")}</h3>
-        ${l.present ? T`<div class="list z2m">
+        <h3 class="section-title">${L(e, "zigbee")}</h3>
+        ${l.present ? E`<div class="list z2m">
                 ${this.z2mOptionRow("welcome_zigbee_title", "zigbee_hint", l.last_seen && l.availability, l.requested_at, "enable-z2m")}
                 ${this.z2mOptionRow("health_title", "health_hint", l.health === !0, l.health_requested_at, "enable-z2m-health")}
-              </div>` : O}
+              </div>` : k}
         <details class="list adv">
           <summary class="row">
-            <span class="label">${I(e, "advanced")}</span>
+            <span class="label">${L(e, "advanced")}</span>
             <ha-icon class="chev" icon="mdi:chevron-down"></ha-icon>
           </summary>
           <label class="row">
-            <span class="label">${I(e, "z2m_base")}</span>
+            <span class="label">${L(e, "z2m_base")}</span>
             <input
               class="text"
               type="text"
@@ -5503,25 +6772,56 @@ F("pulse-settings", class extends M {
               autocomplete="off"
               autocapitalize="off"
               placeholder="zigbee2mqtt"
-              .value=${mr(n.z2m_base)}
+              .value=${vr(n.z2m_base)}
               @change=${(e) => this.onZ2mBase(e)}
               @keydown=${(e) => {
 			e.key === "Enter" && e.currentTarget instanceof HTMLInputElement && e.currentTarget.blur();
 		}}
             />
           </label>
-          <p class="row adv-hint">${I(e, "z2m_base_hint")}</p>
+          <p class="row adv-hint">${L(e, "z2m_base_hint")}</p>
         </details>
       </section>
 
       <section class="section">
-        <h3 class="section-title">${I(e, "try_it")}</h3>
+        <h3 class="section-title">${L(e, "texts")}</h3>
         <div class="list">
-          <button class="row action" type="button" @click=${() => this.fire("test")}>${I(e, "test")}</button>
-          <button class="row action" type="button" @click=${() => this.fire("summary")}>${I(e, "summary_now")}</button>
+          ${yr.map((t) => this.linkRow(L(e, br[t]), L(e, u[`${t}_title`] != null || u[`${t}_message`] != null ? "tpl_custom" : "tpl_default"), () => {
+			this.editing = t;
+		}))}
+        </div>
+        <p class="section-foot">${L(e, "texts_hint")}</p>
+      </section>
+
+      <section class="section">
+        <h3 class="section-title">${L(e, "beta")}</h3>
+        <div class="list">
+          ${this.switchRow("mains_beta", n.mains_beta ?? !1, (e) => this.save({ mains_beta: e }), "mains_beta_hint")}
+          ${n.mains_beta ? this.linkRow(L(e, "mains_devices"), String(f), () => this.fire("show-devices", { filter: "mains" })) : k}
+        </div>
+      </section>
+
+      <section class="section">
+        <h3 class="section-title">${L(e, "try_it")}</h3>
+        <div class="list">
+          <button class="row action" type="button" @click=${() => this.fire("test")}>${L(e, "test")}</button>
+          <button class="row action" type="button" @click=${() => this.fire("summary")}>${L(e, "summary_now")}</button>
         </div>
       </section>
       </div>
+      <pulse-template-sheet
+        .open=${this.editing !== null}
+        .kind=${this.editing ?? "failed"}
+        .language=${e}
+        .current=${u}
+        .defaults=${t.template_defaults ?? {}}
+        .vars=${t.template_vars ?? []}
+        .example=${Pn(p)}
+        @template-save=${(e) => this.save({ templates: e.detail.templates })}
+        @closed=${() => {
+			this.editing = null;
+		}}
+      ></pulse-template-sheet>
     `;
 	}
 	static {
@@ -5655,23 +6955,23 @@ F("pulse-settings", class extends M {
 });
 //#endregion
 //#region src/pulse-panel.ts
-function hr() {
+function xr() {
 	try {
 		return window.localStorage;
 	} catch {
 		return null;
 	}
 }
-function gr() {
-	let e = hr();
+function Sr() {
+	let e = xr();
 	if (!e) return null;
 	try {
-		return Rn(e, "26.10.7", Nn.length > 0);
+		return Hn(e, "26.10.8", Ln.length > 0);
 	} catch {
 		return null;
 	}
 }
-function _r(e) {
+function Cr(e) {
 	return [
 		e.language,
 		e.themes?.darkMode,
@@ -5682,7 +6982,7 @@ function _r(e) {
 		e.user?.is_admin
 	].join("|");
 }
-var vr = class extends M {
+var wr = class extends N {
 	static {
 		this.properties = {
 			hass: { attribute: !1 },
@@ -5700,16 +7000,16 @@ var vr = class extends M {
 		};
 	}
 	constructor() {
-		super(), this.unsub = null, this.retryDelay = On, this.namesCache = {
+		super(), this.unsub = null, this.retryDelay = kn, this.namesCache = {
 			key: "{}",
 			value: {}
-		}, this.spans = L((e) => sn(e)), this.watched = L((e) => H(e)), this.dayStarts = L((e) => at(e)), this.onMenuHidden = (e) => {
+		}, this.spans = R((e) => cn(e)), this.watched = R((e) => U(e)), this.dayStarts = R((e) => at(e)), this.onMenuHidden = (e) => {
 			let t = e.composedPath()[0];
-			t instanceof HTMLElement && t.localName.endsWith("dropdown") && We();
+			t instanceof HTMLElement && t.localName.endsWith("dropdown") && Ue();
 		}, this.deepLink = "", this.subscribedLanguage = "", this.fetchHeartbeat = async (e) => this.hass ? await this.hass.callWS({
 			type: "pulse/heartbeat",
 			device_ids: e
-		}) : null, this.dueIds = L((e) => (e.summary.due_batteries ?? []).map((e) => e.id)), this.narrow = !1, this.snapshot = null, this.now = Date.now() / 1e3, this.openId = null, this.welcome = gr(), this.error = null, this.groupBy = "area", this.filter = null, this.confirmZigbee = !1, this.confirmHealth = !1;
+		}) : null, this.dueIds = R((e) => (e.summary.due_batteries ?? []).map((e) => e.id)), this.narrow = !1, this.snapshot = null, this.now = Date.now() / 1e3, this.openId = null, this.welcome = Sr(), this.error = null, this.groupBy = "area", this.filter = null, this.confirmZigbee = !1, this.confirmHealth = !1;
 	}
 	get language() {
 		return this.hass?.language ?? "en";
@@ -5728,7 +7028,7 @@ var vr = class extends M {
 		return e.startsWith("/settings") ? this.readonly ? "overview" : "settings" : e.startsWith("/devices") ? "devices" : "overview";
 	}
 	connectedCallback() {
-		super.connectedCallback(), He(), this.addEventListener("wa-after-hide", this.onMenuHidden), this.openDeepLink(), this.now = Date.now() / 1e3, this.clock = window.setInterval(() => {
+		super.connectedCallback(), Ve(), this.addEventListener("wa-after-hide", this.onMenuHidden), this.openDeepLink(), this.now = Date.now() / 1e3, this.clock = window.setInterval(() => {
 			this.now = Date.now() / 1e3;
 		}, 3e4), this.ensureSubscribed();
 	}
@@ -5744,14 +7044,14 @@ var vr = class extends M {
 		e && e !== this.deepLink && (this.openId = e), this.deepLink = e;
 	}
 	willUpdate(e) {
-		e.has("route") && this.openDeepLink(), this.hass?.user && this.readonly && (this.route?.path ?? "").startsWith("/settings") && P("/pulse", !0);
+		e.has("route") && this.openDeepLink(), this.hass?.user && this.readonly && (this.route?.path ?? "").startsWith("/settings") && F("/pulse", !0);
 	}
 	shouldUpdate(e) {
 		if (this.ensureSubscribed(), e.size !== 1 || !e.has("hass")) return !0;
 		let t = e.get("hass");
 		if (!t || !this.hass) return !0;
 		let n = this.namesCache.value;
-		return _r(t) !== _r(this.hass) || this.names() !== n;
+		return Cr(t) !== Cr(this.hass) || this.names() !== n;
 	}
 	updated() {
 		this.toggleAttribute("dark", this.hass?.themes?.darkMode === !0);
@@ -5763,15 +7063,15 @@ var vr = class extends M {
 		if (!this.hass) return;
 		this.subscribedLanguage = this.hass.language;
 		let e = this.hass.connection.subscribeMessage((e) => {
-			this.snapshot = e, this.now = Date.now() / 1e3, this.error = null, this.retryDelay = On;
+			this.snapshot = e, this.now = Date.now() / 1e3, this.error = null, this.retryDelay = kn;
 		}, {
 			type: "pulse/subscribe",
 			language: this.hass.language
 		});
 		this.unsub = e, e.catch((t) => {
-			if (this.unsub !== e || (this.unsub = null, this.error = Le(t), !this.isConnected)) return;
+			if (this.unsub !== e || (this.unsub = null, this.error = Ie(t), !this.isConnected)) return;
 			let n = this.retryDelay;
-			this.retryDelay = An(n), this.retryTimer = window.setTimeout(() => {
+			this.retryDelay = jn(n), this.retryTimer = window.setTimeout(() => {
 				this.retryTimer = void 0, this.ensureSubscribed();
 			}, n);
 		});
@@ -5779,14 +7079,14 @@ var vr = class extends M {
 	async call(e, t) {
 		if (this.hass) try {
 			let n = await this.hass.callWS(e);
-			return t && N(this, t), n ?? null;
+			return t && P(this, t), n ?? null;
 		} catch (e) {
-			N(this, Le(e));
+			P(this, Ie(e));
 			return;
 		}
 	}
 	go(e) {
-		e !== "devices" && (this.filter = null), P(e === "overview" ? "/pulse" : `/pulse/${e}`);
+		e !== "devices" && (this.filter = null), F(e === "overview" ? "/pulse" : `/pulse/${e}`);
 	}
 	loaded() {
 		let e = this.snapshot;
@@ -5798,8 +7098,8 @@ var vr = class extends M {
 			type: "pulse/device",
 			device_id: e,
 			...t
-		}), t.ignored === !0 && n && (this.openId = null, N(this, I(this.language, "ignored_done", { name: n.name }), {
-			text: I(this.language, "undo"),
+		}), t.ignored === !0 && n && (this.openId = null, P(this, L(this.language, "ignored_done", { name: n.name }), {
+			text: L(this.language, "undo"),
 			action: () => void this.call({
 				type: "pulse/device",
 				device_id: e,
@@ -5812,8 +7112,8 @@ var vr = class extends M {
 		await this.call({
 			type: "pulse/replaced",
 			device_id: e
-		}) !== void 0 && (this.openId = null, N(this, I(t, "replaced_done"), {
-			text: I(t, "undo"),
+		}) !== void 0 && (this.openId = null, P(this, L(t, "replaced_done"), {
+			text: L(t, "undo"),
 			action: () => void this.onUndoReplaced(e)
 		}));
 	}
@@ -5824,13 +7124,13 @@ var vr = class extends M {
 		});
 		if (n === void 0) return;
 		let r = Reflect.get(Object(n), "undone") === !0;
-		N(this, I(t, r ? "replaced_undone" : "replaced_undo_failed"));
+		P(this, L(t, r ? "replaced_undone" : "replaced_undo_failed"));
 	}
 	async onConfirmZigbee() {
-		this.confirmZigbee = !1, await this.call({ type: "pulse/enable_z2m" }, I(this.language, "zigbee_sent"));
+		this.confirmZigbee = !1, await this.call({ type: "pulse/enable_z2m" }, L(this.language, "zigbee_sent"));
 	}
 	async onConfirmHealth() {
-		this.confirmHealth = !1, await this.call({ type: "pulse/enable_z2m_health" }, I(this.language, "zigbee_sent"));
+		this.confirmHealth = !1, await this.call({ type: "pulse/enable_z2m_health" }, L(this.language, "zigbee_sent"));
 	}
 	onPartnerDismiss(e, t) {
 		this.readonly || this.call({
@@ -5843,21 +7143,21 @@ var vr = class extends M {
 		let e = await this.call({ type: "pulse/test" });
 		if (e === void 0) return;
 		let t = Reflect.get(Object(e), "targets"), n = Array.isArray(t) ? t.length : 0;
-		N(this, n ? I(this.language, "test_done", { count: n }) : I(this.language, "test_none"));
+		P(this, n ? L(this.language, "test_done", { count: n }) : L(this.language, "test_none"));
 	}
 	async onSummary() {
 		let e = await this.call({ type: "pulse/summary" });
-		e !== void 0 && N(this, I(this.language, Reflect.get(Object(e), "sent") ? "summary_sent" : "summary_empty"));
+		e !== void 0 && P(this, L(this.language, Reflect.get(Object(e), "sent") ? "summary_sent" : "summary_empty"));
 	}
 	onMenu(e) {
-		let t = ze(e);
-		t === "summary" && !this.readonly ? this.onSummary() : t === "welcome" ? this.welcome = "welcome" : t === "integration" && P("/config/integrations/integration/pulse");
+		let t = Re(e);
+		t === "summary" && !this.readonly ? this.onSummary() : t === "welcome" ? this.welcome = "welcome" : t === "integration" && F("/config/integrations/integration/pulse");
 	}
 	welcomeDone() {
 		this.welcome = null;
-		let e = hr();
+		let e = xr();
 		try {
-			e && zn(e, "26.10.7");
+			e && Un(e, "26.10.8");
 		} catch {}
 	}
 	zigbeeOffer(e) {
@@ -5883,34 +7183,34 @@ var vr = class extends M {
 		let n = this.language;
 		if (this.readonly) return "";
 		let r = (e.settings.targets ?? e.targets).filter((t) => e.targets.includes(t));
-		if (!r.length) return I(n, "day_nobody");
+		if (!r.length) return L(n, "day_nobody");
 		let i = r.slice(0, 2).map((e) => t[e] ?? e.replace(/^mobile_app_/, "").replaceAll("_", " ")).join(", ");
-		return I(n, "day_to", { names: r.length > 2 ? `${i} +${r.length - 2}` : i });
+		return L(n, "day_to", { names: r.length > 2 ? `${i} +${r.length - 2}` : i });
 	}
 	renderHead() {
 		let e = this.language, t = [
 			{
 				value: "overview",
-				label: I(e, "tab_overview")
+				label: L(e, "tab_overview")
 			},
 			{
 				value: "devices",
-				label: I(e, "tab_devices")
+				label: L(e, "tab_devices")
 			},
 			...this.readonly ? [] : [{
 				value: "settings",
-				label: I(e, "tab_notify")
+				label: L(e, "tab_notify")
 			}]
 		];
-		return T`<header class="head">
-      <div class="brand" title=${I(e, "subtitle")}>
+		return E`<header class="head">
+      <div class="brand" title=${L(e, "subtitle")}>
         <pulse-mark flat></pulse-mark>
-        <span>${I(e, "title")}</span>
+        <span>${L(e, "title")}</span>
       </div>
       <pulse-segmented
         .options=${t}
         .value=${this.view}
-        .label=${I(e, "title")}
+        .label=${L(e, "title")}
         @change=${(e) => {
 			let t = e.detail.value;
 			(t === "overview" || t === "devices" || t === "settings") && this.go(t);
@@ -5920,7 +7220,7 @@ var vr = class extends M {
 	}
 	renderView(e) {
 		let t = this.language, n = this.now, r = this.timeZone, i = this.names();
-		return this.view === "settings" ? T`<pulse-settings
+		return this.view === "settings" ? E`<pulse-settings
         .snapshot=${e}
         .language=${t}
         .timeZone=${r}
@@ -5936,7 +7236,7 @@ var vr = class extends M {
         @show-devices=${(e) => {
 			this.filter = e.detail.filter, this.go("devices");
 		}}
-      ></pulse-settings>` : this.view === "devices" ? T`<pulse-devices
+      ></pulse-settings>` : this.view === "devices" ? E`<pulse-devices
         .devices=${e.devices}
         .language=${t}
         .timeZone=${r}
@@ -5957,7 +7257,7 @@ var vr = class extends M {
         @filter-clear=${() => {
 			this.filter = null;
 		}}
-      ></pulse-devices>` : T`<pulse-overview
+      ></pulse-devices>` : E`<pulse-overview
       .snapshot=${e}
       .language=${t}
       .timeZone=${r}
@@ -5974,22 +7274,22 @@ var vr = class extends M {
     ></pulse-overview>`;
 	}
 	renderContent() {
-		let e = this.language, t = this.snapshot, n = this.error ? T`<ha-alert alert-type="warning" title=${this.error}>${I(e, "connection_lost")}</ha-alert>` : O;
-		return t ? t.loaded === !1 ? T`${n}<ha-alert alert-type="info">${I(e, "not_loaded")}</ha-alert>` : T`${n}${this.renderView(t)}` : this.error ? n : T`<p class="muted center">${I(e, "loading")}</p>`;
+		let e = this.language, t = this.snapshot, n = this.error ? E`<ha-alert alert-type="warning" title=${this.error}>${L(e, "connection_lost")}</ha-alert>` : k;
+		return t ? t.loaded === !1 ? E`${n}<ha-alert alert-type="info">${L(e, "not_loaded")}</ha-alert>` : E`${n}${this.renderView(t)}` : this.error ? n : E`<p class="muted center">${L(e, "loading")}</p>`;
 	}
 	render() {
 		let e = this.loaded(), t = this.language, n = e?.devices.find((e) => e.id === this.openId) ?? null;
-		return T`
+		return E`
       <div class="toolbar">
-        ${Ie(this.hass, this.narrow) ? T`<ha-menu-button .hass=${this.hass} .narrow=${this.narrow}></ha-menu-button>` : O}
-        <div class="toolbar-title">${I(t, "title")}</div>
+        ${Fe(this.hass, this.narrow) ? E`<ha-menu-button .hass=${this.hass} .narrow=${this.narrow}></ha-menu-button>` : k}
+        <div class="toolbar-title">${L(t, "title")}</div>
         <ha-dropdown placement="bottom-end" @wa-select=${(e) => this.onMenu(e)}>
-          <ha-icon-button slot="trigger" .label=${I(t, "more")}>
+          <ha-icon-button slot="trigger" .label=${L(t, "more")}>
             <ha-icon icon="mdi:dots-vertical"></ha-icon>
           </ha-icon-button>
-          ${this.readonly || this.view === "settings" ? O : T`<ha-dropdown-item value="summary"><ha-icon slot="icon" icon="mdi:text-box-outline"></ha-icon>${I(t, "summary_now")}</ha-dropdown-item>`}
-          <ha-dropdown-item value="welcome"><ha-icon slot="icon" icon="mdi:hand-wave-outline"></ha-icon>${I(t, "show_welcome")}</ha-dropdown-item>
-          ${this.readonly ? O : T`<ha-dropdown-item value="integration"><ha-icon slot="icon" icon="mdi:cog-outline"></ha-icon>${I(t, "open_integration")}</ha-dropdown-item>`}
+          ${this.readonly || this.view === "settings" ? k : E`<ha-dropdown-item value="summary"><ha-icon slot="icon" icon="mdi:text-box-outline"></ha-icon>${L(t, "summary_now")}</ha-dropdown-item>`}
+          <ha-dropdown-item value="welcome"><ha-icon slot="icon" icon="mdi:hand-wave-outline"></ha-icon>${L(t, "show_welcome")}</ha-dropdown-item>
+          ${this.readonly ? k : E`<ha-dropdown-item value="integration"><ha-icon slot="icon" icon="mdi:cog-outline"></ha-icon>${L(t, "open_integration")}</ha-dropdown-item>`}
         </ha-dropdown>
       </div>
       <main
@@ -6001,12 +7301,12 @@ var vr = class extends M {
 			type: "pulse/snooze",
 			device_id: e.detail.id,
 			hours: 24
-		}, I(t, "later_done"))}
+		}, L(t, "later_done"))}
         @snooze-cancel=${(e) => void this.call({
 			type: "pulse/snooze",
 			device_id: e.detail.id,
 			hours: 0
-		}, I(t, "snooze_cancelled"))}
+		}, L(t, "snooze_cancelled"))}
         @device-change=${(e) => this.onDeviceChange(e.detail.id, e.detail.changes)}
         @enable-z2m=${() => {
 			this.readonly || (this.confirmZigbee = !0);
@@ -6017,8 +7317,8 @@ var vr = class extends M {
         @partner-dismiss=${(e) => this.onPartnerDismiss(e.detail.id, e.detail.partner)}
       >
         ${this.renderHead()} ${this.renderContent()}
-        <p class="version muted">${I(t, "version", { version: "26.10.7" })}</p>
-        ${e ? T`<pulse-device-sheet
+        <p class="version muted">${L(t, "version", { version: "26.10.8" })}</p>
+        ${e ? E`<pulse-device-sheet
                   .open=${n !== null}
                   .device=${n}
                   .devices=${this.watched(e.devices)}
@@ -6036,13 +7336,13 @@ var vr = class extends M {
                   .noData=${this.spans(e.no_data)}
                   .readonly=${this.readonly}
                   @sheet-closed=${() => {
-			this.openId = null, location.search.includes("device=") && P(location.pathname, !0);
+			this.openId = null, location.search.includes("device=") && F(location.pathname, !0);
 		}}
                 ></pulse-device-sheet>
                 <pulse-welcome
                   .mode=${this.welcome}
                   .language=${t}
-                  .version=${"26.10.7"}
+                  .version=${"26.10.8"}
                   .zigbee=${this.zigbeeOffer(e)}
                   @closed=${() => this.welcomeDone()}
                   @enable-z2m=${() => {
@@ -6052,39 +7352,39 @@ var vr = class extends M {
                 <pulse-sheet
                   no-close
                   .open=${this.confirmZigbee}
-                  .heading=${I(t, "zigbee_confirm_title")}
+                  .heading=${L(t, "zigbee_confirm_title")}
                   .language=${t}
                   @closed=${() => {
 			this.confirmZigbee = !1;
 		}}
                 >
-                  <p class="confirm-text">${I(t, "zigbee_confirm_text")}</p>
-                  <p class="confirm-text">${I(t, "zigbee_confirm_side")}</p>
+                  <p class="confirm-text">${L(t, "zigbee_confirm_text")}</p>
+                  <p class="confirm-text">${L(t, "zigbee_confirm_side")}</p>
                   <button slot="footer" class="pbtn" type="button" @click=${() => {
 			this.confirmZigbee = !1;
-		}}>${I(t, "cancel")}</button>
+		}}>${L(t, "cancel")}</button>
                   <button slot="footer" class="pbtn primary" type="button" @click=${() => void this.onConfirmZigbee()}>
-                    ${I(t, "zigbee_confirm_go")}
+                    ${L(t, "zigbee_confirm_go")}
                   </button>
                 </pulse-sheet>
                 <pulse-sheet
                   no-close
                   .open=${this.confirmHealth}
-                  .heading=${I(t, "health_confirm_title")}
+                  .heading=${L(t, "health_confirm_title")}
                   .language=${t}
                   @closed=${() => {
 			this.confirmHealth = !1;
 		}}
                 >
-                  <p class="confirm-text">${I(t, "health_confirm_text")}</p>
-                  <p class="confirm-text">${I(t, "health_confirm_side")}</p>
+                  <p class="confirm-text">${L(t, "health_confirm_text")}</p>
+                  <p class="confirm-text">${L(t, "health_confirm_side")}</p>
                   <button slot="footer" class="pbtn" type="button" @click=${() => {
 			this.confirmHealth = !1;
-		}}>${I(t, "cancel")}</button>
+		}}>${L(t, "cancel")}</button>
                   <button slot="footer" class="pbtn primary" type="button" @click=${() => void this.onConfirmHealth()}>
-                    ${I(t, "zigbee_confirm_go")}
+                    ${L(t, "zigbee_confirm_go")}
                   </button>
-                </pulse-sheet>` : O}
+                </pulse-sheet>` : k}
       </main>
     `;
 	}
@@ -6226,6 +7526,6 @@ var vr = class extends M {
 		];
 	}
 };
-F("pulse-panel", vr);
+I("pulse-panel", wr);
 //#endregion
-export { vr as PulsePanel };
+export { wr as PulsePanel };

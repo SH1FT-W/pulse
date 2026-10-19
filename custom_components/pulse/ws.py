@@ -13,10 +13,12 @@ from .battery import BATTERY_TYPES, CHEMISTRIES
 from .const import DOMAIN, NOTIFY_DAILY, NOTIFY_NOW, NOTIFY_OFF, SIGNAL_UPDATE, SNOOZE_MAX_HOURS
 from .monitor import PulseMonitor
 from .store import merge_settings
+from .texts import TEMPLATE_KEYS
 
 LEVEL = vol.In([NOTIFY_NOW, NOTIFY_DAILY, NOTIFY_OFF])
 TIME = vol.Match(r"^([01]\d|2[0-3]):[0-5]\d$")
 # MQTT-Thema ohne Platzhalter und ohne Schrägstrich am Rand
+TEMPLATE = vol.All(str, vol.Strip, vol.Length(max=300))
 TOPIC = vol.All(str, vol.Strip, vol.Match(r"^[^#+/\s]([^#+]*[^#+/\s])?$"))
 
 
@@ -177,6 +179,8 @@ SETTINGS_SCHEMA = vol.Schema(
         vol.Optional("arrive_home"): {vol.Optional("enabled"): bool, vol.Optional("persons"): [str]},
         vol.Optional("recovered"): bool,
         vol.Optional("z2m_base"): TOPIC,
+        vol.Optional("mains_beta"): bool,
+        vol.Optional("templates"): {vol.Optional(key): vol.Any(None, TEMPLATE) for key in TEMPLATE_KEYS},
     }
 )
 
@@ -188,8 +192,11 @@ def ws_settings(hass: HomeAssistant, connection: websocket_api.ActiveConnection,
     if (monitor := _need(hass, connection, msg)) is None:
         return
     base = monitor.store.settings.get("z2m_base")
+    mains = monitor.store.settings.get("mains_beta")
     monitor.store.settings = merge_settings(monitor.store.settings, msg["settings"])
     monitor.store.async_delay_save()
+    if monitor.store.settings.get("mains_beta") != mains:
+        monitor.async_rediscover()
     if monitor.store.settings.get("z2m_base") != base:
         # Im Hintergrund: ohne Broker wartet das Abonnieren bis zu 30 s
         hass.async_create_task(monitor.async_restart_z2m(), eager_start=True)

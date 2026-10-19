@@ -34,3 +34,4 @@ ignore:
       selector:
         boolean:
 send_test:
+send_summary:

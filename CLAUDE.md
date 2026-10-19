@@ -77,6 +77,15 @@ es hört nur zu (Zustände, „gemeldet ohne Änderung“, Zigbee2MQTT-Nachricht
 - Begründungen in Nutzersprache: `pulse/subscribe {language}` → `snapshot(language)`; das Panel abonniert bei
   Sprachwechsel neu. Zeitformat aus `hass.locale.time_format` (`timeFormatOf`, `formatWhen`).
 - Zigbee2MQTT nicht da beim Start (Broker langsam): `_tick` versucht es alle `Z2M_RETRY` (5 Min.) erneut.
+- Labels (`LABEL_IMPORTANT`/`LABEL_IGNORE` an Gerät oder Entität, auch eigenen) → `spec.label`, schlägt den Panel-Schalter
+  (Panel sperrt ihn), `pulse_ignore` schlägt `pulse_important`; Label-Wechsel → `_reobserve` wie Ignorieren per Schalter.
+- Beta Netzgeräte (`settings.mains_beta`, Standard aus): `discover(mains=True)` nimmt Geräte ohne Batterie aus
+  `MAINS_INTEGRATIONS` (MQTT nur mit IEEE = Z2M), `spec.mains`. Bewertung: nicht regelmäßig → `ok_mains`, Stille zählt
+  nicht, nur `unavailable`; regelmäßig (≤ `REGULAR_LONGEST`) → Stille zählt normal (hängende Steckdose). Push ohne
+  „Batterie gewechselt“. Ausschalten → `_remove_vanished` entfernt die Entitäten.
+- Eigene Texte (`settings.templates`, je `TEMPLATE_KEYS` None = Standard): `notifier.compose` → `texts.render`
+  (Platzhalter `TEMPLATE_VARS`, leere Werte verschwinden samt „ · “, `{area}` leer, wenn schon im Namen).
+  Standard = `template_defaults(Sprache der Mitteilungen)`, im Snapshot `template_defaults`/`template_vars`.
 - `notifier.py` = Mitteilungen (Stufen sofort/täglich/aus, Ruhezeit mit Nachliefern – je Gerät nur die neueste,
   Problem + „läuft wieder“ in derselben Nacht heben sich auf, außer es kam vorher schon eine an (`told`); wichtige Geräte
   „Prüfen“ sofort, kritisch nur bei Ausfall; Zusammenfassung wartet Ruhezeit/Heimkommen ab (mehrere Personen); Tag der Zusammenfassung in `store.summary_sent`, kritisch für wichtige
@@ -105,7 +114,7 @@ Eine Akzentfarbe: das Panel überschreibt `--primary-color` und HAs Schalter-Far
 ≥ 44 px über `--pu-hit`, Hover nur unter `@media (hover: hover)`. Zigbee-Lebenszeichen nur nach Rückfrage
 (Blatt im Panel), „Batterie gewechselt“ mit Rückgängig (`pulse/replaced_undo`, schließt das Blatt, sonst läge es
 über HAs Hinweis). Kopf ohne Hauptaktion; ⋮ in der App-Leiste. Willkommen/„Neu in Pulse“ in `pulse-welcome.ts` + `welcome.ts` (localStorage
-`pulse.seenVersion`; bei jedem Release WHATS_NEW ersetzen). Anzeige-Logik in `logic.ts` (getestet). Texte nur in `strings-de.ts`/`strings-en.ts`. Farben aus
+`pulse.seenVersion`; bei jedem Release WHATS_NEW ersetzen). Anzeige-Logik in `logic.ts` (getestet). Texte nur in `strings-<sprache>.ts` (en, de, fr, es, nl – neue Schlüssel immer in allen fünf; Server-Sätze: `texts.py` de/en + `texts_i18n.py` fr/es/nl, `translations/*.json`). Farben aus
 HA-Theme-Variablen (`styles.ts`, Akzent `--pulse-accent`). `www/pulse-panel.js` ist Build-Ausgabe.
 Panel 1.1: Schlagzeile stellt Probleme vorn („3 Geräte / brauchen dich.“ rot/orange, „7 von 10 im Takt.“ darunter,
 Verlauf nur wenn alle im Takt; `hero().tone/sub`). Zeiten über `formatWhen(…, now)`: heute nur Uhrzeit, < 6 Tage

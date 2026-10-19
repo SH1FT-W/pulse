@@ -96,6 +96,10 @@
     "send_test": {
       "name": "Testmitteilung senden",
       "description": "Schickt eine Testmitteilung an alle Pulse-Empfänger."
+    },
+    "send_summary": {
+      "name": "Zusammenfassung jetzt senden",
+      "description": "Schickt die Zusammenfassung sofort statt zur eingestellten Uhrzeit. Ist nichts zu melden, kommt keine."
     }
   }
 }

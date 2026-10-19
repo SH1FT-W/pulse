@@ -16,6 +16,9 @@ from .const import (
     EXCLUDED_SENSOR_CLASSES,
     HUB_PLATFORMS,
     INACTIVE_DOMAINS,
+    LABEL_IGNORE,
+    LABEL_IMPORTANT,
+    MAINS_INTEGRATIONS,
 )
 
 
@@ -49,6 +52,10 @@ class DeviceSpec:
     icon: str = "mdi:battery-heart-variant"
     # The integration itself knows whether the device is reachable: "matter" (subscription) or a connectivity sensor
     reachable_via: str | None = None
+    # Set by an HA label (LABEL_IMPORTANT/LABEL_IGNORE): "important", "ignore" or None
+    label: str | None = None
+    # Beta: no battery, powered from the mains (only with the setting `mains_beta`)
+    mains: bool = False
 
     @property
     def connectivity(self) -> str | None:
@@ -83,12 +90,23 @@ ICONS: tuple[tuple[str, str | None, str], ...] = (
 )
 
 
-def icon_for(entries: list[er.RegistryEntry]) -> str:
-    for domain, device_class, icon in ICONS:
+# Mains-powered devices that measure nothing of the above
+MAINS_ICONS: tuple[tuple[str, str | None, str], ...] = (
+    ("light", None, "mdi:lightbulb-outline"),
+    ("cover", None, "mdi:blinds-horizontal"),
+    ("fan", None, "mdi:fan"),
+    ("switch", None, "mdi:power-socket-eu"),
+)
+DEFAULT_ICON = "mdi:battery-heart-variant"
+MAINS_ICON = "mdi:power-plug-outline"
+
+
+def icon_for(entries: list[er.RegistryEntry], mains: bool = False) -> str:
+    for domain, device_class, icon in ICONS + MAINS_ICONS if mains else ICONS:
         for e in entries:
             if e.domain == domain and (device_class is None or _device_class(e) == device_class):
                 return icon
-    return "mdi:battery-heart-variant"
+    return MAINS_ICON if mains else DEFAULT_ICON
 
 
 def ieee_of(device: dr.DeviceEntry) -> str | None:
@@ -98,7 +116,8 @@ def ieee_of(device: dr.DeviceEntry) -> str | None:
     return None
 
 
-def discover(hass: HomeAssistant) -> dict[str, DeviceSpec]:
+def discover(hass: HomeAssistant, mains: bool = False) -> dict[str, DeviceSpec]:
+    """Battery devices; with `mains` (beta) also mains-powered devices of MAINS_INTEGRATIONS."""
     devices = dr.async_get(hass)
     entities = er.async_get(hass)
     areas = ar.async_get(hass)
@@ -127,21 +146,25 @@ def discover(hass: HomeAssistant) -> dict[str, DeviceSpec]:
             continue
         if any(e.domain in EXCLUDED_DOMAINS for e in own):
             continue
-        if any(e.domain == "sensor" and _device_class(e) in EXCLUDED_SENSOR_CLASSES for e in own):
-            continue
         percent = next(
             (e.entity_id for e in own if e.domain == "sensor" and _device_class(e) == "battery"),
             None,
         )
         flag = next((e.entity_id for e in own if e.domain == "binary_sensor" and _device_class(e) == "battery"), None)
         battery = percent or flag
-        if battery is None:
-            continue
         # Main integration = the one with the most entities (templates of other integrations on the device don't count)
         counts: dict[str, int] = {}
         for e in own:
             counts[e.platform] = counts.get(e.platform, 0) + 1
         integration = max(counts, key=lambda p: counts[p])
+        if battery is None:
+            # Beta: mains-powered devices of local integrations (MQTT only Zigbee2MQTT)
+            if not mains or integration not in MAINS_INTEGRATIONS:
+                continue
+            if integration == "mqtt" and ieee_of(device) is None:
+                continue
+        elif any(e.domain == "sensor" and _device_class(e) in EXCLUDED_SENSOR_CLASSES for e in own):
+            continue  # home battery / power station, not a battery sensor
         mine = [e for e in own if e.platform == integration and e.domain not in INACTIVE_DOMAINS]
         # The integration's own reachability flag tells whether the device is reachable, it is no sign of life
         connectivity = next(
@@ -149,6 +172,8 @@ def discover(hass: HomeAssistant) -> dict[str, DeviceSpec]:
             None,
         )
         mine = [e for e in mine if e.entity_id != connectivity]
+        if battery is None and not mine:
+            continue  # mains device without anything that could report
         voltage = next(
             (e.entity_id for e in mine if e.domain == "sensor" and _device_class(e) == "voltage"),
             None,
@@ -162,6 +187,8 @@ def discover(hass: HomeAssistant) -> dict[str, DeviceSpec]:
             e.domain == "binary_sensor" and _device_class(e) in CRITICAL_BINARY_CLASSES for e in own
         )
         area = areas.async_get_area(device.area_id) if device.area_id else None
+        labels = set(device.labels).union(*(e.labels for e in entries))
+        label = "ignore" if LABEL_IGNORE in labels else "important" if LABEL_IMPORTANT in labels else None
         found[device.id] = DeviceSpec(
             device_id=device.id,
             name=device.name_by_user or device.name or device.id,
@@ -178,8 +205,10 @@ def discover(hass: HomeAssistant) -> dict[str, DeviceSpec]:
             voltage=voltage,
             critical=critical,
             ieee=ieee_of(device),
-            icon=icon_for(own),
+            icon=icon_for(own, mains=battery is None),
             reachable_via="matter" if integration == "matter" else connectivity,
+            label=label,
+            mains=battery is None,
         )
     return found
 

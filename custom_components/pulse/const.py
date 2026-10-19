@@ -122,6 +122,40 @@ CLOUD_INTEGRATIONS: Final = frozenset(
 INACTIVE_DOMAINS: Final = {"update", "button", "scene", "text", "image"}
 # Important devices: stricter limits, immediate (optionally critical) notification
 CRITICAL_BINARY_CLASSES: Final = {"moisture", "smoke", "gas", "carbon_monoxide", "safety"}
+# Beta "mains-powered devices": only local integrations whose devices hang now and then (Zigbee router stops
+# reporting, Wi-Fi plug stuck). Zigbee2MQTT devices come through "mqtt" and must have an IEEE address.
+MAINS_INTEGRATIONS: Final = frozenset(
+    {
+        "zha",
+        "mqtt",
+        "zwave_js",
+        "matter",
+        "hue",
+        "deconz",
+        "tradfri",
+        "esphome",
+        "shelly",
+        "tasmota",
+        "tplink",
+        "wled",
+        "homekit_controller",
+        "lifx",
+        "nanoleaf",
+        "yeelight",
+        "wiz",
+        "govee_light_local",
+        "twinkly",
+        "elgato",
+        "fritzbox",
+        "bond",
+        "lutron_caseta",
+        "insteon",
+    }
+)
+
+# HA labels on the device or one of its entities; they win over the panel switches, "ignore" over "important"
+LABEL_IMPORTANT: Final = "pulse_important"
+LABEL_IGNORE: Final = "pulse_ignore"
 
 # Notification levels
 NOTIFY_NOW: Final = "now"
@@ -140,6 +174,18 @@ DEFAULT_SETTINGS: Final[dict[str, Any]] = {
     "arrive_home": {"enabled": False, "persons": []},  # deliver only once one of the persons is home
     "recovered": True,
     "z2m_base": Z2M_BASE,
+    "mains_beta": False,  # beta: also watch mains-powered devices of MAINS_INTEGRATIONS
+    # Own notification texts, None = Pulse's sentence in the user's language (texts.TEMPLATE_KEYS)
+    "templates": {
+        "failed_title": None,
+        "failed_message": None,
+        "check_title": None,
+        "check_message": None,
+        "battery_title": None,
+        "battery_message": None,
+        "recovered_title": None,
+        "recovered_message": None,
+    },
 }
 
 # Reasons reported by the "Batterie" (battery) level instead of "Prüfen" (check)

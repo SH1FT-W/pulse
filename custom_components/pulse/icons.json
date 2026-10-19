@@ -23,6 +23,7 @@
     "mark_replaced": { "service": "mdi:battery-sync" },
     "snooze": { "service": "mdi:bell-sleep" },
     "ignore": { "service": "mdi:eye-off" },
-    "send_test": { "service": "mdi:bell-ring-outline" }
+    "send_test": { "service": "mdi:bell-ring-outline" },
+    "send_summary": { "service": "mdi:email-fast-outline" }
   }
 }

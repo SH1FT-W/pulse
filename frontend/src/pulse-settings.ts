@@ -1,11 +1,20 @@
 import { css, html, LitElement, nothing } from 'lit';
 import { live } from 'lit/directives/live.js';
 import { defineOnce, showToast } from './ha';
-import { arrivePersons, cleanZ2mBase, importantCount, settingsHero, timeOptions } from './logic';
+import {
+  arrivePersons,
+  cleanZ2mBase,
+  importantCount,
+  monitored,
+  settingsHero,
+  templateExample,
+  timeOptions,
+} from './logic';
 import type { Choice } from './pulse-picker';
+import { KIND_KEYS, TEMPLATE_KINDS } from './pulse-template-sheet';
 import { type StringKey, t } from './strings';
 import { puls, shared, tokens } from './styles';
-import type { Settings, Snapshot } from './types';
+import type { Settings, Snapshot, TemplateKind } from './types';
 import './pulse-dayband';
 import './pulse-picker';
 
@@ -23,6 +32,7 @@ export class PulseSettings extends LitElement {
     recipients: { type: String },
     names: { attribute: false },
     timeZone: { attribute: false },
+    editing: { state: true },
   };
 
   declare snapshot: Snapshot;
@@ -33,6 +43,8 @@ export class PulseSettings extends LitElement {
   declare names: Record<string, string>;
   /** Zeitzone von Home Assistant (schon geprüft) */
   declare timeZone: string | undefined;
+  /** Own text being edited (sheet open) */
+  declare editing: TemplateKind | null;
 
   constructor() {
     super();
@@ -41,6 +53,7 @@ export class PulseSettings extends LitElement {
     this.recipients = '';
     this.names = {};
     this.timeZone = undefined;
+    this.editing = null;
   }
 
   private save(settings: Record<string, unknown>): void {
@@ -198,6 +211,11 @@ export class PulseSettings extends LitElement {
     const head = settingsHero(lang, s);
     const important = importantCount(snap.devices);
     const z = snap.z2m;
+    const own = s.templates ?? {};
+    const watched = monitored(snap.devices);
+    const mains = watched.filter((d) => d.mains).length;
+    // Preview with a real device: preferably one with a room
+    const example = watched.find((d) => d.area && !d.mains) ?? watched[0];
     return html`
       <section class="hero">
         <div class="words">
@@ -335,6 +353,41 @@ export class PulseSettings extends LitElement {
       </section>
 
       <section class="section">
+        <h3 class="section-title">${t(lang, 'texts')}</h3>
+        <div class="list">
+          ${TEMPLATE_KINDS.map((kind) =>
+            this.linkRow(
+              t(lang, KIND_KEYS[kind]),
+              t(
+                lang,
+                own[`${kind}_title`] != null || own[`${kind}_message`] != null
+                  ? 'tpl_custom'
+                  : 'tpl_default'
+              ),
+              () => {
+                this.editing = kind;
+              }
+            )
+          )}
+        </div>
+        <p class="section-foot">${t(lang, 'texts_hint')}</p>
+      </section>
+
+      <section class="section">
+        <h3 class="section-title">${t(lang, 'beta')}</h3>
+        <div class="list">
+          ${this.switchRow('mains_beta', s.mains_beta ?? false, (on) => this.save({ mains_beta: on }), 'mains_beta_hint')}
+          ${
+            s.mains_beta
+              ? this.linkRow(t(lang, 'mains_devices'), String(mains), () =>
+                  this.fire('show-devices', { filter: 'mains' })
+                )
+              : nothing
+          }
+        </div>
+      </section>
+
+      <section class="section">
         <h3 class="section-title">${t(lang, 'try_it')}</h3>
         <div class="list">
           <button class="row action" type="button" @click=${() => this.fire('test')}>${t(lang, 'test')}</button>
@@ -342,6 +395,20 @@ export class PulseSettings extends LitElement {
         </div>
       </section>
       </div>
+      <pulse-template-sheet
+        .open=${this.editing !== null}
+        .kind=${this.editing ?? 'failed'}
+        .language=${lang}
+        .current=${own}
+        .defaults=${snap.template_defaults ?? {}}
+        .vars=${snap.template_vars ?? []}
+        .example=${templateExample(example)}
+        @template-save=${(e: CustomEvent<{ templates: Record<string, string | null> }>) =>
+          this.save({ templates: e.detail.templates })}
+        @closed=${() => {
+          this.editing = null;
+        }}
+      ></pulse-template-sheet>
     `;
   }
 

@@ -1,4 +1,4 @@
-"""Sentences for reasons and notifications (German/English), without HA dependency.
+"""Sentences for reasons and notifications (en, de; fr, es, nl in texts_i18n), without HA dependency.
 
 Reasons are built on the server so panel, notification and repair issue say the same thing.
 """
@@ -6,7 +6,10 @@ Reasons are built on the server so panel, notification and repair issue say the 
 from __future__ import annotations
 
 from collections.abc import Mapping
+import re
 from typing import Any
+
+from .texts_i18n import MORE_TEXTS
 
 TEXTS: dict[str, dict[str, str]] = {
     "de": {
@@ -26,6 +29,7 @@ TEXTS: dict[str, dict[str, str]] = {
         "learning": "Lernt noch, wie oft sich das Gerät meldet.",
         "ok_rhythm": "Meldet sich wie gewohnt, etwa {every}.",
         "ok_reachable": "Laut {via} erreichbar. Stille heißt hier nur: gerade nichts zu melden.",
+        "ok_mains": "Am Strom und erreichbar. Meldet sich nur bei Benutzung, Stille ist hier normal.",
         "every_minutes": "alle {n} Minuten",
         "every_minute": "jede Minute",
         "every_hours": "alle {n} Stunden",
@@ -80,6 +84,7 @@ TEXTS: dict[str, dict[str, str]] = {
         "learning": "Still learning how often this device reports.",
         "ok_rhythm": "Reporting as usual, about {every}.",
         "ok_reachable": "Reachable according to {via}. Silence here only means there is nothing to report.",
+        "ok_mains": "Powered and reachable. Only reports when used, so silence is normal here.",
         "every_minutes": "every {n} minutes",
         "every_minute": "every minute",
         "every_hours": "every {n} hours",
@@ -119,8 +124,12 @@ TEXTS: dict[str, dict[str, str]] = {
 }
 
 
+TEXTS.update(MORE_TEXTS)
+
+
 def lang(language: str | None) -> str:
-    return "de" if (language or "").lower().startswith("de") else "en"
+    code = (language or "").lower()[:2]
+    return code if code in TEXTS else "en"
 
 
 def text(language: str | None, key: str, **params: Any) -> str:
@@ -156,3 +165,38 @@ def reason_text(language: str | None, reason: Mapping[str, Any]) -> str:
         if name in params and isinstance(params[name], int | float):
             params[name] = (every if name == "every" else since)(language, float(params[name]))
     return text(language, key, **params)
+
+
+# ── Own notification texts ───────────────────────────────────────────────
+
+# Templateable notifications about one device: <kind>_title / <kind>_message
+TEMPLATE_KINDS = ("failed", "check", "battery", "recovered")
+TEMPLATE_KEYS = tuple(f"{kind}_{part}" for kind in TEMPLATE_KINDS for part in ("title", "message"))
+# Placeholders a template may use; unknown ones stay as written
+TEMPLATE_VARS = ("name", "area", "reason", "model", "manufacturer", "integration")
+SEPARATOR = " · "
+_PLACEHOLDER = re.compile(r"\{(\w+)\}")
+
+
+def template_defaults(language: str | None) -> dict[str, str]:
+    """Pulse's own sentences as templates (shown in the panel as the starting point)."""
+    reason = SEPARATOR.join(("{area}", "{reason}"))
+    return {
+        "failed_title": TEXTS[lang(language)]["push_failed"],
+        "failed_message": reason,
+        "check_title": TEXTS[lang(language)]["push_check"],
+        "check_message": reason,
+        "battery_title": TEXTS[lang(language)]["push_battery"],
+        "battery_message": reason,
+        "recovered_title": TEXTS[lang(language)]["push_recovered"],
+        "recovered_message": SEPARATOR.join(("{area}", TEXTS[lang(language)]["push_recovered_msg"])),
+    }
+
+
+def render(template: str, values: Mapping[str, str | None]) -> str:
+    """Fill in a template. Empty values vanish together with their " · " separator."""
+    filled = _PLACEHOLDER.sub(
+        lambda m: (values.get(m.group(1)) or "") if m.group(1) in TEMPLATE_VARS else m.group(0), template
+    )
+    lines = [SEPARATOR.join(part for part in line.split(SEPARATOR) if part.strip()) for line in filled.split("\n")]
+    return "\n".join(lines).strip()

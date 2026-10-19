@@ -430,8 +430,8 @@ export function shouldDismiss(dy: number, velocity: number): boolean {
   return dy > 120 || (dy > 24 && velocity > 0.5);
 }
 
-/** Device list filter (from overview/notifications): a status, "ignored", important, battery. */
-export type DeviceFilter = Status | 'ignored' | 'important' | 'battery';
+/** Device list filter (from overview/notifications): a status, "ignored", important, battery, mains (beta). */
+export type DeviceFilter = Status | 'ignored' | 'important' | 'battery' | 'mains';
 
 /** Battery topic: low/missing battery or due in the coming weeks (`due` = device IDs). */
 export function batteryDevices(devices: Device[], due: string[] = []): Device[] {
@@ -454,6 +454,7 @@ export function applyFilter(
   if (filter === 'ignored') return devices.filter((d) => d.ignored);
   if (filter === 'important') return monitored(devices).filter((d) => d.critical);
   if (filter === 'battery') return batteryDevices(devices, due);
+  if (filter === 'mains') return monitored(devices).filter((d) => d.mains);
   return monitored(devices).filter((d) => d.status === filter);
 }
 
@@ -1234,4 +1235,47 @@ export const RETRY_MAX = 60_000;
 
 export function nextRetryDelay(delay: number): number {
   return Math.min(Math.max(delay, RETRY_FIRST) * 2, RETRY_MAX);
+}
+
+const SEPARATOR = ' · ';
+
+/**
+ * Own notification text filled in like the server does (texts.render): known placeholders replaced, empty
+ * values vanish with their " · " separator, unknown placeholders stay as written.
+ */
+export function renderTemplate(
+  template: string,
+  values: Record<string, string | null>,
+  known: string[]
+): string {
+  const filled = template.replace(/\{(\w+)\}/g, (match, name: string) =>
+    known.includes(name) ? (values[name] ?? '') : match
+  );
+  return filled
+    .split('\n')
+    .map((line) =>
+      line
+        .split(SEPARATOR)
+        .filter((part) => part.trim())
+        .join(SEPARATOR)
+    )
+    .join('\n')
+    .trim();
+}
+
+/** Example values for the template preview: a real device (room only if not already in its name). */
+export function templateExample(device: Device | undefined): Record<string, string | null> {
+  if (!device) return {};
+  const area =
+    device.area && !device.name.toLocaleLowerCase().includes(device.area.toLocaleLowerCase())
+      ? device.area
+      : null;
+  return {
+    name: device.name,
+    area,
+    reason: device.reason,
+    model: device.model,
+    manufacturer: device.manufacturer,
+    integration: device.integration,
+  };
 }
