@@ -14,10 +14,12 @@ from .const import (
     EXCLUDED_DOMAINS,
     EXCLUDED_PLATFORMS,
     EXCLUDED_SENSOR_CLASSES,
+    HELPER_PLATFORMS,
     HUB_PLATFORMS,
     INACTIVE_DOMAINS,
     LABEL_IGNORE,
     LABEL_IMPORTANT,
+    MAINS_DOMAINS,
     MAINS_INTEGRATIONS,
 )
 
@@ -56,6 +58,8 @@ class DeviceSpec:
     label: str | None = None
     # Beta: no battery, powered from the mains (only with the setting `mains_beta`)
     mains: bool = False
+    # Mains devices: the lamp/plug/cover itself (no config switch); they decide whether the device is reachable
+    main_entities: list[str] = field(default_factory=list)
 
     @property
     def connectivity(self) -> str | None:
@@ -117,7 +121,7 @@ def ieee_of(device: dr.DeviceEntry) -> str | None:
 
 
 def discover(hass: HomeAssistant, mains: bool = False) -> dict[str, DeviceSpec]:
-    """Battery devices; with `mains` (beta) also mains-powered devices of MAINS_INTEGRATIONS."""
+    """Battery devices; with `mains` (beta) also mains-powered devices (lamps, plugs, covers … see MAINS_DOMAINS)."""
     devices = dr.async_get(hass)
     entities = er.async_get(hass)
     areas = ar.async_get(hass)
@@ -152,14 +156,20 @@ def discover(hass: HomeAssistant, mains: bool = False) -> dict[str, DeviceSpec]:
         )
         flag = next((e.entity_id for e in own if e.domain == "binary_sensor" and _device_class(e) == "battery"), None)
         battery = percent or flag
-        # Main integration = the one with the most entities (templates of other integrations on the device don't count)
+        # Main integration = the one with the most entities; helpers on top (template, powercalc) don't count
         counts: dict[str, int] = {}
         for e in own:
             counts[e.platform] = counts.get(e.platform, 0) + 1
-        integration = max(counts, key=lambda p: counts[p])
+        real = {p: n for p, n in counts.items() if p not in HELPER_PLATFORMS} or counts
+        integration = max(real, key=lambda p: real[p])
         if battery is None:
-            # Beta: mains-powered devices of local integrations (MQTT only Zigbee2MQTT)
-            if not mains or integration not in MAINS_INTEGRATIONS:
+            # Beta: mains-powered devices: a real device (no service, no helper) whose own integration gives it a
+            # lamp, plug, cover …, or any device of a local hardware integration (MQTT only Zigbee2MQTT)
+            if not mains or device.entry_type is not None or integration in HELPER_PLATFORMS:
+                continue
+            if integration not in MAINS_INTEGRATIONS and not any(
+                e.platform == integration and e.domain in MAINS_DOMAINS and e.entity_category is None for e in own
+            ):
                 continue
             if integration == "mqtt" and ieee_of(device) is None:
                 continue
@@ -209,6 +219,7 @@ def discover(hass: HomeAssistant, mains: bool = False) -> dict[str, DeviceSpec]:
             reachable_via="matter" if integration == "matter" else connectivity,
             label=label,
             mains=battery is None,
+            main_entities=[e.entity_id for e in mine if e.domain in MAINS_DOMAINS and e.entity_category is None],
         )
     return found
 

@@ -16,6 +16,9 @@ from typing import Any
 from . import battery as batt
 from .const import (
     MERGE_SECONDS,
+    OUTAGE_HABIT,
+    OUTAGE_MIN,
+    OUTAGES_KEPT,
     SEVERITY,
     STATUS_CHECK,
     STATUS_FAILED,
@@ -65,6 +68,11 @@ def restart_echoes(stamps: Sequence[float], starts: Sequence[float]) -> set[floa
         if 0 < idx < len(stamps) and stamps[idx] <= start + RESTART_AFTER:
             echoes.add(stamps[idx])
     return echoes
+
+
+def near_start(ts: float, starts: Sequence[float]) -> bool:
+    """`ts` lies in the window around an HA start (the integration was loading, nothing about the device)."""
+    return any(start - RESTART_BEFORE <= ts <= start + RESTART_AFTER for start in starts)
 
 
 @dataclass(frozen=True)
@@ -237,6 +245,47 @@ def overlap(gaps: Sequence[tuple[float, float]], start: float, end: float) -> fl
     return sum(max(0.0, min(end, b) - max(start, a)) for a, b in gaps)
 
 
+def merge_outages(
+    outages: Sequence[Sequence[float]], new: Sequence[tuple[float, float]], keep_from: float
+) -> list[list[float]]:
+    """Outages [start, end] sorted, without the ones older than `keep_from`; the same outage (start within a
+    minute, live and again from history) only once, the longer one wins."""
+    merged: list[list[float]] = []
+    for start, end in sorted([(float(a), float(b)) for a, b in outages] + [(float(a), float(b)) for a, b in new]):
+        if end < keep_from:
+            continue
+        if merged and start - merged[-1][0] < MINUTE:
+            merged[-1][1] = max(merged[-1][1], end)
+            continue
+        merged.append([start, end])
+    return merged[-OUTAGES_KEPT:]
+
+
+def usual_outage(
+    outages: Sequence[Sequence[float]],
+    now: float,
+    gaps: Sequence[tuple[float, float]] = (),
+    days: float = 14,
+    starts: Sequence[float] = (),
+) -> float | None:
+    """Longest outage if the device often goes unavailable by itself (standby, switched off), otherwise None.
+
+    Counts outages of the last `days` that lasted ≥ OUTAGE_MIN and ended by themselves. Those during an HA
+    pause or beginning at an HA start (integration still loading; an outage that was already running before
+    the restart is known from the recorder with its real start) say nothing about the device.
+    """
+    since = now - days * DAY
+    spans = [
+        end - start
+        for start, end in outages
+        if end >= since
+        and end - start >= OUTAGE_MIN
+        and overlap(gaps, start, end) == 0
+        and not near_start(start, starts)
+    ]
+    return max(spans) if len(spans) >= OUTAGE_HABIT else None
+
+
 def silence_start(
     events: Sequence[float],
     rhythm: Rhythm,
@@ -301,6 +350,7 @@ class Facts:
     battery_missing_since: float | None = None  # battery entity permanently without a value
     reachable: str | None = None  # integration currently reports the device reachable (its name), otherwise None
     mains: bool = False  # beta: mains-powered, an unused lamp is not broken
+    usual_outage: float | None = None  # often unavailable by itself: its longest such outage (`usual_outage`)
 
 
 def _worse(a: Verdict, b: Verdict) -> Verdict:
@@ -381,7 +431,14 @@ def evaluate(facts: Facts) -> Verdict:
     if facts.unavailable_since is not None:
         gone = now - facts.unavailable_since
         params = {"since": gone}
-        if gone >= (HOUR if facts.critical else 2 * HOUR):
+        if facts.usual_outage is not None:
+            # Often away by itself (standby, switched off at the plug): being gone is its habit. At most "watch";
+            # only much longer than ever before (twice its longest outage, at least a day) "prüfen" (check)
+            if gone >= max(2 * facts.usual_outage, DAY):
+                verdict = _worse(verdict, Verdict(STATUS_CHECK, {"key": "unavailable", "params": params}))
+            elif gone >= OUTAGE_MIN:
+                verdict = _worse(verdict, Verdict(STATUS_WATCH, {"key": "unavailable_usual", "params": params}))
+        elif gone >= (HOUR if facts.critical else 2 * HOUR):
             verdict = _worse(verdict, Verdict(STATUS_FAILED, {"key": "unavailable", "params": params}))
         elif gone >= (10 * MINUTE if facts.critical else 20 * MINUTE):
             verdict = _worse(verdict, Verdict(STATUS_CHECK, {"key": "unavailable", "params": params}))

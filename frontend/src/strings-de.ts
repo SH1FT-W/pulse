@@ -328,7 +328,7 @@ export const DE: Record<keyof typeof EN, string> = {
   beta: 'Beta',
   mains_beta: 'Netzgeräte überwachen',
   mains_beta_hint:
-    'Auch Geräte am Strom (Zigbee, Z-Wave, Matter, Shelly, ESPHome …). Pulse meldet, wenn eines nicht mehr erreichbar ist oder trotz sonst regelmäßiger Meldungen still wird. Noch in Erprobung.',
+    'Auch Geräte am Strom: Lampen, Steckdosen, Rollläden, Thermostate … aus jeder Integration. Pulse meldet, wenn eines nicht mehr erreichbar ist oder trotz sonst regelmäßiger Meldungen still wird. Geräte, die oft von selbst weg sind (Standby, ausgeschaltet), lernt es und bleibt dann ruhig. Noch in Erprobung.',
   mains_devices: 'Netzgeräte',
   filter_mains: 'Netzgeräte',
   mains_chip: 'Netzstrom · Beta',
@@ -351,9 +351,9 @@ export const DE: Record<keyof typeof EN, string> = {
   tpl_preview: 'Vorschau',
   tpl_reset: 'Standard verwenden',
   tpl_save: 'Sichern',
-  new_mains_title: 'Netzgeräte als Beta',
+  new_mains_title: 'Netzgeräte sind jetzt dabei',
   new_mains_text:
-    'Auch Steckdosen, Lampen und Schalter am Strom können hängen. Unter Mitteilungen → Beta einschalten.',
+    'Pulse achtet jetzt auch auf Lampen, Steckdosen und Schalter am Strom, aus jeder Integration. Geräte, die oft aus sind, lernt es kennen. Abschalten unter Mitteilungen → Beta.',
   new_texts_title: 'Deine eigenen Worte',
   new_texts_text:
     'Titel und Text jeder Mitteilung lassen sich anpassen, mit Platzhaltern und Vorschau.',

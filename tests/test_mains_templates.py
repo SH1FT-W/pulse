@@ -72,8 +72,12 @@ async def test_mains_beta_switch(hass: HomeAssistant, setup, hass_ws_client):
     plug = _plug(hass)
     hass.states.async_set(plug.entities["switch"], "off")
     await tick(hass, setup["freezer"], timedelta(seconds=10))
-    assert plug.device_id not in monitor.devices  # default: off
+    assert monitor.store.settings["mains_beta"]  # default: on (since 26.10.9)
     client = await hass_ws_client(hass)
+    await client.send_json_auto_id({"type": "pulse/settings", "settings": {"mains_beta": False}})
+    assert (await client.receive_json())["success"]
+    await hass.async_block_till_done()
+    assert plug.device_id not in monitor.devices
     await client.send_json_auto_id({"type": "pulse/settings", "settings": {"mains_beta": True}})
     assert (await client.receive_json())["success"]
     await hass.async_block_till_done()
@@ -134,12 +138,24 @@ async def test_govee_cloud_lamp_reports_unavailable(hass: HomeAssistant, setup):
     await hass.async_block_till_done()
     device = monitor.devices[lamp.device_id]
     assert device.spec.mains and device.spec.reachable_via == lamp.entities["connectivity"]
+    # Prod (26.10.): the lamp goes unavailable, Govee's connectivity sensor stays "on" and the diagnostic
+    # sensor keeps reporting every cloud poll
+    hass.states.async_set(lamp.entities["light"], "unavailable")
+    await hass.async_block_till_done()
+    assert device.unavailable_since is not None
+    for minute in range(3):
+        hass.states.async_set(lamp.entities["last_update_received"], f"2026-10-26T08:0{minute}:00+00:00")
+        await tick(hass, setup["freezer"], timedelta(minutes=50))
+    assert device.unavailable_since is not None
+    assert (device.status, device.reason["key"]) == ("failed", "unavailable")
+    # Back
+    hass.states.async_set(lamp.entities["light"], "off")
+    await hass.async_block_till_done()
+    assert device.unavailable_since is None
     # Govee says the lamp is offline (unplugged, Wi-Fi lost)
     hass.states.async_set(lamp.entities["connectivity"], "off")
     await hass.async_block_till_done()
     assert device.unavailable_since is not None
-    await tick(hass, setup["freezer"], timedelta(hours=2, minutes=1))
-    assert (device.status, device.reason["key"]) == ("failed", "unavailable")
 
 
 async def test_own_templates(hass: HomeAssistant, setup, hass_ws_client):

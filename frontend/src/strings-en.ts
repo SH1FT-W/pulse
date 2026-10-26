@@ -326,7 +326,7 @@ export const EN = {
   beta: 'Beta',
   mains_beta: 'Watch mains-powered devices',
   mains_beta_hint:
-    'Also devices on the mains (Zigbee, Z-Wave, Matter, Shelly, ESPHome …). Pulse tells you when one is no longer reachable or goes silent although it usually reports regularly. Still being tested.',
+    'Also devices on the mains: lamps, plugs, covers, thermostats … from any integration. Pulse tells you when one is no longer reachable or goes silent although it usually reports regularly. Devices that are often gone by themselves (standby, switched off) are learned and stay quiet. Still being tested.',
   mains_devices: 'Mains-powered devices',
   filter_mains: 'Mains-powered',
   mains_chip: 'Mains · Beta',
@@ -349,9 +349,9 @@ export const EN = {
   tpl_preview: 'Preview',
   tpl_reset: 'Use default',
   tpl_save: 'Save',
-  new_mains_title: 'Mains-powered devices in beta',
+  new_mains_title: 'Mains-powered devices are now on',
   new_mains_text:
-    'Plugs, lamps and switches on the mains can hang too. Turn it on under Notifications → Beta.',
+    'Pulse now also watches lamps, plugs and switches on the mains, from any integration. Devices that are often off are learned. Turn it off under Notifications → Beta.',
   new_texts_title: 'Your own words',
   new_texts_text:
     'Change the title and text of every notification, with placeholders and a preview.',

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from datetime import timedelta
 import logging
 from typing import Any
@@ -13,7 +13,7 @@ from homeassistant.util import dt as dt_util
 
 from .battery import LEVEL_LOW
 from .forecast import Forecast, predict
-from .rhythm import restart_echoes
+from .rhythm import near_start, restart_echoes
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,22 +49,46 @@ def real_reports(states: Iterable[Any], starts: Sequence[float] = ()) -> tuple[l
     return reports, actions
 
 
-async def async_load_history(
-    hass: HomeAssistant, entity_ids: list[str], days: int, starts: Sequence[float] = ()
-) -> dict[str, tuple[list[float], list[float]]]:
-    """Per entity (signs of life, actions) of the last `days` days. Empty if no recorder is running."""
+def outage_spans(
+    states: Iterable[Any], offline: str | None = None, starts: Sequence[float] = (), shortest: float = 0.0
+) -> list[tuple[float, float]]:
+    """[start, end] of the times the entity was "unavailable" (or `offline`, e.g. a connectivity sensor's "off")
+    and came back by itself, at least `shortest` long. An outage still running at the end is no finished one;
+    one beginning at an HA start (`starts`) is the integration loading. The row HA rewrites on start keeps an
+    outage that was already running, so it is counted once with its real start."""
+    spans: list[tuple[float, float]] = []
+    since: float | None = None
+    for state in states:
+        if not isinstance(state, State):
+            continue
+        gone = state.state == STATE_UNAVAILABLE or (offline is not None and state.state == offline)
+        if gone:
+            if since is None:
+                since = state.last_updated.timestamp()
+        elif state.state not in NOT_REAL and since is not None:
+            end = state.last_updated.timestamp()
+            if end - since >= shortest and not near_start(since, starts):
+                spans.append((since, end))
+            since = None
+    return spans
+
+
+async def _async_read[T](
+    hass: HomeAssistant, entity_ids: list[str], days: int, boil: Callable[[str, list[Any]], T]
+) -> dict[str, T]:
+    """Per entity `boil(entity_id, states)` over the last `days` days. Empty if no recorder is running."""
     if not entity_ids or "recorder" not in hass.config.components:
         return {}
     from homeassistant.components.recorder import get_instance, history
 
     start = dt_util.utcnow() - timedelta(days=days)
 
-    def _load() -> dict[str, tuple[list[float], list[float]]]:
+    def _load() -> dict[str, T]:
         # Read in small chunks and boil them down to timestamps right away: chatty sensors
         # have tens of thousands of rows, and all state objects at once cost a lot of memory
-        reports: dict[str, tuple[list[float], list[float]]] = {}
+        result: dict[str, T] = {}
         for i in range(0, len(entity_ids), CHUNK):
-            result = history.get_significant_states(
+            rows = history.get_significant_states(
                 hass,
                 start,
                 None,
@@ -76,16 +100,38 @@ async def async_load_history(
                 no_attributes=True,
             )
             # Boil down and release right away: never more than one chunk of state objects in memory
-            for entity_id in list(result):
-                reports[entity_id] = real_reports(result.pop(entity_id), starts)
-            del result
-        return reports
+            for entity_id in list(rows):
+                result[entity_id] = boil(entity_id, rows.pop(entity_id))
+            del rows
+        return result
 
     try:
         return await get_instance(hass).async_add_executor_job(_load)
     except Exception:  # history is a bonus; Pulse learns live if need be
         _LOGGER.exception("Could not read history")
         return {}
+
+
+async def async_load_history(
+    hass: HomeAssistant, entity_ids: list[str], days: int, starts: Sequence[float] = ()
+) -> dict[str, tuple[list[float], list[float]]]:
+    """Per entity (signs of life, actions) of the last `days` days. Empty if no recorder is running."""
+    return await _async_read(hass, entity_ids, days, lambda _, states: real_reports(states, starts))
+
+
+async def async_load_outages(
+    hass: HomeAssistant,
+    entity_ids: list[str],
+    days: int,
+    offline: Mapping[str, str] | None = None,
+    starts: Sequence[float] = (),
+    shortest: float = 0.0,
+) -> dict[str, list[tuple[float, float]]]:
+    """Per entity the finished outages of the last `days` days (`offline`: entity → its "gone" state)."""
+    offline = offline or {}
+    return await _async_read(
+        hass, entity_ids, days, lambda e, states: outage_spans(states, offline.get(e), starts, shortest)
+    )
 
 
 def load_forecasts(

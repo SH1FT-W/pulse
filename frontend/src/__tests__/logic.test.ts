@@ -528,6 +528,9 @@ describe('Richtung Puls', () => {
       detailHeadline('de', device('u', { status: 'check', reason_key: 'unavailable' }), NOW).text
     ).toBe('Nicht erreichbar.');
     expect(
+      detailHeadline('de', device('s', { status: 'watch', reason_key: 'unavailable_usual' }), NOW)
+    ).toEqual({ text: 'Nicht erreichbar.', tone: 'warn' });
+    expect(
       detailHeadline('de', device('p', { status: 'check', reason_key: 'partner' }), NOW).text
     ).toBe('Schweigt, Partner aktiv.');
     expect(detailText('de', door, NOW)).toMatch(/^Meldet sich sonst alle 3 Std\. Zuletzt /);

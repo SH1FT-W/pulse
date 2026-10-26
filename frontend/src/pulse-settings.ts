@@ -376,7 +376,7 @@ export class PulseSettings extends LitElement {
       <section class="section">
         <h3 class="section-title">${t(lang, 'beta')}</h3>
         <div class="list">
-          ${this.switchRow('mains_beta', s.mains_beta ?? false, (on) => this.save({ mains_beta: on }), 'mains_beta_hint')}
+          ${this.switchRow('mains_beta', s.mains_beta ?? true, (on) => this.save({ mains_beta: on }), 'mains_beta_hint')}
           ${
             s.mains_beta
               ? this.linkRow(t(lang, 'mains_devices'), String(mains), () =>

@@ -80,10 +80,19 @@ es hört nur zu (Zustände, „gemeldet ohne Änderung“, Zigbee2MQTT-Nachricht
 - Zigbee2MQTT nicht da beim Start (Broker langsam): `_tick` versucht es alle `Z2M_RETRY` (5 Min.) erneut.
 - Labels (`LABEL_IMPORTANT`/`LABEL_IGNORE` an Gerät oder Entität, auch eigenen) → `spec.label`, schlägt den Panel-Schalter
   (Panel sperrt ihn), `pulse_ignore` schlägt `pulse_important`; Label-Wechsel → `_reobserve` wie Ignorieren per Schalter.
-- Beta Netzgeräte (`settings.mains_beta`, Standard aus): `discover(mains=True)` nimmt Geräte ohne Batterie aus
-  `MAINS_INTEGRATIONS` (MQTT nur mit IEEE = Z2M), `spec.mains`. Bewertung: nicht regelmäßig → `ok_mains`, Stille zählt
-  nicht, nur `unavailable`; regelmäßig (≤ `REGULAR_LONGEST`) → Stille zählt normal (hängende Steckdose). Push ohne
-  „Batterie gewechselt“. Ausschalten → `_remove_vanished` entfernt die Entitäten.
+- Beta Netzgeräte (`settings.mains_beta`, Standard an seit 26.10.9, Minor 8 schaltet es einmalig für alle ein): `discover(mains=True)` nimmt Geräte ohne Batterie: kein
+  Dienst-Gerät (`entry_type`), Hauptintegration (meiste Entitäten ohne `HELPER_PLATFORMS` wie template/powercalc) ist
+  eine lokale Hardware-Integration (`MAINS_INTEGRATIONS`, auch ohne Lampe: BLE-Proxy, Zigbee-Router) oder gibt ihm eine
+  `MAINS_DOMAINS`-Entität ohne entity_category (jede Integration, z. B. Govee-Cloud, Chihiros) (MQTT nur mit IEEE =
+  Z2M), `spec.mains`. Erreichbar: nur `spec.main_entities` zählen (`MAINS_DOMAINS` ohne entity_category; Diagnose-Sensoren
+  und Einstellungs-Schalter bleiben bei Govee da, Konnektivität bleibt „on“), Meldungen heben „unavailable“ nicht auf (`_activity`). Bewertung: nicht regelmäßig →
+  `ok_mains`, Stille zählt nicht, nur `unavailable`; regelmäßig (≤ `REGULAR_LONGEST`) → Stille zählt normal.
+  Gelernte Erreichbarkeit: `record["outages"]` ([Start, Ende] ≥ `OUTAGE_MIN`, live in `_reachable_again`, beim Start aus
+  dem Recorder `history.async_load_outages`), ≥ `OUTAGE_HABIT` in `KEEP_DAYS` ohne HA-Pause und nicht im Neustart-Fenster
+  (`rhythm.near_start`: Integration lädt; ein vor dem Neustart begonnener Ausfall kommt mit echtem Start aus dem Recorder)
+  → `rhythm.usual_outage`;
+  dann weg = `unavailable_usual` (watch), erst > max(2× längster, 1 Tag) `unavailable` check, nie failed.
+  Push ohne „Batterie gewechselt“. Ausschalten → `_remove_vanished` entfernt die Entitäten.
 - Eigene Texte (`settings.templates`, je `TEMPLATE_KEYS` None = Standard): `notifier.compose` → `texts.render`
   (Platzhalter `TEMPLATE_VARS`, leere Werte verschwinden samt „ · “, `{area}` leer, wenn schon im Namen).
   Standard = `template_defaults(Sprache der Mitteilungen)`, im Snapshot `template_defaults`/`template_vars`.
@@ -91,7 +100,7 @@ es hört nur zu (Zustände, „gemeldet ohne Änderung“, Zigbee2MQTT-Nachricht
   Problem + „läuft wieder“ in derselben Nacht heben sich auf, außer es kam vorher schon eine an (`told`); wichtige Geräte
   „Prüfen“ sofort, kritisch nur bei Ausfall; Zusammenfassung wartet Ruhezeit/Heimkommen ab (mehrere Personen); Tag der Zusammenfassung in `store.summary_sent`, kritisch für wichtige
   Geräte, erst beim Heimkommen, keine Wiederholungen über `record["notified"]`, Aktionen aus der App).
-- `store.py` (.storage/pulse.devices: Meldungen, Einstellungen pro Gerät, Mitteilungs-Einstellungen; Minor 7).
+- `store.py` (.storage/pulse.devices: Meldungen, Einstellungen pro Gerät, Mitteilungs-Einstellungen; Minor 8: `outages`).
   `async_delay_save` plant nur, wenn nichts ansteht (HA verschiebt sonst bei jedem Aufruf – es wurde nie gespeichert).
   Nicht mehr überwachte Geräte (noch in der Registry, mit eigenen Entitäten oder deaktiviert): Pulse-Entitäten
   entfernen, Datensatz gekürzt behalten, `SIGNAL_REMOVED_DEVICES` → Plattformen vergessen sie (kommen neu wieder).

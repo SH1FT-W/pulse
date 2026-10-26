@@ -332,7 +332,7 @@ export const NL: Record<keyof typeof EN, string> = {
   beta: 'Bèta',
   mains_beta: 'Apparaten op netstroom bewaken',
   mains_beta_hint:
-    'Ook apparaten op netstroom (Zigbee, Z-Wave, Matter, Shelly, ESPHome …). Pulse laat het je weten als er een niet meer bereikbaar is of stil wordt terwijl het zich normaal regelmatig meldt. Wordt nog getest.',
+    'Ook apparaten op het stroomnet: lampen, stekkers, rolluiken, thermostaten … uit elke integratie. Pulse meldt het als er een niet meer bereikbaar is of stil wordt terwijl hij zich normaal regelmatig meldt. Apparaten die vaak vanzelf weg zijn (stand-by, uitgeschakeld) leert Pulse kennen en blijft dan stil. Nog in de testfase.',
   mains_devices: 'Apparaten op netstroom',
   filter_mains: 'Netstroom',
   mains_chip: 'Netstroom · Bèta',
@@ -355,9 +355,9 @@ export const NL: Record<keyof typeof EN, string> = {
   tpl_preview: 'Voorbeeld',
   tpl_reset: 'Standaard gebruiken',
   tpl_save: 'Opslaan',
-  new_mains_title: 'Apparaten op netstroom in bèta',
+  new_mains_title: 'Apparaten op netstroom staan nu aan',
   new_mains_text:
-    'Ook stekkers, lampen en schakelaars op netstroom kunnen vastlopen. Zet het aan onder Meldingen → Bèta.',
+    'Pulse let nu ook op lampen, stekkers en schakelaars op netstroom, uit elke integratie. Apparaten die vaak uit staan leert Pulse kennen. Uitzetten onder Meldingen → Bèta.',
   new_texts_title: 'Je eigen woorden',
   new_texts_text: 'Pas de titel en tekst van elke melding aan, met placeholders en een voorbeeld.',
   new_labels_title: 'Labels in plaats van klikken',

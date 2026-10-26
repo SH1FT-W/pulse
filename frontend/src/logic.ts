@@ -544,7 +544,14 @@ export function isWaiting(device: Device): boolean {
 }
 
 /** Reasons concerning the rhythm (not just the battery). */
-const OFF_RHYTHM = new Set(['silent', 'silent_new', 'unavailable', 'partner', 'radio_only']);
+const OFF_RHYTHM = new Set([
+  'silent',
+  'silent_new',
+  'unavailable',
+  'unavailable_usual',
+  'partner',
+  'radio_only',
+]);
 const SILENT = new Set(['silent', 'silent_new']);
 
 /** Duration as a phrase for "seit …" (since …): 12 Minuten, 5 Stunden, 4 Tagen. */
@@ -724,7 +731,8 @@ export function heroSentences(
     if (key === 'waiting_first') return mention(language, 'sent_waiting', d, {});
     if (key === 'battery_low') return mention(language, 'sent_battery_low', d, {});
     if (key === 'battery_soon') return mention(language, 'sent_battery', d, {});
-    if (key === 'unavailable') return mention(language, 'sent_unavailable', d, {});
+    if (key === 'unavailable' || key === 'unavailable_usual')
+      return mention(language, 'sent_unavailable', d, {});
     if (key === 'startup_waiting') return mention(language, 'sent_startup', d, {});
     if (key === 'radio_only') return mention(language, 'sent_radio_only', d, {});
     if (key === 'battery_missing') return mention(language, 'sent_battery_missing', d, {});
@@ -877,7 +885,7 @@ export function detailHeadline(
     return { text: t(language, 'dh_radio_only'), tone: tone(device.status) };
   if (key === 'battery_missing')
     return { text: t(language, 'dh_battery_missing'), tone: tone(device.status) };
-  if (key === 'unavailable')
+  if (key === 'unavailable' || key === 'unavailable_usual')
     return { text: t(language, 'dh_unavailable'), tone: tone(device.status) };
   if (key === 'partner') return { text: t(language, 'dh_partner'), tone: tone(device.status) };
   if (key.startsWith('battery') && device.battery.level !== null)

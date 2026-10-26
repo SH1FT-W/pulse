@@ -15,7 +15,7 @@ STORE_VERSION: Final = 1
 # 2: uptime, 3: source per battery change, false changes dropped, 4: volts → mV, arrive home as a list,
 # 5: summary day (summary_sent/summary_pending), 6: dismissed partner suggestions, battery missing since,
 # cloud outage reported, Z2M health requested, 7: restart echoes dropped, cloud reports rebuilt
-STORE_MINOR: Final = 7
+STORE_MINOR: Final = 8
 
 # Dispatcher: something changed (resend the panel, update entities)
 SIGNAL_UPDATE: Final = "pulse_update"
@@ -122,9 +122,14 @@ CLOUD_INTEGRATIONS: Final = frozenset(
 INACTIVE_DOMAINS: Final = {"update", "button", "scene", "text", "image"}
 # Important devices: stricter limits, immediate (optionally critical) notification
 CRITICAL_BINARY_CLASSES: Final = {"moisture", "smoke", "gas", "carbon_monoxide", "safety"}
-# Beta "mains-powered devices": local integrations whose devices hang now and then (Zigbee router stops
-# reporting, Wi-Fi plug stuck), plus cloud ones with their own connectivity sensor.
-# Zigbee2MQTT devices come through "mqtt" and must have an IEEE address.
+# Beta "mains-powered devices": recognised by what they are (lamp, plug, cover …), from any integration.
+# A device counts if its own integration gives it one of these (not as a config/diagnostic entity) ...
+MAINS_DOMAINS: Final = frozenset(
+    {"light", "switch", "fan", "cover", "climate", "valve", "humidifier", "water_heater", "siren", "lock"}
+)
+# ... or if it comes from a local integration whose devices are always hardware, also without a lamp or plug
+# (Zigbee router, ESPHome Bluetooth proxy, Shelly input). Zigbee2MQTT devices come through "mqtt" with an
+# IEEE address.
 MAINS_INTEGRATIONS: Final = frozenset(
     {
         "zha",
@@ -145,7 +150,6 @@ MAINS_INTEGRATIONS: Final = frozenset(
         "yeelight",
         "wiz",
         "govee_light_local",
-        "govee",  # Govee cloud (custom integration): its connectivity sensor tells when a lamp is gone
         "twinkly",
         "elgato",
         "fritzbox",
@@ -154,6 +158,34 @@ MAINS_INTEGRATIONS: Final = frozenset(
         "insteon",
     }
 )
+# Helpers built on top of other devices: never the device's own integration (Govee lamp + powercalc sensors)
+HELPER_PLATFORMS: Final = frozenset(
+    {
+        "template",
+        "group",
+        "powercalc",
+        "switch_as_x",
+        "adaptive_lighting",
+        "universal",
+        "min_max",
+        "utility_meter",
+        "derivative",
+        "integration",
+        "threshold",
+        "statistics",
+        "filter",
+        "trend",
+        "generic_thermostat",
+        "generic_hygrostat",
+        "better_thermostat",
+    }
+)
+# Learned availability (mains devices): a device that went unavailable by itself at least OUTAGE_HABIT times
+# within KEEP_DAYS (each ≥ OUTAGE_MIN, HA pauses excluded) is often switched off (standby, plug); being gone is
+# then its habit (at most "watch"), until it stays away for more than twice its longest outage (at least a day)
+OUTAGE_MIN: Final = 20 * 60.0
+OUTAGE_HABIT: Final = 3
+OUTAGES_KEPT: Final = 100
 
 # HA labels on the device or one of its entities; they win over the panel switches, "ignore" over "important"
 LABEL_IMPORTANT: Final = "pulse_important"
@@ -176,7 +208,7 @@ DEFAULT_SETTINGS: Final[dict[str, Any]] = {
     "arrive_home": {"enabled": False, "persons": []},  # deliver only once one of the persons is home
     "recovered": True,
     "z2m_base": Z2M_BASE,
-    "mains_beta": False,  # beta: also watch mains-powered devices of MAINS_INTEGRATIONS
+    "mains_beta": True,  # beta (on since 26.10.9): also watch mains-powered devices (see MAINS_DOMAINS)
     # Own notification texts, None = Pulse's sentence in the user's language (texts.TEMPLATE_KEYS)
     "templates": {
         "failed_title": None,

@@ -16,6 +16,7 @@ Worauf sich dieses Repo bei Home Assistant verlässt. Bei jeder Änderung am Cod
 | `DeviceEntry.config_entry_id` (ab 2026.10), davor die Menge `config_entries` | `discovery.py` `_entry_ids` | `tests/test_integration.py` (Discovery) |
 | Batterie = `sensor` bzw. `binary_sensor` mit `device_class: battery`; Erreichbarkeit = `binary_sensor` `connectivity` derselben Integration | `discovery.py` `discover` | `tests/test_reachable.py`, `tests/test_mains_templates.py` |
 | Hauptintegration eines Geräts = `platform` mit den meisten Entitäten (Fremde wie powercalc/template zählen nicht) | `discovery.py` `discover` | `tests/test_mains_templates.py` |
+| Netzgeräte: `DeviceEntry.entry_type` (Dienst) und `RegistryEntry.entity_category`; Lampen/Steckdosen gehen bei Ausfall auf `unavailable` | `discovery.py`, `monitor.py` `_check_availability` | `tests/test_mains_learned.py` |
 | Labels hängen an `DeviceEntry.labels` und `RegistryEntry.labels` | `discovery.py` | `tests/test_labels.py` |
 | Recorder: `history.get_significant_states` und `statistics_during_period` (Executor) | `history.py` | `tests/test_z2m_history.py` (Verlauf), `tests/test_v11.py` (Statistik) |
 | Push nur über `notify.mobile_app_*`, Aktionen über Ereignis `mobile_app_notification_action` | `notifier.py` | `tests/test_integration.py` |
@@ -27,7 +28,8 @@ Integrationen, deren Entitäten oder Attribute dieses Repo liest (Domain, was ge
 
 - `mqtt` / Zigbee2MQTT: Themen `<base>/bridge/devices|info|state|event|health` und `<base>/#`, Feld `last_seen` (`z2m.py`).
 - `matter`: Gerät gilt als erreichbar, solange es nicht `unavailable` ist (`discovery.py` `reachable_via`).
-- `govee` (Govee-Cloud, eigene Integration): `binary_sensor` `connectivity` je Lampe, Netzgeräte-Beta (`const.py` `MAINS_INTEGRATIONS`).
+- `govee` (Govee-Cloud, eigene Integration): Lampe wird `unavailable`, Konnektivitäts-Sensor bleibt dabei „on“, Diagnose-Sensoren melden weiter (`monitor.py` `_check_availability`, `tests/test_mains_templates.py`).
+- `powercalc`, `template` u. a. (`const.py` `HELPER_PLATFORMS`): hängen eigene Entitäten an fremde Geräte, zählen nie als deren Integration.
 - Cloud-Integrationen aus `const.py` `CLOUD_INTEGRATIONS` (Netatmo u. a.): nur Wertänderungen zählen.
 
 ## Prüfbefehl

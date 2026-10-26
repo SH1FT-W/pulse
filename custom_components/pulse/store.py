@@ -38,6 +38,7 @@ def default_record() -> dict[str, Any]:
         "first_seen": None,
         "partner_dismissed": [],  # dismissed partner suggestions (device IDs)
         "battery_missing_since": None,  # battery entity without a value since
+        "outages": [],  # mains devices: [start, end] of past "unavailable" spans that ended by themselves
     }
 
 
@@ -98,6 +99,12 @@ def migrate(old_minor: int, data: dict[str, Any]) -> dict[str, Any]:
                 echoes = restart_echoes(stamps, starts)
                 record[key] = [ts for ts in stamps if ts not in echoes]
             record["rebuild_events"] = True
+    if old_minor < 8:
+        # 26.10.9: learned availability of mains devices (filled live and from the recorder on start); watching
+        # mains devices is on by default from now on, also where it was only off as the old default
+        for record in data.get("devices", {}).values():
+            record.setdefault("outages", [])
+        data.setdefault("settings", {})["mains_beta"] = True
     return data
 
 

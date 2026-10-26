@@ -882,7 +882,7 @@ var We = {
 	due_untyped: "Typ offen: {names}",
 	beta: "Beta",
 	mains_beta: "Netzgeräte überwachen",
-	mains_beta_hint: "Auch Geräte am Strom (Zigbee, Z-Wave, Matter, Shelly, ESPHome …). Pulse meldet, wenn eines nicht mehr erreichbar ist oder trotz sonst regelmäßiger Meldungen still wird. Noch in Erprobung.",
+	mains_beta_hint: "Auch Geräte am Strom: Lampen, Steckdosen, Rollläden, Thermostate … aus jeder Integration. Pulse meldet, wenn eines nicht mehr erreichbar ist oder trotz sonst regelmäßiger Meldungen still wird. Geräte, die oft von selbst weg sind (Standby, ausgeschaltet), lernt es und bleibt dann ruhig. Noch in Erprobung.",
 	mains_devices: "Netzgeräte",
 	filter_mains: "Netzgeräte",
 	mains_chip: "Netzstrom · Beta",
@@ -902,8 +902,8 @@ var We = {
 	tpl_preview: "Vorschau",
 	tpl_reset: "Standard verwenden",
 	tpl_save: "Sichern",
-	new_mains_title: "Netzgeräte als Beta",
-	new_mains_text: "Auch Steckdosen, Lampen und Schalter am Strom können hängen. Unter Mitteilungen → Beta einschalten.",
+	new_mains_title: "Netzgeräte sind jetzt dabei",
+	new_mains_text: "Pulse achtet jetzt auch auf Lampen, Steckdosen und Schalter am Strom, aus jeder Integration. Geräte, die oft aus sind, lernt es kennen. Abschalten unter Mitteilungen → Beta.",
 	new_texts_title: "Deine eigenen Worte",
 	new_texts_text: "Titel und Text jeder Mitteilung lassen sich anpassen, mit Platzhaltern und Vorschau.",
 	new_labels_title: "Labels statt Klicks",
@@ -1216,7 +1216,7 @@ var We = {
 	due_untyped: "type unknown: {names}",
 	beta: "Beta",
 	mains_beta: "Watch mains-powered devices",
-	mains_beta_hint: "Also devices on the mains (Zigbee, Z-Wave, Matter, Shelly, ESPHome …). Pulse tells you when one is no longer reachable or goes silent although it usually reports regularly. Still being tested.",
+	mains_beta_hint: "Also devices on the mains: lamps, plugs, covers, thermostats … from any integration. Pulse tells you when one is no longer reachable or goes silent although it usually reports regularly. Devices that are often gone by themselves (standby, switched off) are learned and stay quiet. Still being tested.",
 	mains_devices: "Mains-powered devices",
 	filter_mains: "Mains-powered",
 	mains_chip: "Mains · Beta",
@@ -1236,8 +1236,8 @@ var We = {
 	tpl_preview: "Preview",
 	tpl_reset: "Use default",
 	tpl_save: "Save",
-	new_mains_title: "Mains-powered devices in beta",
-	new_mains_text: "Plugs, lamps and switches on the mains can hang too. Turn it on under Notifications → Beta.",
+	new_mains_title: "Mains-powered devices are now on",
+	new_mains_text: "Pulse now also watches lamps, plugs and switches on the mains, from any integration. Devices that are often off are learned. Turn it off under Notifications → Beta.",
 	new_texts_title: "Your own words",
 	new_texts_text: "Change the title and text of every notification, with placeholders and a preview.",
 	new_labels_title: "Labels instead of clicks",
@@ -1552,7 +1552,7 @@ var We = {
 		due_untyped: "type inconnu : {names}",
 		beta: "Bêta",
 		mains_beta: "Surveiller les appareils sur secteur",
-		mains_beta_hint: "Aussi les appareils sur secteur (Zigbee, Z-Wave, Matter, Shelly, ESPHome …). Pulse vous prévient quand l’un d’eux n’est plus joignable ou se tait alors qu’il se signale d’habitude régulièrement. Encore en test.",
+		mains_beta_hint: "Aussi les appareils sur secteur : lampes, prises, volets, thermostats … de toute intégration. Pulse vous prévient quand l’un d’eux n’est plus joignable ou se tait alors qu’il se manifeste d’habitude régulièrement. Les appareils souvent absents d’eux-mêmes (veille, éteints) sont appris et restent discrets. Encore en test.",
 		mains_devices: "Appareils sur secteur",
 		filter_mains: "Sur secteur",
 		mains_chip: "Secteur · Bêta",
@@ -1572,8 +1572,8 @@ var We = {
 		tpl_preview: "Aperçu",
 		tpl_reset: "Rétablir par défaut",
 		tpl_save: "Enregistrer",
-		new_mains_title: "Appareils sur secteur en bêta",
-		new_mains_text: "Prises, lampes et interrupteurs sur secteur peuvent aussi se bloquer. À activer sous Notifications → Bêta.",
+		new_mains_title: "Les appareils sur secteur sont activés",
+		new_mains_text: "Pulse surveille désormais aussi lampes, prises et interrupteurs sur secteur, de toute intégration. Les appareils souvent éteints sont appris. À désactiver sous Notifications → Bêta.",
 		new_texts_title: "Vos propres mots",
 		new_texts_text: "Modifiez le titre et le texte de chaque notification, avec des variables et un aperçu.",
 		new_labels_title: "Des labels plutôt que des clics",
@@ -1887,7 +1887,7 @@ var We = {
 		due_untyped: "tipo desconocido: {names}",
 		beta: "Beta",
 		mains_beta: "Supervisar dispositivos conectados a la red",
-		mains_beta_hint: "También dispositivos conectados a la red eléctrica (Zigbee, Z-Wave, Matter, Shelly, ESPHome …). Pulse te avisa cuando uno deja de estar disponible o se queda en silencio aunque suele dar señales con regularidad. Aún en pruebas.",
+		mains_beta_hint: "También dispositivos con corriente: lámparas, enchufes, persianas, termostatos … de cualquier integración. Pulse avisa cuando uno ya no está disponible o se calla aunque suele informar con regularidad. Los dispositivos que a menudo desaparecen solos (reposo, apagados) los aprende y no avisa. Aún en pruebas.",
 		mains_devices: "Dispositivos conectados a la red",
 		filter_mains: "Conectados a la red",
 		mains_chip: "Red · Beta",
@@ -1907,8 +1907,8 @@ var We = {
 		tpl_preview: "Vista previa",
 		tpl_reset: "Usar predeterminado",
 		tpl_save: "Guardar",
-		new_mains_title: "Dispositivos a la red en beta",
-		new_mains_text: "Enchufes, lámparas e interruptores conectados a la red también se cuelgan. Actívalo en Notificaciones → Beta.",
+		new_mains_title: "Los dispositivos a la red ya están activos",
+		new_mains_text: "Pulse ahora también vigila lámparas, enchufes e interruptores conectados a la red, de cualquier integración. Aprende los que suelen estar apagados. Desactívalo en Notificaciones → Beta.",
 		new_texts_title: "Tus propias palabras",
 		new_texts_text: "Cambia el título y el texto de cada notificación, con marcadores y vista previa.",
 		new_labels_title: "Etiquetas en vez de clics",
@@ -2222,7 +2222,7 @@ var We = {
 		due_untyped: "type onbekend: {names}",
 		beta: "Bèta",
 		mains_beta: "Apparaten op netstroom bewaken",
-		mains_beta_hint: "Ook apparaten op netstroom (Zigbee, Z-Wave, Matter, Shelly, ESPHome …). Pulse laat het je weten als er een niet meer bereikbaar is of stil wordt terwijl het zich normaal regelmatig meldt. Wordt nog getest.",
+		mains_beta_hint: "Ook apparaten op het stroomnet: lampen, stekkers, rolluiken, thermostaten … uit elke integratie. Pulse meldt het als er een niet meer bereikbaar is of stil wordt terwijl hij zich normaal regelmatig meldt. Apparaten die vaak vanzelf weg zijn (stand-by, uitgeschakeld) leert Pulse kennen en blijft dan stil. Nog in de testfase.",
 		mains_devices: "Apparaten op netstroom",
 		filter_mains: "Netstroom",
 		mains_chip: "Netstroom · Bèta",
@@ -2242,8 +2242,8 @@ var We = {
 		tpl_preview: "Voorbeeld",
 		tpl_reset: "Standaard gebruiken",
 		tpl_save: "Opslaan",
-		new_mains_title: "Apparaten op netstroom in bèta",
-		new_mains_text: "Ook stekkers, lampen en schakelaars op netstroom kunnen vastlopen. Zet het aan onder Meldingen → Bèta.",
+		new_mains_title: "Apparaten op netstroom staan nu aan",
+		new_mains_text: "Pulse let nu ook op lampen, stekkers en schakelaars op netstroom, uit elke integratie. Apparaten die vaak uit staan leert Pulse kennen. Uitzetten onder Meldingen → Bèta.",
 		new_texts_title: "Je eigen woorden",
 		new_texts_text: "Pas de titel en tekst van elke melding aan, met placeholders en een voorbeeld.",
 		new_labels_title: "Labels in plaats van klikken",
@@ -2577,6 +2577,7 @@ var Rt = /* @__PURE__ */ new Set([
 	"silent",
 	"silent_new",
 	"unavailable",
+	"unavailable_usual",
 	"partner",
 	"radio_only"
 ]), zt = /* @__PURE__ */ new Set(["silent", "silent_new"]);
@@ -2693,7 +2694,7 @@ function Kt(e, t, n, r) {
 			let i = Vt(e, a, n, r);
 			return i ? q(e, "sent_silent_since", t, { day: i }) : q(e, "sent_silent_for", t, { span: Bt(e, n - a) });
 		}
-		return i === "waiting_first" ? q(e, "sent_waiting", t, {}) : i === "battery_low" ? q(e, "sent_battery_low", t, {}) : i === "battery_soon" ? q(e, "sent_battery", t, {}) : i === "unavailable" ? q(e, "sent_unavailable", t, {}) : i === "startup_waiting" ? q(e, "sent_startup", t, {}) : i === "radio_only" ? q(e, "sent_radio_only", t, {}) : i === "battery_missing" ? q(e, "sent_battery_missing", t, {}) : i === "partner" ? q(e, "sent_partner", t, { partner: t.partner_name ?? "" }) : q(e, "sent_other", t, { reason: t.reason });
+		return i === "waiting_first" ? q(e, "sent_waiting", t, {}) : i === "battery_low" ? q(e, "sent_battery_low", t, {}) : i === "battery_soon" ? q(e, "sent_battery", t, {}) : i === "unavailable" || i === "unavailable_usual" ? q(e, "sent_unavailable", t, {}) : i === "startup_waiting" ? q(e, "sent_startup", t, {}) : i === "radio_only" ? q(e, "sent_radio_only", t, {}) : i === "battery_missing" ? q(e, "sent_battery_missing", t, {}) : i === "partner" ? q(e, "sent_partner", t, { partner: t.partner_name ?? "" }) : q(e, "sent_other", t, { reason: t.reason });
 	}), l = i.length - c.length;
 	return {
 		mentions: c,
@@ -2814,7 +2815,7 @@ function rn(e, t, n) {
 	} : r === "battery_missing" ? {
 		text: L(e, "dh_battery_missing"),
 		tone: B(t.status)
-	} : r === "unavailable" ? {
+	} : r === "unavailable" || r === "unavailable_usual" ? {
 		text: L(e, "dh_unavailable"),
 		tone: B(t.status)
 	} : r === "partner" ? {
@@ -3494,7 +3495,11 @@ var J = o`
 		title: "welcome_notify_title",
 		text: "welcome_notify_text"
 	}
-], Ln = [], Rn = "https://github.com/SH1FT-W/pulse/blob/main/CHANGELOG.md";
+], Ln = [{
+	icon: "mdi:power-plug-outline",
+	title: "new_mains_title",
+	text: "new_mains_text"
+}], Rn = "https://github.com/SH1FT-W/pulse/blob/main/CHANGELOG.md";
 I("pulse-welcome", class extends N {
 	static {
 		this.properties = {
@@ -6775,7 +6780,7 @@ I("pulse-template-sheet", class extends N {
       <section class="section">
         <h3 class="section-title">${L(e, "beta")}</h3>
         <div class="list">
-          ${this.switchRow("mains_beta", n.mains_beta ?? !1, (e) => this.save({ mains_beta: e }), "mains_beta_hint")}
+          ${this.switchRow("mains_beta", n.mains_beta ?? !0, (e) => this.save({ mains_beta: e }), "mains_beta_hint")}
           ${n.mains_beta ? this.linkRow(L(e, "mains_devices"), String(f), () => this.fire("show-devices", { filter: "mains" })) : k}
         </div>
       </section>
@@ -6945,7 +6950,7 @@ function Sr() {
 	let e = xr();
 	if (!e) return null;
 	try {
-		return Hn(e, "26.10.9b1", Ln.length > 0);
+		return Hn(e, "26.10.9b2", Ln.length > 0);
 	} catch {
 		return null;
 	}
@@ -7136,7 +7141,7 @@ var wr = class extends N {
 		this.welcome = null;
 		let e = xr();
 		try {
-			e && Un(e, "26.10.9b1");
+			e && Un(e, "26.10.9b2");
 		} catch {}
 	}
 	zigbeeOffer(e) {
@@ -7296,7 +7301,7 @@ var wr = class extends N {
         @partner-dismiss=${(e) => this.onPartnerDismiss(e.detail.id, e.detail.partner)}
       >
         ${this.renderHead()} ${this.renderContent()}
-        <p class="version muted">${L(t, "version", { version: "26.10.9b1" })}</p>
+        <p class="version muted">${L(t, "version", { version: "26.10.9b2" })}</p>
         ${e ? E`<pulse-device-sheet
                   .open=${n !== null}
                   .device=${n}
@@ -7321,7 +7326,7 @@ var wr = class extends N {
                 <pulse-welcome
                   .mode=${this.welcome}
                   .language=${t}
-                  .version=${"26.10.9b1"}
+                  .version=${"26.10.9b2"}
                   .zigbee=${this.zigbeeOffer(e)}
                   @closed=${() => this.welcomeDone()}
                   @enable-z2m=${() => {

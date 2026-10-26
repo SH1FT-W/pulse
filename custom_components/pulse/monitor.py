@@ -55,6 +55,7 @@ from .const import (
     KEEP_DAYS,
     MAX_EVENTS,
     MERGE_SECONDS,
+    OUTAGE_MIN,
     SEVERITY,
     SIGNAL_NEW_DEVICES,
     SIGNAL_REMOVED_DEVICES,
@@ -72,7 +73,7 @@ from .const import (
 )
 from .discovery import DeviceSpec, discover
 from .forecast import Forecast
-from .history import async_load_history, load_forecasts
+from .history import async_load_history, async_load_outages, load_forecasts
 from .notifier import Notifier
 from .partners import PartnerInput, Suggestion, suggest
 from .rhythm import (
@@ -86,10 +87,13 @@ from .rhythm import (
     evaluate,
     heartbeat_days,
     merge_event,
+    merge_outages,
+    near_start,
     no_data,
     overlap,
     silence_start,
     strip,
+    usual_outage,
 )
 from .snapshot import serialize, snapshot
 from .store import SAVE_DELAY_EVENTS, PulseStore
@@ -582,9 +586,34 @@ class PulseMonitor:
                 device.record.get("first_seen") is None or device.record["events"][0] < device.record["first_seen"]
             ):
                 device.record["first_seen"] = device.record["events"][0]
+        await self._async_learn_outages()
+        if self._stopped:
+            return
         self.bootstrapped = True
         _LOGGER.debug("History read: %s entities", len(result))
         self._tick(dt_util.utcnow())
+
+    async def _async_learn_outages(self) -> None:
+        """Mains devices: past outages from the recorder (the lamp/plug "unavailable", else connectivity "off")."""
+        watch: dict[str, Device] = {}
+        offline: dict[str, str] = {}
+        for device in self.devices.values():
+            spec = device.spec
+            if not spec.mains:
+                continue
+            # The lamp itself first: Govee's connectivity sensor stays "on" while the lamp is unavailable
+            entity_id = next(iter(spec.main_entities), None) or spec.connectivity
+            if entity_id is None:
+                continue
+            watch[entity_id] = device
+            if entity_id == spec.connectivity:
+                offline[entity_id] = STATE_OFF
+        result = await async_load_outages(self.hass, sorted(watch), HISTORY_DAYS, offline, self._starts(), OUTAGE_MIN)
+        keep_from = time.time() - KEEP_DAYS * DAY
+        for entity_id, spans in result.items():
+            if spans and (owner := watch.get(entity_id)) is not None:
+                record = owner.record
+                record["outages"] = merge_outages(record.get("outages", []), spans, keep_from)
 
     # ── Reports ──────────────────────────────────────────────────────────
 
@@ -665,8 +694,10 @@ class PulseMonitor:
         added = merge_event(device.record["events"], ts, keep_from, MAX_EVENTS, THIN_SECONDS)
         if action:
             merge_event(device.record["actions"], ts, keep_from, MAX_EVENTS)
-        if device.unavailable_since is not None:
-            device.unavailable_since = None
+        if not device.spec.mains:
+            # Mains devices: a diagnostic sensor that keeps reporting (Govee's cloud poll) says nothing about the
+            # lamp itself; `_check_availability` decides from the lamp/plug
+            self._reachable_again(device, ts)
         if added or action:
             self.store.async_delay_save(SAVE_DELAY_EVENTS)
             if device.problem or action:
@@ -678,13 +709,36 @@ class PulseMonitor:
             return  # Zigbee2MQTT reports availability itself
         states = [self.hass.states.get(e) for e in device.spec.entities]
         known = [s for s in states if s is not None]
+        if device.spec.mains:
+            # The lamp/plug itself counts, not its diagnostic sensors or config switches (they stay available while
+            # the lamp is gone)
+            known = [s for s in known if s.entity_id in device.spec.main_entities] or known
         via = device.spec.connectivity
         offline = via is not None and self.hass.states.is_state(via, STATE_OFF)
-        if offline or (known and all(s.state == STATE_UNAVAILABLE for s in known)):
+        gone = bool(known) and all(s.state == STATE_UNAVAILABLE for s in known)
+        if offline or gone:
             if device.unavailable_since is None:
-                device.unavailable_since = now
+                # Since the last of them went (still true after an HA restart only from then on)
+                device.unavailable_since = min(now, max(s.last_changed.timestamp() for s in known)) if gone else now
         else:
-            device.unavailable_since = None
+            self._reachable_again(device, now)
+
+    def _starts(self) -> list[float]:
+        """Own HA starts (from `store.uptime`)."""
+        return [float(span[0]) for span in self.store.uptime]
+
+    def _reachable_again(self, device: Device, now: float) -> None:
+        """Back after "unavailable": mains devices remember the outage (learned availability, `usual_outage`)."""
+        since = device.unavailable_since
+        if since is None:
+            return
+        device.unavailable_since = None
+        # Not when it was gone since an HA start: then the integration was loading (or the outage was already
+        # running before the restart, which the recorder knows with its real start)
+        if device.spec.mains and now - since >= OUTAGE_MIN and not near_start(since, self._starts()):
+            outages = device.record.get("outages", [])
+            device.record["outages"] = merge_outages(outages, [(since, now)], now - KEEP_DAYS * DAY)
+            self.store.async_delay_save(SAVE_DELAY_EVENTS)
 
     def _settled(self, now: float) -> bool:
         """Home Assistant has been running long enough that battery values are no longer start echoes."""
@@ -756,7 +810,7 @@ class PulseMonitor:
         if device is None:
             return
         if online:
-            device.unavailable_since = None
+            self._reachable_again(device, time.time())
         elif device.unavailable_since is None:
             device.unavailable_since = time.time()
         self._evaluate(device, time.time())
@@ -882,6 +936,9 @@ class PulseMonitor:
             battery_missing_since=record.get("battery_missing_since"),
             reachable=self._reachable(device),
             mains=device.spec.mains,
+            usual_outage=usual_outage(record.get("outages", ()), now, gaps, KEEP_DAYS, self._starts())
+            if device.spec.mains
+            else None,
         )
 
     def _reachable(self, device: Device) -> str | None:

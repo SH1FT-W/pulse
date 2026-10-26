@@ -332,7 +332,7 @@ export const ES: Record<keyof typeof EN, string> = {
   beta: 'Beta',
   mains_beta: 'Supervisar dispositivos conectados a la red',
   mains_beta_hint:
-    'También dispositivos conectados a la red eléctrica (Zigbee, Z-Wave, Matter, Shelly, ESPHome …). Pulse te avisa cuando uno deja de estar disponible o se queda en silencio aunque suele dar señales con regularidad. Aún en pruebas.',
+    'También dispositivos con corriente: lámparas, enchufes, persianas, termostatos … de cualquier integración. Pulse avisa cuando uno ya no está disponible o se calla aunque suele informar con regularidad. Los dispositivos que a menudo desaparecen solos (reposo, apagados) los aprende y no avisa. Aún en pruebas.',
   mains_devices: 'Dispositivos conectados a la red',
   filter_mains: 'Conectados a la red',
   mains_chip: 'Red · Beta',
@@ -355,9 +355,9 @@ export const ES: Record<keyof typeof EN, string> = {
   tpl_preview: 'Vista previa',
   tpl_reset: 'Usar predeterminado',
   tpl_save: 'Guardar',
-  new_mains_title: 'Dispositivos a la red en beta',
+  new_mains_title: 'Los dispositivos a la red ya están activos',
   new_mains_text:
-    'Enchufes, lámparas e interruptores conectados a la red también se cuelgan. Actívalo en Notificaciones → Beta.',
+    'Pulse ahora también vigila lámparas, enchufes e interruptores conectados a la red, de cualquier integración. Aprende los que suelen estar apagados. Desactívalo en Notificaciones → Beta.',
   new_texts_title: 'Tus propias palabras',
   new_texts_text:
     'Cambia el título y el texto de cada notificación, con marcadores y vista previa.',

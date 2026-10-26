@@ -336,7 +336,7 @@ export const FR: Record<keyof typeof EN, string> = {
   beta: 'Bêta',
   mains_beta: 'Surveiller les appareils sur secteur',
   mains_beta_hint:
-    'Aussi les appareils sur secteur (Zigbee, Z-Wave, Matter, Shelly, ESPHome …). Pulse vous prévient quand l’un d’eux n’est plus joignable ou se tait alors qu’il se signale d’habitude régulièrement. Encore en test.',
+    'Aussi les appareils sur secteur : lampes, prises, volets, thermostats … de toute intégration. Pulse vous prévient quand l’un d’eux n’est plus joignable ou se tait alors qu’il se manifeste d’habitude régulièrement. Les appareils souvent absents d’eux-mêmes (veille, éteints) sont appris et restent discrets. Encore en test.',
   mains_devices: 'Appareils sur secteur',
   filter_mains: 'Sur secteur',
   mains_chip: 'Secteur · Bêta',
@@ -359,9 +359,9 @@ export const FR: Record<keyof typeof EN, string> = {
   tpl_preview: 'Aperçu',
   tpl_reset: 'Rétablir par défaut',
   tpl_save: 'Enregistrer',
-  new_mains_title: 'Appareils sur secteur en bêta',
+  new_mains_title: 'Les appareils sur secteur sont activés',
   new_mains_text:
-    'Prises, lampes et interrupteurs sur secteur peuvent aussi se bloquer. À activer sous Notifications → Bêta.',
+    'Pulse surveille désormais aussi lampes, prises et interrupteurs sur secteur, de toute intégration. Les appareils souvent éteints sont appris. À désactiver sous Notifications → Bêta.',
   new_texts_title: 'Vos propres mots',
   new_texts_text:
     'Modifiez le titre et le texte de chaque notification, avec des variables et un aperçu.',
