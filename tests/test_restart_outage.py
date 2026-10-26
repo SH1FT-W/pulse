@@ -39,7 +39,8 @@ async def test_battery_device_gone_before_the_restart_fails_right_away(hass: Hom
     # No learned rhythm yet (new sensor): the silence rule can't catch it, only "unavailable" can
     assert not device.spec.mains and device.unavailable_since is not None  # HA only knows: since the start
     gone = time.time() - 3 * DAY
-    with patch(LOAD, AsyncMock(return_value={leak.entities["leak"]: ([], gone)})) as load:
+    result = {e: ([], gone) for e in leak.entities.values()}
+    with patch(LOAD, AsyncMock(return_value=result)) as load:
         await monitor._async_learn_outages()
     assert leak.entities["leak"] in load.call_args.args[1]  # asked for, although no mains device
     assert device.unavailable_since == gone
@@ -61,7 +62,7 @@ async def test_zigbee_offline_after_the_history_read_keeps_the_real_start(hass: 
     await hass.async_block_till_done()
     device.unavailable_since = None
     gone = time.time() - 2 * DAY
-    with patch(LOAD, AsyncMock(return_value={thermo.entities["temperature"]: ([], gone)})):
+    with patch(LOAD, AsyncMock(return_value={e: ([], gone) for e in thermo.entities.values()})):
         await monitor._async_learn_outages()
     monitor._z2m_availability(device.spec.ieee or "", False)
     assert device.unavailable_since == gone
@@ -78,7 +79,7 @@ async def test_gone_only_since_the_start_is_not_backdated(hass: HomeAssistant, s
     since = device.unavailable_since
     # The recorder's outage began at this HA start: the integration was loading, nothing older is known
     start = monitor._starts()[-1]
-    with patch(LOAD, AsyncMock(return_value={leak.entities["leak"]: ([], start + 30)})):
+    with patch(LOAD, AsyncMock(return_value={e: ([], start + 30) for e in leak.entities.values()})):
         await monitor._async_learn_outages()
     assert device.unavailable_since == since
     assert leak.device_id not in monitor._gone_before
@@ -110,3 +111,32 @@ async def test_stored_reports_from_an_outage_are_dropped(hass: HomeAssistant, se
         await monitor._async_learn_outages()
     assert device.record["events"] == real
     assert device.record["outages"] == [list(old_outage)]
+
+
+async def test_one_entity_often_unavailable_is_no_outage_of_the_device(hass: HomeAssistant, setup):
+    """Prod 26.10.: a camera's siren is "unknown" normally and "unavailable" every evening; 26.10.12 took its
+    never-ending "outage" for the device's and dropped ten days of reports."""
+    monitor: PulseMonitor = setup["monitor"]
+    camera = add_device(
+        hass,
+        "camera",
+        "Flur",
+        [("siren", "siren", None), ("light", "spotlight", None), ("binary_sensor", "motion", "motion")],
+        manufacturer="Reolink",
+        platform="reolink",
+    )
+    hass.states.async_set(camera.entities["siren"], "unknown")
+    hass.states.async_set(camera.entities["spotlight"], "off")
+    hass.states.async_set(camera.entities["motion"], "off")
+    monitor._rediscover()
+    await hass.async_block_till_done()
+    device = monitor.devices[camera.device_id]
+    now = time.time()
+    device.record["events"] = events = [now - DAY * 9 + i * 3600 for i in range(200)]
+    siren_gone = ([(now - 5 * DAY, now - 4 * DAY)], now - 8 * DAY)
+    result = {camera.entities["siren"]: siren_gone, camera.entities["spotlight"]: ([], None)}
+    with patch(LOAD, AsyncMock(return_value=result)):
+        await monitor._async_learn_outages()
+    assert device.record["events"] == events
+    assert device.record.get("outages", []) == []
+    assert camera.device_id not in monitor._gone_before

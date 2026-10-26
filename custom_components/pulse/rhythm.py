@@ -245,6 +245,28 @@ def overlap(gaps: Sequence[tuple[float, float]], start: float, end: float) -> fl
     return sum(max(0.0, min(end, b) - max(start, a)) for a, b in gaps)
 
 
+def device_outages(
+    per_entity: Sequence[tuple[Sequence[tuple[float, float]], float | None]], now: float
+) -> tuple[list[tuple[float, float]], float | None]:
+    """A device is gone only while all of its entities are: intersect their outages.
+
+    per_entity: per entity (finished outages, start of the one still running). Returns (finished outages of the
+    device, start of its outage still running or None).
+    """
+    if not per_entity:
+        return [], None
+    common: list[tuple[float, float]] | None = None
+    for spans, running in per_entity:
+        mine = sorted([*spans, *([(running, now)] if running is not None else [])])
+        if common is None:
+            common = mine
+            continue
+        common = [(max(a, c), min(b, d)) for a, b in common for c, d in mine if max(a, c) < min(b, d)]
+    finished = [(a, b) for a, b in common or [] if b < now]
+    running = next((a for a, b in common or [] if b >= now), None)
+    return finished, running
+
+
 def without_spans(events: Sequence[float], spans: Sequence[tuple[float, float]]) -> list[float]:
     """Reports outside the given [start, end] spans (in place of the device: e.g. while it was unreachable)."""
     return [ts for ts in events if not any(start <= ts <= end for start, end in spans)]

@@ -83,6 +83,7 @@ from .rhythm import (
     Rhythm,
     RhythmCache,
     Verdict,
+    device_outages,
     downtime_gaps,
     evaluate,
     heartbeat_days,
@@ -598,41 +599,52 @@ class PulseMonitor:
 
     async def _async_learn_outages(self) -> None:
         """From the recorder: past outages of mains devices, and for every device that is gone right now since
-        when it really is (after an HA start only "unavailable since the start" is known)."""
-        watch: dict[str, Device] = {}
+        when it really is (after an HA start only "unavailable since the start" is known).
+
+        A device counts as gone only while all of its deciding entities were unavailable at the same time
+        (`device_outages`): the lamp/plug entities of a mains device, else the integration's reachability flag,
+        else all its entities. One entity alone (a siren that is often unavailable) says nothing.
+        """
+        watch: dict[str, list[str]] = {}
         offline: dict[str, str] = {}
         for device in self.devices.values():
             spec = device.spec
             if not spec.mains and not self._gone_now(device):
                 continue
-            # Mains: the lamp itself first (Govee's connectivity sensor stays "on" while the lamp is unavailable);
-            # battery devices: the integration's reachability flag, else any of their entities
-            if spec.mains:
-                entity_id = next(iter(spec.main_entities), None) or spec.connectivity
+            if spec.mains and spec.main_entities:
+                entity_ids = list(spec.main_entities)
+            elif spec.connectivity:
+                entity_ids = [spec.connectivity]
+                offline[spec.connectivity] = STATE_OFF
             else:
-                entity_id = spec.connectivity or next(iter(spec.entities), None)
-            if entity_id is None:
-                continue
-            watch[entity_id] = device
-            if entity_id == spec.connectivity:
-                offline[entity_id] = STATE_OFF
-        result = await async_load_outages(self.hass, sorted(watch), HISTORY_DAYS, offline, self._starts(), OUTAGE_MIN)
-        keep_from = time.time() - KEEP_DAYS * DAY
-        for entity_id, (spans, running) in result.items():
-            owner = watch.get(entity_id)
-            if owner is None:
-                continue
+                entity_ids = list(spec.entities)
+            if entity_ids:
+                watch[spec.device_id] = entity_ids
+        wanted = sorted({e for ids in watch.values() for e in ids})
+        result = await async_load_outages(self.hass, wanted, HISTORY_DAYS, offline)
+        now = time.time()
+        keep_from = now - KEEP_DAYS * DAY
+        starts = self._starts()
+        for device_id, entity_ids in watch.items():
+            owner = self.devices.get(device_id)
+            if owner is None or any(e not in result for e in entity_ids):
+                continue  # no history for one of them: unknown, so nothing is assumed
+            spans, running = device_outages([result[e] for e in entity_ids], now)
+            spans = [(a, b) for a, b in spans if b - a >= OUTAGE_MIN and not near_start(a, starts)]
+            if running is not None and near_start(running, starts):
+                running = None  # only gone since the integration was loading at this start
+            gone_now = owner.unavailable_since is not None
             if owner.spec.mains:
                 if spans:
                     owner.record["outages"] = merge_outages(owner.record.get("outages", []), spans, keep_from)
-                # Reports stored while the lamp itself was gone were only its other entities being rewritten
-                gone = [*spans, *([(running, time.time())] if running is not None else [])]
+                # Reports stored while the device itself was gone were only its other entities being rewritten
+                gone = [*spans, *([(running, now)] if running is not None and gone_now else [])]
                 if gone:
                     owner.record["events"] = without_spans(owner.record["events"], gone)
-            # Gone since before the restart (not just since the integration was loading at the start)
-            if running is not None and not near_start(running, self._starts()):
-                self._gone_before[owner.spec.device_id] = running
-                if owner.unavailable_since is not None and running < owner.unavailable_since:
+            # Gone since before the restart
+            if running is not None:
+                self._gone_before[device_id] = running
+                if gone_now and owner.unavailable_since is not None and running < owner.unavailable_since:
                     owner.unavailable_since = running
 
     def _gone_now(self, device: Device) -> bool:

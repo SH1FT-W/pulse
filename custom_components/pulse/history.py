@@ -65,7 +65,9 @@ def outage_spans(
         if gone:
             if since is None:
                 since = state.last_updated.timestamp()
-        elif state.state not in NOT_REAL and since is not None:
+        elif since is not None:
+            # Any other state ends it, also "unknown": an entity whose normal state is unknown (a siren, a
+            # button) is there; only "unavailable" means gone
             end = state.last_updated.timestamp()
             if end - since >= shortest and not near_start(since, starts):
                 spans.append((since, end))
@@ -83,8 +85,8 @@ def running_outage(states: Iterable[Any], offline: str | None = None) -> float |
         if state.state == STATE_UNAVAILABLE or (offline is not None and state.state == offline):
             if since is None:
                 since = state.last_updated.timestamp()
-        elif state.state not in NOT_REAL:
-            since = None
+        else:
+            since = None  # any other state, also "unknown", means the entity is there
     return since
 
 

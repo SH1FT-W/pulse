@@ -12,7 +12,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from common import add_device, tick
 from custom_components.pulse.history import outage_spans, running_outage
-from custom_components.pulse.rhythm import Facts, Rhythm, evaluate, merge_outages, usual_outage
+from custom_components.pulse.rhythm import Facts, Rhythm, device_outages, evaluate, merge_outages, usual_outage
 from custom_components.pulse.store import migrate
 
 MINUTE = 60.0
@@ -46,6 +46,17 @@ def test_outage_at_ha_start_does_not_count():
     assert usual_outage(outages, now) == 3 * HOUR
     # The second one began right at an HA start (integration loading): only two left
     assert usual_outage(outages, now, starts=[T0 + DAY - MINUTE]) is None
+
+
+def test_device_is_gone_only_while_all_its_entities_are():
+    now = T0 + DAY
+    light = ([(T0, T0 + 3 * HOUR)], now - HOUR)
+    siren = ([(T0 + HOUR, T0 + 5 * HOUR)], None)  # often unavailable on its own, there right now
+    assert device_outages([light, siren], now) == ([(T0 + HOUR, T0 + 3 * HOUR)], None)
+    assert device_outages([light], now) == ([(T0, T0 + 3 * HOUR)], now - HOUR)
+    both = ([], now - 2 * HOUR)
+    assert device_outages([light, both], now) == ([], now - HOUR)
+    assert device_outages([], now) == ([], None)
 
 
 def test_merge_outages_keeps_one_per_start():
@@ -90,7 +101,11 @@ def test_outage_spans_only_finished_ones():
         _state("off", T0 + 3 * HOUR),
         _state("unavailable", T0 + 5 * HOUR),
     ]
-    assert outage_spans(rows) == [(T0 + HOUR, T0 + 3 * HOUR)]
+    # "unknown" means the entity is there (a siren's normal state): it ends the outage
+    assert outage_spans(rows) == [(T0 + HOUR, T0 + 2 * HOUR)]
+    siren = [_state("unknown", T0), _state("unavailable", T0 + HOUR), _state("unknown", T0 + 9 * HOUR)]
+    assert outage_spans(siren) == [(T0 + HOUR, T0 + 9 * HOUR)]
+    assert running_outage(siren) is None
     sensor = [_state("on", T0), _state("off", T0 + HOUR), _state("on", T0 + 4 * HOUR)]
     assert outage_spans(sensor, "off") == [(T0 + HOUR, T0 + 4 * HOUR)]
     assert outage_spans(sensor) == []

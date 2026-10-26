@@ -2,6 +2,11 @@
 
 After 1.1.0, releases use calendar versions `YY.M.N` (year, month, number of the release in that month), e.g. `26.10.4`. They count as newer than every 1.x version, so updates through HACS work as before.
 
+## 26.10.13 – 2026-10-26
+
+### Fixed
+- 26.10.12 could drop days of real reports of a mains-powered device and show it as *Silent for 10 days* for a moment after a restart. It took one entity that is often unavailable on its own (a camera's siren, whose normal state is "unknown") for the whole device, and did not count "unknown" as being there. Now only "unavailable" means gone, and a device counts as gone only while all of its deciding entities (lamp, plug, siren …) are unavailable at the same time. Stored reports are removed only for such outages of the whole device. The dropped reports come back from the recorder on the next start.
+
 ## 26.10.12 – 2026-10-26
 
 ### Changed
