@@ -7046,7 +7046,7 @@ function Sr() {
 	let e = xr();
 	if (!e) return null;
 	try {
-		return Hn(e, "26.10.9", Ln.length > 0);
+		return Hn(e, "26.10.10", Ln.length > 0);
 	} catch {
 		return null;
 	}
@@ -7237,7 +7237,7 @@ var wr = class extends N {
 		this.welcome = null;
 		let e = xr();
 		try {
-			e && Un(e, "26.10.9");
+			e && Un(e, "26.10.10");
 		} catch {}
 	}
 	zigbeeOffer(e) {
@@ -7401,7 +7401,7 @@ var wr = class extends N {
         @partner-dismiss=${(e) => this.onPartnerDismiss(e.detail.id, e.detail.partner)}
       >
         ${this.renderHead()} ${this.renderContent()}
-        <p class="version muted">${L(t, "version", { version: "26.10.9" })}</p>
+        <p class="version muted">${L(t, "version", { version: "26.10.10" })}</p>
         ${e ? E`<pulse-device-sheet
                   .open=${n !== null}
                   .device=${n}
@@ -7426,7 +7426,7 @@ var wr = class extends N {
                 <pulse-welcome
                   .mode=${this.welcome}
                   .language=${t}
-                  .version=${"26.10.9"}
+                  .version=${"26.10.10"}
                   .zigbee=${this.zigbeeOffer(e)}
                   @closed=${() => this.welcomeDone()}
                   @enable-z2m=${() => {

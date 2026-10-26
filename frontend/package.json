@@ -1,6 +1,6 @@
 {
   "name": "@pulse/frontend",
-  "version": "26.10.9",
+  "version": "26.10.10",
   "private": true,
   "type": "module",
   "description": "Pulse-Panel für Home Assistant – Lit + HAs eigene Elemente",

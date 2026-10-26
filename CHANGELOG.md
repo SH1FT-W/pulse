@@ -2,6 +2,11 @@
 
 After 1.1.0, releases use calendar versions `YY.M.N` (year, month, number of the release in that month), e.g. `26.10.4`. They count as newer than every 1.x version, so updates through HACS work as before.
 
+## 26.10.10 – 2026-10-26
+
+### Fixed
+- A battery device that was already unreachable before Home Assistant restarted (a Matter leak sensor, a lock, a Zigbee sensor with availability on) counted as unreachable only since the restart, as mains-powered devices did before 26.10.9. Pulse now takes the real start from the recorder for every device that is unreachable at start, also when Zigbee2MQTT reports it offline only after the history was read. Most battery devices were already caught by their silence; this matters for devices without a learned rhythm and for the reason shown ("unreachable" instead of "silent").
+
 ## 26.10.9 – 2026-10-26
 
 ### Changed

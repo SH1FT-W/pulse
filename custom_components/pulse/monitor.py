@@ -264,6 +264,8 @@ class PulseMonitor:
         self._gaps_cache: tuple[tuple[int, float], list[tuple[float, float]]] | None = None
         # Cloud outages of the last tick: integration → {ids, since, count, name}
         self.cloud_outages: dict[str, dict[str, Any]] = {}
+        # From the recorder at start: device ID → since when it has really been gone (outage running over the restart)
+        self._gone_before: dict[str, float] = {}
         # Once a day: forecast + partner suggestions
         self._daily_at = 0.0
         self._daily_running = False
@@ -594,15 +596,20 @@ class PulseMonitor:
         self._tick(dt_util.utcnow())
 
     async def _async_learn_outages(self) -> None:
-        """Mains devices: past outages from the recorder (the lamp/plug "unavailable", else connectivity "off")."""
+        """From the recorder: past outages of mains devices, and for every device that is gone right now since
+        when it really is (after an HA start only "unavailable since the start" is known)."""
         watch: dict[str, Device] = {}
         offline: dict[str, str] = {}
         for device in self.devices.values():
             spec = device.spec
-            if not spec.mains:
+            if not spec.mains and not self._gone_now(device):
                 continue
-            # The lamp itself first: Govee's connectivity sensor stays "on" while the lamp is unavailable
-            entity_id = next(iter(spec.main_entities), None) or spec.connectivity
+            # Mains: the lamp itself first (Govee's connectivity sensor stays "on" while the lamp is unavailable);
+            # battery devices: the integration's reachability flag, else any of their entities
+            if spec.mains:
+                entity_id = next(iter(spec.main_entities), None) or spec.connectivity
+            else:
+                entity_id = spec.connectivity or next(iter(spec.entities), None)
             if entity_id is None:
                 continue
             watch[entity_id] = device
@@ -614,12 +621,31 @@ class PulseMonitor:
             owner = watch.get(entity_id)
             if owner is None:
                 continue
-            if spans:
+            if spans and owner.spec.mains:
                 owner.record["outages"] = merge_outages(owner.record.get("outages", []), spans, keep_from)
-            # Gone since before the restart: after a start HA (and thus Pulse) only knows "unavailable since the
-            # start"; the recorder knows when it really went (a lamp gone for days is "failed" right away)
-            if owner.unavailable_since is not None and running is not None and running < owner.unavailable_since:
-                owner.unavailable_since = running
+            # Gone since before the restart (not just since the integration was loading at the start)
+            if running is not None and not near_start(running, self._starts()):
+                self._gone_before[owner.spec.device_id] = running
+                if owner.unavailable_since is not None and running < owner.unavailable_since:
+                    owner.unavailable_since = running
+
+    def _gone_now(self, device: Device) -> bool:
+        """Unreachable at the moment: marked so, or all its entities unavailable / the integration says offline."""
+        if device.unavailable_since is not None:
+            return True
+        via = device.spec.connectivity
+        if via is not None and self.hass.states.is_state(via, STATE_OFF):
+            return True
+        states = [self.hass.states.get(e) for e in device.spec.entities]
+        known = [s for s in states if s is not None]
+        return bool(known) and all(s.state == STATE_UNAVAILABLE for s in known)
+
+    def _mark_unavailable(self, device: Device, since: float) -> None:
+        """Unreachable from `since` on; if the recorder knows it was gone already before the restart, from then."""
+        if device.unavailable_since is not None:
+            return
+        before = self._gone_before.get(device.spec.device_id)
+        device.unavailable_since = before if before is not None and before < since else since
 
     # ── Reports ──────────────────────────────────────────────────────────
 
@@ -723,9 +749,8 @@ class PulseMonitor:
         offline = via is not None and self.hass.states.is_state(via, STATE_OFF)
         gone = bool(known) and all(s.state == STATE_UNAVAILABLE for s in known)
         if offline or gone:
-            if device.unavailable_since is None:
-                # Since the last of them went (still true after an HA restart only from then on)
-                device.unavailable_since = min(now, max(s.last_changed.timestamp() for s in known)) if gone else now
+            # Since the last of them went (after an HA restart: since the start, or earlier from the recorder)
+            self._mark_unavailable(device, min(now, max(s.last_changed.timestamp() for s in known)) if gone else now)
         else:
             self._reachable_again(device, now)
 
@@ -735,6 +760,7 @@ class PulseMonitor:
 
     def _reachable_again(self, device: Device, now: float) -> None:
         """Back after "unavailable": mains devices remember the outage (learned availability, `usual_outage`)."""
+        self._gone_before.pop(device.spec.device_id, None)  # back: the outage before the restart is over
         since = device.unavailable_since
         if since is None:
             return
@@ -817,8 +843,8 @@ class PulseMonitor:
             return
         if online:
             self._reachable_again(device, time.time())
-        elif device.unavailable_since is None:
-            device.unavailable_since = time.time()
+        else:
+            self._mark_unavailable(device, time.time())
         self._evaluate(device, time.time())
         self.async_update()
 
@@ -1204,6 +1230,7 @@ class PulseMonitor:
         if source != "manual":
             merge_event(device.record["events"], now, None, MAX_EVENTS)
         device.unavailable_since = None
+        self._gone_before.pop(device_id, None)
         self.hass.bus.async_fire(
             EVENT_BATTERY_REPLACED, {"device_id": device_id, "name": device.name, "source": source}
         )
