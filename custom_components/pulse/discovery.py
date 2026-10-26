@@ -75,6 +75,7 @@ class DeviceSpec:
 # Icon by what the device measures (first matching rule wins)
 ICONS: tuple[tuple[str, str | None, str], ...] = (
     ("lock", None, "mdi:lock-outline"),
+    ("camera", None, "mdi:cctv"),
     ("binary_sensor", "moisture", "mdi:water-alert-outline"),
     ("binary_sensor", "smoke", "mdi:smoke-detector-variant"),
     ("binary_sensor", "gas", "mdi:gas-cylinder"),
@@ -106,10 +107,15 @@ MAINS_ICON = "mdi:power-plug-outline"
 
 
 def icon_for(entries: list[er.RegistryEntry], mains: bool = False) -> str:
-    for domain, device_class, icon in ICONS + MAINS_ICONS if mains else ICONS:
-        for e in entries:
-            if e.domain == domain and (device_class is None or _device_class(e) == device_class):
-                return icon
+    # What the device is: first its regular entities (a camera's diagnostic chip temperature is no thermometer),
+    # only then all (a smoke detector whose smoke sensor its integration files under diagnostics)
+    rules = ICONS + MAINS_ICONS if mains else ICONS
+    regular = [e for e in entries if e.entity_category is None]
+    for candidates in (regular, entries):
+        for domain, device_class, icon in rules:
+            for e in candidates:
+                if e.domain == domain and (device_class is None or _device_class(e) == device_class):
+                    return icon
     return MAINS_ICON if mains else DEFAULT_ICON
 
 

@@ -64,6 +64,9 @@ es hört nur zu (Zustände, „gemeldet ohne Änderung“, Zigbee2MQTT-Nachricht
 - Takt je Gerät aus `RhythmCache` (neu gelernt nur bei neuen Meldungen). Meldungen werden auf eine je 120 s
   ausgedünnt (`THIN_SECONDS`, `MAX_EVENTS` 6000 = 7 Tage auch für BLE). Rhythmusleiste: 12 Fenster je Kalendertag.
 - Start/Stopp: `_stopped` + `_z2m_lock` – ein Neuladen während des Starts hinterlässt keinen zweiten Wächter/Listener.
+- Symbol (`discovery.icon_for`): erst normale Entitäten, dann alle (Diagnose-Chiptemperatur ≠ Thermometer, Techem-Rauchmelder
+  mit Rauch als Diagnose-Entität bleibt Rauchmelder); Kamera → `mdi:cctv`. Grund bei Ausfall: gleich schwer → „nicht erreichbar“
+  schlägt Stille (`rhythm.SILENCE_KEYS`).
 - Entitäten schreiben nur bei Änderung (`PulseEntity._handle_update`); Attribute stabil (`reason_key`, `silent_since` –
   bei `unavailable`/`unavailable_usual` der Ausfallbeginn, `unavailable_since`),
   keine laufend wechselnden Sätze. Lesen (Panel, `pulse/subscribe`, `pulse/heartbeat`) für alle, Schreiben nur Admins.

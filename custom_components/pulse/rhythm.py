@@ -380,6 +380,9 @@ class Facts:
     usual_outage: float | None = None  # often unavailable by itself: its longest such outage (`usual_outage`)
 
 
+SILENCE_KEYS = frozenset({"silent", "silent_new", "radio_only"})
+
+
 def _worse(a: Verdict, b: Verdict) -> Verdict:
     return b if SEVERITY[b.status] > SEVERITY[a.status] else a
 
@@ -454,7 +457,13 @@ def evaluate(facts: Facts) -> Verdict:
     elif waiting and facts.downtime > 0:
         verdict = _worse(verdict, Verdict(STATUS_WATCH, {"key": "startup_waiting", "params": {}}))
 
-    # 2. Not reachable (Zigbee availability, Matter)
+    # 2. Not reachable (Zigbee availability, Matter). Being unreachable explains a silence: at the same level
+    # "nicht erreichbar" (unreachable) is the reason shown, not "still" (silent)
+    def _gone(current: Verdict, new: Verdict) -> Verdict:
+        if SEVERITY[new.status] >= SEVERITY[current.status] and current.reason["key"] in SILENCE_KEYS:
+            return new
+        return _worse(current, new)
+
     if facts.unavailable_since is not None:
         gone = now - facts.unavailable_since
         params = {"since": gone}
@@ -462,13 +471,13 @@ def evaluate(facts: Facts) -> Verdict:
             # Often away by itself (standby, switched off at the plug): being gone is its habit. At most "watch";
             # only much longer than ever before (twice its longest outage, at least a day) "prüfen" (check)
             if gone >= max(2 * facts.usual_outage, DAY):
-                verdict = _worse(verdict, Verdict(STATUS_CHECK, {"key": "unavailable", "params": params}))
+                verdict = _gone(verdict, Verdict(STATUS_CHECK, {"key": "unavailable", "params": params}))
             elif gone >= OUTAGE_MIN:
-                verdict = _worse(verdict, Verdict(STATUS_WATCH, {"key": "unavailable_usual", "params": params}))
+                verdict = _gone(verdict, Verdict(STATUS_WATCH, {"key": "unavailable_usual", "params": params}))
         elif gone >= (HOUR if facts.critical else 2 * HOUR):
-            verdict = _worse(verdict, Verdict(STATUS_FAILED, {"key": "unavailable", "params": params}))
+            verdict = _gone(verdict, Verdict(STATUS_FAILED, {"key": "unavailable", "params": params}))
         elif gone >= (10 * MINUTE if facts.critical else 20 * MINUTE):
-            verdict = _worse(verdict, Verdict(STATUS_CHECK, {"key": "unavailable", "params": params}))
+            verdict = _gone(verdict, Verdict(STATUS_CHECK, {"key": "unavailable", "params": params}))
 
     # 3. Cross-check: the partner was active several times, this device was not
     if facts.partner_name and facts.partner_actions >= 3:

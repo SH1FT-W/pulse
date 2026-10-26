@@ -48,6 +48,23 @@ def test_outage_at_ha_start_does_not_count():
     assert usual_outage(outages, now, starts=[T0 + DAY - MINUTE]) is None
 
 
+def test_unreachable_is_the_reason_not_the_silence():
+    now = T0
+    # A lamp gone for three days: silent for as long (no fake reports), and unreachable
+    facts = Facts(
+        now=now,
+        rhythm=Rhythm(300.0, 900.0, 200),
+        last_activity=now - 3 * DAY,
+        mains=True,
+        unavailable_since=now - 3 * DAY,
+    )
+    verdict = evaluate(facts)
+    assert (verdict.status, verdict.reason["key"]) == ("failed", "unavailable")
+    # A worse silence still wins over a milder unreachable (just gone for 30 minutes)
+    late = evaluate(Facts(**{**facts.__dict__, "unavailable_since": now - 30 * MINUTE}))
+    assert (late.status, late.reason["key"]) == ("failed", "silent")
+
+
 def test_device_is_gone_only_while_all_its_entities_are():
     now = T0 + DAY
     light = ([(T0, T0 + 3 * HOUR)], now - HOUR)
@@ -265,3 +282,34 @@ async def test_gone_since_before_the_restart_fails_right_away(hass: HomeAssistan
     assert device.unavailable_since == gone
     await tick(hass, setup["freezer"], timedelta(minutes=1))
     assert (device.status, device.reason["key"]) == ("failed", "unavailable")
+
+
+async def test_icon_from_what_the_device_is(hass: HomeAssistant, setup):
+    """Prod 26.10.: an ESPHome camera got a thermometer from its diagnostic chip temperature sensor."""
+    monitor = setup["monitor"]
+    cam = add_device(
+        hass,
+        "birdhouse",
+        "Vogelhaus Kamera",
+        [("camera", "camera", None), ("sensor", "chip", "temperature"), ("switch", "standby", None)],
+        manufacturer="Espressif",
+        platform="esphome",
+    )
+    er.async_get(hass).async_update_entity(cam.entities["chip"], entity_category=EntityCategory.DIAGNOSTIC)
+    monitor.async_rediscover()
+    assert monitor.devices[cam.device_id].spec.icon == "mdi:cctv"
+    # Smoke detector over MQTT: the smoke sensor is filed under diagnostics, nothing regular says what it is
+    smoke = add_device(
+        hass,
+        "smoke",
+        "Rauchmelder",
+        [("binary_sensor", "smoke", "smoke"), ("sensor", "battery", "battery"), ("sensor", "due", "date")],
+        manufacturer="Techem",
+        platform="mqtt",
+        ieee="0x00ff",
+    )
+    reg = er.async_get(hass)
+    for key in ("smoke", "battery"):
+        reg.async_update_entity(smoke.entities[key], entity_category=EntityCategory.DIAGNOSTIC)
+    monitor.async_rediscover()
+    assert monitor.devices[smoke.device_id].spec.icon == "mdi:smoke-detector-variant"

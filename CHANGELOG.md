@@ -2,6 +2,12 @@
 
 After 1.1.0, releases use calendar versions `YY.M.N` (year, month, number of the release in that month), e.g. `26.10.4`. They count as newer than every 1.x version, so updates through HACS work as before.
 
+## 26.10.14 – 2026-10-26
+
+### Fixed
+- An unreachable device that is also silent showed *silent* as its reason. Being unreachable explains the silence, so at the same level Pulse now says *unreachable*; a worse silence still wins.
+- Device icons come from what a device is: Pulse looks at its regular entities first and at diagnostic or settings entities only if nothing else fits. An ESPHome camera no longer gets a thermometer from its chip temperature sensor, a smoke detector whose smoke sensor is filed under diagnostics keeps its icon. Cameras get a camera icon, room thermostats a radiator.
+
 ## 26.10.13 – 2026-10-26
 
 ### Fixed
