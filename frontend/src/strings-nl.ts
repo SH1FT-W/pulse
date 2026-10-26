@@ -6,6 +6,14 @@ export const NL: Record<keyof typeof EN, string> = {
   tab_overview: 'Overzicht',
   tab_devices: 'Apparaten',
   tab_notify: 'Meldingen',
+  tab_options: 'Instellingen',
+  options_hl1: '{count} apparaten',
+  options_hl1_one: 'Eén apparaat',
+  options_hl2: 'Pulse luistert.',
+  options_sub: 'Kies wat Pulse in de gaten houdt en wat het daarnaast leest.',
+  options_sub_mains:
+    'Daarvan {mains} op netstroom. Kies wat Pulse in de gaten houdt en wat het daarnaast leest.',
+  options_watch: 'In de gaten houden',
   close: 'Sluiten',
   more: 'Meer',
   loading: 'Pulse laden …',
@@ -357,7 +365,10 @@ export const NL: Record<keyof typeof EN, string> = {
   tpl_save: 'Opslaan',
   new_mains_title: 'Apparaten op netstroom staan nu aan',
   new_mains_text:
-    'Pulse let nu ook op lampen, stekkers en schakelaars op netstroom, uit elke integratie. Apparaten die vaak uit staan leert Pulse kennen. Uitzetten onder Meldingen → Bèta.',
+    'Pulse let nu ook op lampen, stekkers en schakelaars op netstroom, uit elke integratie. Apparaten die vaak uit staan leert Pulse kennen. Uitzetten onder Instellingen.',
+  new_layout_title: 'Overzichtelijker',
+  new_layout_text:
+    'Ruimtes vallen op in de lijsten en Instellingen heeft een eigen tabblad: apparaten op netstroom en Zigbee2MQTT staan nu daar, Meldingen gaat alleen nog over meldingen.',
   new_texts_title: 'Je eigen woorden',
   new_texts_text: 'Pas de titel en tekst van elke melding aan, met placeholders en een voorbeeld.',
   new_labels_title: 'Labels in plaats van klikken',

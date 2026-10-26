@@ -35,6 +35,17 @@ export class PulseSegmented extends LitElement {
     this.dispatchEvent(new CustomEvent('change', { detail: { value } }));
   }
 
+  /** Scrolls the active tab into the visible part of the bar (only moves the bar, never the page). */
+  updated(): void {
+    const nav = this.renderRoot.querySelector('nav');
+    const active = this.renderRoot.querySelector<HTMLElement>('button.active');
+    if (!nav || !active || nav.scrollWidth <= nav.clientWidth) return;
+    const left = active.offsetLeft - nav.offsetLeft;
+    if (left < nav.scrollLeft) nav.scrollLeft = left;
+    else if (left + active.offsetWidth > nav.scrollLeft + nav.clientWidth)
+      nav.scrollLeft = left + active.offsetWidth - nav.clientWidth;
+  }
+
   render() {
     return html`<nav aria-label=${this.label}>
       ${this.options.map(
@@ -57,9 +68,16 @@ export class PulseSegmented extends LitElement {
         display: block;
         max-width: 100%;
       }
+      /* Four tabs in a long language on a narrow phone: swipe sideways instead of overflowing the page */
       nav {
         display: flex;
         gap: clamp(4px, 1.6vw, 14px);
+        overflow-x: auto;
+        scrollbar-width: none;
+        overscroll-behavior-x: contain;
+      }
+      nav::-webkit-scrollbar {
+        display: none;
       }
       button {
         position: relative;

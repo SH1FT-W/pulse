@@ -2,25 +2,19 @@
 
 After 1.1.0, releases use calendar versions `YY.M.N` (year, month, number of the release in that month), e.g. `26.10.4`. They count as newer than every 1.x version, so updates through HACS work as before.
 
-## 26.10.9b3 – 2026-10-26 (beta)
-
-### Fixed
-- A device that was already unreachable before Home Assistant restarted counted as unreachable only since the restart, and showed *In rhythm* for the first 20 minutes. Pulse now takes the real start from the recorder, so a lamp gone for days is *Failed* right after the restart.
-
-## 26.10.9b2 – 2026-10-26 (beta)
+## 26.10.9 – 2026-10-26
 
 ### Changed
-- **Watching mains-powered devices is on by default**, also in existing installations (once, with the update; switch it off under *Notifications → Beta*, it then stays off). "New in Pulse" says so.
-- **Beta: mains-powered devices from any integration.** Besides every device of the local integrations as before (Zigbee, Matter, ESPHome, Shelly …), Pulse now also watches every device without a battery whose own integration gives it a lamp, plug, switch, cover, fan, thermostat, valve or lock (Govee cloud, Bluetooth aquarium lamps, Tuya local, VeSync …). Helpers on top of a device (template, group, powercalc, switch_as_x …) and service devices don't count; a helper's entities no longer decide which integration a device belongs to.
-- **Learned availability.** Pulse remembers when a mains device went unavailable by itself and came back (live and from the recorder; outages that begin at a Home Assistant start, while integrations are still loading, don't count). With at least three such outages of 20 minutes or more in two weeks, being gone is that device's habit: *Watch* ("Normal for this device, it is often off or in standby"), no notification. Only when it stays away for more than twice its longest outage (at least a day) it becomes *Check*. Replayed on a real home's last ten days: a Bluetooth aquarium lamp went from 5 alarms to 0, a camera from 11 to 3.
+- **Watching mains-powered devices is on by default**, also in existing installations (once, with the update). Switch it off under *Settings*; it then stays off. "New in Pulse" says so.
+- **Mains-powered devices from any integration.** Besides every device of the local integrations as before (Zigbee, Matter, ESPHome, Shelly …), Pulse now watches every device without a battery whose own integration gives it a lamp, plug, switch, cover, fan, thermostat, valve or lock (Govee cloud, Bluetooth aquarium lamps, Tuya local, VeSync …). Helpers on top of a device (template, group, powercalc, switch_as_x …) and service devices don't count; a helper's entities no longer decide which integration a device belongs to.
+- **Learned availability.** Pulse remembers when a mains device went unavailable by itself and came back (live and from the recorder; outages that begin at a Home Assistant start, while integrations are still loading, don't count). With at least three such outages of 20 minutes or more in two weeks, being gone is that device's habit: *Watch* ("Normal for this device, it is often off or in standby"), no notification. Only when it stays away for more than twice its longest outage (at least a day) does it become *Check*. Replayed on a real home's last ten days: a Bluetooth aquarium lamp went from 5 alarms to 0, a camera from 11 to 3.
+
+- **Own tab for settings.** *Notifications* is only about notifications now; watching mains-powered devices and the Zigbee2MQTT options moved to a new *Settings* tab. On a narrow phone the tab bar scrolls sideways instead of overflowing.
+- **Rooms stand out.** In the overview and the device list, room headers are their own band with a count, no longer looking like a device row; devices under a room header no longer repeat the room name.
 
 ### Fixed
-- A mains device counts as unreachable when the lamp or plug itself is unavailable. Before, all of its entities had to be, and diagnostic sensors that keep reporting (Govee's "last update" on every cloud poll) kept it "reachable" forever, also while its connectivity sensor still said "on".
-
-## 26.10.9b1 – 2026-10-26 (beta)
-
-### Fixed
-- **Beta: mains-powered devices.** Lamps of the Govee cloud integration (`govee`) are watched too. Pulse only knew the local Govee integration, so an offline Govee lamp was never reported. (26.10.9b2 replaces the list entry with the rule by device kind.)
+- An offline Govee lamp was never reported. Pulse did not know the Govee cloud integration, and a mains device only counted as unreachable when all of its entities were: diagnostic sensors that keep reporting (Govee's "last update" on every cloud poll) and a connectivity sensor that stays "on" kept it "reachable" forever. Now the lamp or plug itself decides (not its diagnostic sensors or config switches).
+- A device that was already unreachable before Home Assistant restarted counted as unreachable only since the restart and showed *In rhythm* for the first 20 minutes. Pulse now takes the real start from the recorder, so a lamp gone for days is *Failed* right after the restart.
 
 ## 26.10.8 – 2026-10-19
 

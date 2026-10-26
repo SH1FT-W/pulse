@@ -111,7 +111,8 @@ es hört nur zu (Zustände, „gemeldet ohne Änderung“, Zigbee2MQTT-Nachricht
 
 **Panel** (`frontend/src/`): Lit, ein Element pro Datei (`pulse-*.ts`), `static properties` + `declare`, keine
 Decorators. Optik „Puls“ (Richtung C): Kopf = Zeichen + „Pulse“ + Reiter mit Unterstrich (`pulse-segmented`)
-Übersicht/Geräte/Mitteilungen (`/pulse`, `/pulse/devices`, `/pulse/settings`); Übersicht = große Schlagzeile
+Übersicht/Geräte/Mitteilungen/Einstellungen (`/pulse`, `/pulse/devices`, `/pulse/settings`, `/pulse/options`; beide letzten
+`pulse-settings` mit `page` notify|options, Einstellungen = Netzgeräte + Zigbee2MQTT; Reiterleiste wischt bei Platzmangel); Übersicht = große Schlagzeile
 (`hero`/`heroSentences` in `logic.ts`), „Dein Tag mit Pulse“ (`pulse-dayband`), Monitor mit einer Rhythmusleiste je
 Gerät (`pulse-rhythm`: bricht bei Stille ab, rot gestrichelt + „Seit X still“; „Im Takt“ ab 12 Geräten nach Raum
 einklappbar), Detail mit Herzschlag-Kalender (`pulse-heartbeat`, Daten per `pulse/heartbeat`, 15-min-Fenster je Kalendertag
@@ -135,7 +136,7 @@ Stille aus `silence_start`/`strays` (Rückfall: eigene `silentIndex`-Rechnung), 
 Einzelalarm: grau, „Im Blick“, Sammelhinweis aus `summary.cloud_outages`). Vorhersage nur als grober Bereich
 (`forecastText`), Einkaufsliste aus `summary.due_batteries` (`dueLine`), Batterie-Kachel antippbar (Filter
 `battery`), wichtige Geräte mit Stern + Filter `important`. Funk-Zähler (`pulse/enable_z2m_health`) und
-Zigbee-Lebenszeichen auch unter Mitteilungen → Zigbee2MQTT, nur nach Rückfrage. Partner-Vorschläge im Detail
+Zigbee-Lebenszeichen auch unter Einstellungen → Zigbee2MQTT, nur nach Rückfrage. Partner-Vorschläge im Detail
 (`pulse/device {partner}` / `pulse/partner_suggestion_dismiss`). Abo-Fehler: letzter Stand bleibt + Hinweis.
 Panel-Version kommt aus `manifest.json` (vite.config) – nach dem Versionssprung neu bauen.
 

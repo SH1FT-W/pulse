@@ -6,6 +6,14 @@ export const DE: Record<keyof typeof EN, string> = {
   tab_overview: 'Übersicht',
   tab_devices: 'Geräte',
   tab_notify: 'Mitteilungen',
+  tab_options: 'Einstellungen',
+  options_hl1: '{count} Geräte',
+  options_hl1_one: 'Ein Gerät',
+  options_hl2: 'hört Pulse zu.',
+  options_sub: 'Hier legst du fest, was Pulse überwacht und was es zusätzlich mitliest.',
+  options_sub_mains:
+    'Davon {mains} am Strom. Hier legst du fest, was Pulse überwacht und was es zusätzlich mitliest.',
+  options_watch: 'Überwachen',
   close: 'Schließen',
   more: 'Mehr',
   loading: 'Pulse lädt …',
@@ -353,7 +361,10 @@ export const DE: Record<keyof typeof EN, string> = {
   tpl_save: 'Sichern',
   new_mains_title: 'Netzgeräte sind jetzt dabei',
   new_mains_text:
-    'Pulse achtet jetzt auch auf Lampen, Steckdosen und Schalter am Strom, aus jeder Integration. Geräte, die oft aus sind, lernt es kennen. Abschalten unter Mitteilungen → Beta.',
+    'Pulse achtet jetzt auch auf Lampen, Steckdosen und Schalter am Strom, aus jeder Integration. Geräte, die oft aus sind, lernt es kennen. Abschalten unter Einstellungen.',
+  new_layout_title: 'Übersichtlicher',
+  new_layout_text:
+    'Räume heben sich in den Listen klar ab, und „Einstellungen“ hat einen eigenen Reiter: Netzgeräte und Zigbee2MQTT stehen jetzt dort, „Mitteilungen“ ist nur noch für Mitteilungen.',
   new_texts_title: 'Deine eigenen Worte',
   new_texts_text:
     'Titel und Text jeder Mitteilung lassen sich anpassen, mit Platzhaltern und Vorschau.',

@@ -120,7 +120,7 @@ export class PulseOverview extends LitElement {
   private readonly gapsOf = memoize(gapFractions);
   private gaps: [number, number][] = [];
 
-  private renderRow(d: Device) {
+  private renderRow(d: Device, showRoom = true) {
     const lang = this.language;
     const word = statusWord(lang, d, this.now);
     const time =
@@ -137,7 +137,7 @@ export class PulseOverview extends LitElement {
               ? html`<span class="star" role="img" aria-label=${t(lang, 'important_badge')} title=${t(lang, 'important_badge')}><ha-icon icon="mdi:star"></ha-icon></span>`
               : nothing
           }</span>
-          ${d.area ? html`<span class="room">${d.area}</span>` : nothing}
+          ${showRoom && d.area ? html`<span class="room">${d.area}</span>` : nothing}
         </span>
       </span>
       <pulse-rhythm
@@ -169,7 +169,7 @@ export class PulseOverview extends LitElement {
           <ha-icon icon=${closed ? 'mdi:chevron-right' : 'mdi:chevron-down'}></ha-icon>
           <span>${g.area}</span><span class="count">${g.devices.length}</span>
         </button>
-        ${closed ? nothing : g.devices.map((d) => this.renderRow(d))}`;
+        ${closed ? nothing : g.devices.map((d) => this.renderRow(d, false))}`;
     })}`;
   }
 
@@ -442,9 +442,11 @@ export class PulseOverview extends LitElement {
       }
       @media (hover: hover) {
         .mrow:hover,
-        .room-head:hover,
         .fact.tappable:hover {
           background: color-mix(in srgb, var(--pu-ink) 3%, transparent);
+        }
+        .room-head:hover {
+          background: color-mix(in srgb, var(--pu-ink) 8%, transparent);
         }
       }
       .mrow:active {
@@ -458,20 +460,22 @@ export class PulseOverview extends LitElement {
         outline-offset: 3px;
         border-radius: var(--pu-r-8);
       }
+      /* Raum-Überschrift: eigene Leiste mit Abstand, nicht wie eine Gerätezeile */
       .room-head {
         display: flex;
         align-items: center;
         gap: var(--pu-sp-8);
         width: 100%;
         min-height: max(40px, var(--pu-hit));
-        padding: 0;
+        margin-top: var(--pu-sp-16);
+        padding: 0 var(--pu-sp-12);
         border: 0;
-        border-bottom: 1px solid var(--pu-line);
-        background: none;
+        border-radius: var(--pu-r-8);
+        background: color-mix(in srgb, var(--pu-ink) 5%, transparent);
         color: var(--pu-ink);
         font: inherit;
         font-size: var(--pu-fs-15);
-        font-weight: 600;
+        font-weight: 700;
         text-align: start;
         cursor: pointer;
         --mdc-icon-size: 18px;
@@ -480,8 +484,13 @@ export class PulseOverview extends LitElement {
         color: var(--pu-muted);
       }
       .room-head .count {
-        color: var(--pu-faint);
-        font-weight: 500;
+        padding: 0 8px;
+        border-radius: 99px;
+        background: color-mix(in srgb, var(--pu-ink) 8%, transparent);
+        color: var(--pu-muted);
+        font-size: 12px;
+        font-weight: 600;
+        line-height: 20px;
       }
 
       /* ── Fakten unten ── */

@@ -7,6 +7,13 @@ export const ES: Record<keyof typeof EN, string> = {
   tab_overview: 'Resumen',
   tab_devices: 'Dispositivos',
   tab_notify: 'Notificaciones',
+  tab_options: 'Ajustes',
+  options_hl1: '{count} dispositivos',
+  options_hl1_one: 'Un dispositivo',
+  options_hl2: 'Pulse escucha.',
+  options_sub: 'Elige qué vigila Pulse y qué lee además.',
+  options_sub_mains: '{mains} de ellos con corriente. Elige qué vigila Pulse y qué lee además.',
+  options_watch: 'Vigilar',
   close: 'Cerrar',
   more: 'Más',
   loading: 'Cargando Pulse …',
@@ -357,7 +364,10 @@ export const ES: Record<keyof typeof EN, string> = {
   tpl_save: 'Guardar',
   new_mains_title: 'Los dispositivos a la red ya están activos',
   new_mains_text:
-    'Pulse ahora también vigila lámparas, enchufes e interruptores conectados a la red, de cualquier integración. Aprende los que suelen estar apagados. Desactívalo en Notificaciones → Beta.',
+    'Pulse ahora también vigila lámparas, enchufes e interruptores conectados a la red, de cualquier integración. Aprende los que suelen estar apagados. Desactívalo en Ajustes.',
+  new_layout_title: 'Más claro',
+  new_layout_text:
+    'Las estancias destacan en las listas y Ajustes tiene su propia pestaña: los dispositivos con corriente y Zigbee2MQTT están ahora allí, Notificaciones solo trata de notificaciones.',
   new_texts_title: 'Tus propias palabras',
   new_texts_text:
     'Cambia el título y el texto de cada notificación, con marcadores y vista previa.',

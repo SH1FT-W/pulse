@@ -38,7 +38,7 @@ import './pulse-sheet';
 
 declare const __PULSE_VERSION__: string;
 
-type View = 'overview' | 'devices' | 'settings';
+type View = 'overview' | 'devices' | 'settings' | 'options';
 
 interface Route {
   path: string;
@@ -160,6 +160,7 @@ export class PulsePanel extends LitElement {
     const path = this.route?.path ?? '';
     // Mitteilungen gibt es nur für Admins
     if (path.startsWith('/settings')) return this.readonly ? 'overview' : 'settings';
+    if (path.startsWith('/options')) return this.readonly ? 'overview' : 'options';
     if (path.startsWith('/devices')) return 'devices';
     return 'overview';
   }
@@ -215,7 +216,11 @@ export class PulsePanel extends LitElement {
   protected willUpdate(changed: PropertyValues<this>): void {
     if (changed.has('route')) this.openDeepLink();
     // Mitteilungen gibt es nur für Admins: die Adresse dazu passend ersetzen
-    if (this.hass?.user && this.readonly && (this.route?.path ?? '').startsWith('/settings'))
+    if (
+      this.hass?.user &&
+      this.readonly &&
+      ['/settings', '/options'].some((p) => (this.route?.path ?? '').startsWith(p))
+    )
       navigateTo('/pulse', true);
   }
 
@@ -446,7 +451,12 @@ export class PulsePanel extends LitElement {
     const tabs = [
       { value: 'overview', label: t(lang, 'tab_overview') },
       { value: 'devices', label: t(lang, 'tab_devices') },
-      ...(this.readonly ? [] : [{ value: 'settings', label: t(lang, 'tab_notify') }]),
+      ...(this.readonly
+        ? []
+        : [
+            { value: 'settings', label: t(lang, 'tab_notify') },
+            { value: 'options', label: t(lang, 'tab_options') },
+          ]),
     ];
     return html`<header class="head">
       <div class="brand" title=${t(lang, 'subtitle')}>
@@ -459,7 +469,8 @@ export class PulsePanel extends LitElement {
         .label=${t(lang, 'title')}
         @change=${(e: CustomEvent<{ value: string }>) => {
           const v = e.detail.value;
-          if (v === 'overview' || v === 'devices' || v === 'settings') this.go(v);
+          if (v === 'overview' || v === 'devices' || v === 'settings' || v === 'options')
+            this.go(v);
         }}
       ></pulse-segmented>
     </header>`;
@@ -470,8 +481,9 @@ export class PulsePanel extends LitElement {
     const now = this.now;
     const zone = this.timeZone;
     const names = this.names();
-    if (this.view === 'settings') {
+    if (this.view === 'settings' || this.view === 'options') {
       return html`<pulse-settings
+        .page=${this.view === 'options' ? 'options' : 'notify'}
         .snapshot=${snap}
         .language=${lang}
         .timeZone=${zone}

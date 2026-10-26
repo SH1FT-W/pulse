@@ -27,6 +27,7 @@ const WELCOME: Feature[] = [
  */
 export const WHATS_NEW: Feature[] = [
   { icon: 'mdi:power-plug-outline', title: 'new_mains_title', text: 'new_mains_text' },
+  { icon: 'mdi:view-agenda-outline', title: 'new_layout_title', text: 'new_layout_text' },
 ];
 
 const CHANGELOG_URL = 'https://github.com/SH1FT-W/pulse/blob/main/CHANGELOG.md';

@@ -4,6 +4,14 @@ export const EN = {
   tab_overview: 'Overview',
   tab_devices: 'Devices',
   tab_notify: 'Notifications',
+  tab_options: 'Settings',
+  options_hl1: '{count} devices',
+  options_hl1_one: 'One device',
+  options_hl2: 'Pulse is listening.',
+  options_sub: 'Choose what Pulse watches and what it reads in addition.',
+  options_sub_mains:
+    '{mains} of them on the mains. Choose what Pulse watches and what it reads in addition.',
+  options_watch: 'Watch',
   close: 'Close',
   more: 'More',
   loading: 'Loading Pulse …',
@@ -351,7 +359,10 @@ export const EN = {
   tpl_save: 'Save',
   new_mains_title: 'Mains-powered devices are now on',
   new_mains_text:
-    'Pulse now also watches lamps, plugs and switches on the mains, from any integration. Devices that are often off are learned. Turn it off under Notifications → Beta.',
+    'Pulse now also watches lamps, plugs and switches on the mains, from any integration. Devices that are often off are learned. Turn it off under Settings.',
+  new_layout_title: 'Easier to scan',
+  new_layout_text:
+    'Rooms stand out in the lists, and Settings has its own tab: mains-powered devices and Zigbee2MQTT live there now, Notifications is only about notifications.',
   new_texts_title: 'Your own words',
   new_texts_text:
     'Change the title and text of every notification, with placeholders and a preview.',

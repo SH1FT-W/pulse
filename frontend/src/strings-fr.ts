@@ -7,6 +7,14 @@ export const FR: Record<keyof typeof EN, string> = {
   tab_overview: 'Vue d’ensemble',
   tab_devices: 'Appareils',
   tab_notify: 'Notifications',
+  tab_options: 'Réglages',
+  options_hl1: '{count} appareils',
+  options_hl1_one: 'Un appareil',
+  options_hl2: 'Pulse écoute.',
+  options_sub: 'Choisissez ce que Pulse surveille et ce qu’il lit en plus.',
+  options_sub_mains:
+    'Dont {mains} sur secteur. Choisissez ce que Pulse surveille et ce qu’il lit en plus.',
+  options_watch: 'Surveiller',
   close: 'Fermer',
   more: 'Plus',
   loading: 'Chargement de Pulse …',
@@ -361,7 +369,10 @@ export const FR: Record<keyof typeof EN, string> = {
   tpl_save: 'Enregistrer',
   new_mains_title: 'Les appareils sur secteur sont activés',
   new_mains_text:
-    'Pulse surveille désormais aussi lampes, prises et interrupteurs sur secteur, de toute intégration. Les appareils souvent éteints sont appris. À désactiver sous Notifications → Bêta.',
+    'Pulse surveille désormais aussi lampes, prises et interrupteurs sur secteur, de toute intégration. Les appareils souvent éteints sont appris. À désactiver sous Réglages.',
+  new_layout_title: 'Plus lisible',
+  new_layout_text:
+    'Les pièces se distinguent dans les listes, et Réglages a son propre onglet : appareils sur secteur et Zigbee2MQTT y sont désormais, Notifications ne concerne plus que les notifications.',
   new_texts_title: 'Vos propres mots',
   new_texts_text:
     'Modifiez le titre et le texte de chaque notification, avec des variables et un aperçu.',

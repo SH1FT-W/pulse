@@ -393,9 +393,11 @@ export class PulseDevices extends LitElement {
         -webkit-tap-highlight-color: transparent;
       }
       @media (hover: hover) {
-        .mrow:hover,
-        .group:hover {
+        .mrow:hover {
           background: color-mix(in srgb, var(--pu-ink) 3%, transparent);
+        }
+        .group:hover {
+          background: color-mix(in srgb, var(--pu-ink) 8%, transparent);
         }
       }
       .mrow:active {
@@ -407,29 +409,37 @@ export class PulseDevices extends LitElement {
         outline-offset: 3px;
         border-radius: var(--pu-r-8);
       }
+      /* Gruppen-Überschrift: eigene Leiste mit Abstand (wie die Räume in der Übersicht) */
       .group {
         display: flex;
         align-items: center;
         gap: var(--pu-sp-8);
         width: 100%;
-        min-height: max(44px, var(--pu-hit));
-        padding: var(--pu-sp-24) 0 var(--pu-sp-8);
+        min-height: max(40px, var(--pu-hit));
+        margin-top: var(--pu-sp-16);
+        padding: 0 var(--pu-sp-12);
         border: 0;
-        border-bottom: 1px solid var(--pu-line);
-        background: none;
-        color: var(--pu-muted);
+        border-radius: var(--pu-r-8);
+        background: color-mix(in srgb, var(--pu-ink) 5%, transparent);
+        color: var(--pu-ink);
         font: inherit;
-        font-size: 12px;
-        font-weight: 600;
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
+        font-size: var(--pu-fs-15);
+        font-weight: 700;
         text-align: start;
         cursor: pointer;
         --mdc-icon-size: 18px;
       }
+      .group ha-icon {
+        color: var(--pu-muted);
+      }
       .group .count {
-        font-weight: 500;
-        color: var(--pu-faint);
+        padding: 0 8px;
+        border-radius: 99px;
+        background: color-mix(in srgb, var(--pu-ink) 8%, transparent);
+        color: var(--pu-muted);
+        font-size: 12px;
+        font-weight: 600;
+        line-height: 20px;
       }
       .empty {
         margin: 0;

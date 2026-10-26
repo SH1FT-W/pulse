@@ -27,6 +27,7 @@ type LevelKey = keyof Settings['levels'];
 export class PulseSettings extends LitElement {
   static properties = {
     snapshot: { attribute: false },
+    page: { type: String },
     language: { type: String },
     now: { type: Number },
     recipients: { type: String },
@@ -36,6 +37,8 @@ export class PulseSettings extends LitElement {
   };
 
   declare snapshot: Snapshot;
+  /** notify = Mitteilungen, options = Einstellungen (was Pulse überwacht, Zigbee2MQTT) */
+  declare page: 'notify' | 'options';
   declare language: string;
   declare now: number;
   declare recipients: string;
@@ -192,6 +195,75 @@ export class PulseSettings extends LitElement {
     );
   }
 
+  /** Einstellungen: was Pulse überwacht (Netzgeräte) und was es zusätzlich liest (Zigbee2MQTT). */
+  private renderOptionsPage(count: number, mains: number) {
+    const lang = this.language;
+    const s = this.snapshot.settings;
+    const z = this.snapshot.z2m;
+    return html`
+      <section class="hero">
+        <div class="words">
+          <h2 class="hl">${t(lang, count === 1 ? 'options_hl1_one' : 'options_hl1', { count })}<br /><span class="grad">${t(lang, 'options_hl2')}</span></h2>
+          <p class="hsub">${s.mains_beta ? t(lang, 'options_sub_mains', { mains }) : t(lang, 'options_sub')}</p>
+        </div>
+      </section>
+
+      <div class="cols">
+      <section class="section">
+        <h3 class="section-title">${t(lang, 'options_watch')}</h3>
+        <div class="list">
+          ${this.switchRow('mains_beta', s.mains_beta ?? true, (on) => this.save({ mains_beta: on }), 'mains_beta_hint')}
+          ${
+            s.mains_beta
+              ? this.linkRow(t(lang, 'mains_devices'), String(mains), () =>
+                  this.fire('show-devices', { filter: 'mains' })
+                )
+              : nothing
+          }
+        </div>
+      </section>
+
+      <section class="section">
+        <h3 class="section-title">${t(lang, 'zigbee')}</h3>
+        ${
+          z.present
+            ? html`<div class="list z2m">
+                ${this.z2mOptionRow('welcome_zigbee_title', 'zigbee_hint', z.last_seen && z.availability, z.requested_at, 'enable-z2m')}
+                ${this.z2mOptionRow('health_title', 'health_hint', z.health === true, z.health_requested_at, 'enable-z2m-health')}
+              </div>`
+            : nothing
+        }
+        <details class="list adv">
+          <summary class="row">
+            <span class="label">${t(lang, 'advanced')}</span>
+            <ha-icon class="chev" icon="mdi:chevron-down"></ha-icon>
+          </summary>
+          <label class="row">
+            <span class="label">${t(lang, 'z2m_base')}</span>
+            <input
+              class="text"
+              type="text"
+              spellcheck="false"
+              autocomplete="off"
+              autocapitalize="off"
+              placeholder="zigbee2mqtt"
+              .value=${live(s.z2m_base)}
+              @change=${(e: Event) => this.onZ2mBase(e)}
+              @keydown=${(e: KeyboardEvent) => {
+                // Enter speichert (über change beim Verlassen des Feldes)
+                if (e.key === 'Enter' && e.currentTarget instanceof HTMLInputElement)
+                  e.currentTarget.blur();
+              }}
+            />
+          </label>
+          <p class="row adv-hint">${t(lang, 'z2m_base_hint')}</p>
+        </details>
+      </section>
+
+      </div>
+    `;
+  }
+
   render() {
     const lang = this.language;
     const snap = this.snapshot;
@@ -210,12 +282,12 @@ export class PulseSettings extends LitElement {
     const persons = arrivePersons(s);
     const head = settingsHero(lang, s);
     const important = importantCount(snap.devices);
-    const z = snap.z2m;
     const own = s.templates ?? {};
     const watched = monitored(snap.devices);
     const mains = watched.filter((d) => d.mains).length;
     // Preview with a real device: preferably one with a room
     const example = watched.find((d) => d.area && !d.mains) ?? watched[0];
+    if (this.page === 'options') return this.renderOptionsPage(watched.length, mains);
     return html`
       <section class="hero">
         <div class="words">
@@ -316,43 +388,6 @@ export class PulseSettings extends LitElement {
       </section>
 
       <section class="section">
-        <h3 class="section-title">${t(lang, 'zigbee')}</h3>
-        ${
-          z.present
-            ? html`<div class="list z2m">
-                ${this.z2mOptionRow('welcome_zigbee_title', 'zigbee_hint', z.last_seen && z.availability, z.requested_at, 'enable-z2m')}
-                ${this.z2mOptionRow('health_title', 'health_hint', z.health === true, z.health_requested_at, 'enable-z2m-health')}
-              </div>`
-            : nothing
-        }
-        <details class="list adv">
-          <summary class="row">
-            <span class="label">${t(lang, 'advanced')}</span>
-            <ha-icon class="chev" icon="mdi:chevron-down"></ha-icon>
-          </summary>
-          <label class="row">
-            <span class="label">${t(lang, 'z2m_base')}</span>
-            <input
-              class="text"
-              type="text"
-              spellcheck="false"
-              autocomplete="off"
-              autocapitalize="off"
-              placeholder="zigbee2mqtt"
-              .value=${live(s.z2m_base)}
-              @change=${(e: Event) => this.onZ2mBase(e)}
-              @keydown=${(e: KeyboardEvent) => {
-                // Enter speichert (über change beim Verlassen des Feldes)
-                if (e.key === 'Enter' && e.currentTarget instanceof HTMLInputElement)
-                  e.currentTarget.blur();
-              }}
-            />
-          </label>
-          <p class="row adv-hint">${t(lang, 'z2m_base_hint')}</p>
-        </details>
-      </section>
-
-      <section class="section">
         <h3 class="section-title">${t(lang, 'texts')}</h3>
         <div class="list">
           ${TEMPLATE_KINDS.map((kind) =>
@@ -371,20 +406,6 @@ export class PulseSettings extends LitElement {
           )}
         </div>
         <p class="section-foot">${t(lang, 'texts_hint')}</p>
-      </section>
-
-      <section class="section">
-        <h3 class="section-title">${t(lang, 'beta')}</h3>
-        <div class="list">
-          ${this.switchRow('mains_beta', s.mains_beta ?? true, (on) => this.save({ mains_beta: on }), 'mains_beta_hint')}
-          ${
-            s.mains_beta
-              ? this.linkRow(t(lang, 'mains_devices'), String(mains), () =>
-                  this.fire('show-devices', { filter: 'mains' })
-                )
-              : nothing
-          }
-        </div>
       </section>
 
       <section class="section">

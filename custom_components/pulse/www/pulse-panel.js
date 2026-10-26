@@ -582,6 +582,13 @@ var We = {
 	tab_overview: "Übersicht",
 	tab_devices: "Geräte",
 	tab_notify: "Mitteilungen",
+	tab_options: "Einstellungen",
+	options_hl1: "{count} Geräte",
+	options_hl1_one: "Ein Gerät",
+	options_hl2: "hört Pulse zu.",
+	options_sub: "Hier legst du fest, was Pulse überwacht und was es zusätzlich mitliest.",
+	options_sub_mains: "Davon {mains} am Strom. Hier legst du fest, was Pulse überwacht und was es zusätzlich mitliest.",
+	options_watch: "Überwachen",
 	close: "Schließen",
 	more: "Mehr",
 	loading: "Pulse lädt …",
@@ -903,7 +910,9 @@ var We = {
 	tpl_reset: "Standard verwenden",
 	tpl_save: "Sichern",
 	new_mains_title: "Netzgeräte sind jetzt dabei",
-	new_mains_text: "Pulse achtet jetzt auch auf Lampen, Steckdosen und Schalter am Strom, aus jeder Integration. Geräte, die oft aus sind, lernt es kennen. Abschalten unter Mitteilungen → Beta.",
+	new_mains_text: "Pulse achtet jetzt auch auf Lampen, Steckdosen und Schalter am Strom, aus jeder Integration. Geräte, die oft aus sind, lernt es kennen. Abschalten unter Einstellungen.",
+	new_layout_title: "Übersichtlicher",
+	new_layout_text: "Räume heben sich in den Listen klar ab, und „Einstellungen“ hat einen eigenen Reiter: Netzgeräte und Zigbee2MQTT stehen jetzt dort, „Mitteilungen“ ist nur noch für Mitteilungen.",
 	new_texts_title: "Deine eigenen Worte",
 	new_texts_text: "Titel und Text jeder Mitteilung lassen sich anpassen, mit Platzhaltern und Vorschau.",
 	new_labels_title: "Labels statt Klicks",
@@ -916,6 +925,13 @@ var We = {
 	tab_overview: "Overview",
 	tab_devices: "Devices",
 	tab_notify: "Notifications",
+	tab_options: "Settings",
+	options_hl1: "{count} devices",
+	options_hl1_one: "One device",
+	options_hl2: "Pulse is listening.",
+	options_sub: "Choose what Pulse watches and what it reads in addition.",
+	options_sub_mains: "{mains} of them on the mains. Choose what Pulse watches and what it reads in addition.",
+	options_watch: "Watch",
 	close: "Close",
 	more: "More",
 	loading: "Loading Pulse …",
@@ -1237,7 +1253,9 @@ var We = {
 	tpl_reset: "Use default",
 	tpl_save: "Save",
 	new_mains_title: "Mains-powered devices are now on",
-	new_mains_text: "Pulse now also watches lamps, plugs and switches on the mains, from any integration. Devices that are often off are learned. Turn it off under Notifications → Beta.",
+	new_mains_text: "Pulse now also watches lamps, plugs and switches on the mains, from any integration. Devices that are often off are learned. Turn it off under Settings.",
+	new_layout_title: "Easier to scan",
+	new_layout_text: "Rooms stand out in the lists, and Settings has its own tab: mains-powered devices and Zigbee2MQTT live there now, Notifications is only about notifications.",
 	new_texts_title: "Your own words",
 	new_texts_text: "Change the title and text of every notification, with placeholders and a preview.",
 	new_labels_title: "Labels instead of clicks",
@@ -1252,6 +1270,13 @@ var We = {
 		tab_overview: "Vue d’ensemble",
 		tab_devices: "Appareils",
 		tab_notify: "Notifications",
+		tab_options: "Réglages",
+		options_hl1: "{count} appareils",
+		options_hl1_one: "Un appareil",
+		options_hl2: "Pulse écoute.",
+		options_sub: "Choisissez ce que Pulse surveille et ce qu’il lit en plus.",
+		options_sub_mains: "Dont {mains} sur secteur. Choisissez ce que Pulse surveille et ce qu’il lit en plus.",
+		options_watch: "Surveiller",
 		close: "Fermer",
 		more: "Plus",
 		loading: "Chargement de Pulse …",
@@ -1573,7 +1598,9 @@ var We = {
 		tpl_reset: "Rétablir par défaut",
 		tpl_save: "Enregistrer",
 		new_mains_title: "Les appareils sur secteur sont activés",
-		new_mains_text: "Pulse surveille désormais aussi lampes, prises et interrupteurs sur secteur, de toute intégration. Les appareils souvent éteints sont appris. À désactiver sous Notifications → Bêta.",
+		new_mains_text: "Pulse surveille désormais aussi lampes, prises et interrupteurs sur secteur, de toute intégration. Les appareils souvent éteints sont appris. À désactiver sous Réglages.",
+		new_layout_title: "Plus lisible",
+		new_layout_text: "Les pièces se distinguent dans les listes, et Réglages a son propre onglet : appareils sur secteur et Zigbee2MQTT y sont désormais, Notifications ne concerne plus que les notifications.",
 		new_texts_title: "Vos propres mots",
 		new_texts_text: "Modifiez le titre et le texte de chaque notification, avec des variables et un aperçu.",
 		new_labels_title: "Des labels plutôt que des clics",
@@ -1587,6 +1614,13 @@ var We = {
 		tab_overview: "Resumen",
 		tab_devices: "Dispositivos",
 		tab_notify: "Notificaciones",
+		tab_options: "Ajustes",
+		options_hl1: "{count} dispositivos",
+		options_hl1_one: "Un dispositivo",
+		options_hl2: "Pulse escucha.",
+		options_sub: "Elige qué vigila Pulse y qué lee además.",
+		options_sub_mains: "{mains} de ellos con corriente. Elige qué vigila Pulse y qué lee además.",
+		options_watch: "Vigilar",
 		close: "Cerrar",
 		more: "Más",
 		loading: "Cargando Pulse …",
@@ -1908,7 +1942,9 @@ var We = {
 		tpl_reset: "Usar predeterminado",
 		tpl_save: "Guardar",
 		new_mains_title: "Los dispositivos a la red ya están activos",
-		new_mains_text: "Pulse ahora también vigila lámparas, enchufes e interruptores conectados a la red, de cualquier integración. Aprende los que suelen estar apagados. Desactívalo en Notificaciones → Beta.",
+		new_mains_text: "Pulse ahora también vigila lámparas, enchufes e interruptores conectados a la red, de cualquier integración. Aprende los que suelen estar apagados. Desactívalo en Ajustes.",
+		new_layout_title: "Más claro",
+		new_layout_text: "Las estancias destacan en las listas y Ajustes tiene su propia pestaña: los dispositivos con corriente y Zigbee2MQTT están ahora allí, Notificaciones solo trata de notificaciones.",
 		new_texts_title: "Tus propias palabras",
 		new_texts_text: "Cambia el título y el texto de cada notificación, con marcadores y vista previa.",
 		new_labels_title: "Etiquetas en vez de clics",
@@ -1922,6 +1958,13 @@ var We = {
 		tab_overview: "Overzicht",
 		tab_devices: "Apparaten",
 		tab_notify: "Meldingen",
+		tab_options: "Instellingen",
+		options_hl1: "{count} apparaten",
+		options_hl1_one: "Eén apparaat",
+		options_hl2: "Pulse luistert.",
+		options_sub: "Kies wat Pulse in de gaten houdt en wat het daarnaast leest.",
+		options_sub_mains: "Daarvan {mains} op netstroom. Kies wat Pulse in de gaten houdt en wat het daarnaast leest.",
+		options_watch: "In de gaten houden",
 		close: "Sluiten",
 		more: "Meer",
 		loading: "Pulse laden …",
@@ -2243,7 +2286,9 @@ var We = {
 		tpl_reset: "Standaard gebruiken",
 		tpl_save: "Opslaan",
 		new_mains_title: "Apparaten op netstroom staan nu aan",
-		new_mains_text: "Pulse let nu ook op lampen, stekkers en schakelaars op netstroom, uit elke integratie. Apparaten die vaak uit staan leert Pulse kennen. Uitzetten onder Meldingen → Bèta.",
+		new_mains_text: "Pulse let nu ook op lampen, stekkers en schakelaars op netstroom, uit elke integratie. Apparaten die vaak uit staan leert Pulse kennen. Uitzetten onder Instellingen.",
+		new_layout_title: "Overzichtelijker",
+		new_layout_text: "Ruimtes vallen op in de lijsten en Instellingen heeft een eigen tabblad: apparaten op netstroom en Zigbee2MQTT staan nu daar, Meldingen gaat alleen nog over meldingen.",
 		new_texts_title: "Je eigen woorden",
 		new_texts_text: "Pas de titel en tekst van elke melding aan, met placeholders en een voorbeeld.",
 		new_labels_title: "Labels in plaats van klikken",
@@ -3499,6 +3544,10 @@ var J = o`
 	icon: "mdi:power-plug-outline",
 	title: "new_mains_title",
 	text: "new_mains_text"
+}, {
+	icon: "mdi:view-agenda-outline",
+	title: "new_layout_title",
+	text: "new_layout_text"
 }], Rn = "https://github.com/SH1FT-W/pulse/blob/main/CHANGELOG.md";
 I("pulse-welcome", class extends N {
 	static {
@@ -5567,9 +5616,11 @@ I("pulse-devices", class extends N {
         -webkit-tap-highlight-color: transparent;
       }
       @media (hover: hover) {
-        .mrow:hover,
-        .group:hover {
+        .mrow:hover {
           background: color-mix(in srgb, var(--pu-ink) 3%, transparent);
+        }
+        .group:hover {
+          background: color-mix(in srgb, var(--pu-ink) 8%, transparent);
         }
       }
       .mrow:active {
@@ -5581,29 +5632,37 @@ I("pulse-devices", class extends N {
         outline-offset: 3px;
         border-radius: var(--pu-r-8);
       }
+      /* Gruppen-Überschrift: eigene Leiste mit Abstand (wie die Räume in der Übersicht) */
       .group {
         display: flex;
         align-items: center;
         gap: var(--pu-sp-8);
         width: 100%;
-        min-height: max(44px, var(--pu-hit));
-        padding: var(--pu-sp-24) 0 var(--pu-sp-8);
+        min-height: max(40px, var(--pu-hit));
+        margin-top: var(--pu-sp-16);
+        padding: 0 var(--pu-sp-12);
         border: 0;
-        border-bottom: 1px solid var(--pu-line);
-        background: none;
-        color: var(--pu-muted);
+        border-radius: var(--pu-r-8);
+        background: color-mix(in srgb, var(--pu-ink) 5%, transparent);
+        color: var(--pu-ink);
         font: inherit;
-        font-size: 12px;
-        font-weight: 600;
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
+        font-size: var(--pu-fs-15);
+        font-weight: 700;
         text-align: start;
         cursor: pointer;
         --mdc-icon-size: 18px;
       }
+      .group ha-icon {
+        color: var(--pu-muted);
+      }
       .group .count {
-        font-weight: 500;
-        color: var(--pu-faint);
+        padding: 0 8px;
+        border-radius: 99px;
+        background: color-mix(in srgb, var(--pu-ink) 8%, transparent);
+        color: var(--pu-muted);
+        font-size: 12px;
+        font-weight: 600;
+        line-height: 20px;
       }
       .empty {
         margin: 0;
@@ -5809,14 +5868,14 @@ I("pulse-overview", class extends N {
 		let t = new Set(this.closed);
 		t.has(e) ? t.delete(e) : t.add(e), this.closed = t, dr(t);
 	}
-	renderRow(e) {
-		let t = this.language, n = $t(t, e, this.now), r = K(e) && e.last_activity !== null ? mt(t, e.last_activity, this.now, this.timeZone, this.timeFormat) : Xe(t, e.last_activity, this.now);
+	renderRow(e, t = !0) {
+		let n = this.language, r = $t(n, e, this.now), i = K(e) && e.last_activity !== null ? mt(n, e.last_activity, this.now, this.timeZone, this.timeFormat) : Xe(n, e.last_activity, this.now);
 		return E`<button class="mrow rowgrid" type="button" @click=${() => this.fire("open", { id: e.id })}>
       <span class="nm">
         <ha-icon class=${`t-${e.ignored ? "ok" : V(e)}`} .icon=${e.icon}></ha-icon>
         <span class="who">
-          <span class="title"><b>${e.name}</b>${e.critical && !e.ignored ? E`<span class="star" role="img" aria-label=${L(t, "important_badge")} title=${L(t, "important_badge")}><ha-icon icon="mdi:star"></ha-icon></span>` : k}</span>
-          ${e.area ? E`<span class="room">${e.area}</span>` : k}
+          <span class="title"><b>${e.name}</b>${e.critical && !e.ignored ? E`<span class="star" role="img" aria-label=${L(n, "important_badge")} title=${L(n, "important_badge")}><ha-icon icon="mdi:star"></ha-icon></span>` : k}</span>
+          ${t && e.area ? E`<span class="room">${e.area}</span>` : k}
         </span>
       </span>
       <pulse-rhythm
@@ -5826,10 +5885,10 @@ I("pulse-overview", class extends N {
         .gaps=${this.gaps}
         .days=${Math.max(1, this.dayStarts.length - 1)}
         .silentFrom=${gn(e, this.dayStarts)}
-        .flag=${Qt(t, e, this.now)}
+        .flag=${Qt(n, e, this.now)}
       ></pulse-rhythm>
       <span class="st">
-        ${n ? E`<b class=${`t-${n.tone}`}>${n.text}</b><span class="sep"> · </span>` : k}<span class="num time">${r}</span>
+        ${r ? E`<b class=${`t-${r.tone}`}>${r.text}</b><span class="sep"> · </span>` : k}<span class="num time">${i}</span>
       </span>
     </button>`;
 	}
@@ -5843,7 +5902,7 @@ I("pulse-overview", class extends N {
           <ha-icon icon=${t ? "mdi:chevron-right" : "mdi:chevron-down"}></ha-icon>
           <span>${e.area}</span><span class="count">${e.devices.length}</span>
         </button>
-        ${t ? k : e.devices.map((e) => this.renderRow(e))}`;
+        ${t ? k : e.devices.map((e) => this.renderRow(e, !1))}`;
 		})}`;
 	}
 	renderZigbee() {
@@ -6051,9 +6110,11 @@ I("pulse-overview", class extends N {
       }
       @media (hover: hover) {
         .mrow:hover,
-        .room-head:hover,
         .fact.tappable:hover {
           background: color-mix(in srgb, var(--pu-ink) 3%, transparent);
+        }
+        .room-head:hover {
+          background: color-mix(in srgb, var(--pu-ink) 8%, transparent);
         }
       }
       .mrow:active {
@@ -6067,20 +6128,22 @@ I("pulse-overview", class extends N {
         outline-offset: 3px;
         border-radius: var(--pu-r-8);
       }
+      /* Raum-Überschrift: eigene Leiste mit Abstand, nicht wie eine Gerätezeile */
       .room-head {
         display: flex;
         align-items: center;
         gap: var(--pu-sp-8);
         width: 100%;
         min-height: max(40px, var(--pu-hit));
-        padding: 0;
+        margin-top: var(--pu-sp-16);
+        padding: 0 var(--pu-sp-12);
         border: 0;
-        border-bottom: 1px solid var(--pu-line);
-        background: none;
+        border-radius: var(--pu-r-8);
+        background: color-mix(in srgb, var(--pu-ink) 5%, transparent);
         color: var(--pu-ink);
         font: inherit;
         font-size: var(--pu-fs-15);
-        font-weight: 600;
+        font-weight: 700;
         text-align: start;
         cursor: pointer;
         --mdc-icon-size: 18px;
@@ -6089,8 +6152,13 @@ I("pulse-overview", class extends N {
         color: var(--pu-muted);
       }
       .room-head .count {
-        color: var(--pu-faint);
-        font-weight: 500;
+        padding: 0 8px;
+        border-radius: 99px;
+        background: color-mix(in srgb, var(--pu-ink) 8%, transparent);
+        color: var(--pu-muted);
+        font-size: 12px;
+        font-weight: 600;
+        line-height: 20px;
       }
 
       /* ── Fakten unten ── */
@@ -6245,6 +6313,12 @@ I("pulse-overview", class extends N {
 	pick(e) {
 		e !== this.value && this.dispatchEvent(new CustomEvent("change", { detail: { value: e } }));
 	}
+	updated() {
+		let e = this.renderRoot.querySelector("nav"), t = this.renderRoot.querySelector("button.active");
+		if (!e || !t || e.scrollWidth <= e.clientWidth) return;
+		let n = t.offsetLeft - e.offsetLeft;
+		n < e.scrollLeft ? e.scrollLeft = n : n + t.offsetWidth > e.scrollLeft + e.clientWidth && (e.scrollLeft = n + t.offsetWidth - e.clientWidth);
+	}
 	render() {
 		return E`<nav aria-label=${this.label}>
       ${this.options.map((e) => E`<button
@@ -6263,9 +6337,16 @@ I("pulse-overview", class extends N {
         display: block;
         max-width: 100%;
       }
+      /* Four tabs in a long language on a narrow phone: swipe sideways instead of overflowing the page */
       nav {
         display: flex;
         gap: clamp(4px, 1.6vw, 14px);
+        overflow-x: auto;
+        scrollbar-width: none;
+        overscroll-behavior-x: contain;
+      }
+      nav::-webkit-scrollbar {
+        display: none;
       }
       button {
         position: relative;
@@ -6560,6 +6641,7 @@ I("pulse-template-sheet", class extends N {
 	static {
 		this.properties = {
 			snapshot: { attribute: !1 },
+			page: { type: String },
 			language: { type: String },
 			now: { type: Number },
 			recipients: { type: String },
@@ -6656,6 +6738,59 @@ I("pulse-template-sheet", class extends N {
 		let i = this.language;
 		return this.toggleRow(E`<span class="label">${L(i, e)}${r ? E`<small>${L(i, r)}</small>` : k}</span>`, t, n);
 	}
+	renderOptionsPage(e, t) {
+		let n = this.language, r = this.snapshot.settings, i = this.snapshot.z2m;
+		return E`
+      <section class="hero">
+        <div class="words">
+          <h2 class="hl">${L(n, e === 1 ? "options_hl1_one" : "options_hl1", { count: e })}<br /><span class="grad">${L(n, "options_hl2")}</span></h2>
+          <p class="hsub">${r.mains_beta ? L(n, "options_sub_mains", { mains: t }) : L(n, "options_sub")}</p>
+        </div>
+      </section>
+
+      <div class="cols">
+      <section class="section">
+        <h3 class="section-title">${L(n, "options_watch")}</h3>
+        <div class="list">
+          ${this.switchRow("mains_beta", r.mains_beta ?? !0, (e) => this.save({ mains_beta: e }), "mains_beta_hint")}
+          ${r.mains_beta ? this.linkRow(L(n, "mains_devices"), String(t), () => this.fire("show-devices", { filter: "mains" })) : k}
+        </div>
+      </section>
+
+      <section class="section">
+        <h3 class="section-title">${L(n, "zigbee")}</h3>
+        ${i.present ? E`<div class="list z2m">
+                ${this.z2mOptionRow("welcome_zigbee_title", "zigbee_hint", i.last_seen && i.availability, i.requested_at, "enable-z2m")}
+                ${this.z2mOptionRow("health_title", "health_hint", i.health === !0, i.health_requested_at, "enable-z2m-health")}
+              </div>` : k}
+        <details class="list adv">
+          <summary class="row">
+            <span class="label">${L(n, "advanced")}</span>
+            <ha-icon class="chev" icon="mdi:chevron-down"></ha-icon>
+          </summary>
+          <label class="row">
+            <span class="label">${L(n, "z2m_base")}</span>
+            <input
+              class="text"
+              type="text"
+              spellcheck="false"
+              autocomplete="off"
+              autocapitalize="off"
+              placeholder="zigbee2mqtt"
+              .value=${vr(r.z2m_base)}
+              @change=${(e) => this.onZ2mBase(e)}
+              @keydown=${(e) => {
+			e.key === "Enter" && e.currentTarget instanceof HTMLInputElement && e.currentTarget.blur();
+		}}
+            />
+          </label>
+          <p class="row adv-hint">${L(n, "z2m_base_hint")}</p>
+        </details>
+      </section>
+
+      </div>
+    `;
+	}
 	render() {
 		let e = this.language, t = this.snapshot, n = t.settings, r = n.targets ?? t.targets, i = [
 			{
@@ -6673,8 +6808,8 @@ I("pulse-template-sheet", class extends N {
 		], a = (e, t, r, a) => this.pickerRow(t, n.levels[e], i, (t) => this.save({ levels: { [e]: t } }), {
 			icon: r,
 			tone: a
-		}), o = bn(n), s = xn(e, n), c = Et(t.devices), l = t.z2m, u = n.templates ?? {}, d = U(t.devices), f = d.filter((e) => e.mains).length, p = d.find((e) => e.area && !e.mains) ?? d[0];
-		return E`
+		}), o = bn(n), s = xn(e, n), c = Et(t.devices), l = n.templates ?? {}, u = U(t.devices), d = u.filter((e) => e.mains).length, f = u.find((e) => e.area && !e.mains) ?? u[0];
+		return this.page === "options" ? this.renderOptionsPage(u.length, d) : E`
       <section class="hero">
         <div class="words">
           <h2 class="hl">${s.line1}<br /><span class="grad">${s.line2}</span></h2>
@@ -6737,52 +6872,13 @@ I("pulse-template-sheet", class extends N {
       </section>
 
       <section class="section">
-        <h3 class="section-title">${L(e, "zigbee")}</h3>
-        ${l.present ? E`<div class="list z2m">
-                ${this.z2mOptionRow("welcome_zigbee_title", "zigbee_hint", l.last_seen && l.availability, l.requested_at, "enable-z2m")}
-                ${this.z2mOptionRow("health_title", "health_hint", l.health === !0, l.health_requested_at, "enable-z2m-health")}
-              </div>` : k}
-        <details class="list adv">
-          <summary class="row">
-            <span class="label">${L(e, "advanced")}</span>
-            <ha-icon class="chev" icon="mdi:chevron-down"></ha-icon>
-          </summary>
-          <label class="row">
-            <span class="label">${L(e, "z2m_base")}</span>
-            <input
-              class="text"
-              type="text"
-              spellcheck="false"
-              autocomplete="off"
-              autocapitalize="off"
-              placeholder="zigbee2mqtt"
-              .value=${vr(n.z2m_base)}
-              @change=${(e) => this.onZ2mBase(e)}
-              @keydown=${(e) => {
-			e.key === "Enter" && e.currentTarget instanceof HTMLInputElement && e.currentTarget.blur();
-		}}
-            />
-          </label>
-          <p class="row adv-hint">${L(e, "z2m_base_hint")}</p>
-        </details>
-      </section>
-
-      <section class="section">
         <h3 class="section-title">${L(e, "texts")}</h3>
         <div class="list">
-          ${yr.map((t) => this.linkRow(L(e, br[t]), L(e, u[`${t}_title`] != null || u[`${t}_message`] != null ? "tpl_custom" : "tpl_default"), () => {
+          ${yr.map((t) => this.linkRow(L(e, br[t]), L(e, l[`${t}_title`] != null || l[`${t}_message`] != null ? "tpl_custom" : "tpl_default"), () => {
 			this.editing = t;
 		}))}
         </div>
         <p class="section-foot">${L(e, "texts_hint")}</p>
-      </section>
-
-      <section class="section">
-        <h3 class="section-title">${L(e, "beta")}</h3>
-        <div class="list">
-          ${this.switchRow("mains_beta", n.mains_beta ?? !0, (e) => this.save({ mains_beta: e }), "mains_beta_hint")}
-          ${n.mains_beta ? this.linkRow(L(e, "mains_devices"), String(f), () => this.fire("show-devices", { filter: "mains" })) : k}
-        </div>
       </section>
 
       <section class="section">
@@ -6797,10 +6893,10 @@ I("pulse-template-sheet", class extends N {
         .open=${this.editing !== null}
         .kind=${this.editing ?? "failed"}
         .language=${e}
-        .current=${u}
+        .current=${l}
         .defaults=${t.template_defaults ?? {}}
         .vars=${t.template_vars ?? []}
-        .example=${Pn(p)}
+        .example=${Pn(f)}
         @template-save=${(e) => this.save({ templates: e.detail.templates })}
         @closed=${() => {
 			this.editing = null;
@@ -6950,7 +7046,7 @@ function Sr() {
 	let e = xr();
 	if (!e) return null;
 	try {
-		return Hn(e, "26.10.9b3", Ln.length > 0);
+		return Hn(e, "26.10.9", Ln.length > 0);
 	} catch {
 		return null;
 	}
@@ -7009,7 +7105,7 @@ var wr = class extends N {
 	}
 	get view() {
 		let e = this.route?.path ?? "";
-		return e.startsWith("/settings") ? this.readonly ? "overview" : "settings" : e.startsWith("/devices") ? "devices" : "overview";
+		return e.startsWith("/settings") ? this.readonly ? "overview" : "settings" : e.startsWith("/options") ? this.readonly ? "overview" : "options" : e.startsWith("/devices") ? "devices" : "overview";
 	}
 	connectedCallback() {
 		super.connectedCallback(), Ve(), this.addEventListener("wa-after-hide", this.onMenuHidden), this.openDeepLink(), this.now = Date.now() / 1e3, this.clock = window.setInterval(() => {
@@ -7028,7 +7124,7 @@ var wr = class extends N {
 		e && e !== this.deepLink && (this.openId = e), this.deepLink = e;
 	}
 	willUpdate(e) {
-		e.has("route") && this.openDeepLink(), this.hass?.user && this.readonly && (this.route?.path ?? "").startsWith("/settings") && F("/pulse", !0);
+		e.has("route") && this.openDeepLink(), this.hass?.user && this.readonly && ["/settings", "/options"].some((e) => (this.route?.path ?? "").startsWith(e)) && F("/pulse", !0);
 	}
 	shouldUpdate(e) {
 		if (this.ensureSubscribed(), e.size !== 1 || !e.has("hass")) return !0;
@@ -7141,7 +7237,7 @@ var wr = class extends N {
 		this.welcome = null;
 		let e = xr();
 		try {
-			e && Un(e, "26.10.9b3");
+			e && Un(e, "26.10.9");
 		} catch {}
 	}
 	zigbeeOffer(e) {
@@ -7184,6 +7280,9 @@ var wr = class extends N {
 			...this.readonly ? [] : [{
 				value: "settings",
 				label: L(e, "tab_notify")
+			}, {
+				value: "options",
+				label: L(e, "tab_options")
 			}]
 		];
 		return E`<header class="head">
@@ -7197,14 +7296,15 @@ var wr = class extends N {
         .label=${L(e, "title")}
         @change=${(e) => {
 			let t = e.detail.value;
-			(t === "overview" || t === "devices" || t === "settings") && this.go(t);
+			(t === "overview" || t === "devices" || t === "settings" || t === "options") && this.go(t);
 		}}
       ></pulse-segmented>
     </header>`;
 	}
 	renderView(e) {
 		let t = this.language, n = this.now, r = this.timeZone, i = this.names();
-		return this.view === "settings" ? E`<pulse-settings
+		return this.view === "settings" || this.view === "options" ? E`<pulse-settings
+        .page=${this.view === "options" ? "options" : "notify"}
         .snapshot=${e}
         .language=${t}
         .timeZone=${r}
@@ -7301,7 +7401,7 @@ var wr = class extends N {
         @partner-dismiss=${(e) => this.onPartnerDismiss(e.detail.id, e.detail.partner)}
       >
         ${this.renderHead()} ${this.renderContent()}
-        <p class="version muted">${L(t, "version", { version: "26.10.9b3" })}</p>
+        <p class="version muted">${L(t, "version", { version: "26.10.9" })}</p>
         ${e ? E`<pulse-device-sheet
                   .open=${n !== null}
                   .device=${n}
@@ -7326,7 +7426,7 @@ var wr = class extends N {
                 <pulse-welcome
                   .mode=${this.welcome}
                   .language=${t}
-                  .version=${"26.10.9b3"}
+                  .version=${"26.10.9"}
                   .zigbee=${this.zigbeeOffer(e)}
                   @closed=${() => this.welcomeDone()}
                   @enable-z2m=${() => {
