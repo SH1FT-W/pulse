@@ -82,3 +82,31 @@ async def test_gone_only_since_the_start_is_not_backdated(hass: HomeAssistant, s
         await monitor._async_learn_outages()
     assert device.unavailable_since == since
     assert leak.device_id not in monitor._gone_before
+
+
+async def test_stored_reports_from_an_outage_are_dropped(hass: HomeAssistant, setup):
+    monitor: PulseMonitor = setup["monitor"]
+    lamp = add_device(
+        hass,
+        "ceiling",
+        "Deckenleuchte",
+        [("light", "light", None), ("sensor", "mode", None)],
+        manufacturer="Govee",
+        platform="govee",
+    )
+    hass.states.async_set(lamp.entities["light"], "unavailable")
+    hass.states.async_set(lamp.entities["mode"], "cloud_api")
+    monitor._rediscover()
+    await hass.async_block_till_done()
+    device = monitor.devices[lamp.device_id]
+    now = time.time()
+    # Before 26.10.12 the rewritten "cloud_api" counted every 5 minutes, also during the outage
+    real = [now - 6 * DAY + i * 300 for i in range(10)]
+    old_outage = (now - 5 * DAY, now - 4 * DAY)
+    fake = [old_outage[0] + 600, now - 2 * DAY, now - 600]
+    device.record["events"] = sorted(real + fake)
+    result = {lamp.entities["light"]: ([old_outage], now - 3 * DAY)}
+    with patch(LOAD, AsyncMock(return_value=result)):
+        await monitor._async_learn_outages()
+    assert device.record["events"] == real
+    assert device.record["outages"] == [list(old_outage)]

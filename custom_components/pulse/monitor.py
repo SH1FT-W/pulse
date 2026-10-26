@@ -94,6 +94,7 @@ from .rhythm import (
     silence_start,
     strip,
     usual_outage,
+    without_spans,
 )
 from .snapshot import serialize, snapshot
 from .store import SAVE_DELAY_EVENTS, PulseStore
@@ -621,8 +622,13 @@ class PulseMonitor:
             owner = watch.get(entity_id)
             if owner is None:
                 continue
-            if spans and owner.spec.mains:
-                owner.record["outages"] = merge_outages(owner.record.get("outages", []), spans, keep_from)
+            if owner.spec.mains:
+                if spans:
+                    owner.record["outages"] = merge_outages(owner.record.get("outages", []), spans, keep_from)
+                # Reports stored while the lamp itself was gone were only its other entities being rewritten
+                gone = [*spans, *([(running, time.time())] if running is not None else [])]
+                if gone:
+                    owner.record["events"] = without_spans(owner.record["events"], gone)
             # Gone since before the restart (not just since the integration was loading at the start)
             if running is not None and not near_start(running, self._starts()):
                 self._gone_before[owner.spec.device_id] = running
@@ -721,14 +727,17 @@ class PulseMonitor:
             self._activity(device, new.last_reported.timestamp(), False)
 
     def _activity(self, device: Device, ts: float, action: bool) -> None:
+        if device.spec.mains and device.unavailable_since is not None:
+            # The lamp/plug itself is gone: what its other entities still report (a diagnostic sensor rewritten on
+            # every poll of the integration) is no sign of life of the device
+            return
         keep_from = time.time() - KEEP_DAYS * DAY
         # Thin out very chatty devices (BLE every few seconds) so 7 days fit into the store
         added = merge_event(device.record["events"], ts, keep_from, MAX_EVENTS, THIN_SECONDS)
         if action:
             merge_event(device.record["actions"], ts, keep_from, MAX_EVENTS)
         if not device.spec.mains:
-            # Mains devices: a diagnostic sensor that keeps reporting (Govee's cloud poll) says nothing about the
-            # lamp itself; `_check_availability` decides from the lamp/plug
+            # Mains devices: `_check_availability` decides from the lamp/plug itself
             self._reachable_again(device, ts)
         if added or action:
             self.store.async_delay_save(SAVE_DELAY_EVENTS)

@@ -86,7 +86,10 @@ es hört nur zu (Zustände, „gemeldet ohne Änderung“, Zigbee2MQTT-Nachricht
   eine lokale Hardware-Integration (`MAINS_INTEGRATIONS`, auch ohne Lampe: BLE-Proxy, Zigbee-Router) oder gibt ihm eine
   `MAINS_DOMAINS`-Entität ohne entity_category (jede Integration, z. B. Govee-Cloud, Chihiros) (MQTT nur mit IEEE =
   Z2M), `spec.mains`. Erreichbar: nur `spec.main_entities` zählen (`MAINS_DOMAINS` ohne entity_category; Diagnose-Sensoren
-  und Einstellungs-Schalter bleiben bei Govee da, Konnektivität bleibt „on“), Meldungen heben „unavailable“ nicht auf (`_activity`). Bewertung: nicht regelmäßig →
+  und Einstellungs-Schalter bleiben bei Govee da, Konnektivität bleibt „on“), Meldungen heben „unavailable“ nicht auf und zählen währenddessen nicht als Lebenszeichen (`_activity`;
+  manche Integrationen schreiben bei jedem Abruf alle Entitäten neu); beim Start entfernt `_async_learn_outages`
+  gespeicherte Meldungen aus Ausfallzeiten (`rhythm.without_spans`). Abrufe allgemein zu erkennen (Gleichschritt,
+  iot_class) wurde am 26.10. an Prod-Daten verworfen: kleine Integrationen nicht trennbar, ZHA meldet `local_polling`. Bewertung: nicht regelmäßig →
   `ok_mains`, Stille zählt nicht, nur `unavailable`; regelmäßig (≤ `REGULAR_LONGEST`) → Stille zählt normal.
   Gelernte Erreichbarkeit: `record["outages"]` ([Start, Ende] ≥ `OUTAGE_MIN`, live in `_reachable_again`, beim Start aus
   dem Recorder `history.async_load_outages`; ein noch laufender Ausfall (`history.running_outage`) setzt

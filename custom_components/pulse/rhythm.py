@@ -245,6 +245,11 @@ def overlap(gaps: Sequence[tuple[float, float]], start: float, end: float) -> fl
     return sum(max(0.0, min(end, b) - max(start, a)) for a, b in gaps)
 
 
+def without_spans(events: Sequence[float], spans: Sequence[tuple[float, float]]) -> list[float]:
+    """Reports outside the given [start, end] spans (in place of the device: e.g. while it was unreachable)."""
+    return [ts for ts in events if not any(start <= ts <= end for start, end in spans)]
+
+
 def merge_outages(
     outages: Sequence[Sequence[float]], new: Sequence[tuple[float, float]], keep_from: float
 ) -> list[list[float]]:

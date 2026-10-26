@@ -349,6 +349,7 @@ export const monitor = css`
   }
   /* Name (+ Stern) und Raum: nebeneinander, auf dem Handy untereinander */
   .who {
+    flex: 1;
     display: flex;
     align-items: center;
     gap: var(--pu-sp-12);
@@ -381,9 +382,11 @@ export const monitor = css`
     overflow: hidden;
     text-overflow: ellipsis;
   }
-  /* Lange Raumnamen zweizeilig statt abgeschnitten */
+  /* Raum rechtsbündig an der Leiste; lange Raumnamen zweizeilig statt abgeschnitten */
   .room {
     flex: 0 100 auto;
+    margin-left: auto;
+    text-align: end;
     min-width: 0;
     overflow: hidden;
     display: -webkit-box;
@@ -445,6 +448,8 @@ export const monitor = css`
     }
     .room {
       display: block;
+      margin-left: 0;
+      text-align: start;
       white-space: nowrap;
       text-overflow: ellipsis;
       max-width: 100%;

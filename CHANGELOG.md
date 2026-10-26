@@ -2,6 +2,14 @@
 
 After 1.1.0, releases use calendar versions `YY.M.N` (year, month, number of the release in that month), e.g. `26.10.4`. They count as newer than every 1.x version, so updates through HACS work as before.
 
+## 26.10.12 – 2026-10-26
+
+### Changed
+- The room next to a device name is right-aligned against the rhythm bar, so names and rooms each form a clean column. On phones it stays below the name.
+
+### Fixed
+- While a mains-powered device itself is unreachable, what its other entities still report is no longer counted as a sign of life. Some integrations rewrite every entity on each poll, also when the lamp is gone (Govee's "connection mode" diagnostic sensor), which drew a healthy-looking rhythm bar through the outage. On start Pulse also removes such reports it had already stored for outages it finds in the recorder. This is a general rule, not a list of integrations: a lamp that works keeps all its reports.
+
 ## 26.10.11 – 2026-10-26
 
 ### Fixed

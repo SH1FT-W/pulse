@@ -3445,6 +3445,7 @@ var J = o`
   }
   /* Name (+ Stern) und Raum: nebeneinander, auf dem Handy untereinander */
   .who {
+    flex: 1;
     display: flex;
     align-items: center;
     gap: var(--pu-sp-12);
@@ -3477,9 +3478,11 @@ var J = o`
     overflow: hidden;
     text-overflow: ellipsis;
   }
-  /* Lange Raumnamen zweizeilig statt abgeschnitten */
+  /* Raum rechtsbündig an der Leiste; lange Raumnamen zweizeilig statt abgeschnitten */
   .room {
     flex: 0 100 auto;
+    margin-left: auto;
+    text-align: end;
     min-width: 0;
     overflow: hidden;
     display: -webkit-box;
@@ -3541,6 +3544,8 @@ var J = o`
     }
     .room {
       display: block;
+      margin-left: 0;
+      text-align: start;
       white-space: nowrap;
       text-overflow: ellipsis;
       max-width: 100%;
@@ -7080,7 +7085,7 @@ function wr() {
 	let e = Cr();
 	if (!e) return null;
 	try {
-		return Wn(e, "26.10.11", zn.length > 0);
+		return Wn(e, "26.10.12", zn.length > 0);
 	} catch {
 		return null;
 	}
@@ -7271,7 +7276,7 @@ var Er = class extends M {
 		this.welcome = null;
 		let e = Cr();
 		try {
-			e && Gn(e, "26.10.11");
+			e && Gn(e, "26.10.12");
 		} catch {}
 	}
 	zigbeeOffer(e) {
@@ -7435,7 +7440,7 @@ var Er = class extends M {
         @partner-dismiss=${(e) => this.onPartnerDismiss(e.detail.id, e.detail.partner)}
       >
         ${this.renderHead()} ${this.renderContent()}
-        <p class="version muted">${I(t, "version", { version: "26.10.11" })}</p>
+        <p class="version muted">${I(t, "version", { version: "26.10.12" })}</p>
         ${e ? T`<pulse-device-sheet
                   .open=${n !== null}
                   .device=${n}
@@ -7460,7 +7465,7 @@ var Er = class extends M {
                 <pulse-welcome
                   .mode=${this.welcome}
                   .language=${t}
-                  .version=${"26.10.11"}
+                  .version=${"26.10.12"}
                   .zigbee=${this.zigbeeOffer(e)}
                   @closed=${() => this.welcomeDone()}
                   @enable-z2m=${() => {

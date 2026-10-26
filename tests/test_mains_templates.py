@@ -144,9 +144,12 @@ async def test_govee_cloud_lamp_reports_unavailable(hass: HomeAssistant, setup):
     hass.states.async_set(lamp.entities["light"], "unavailable")
     await hass.async_block_till_done()
     assert device.unavailable_since is not None
+    before = list(device.record["events"])
     for minute in range(3):
         hass.states.async_set(lamp.entities["last_update_received"], f"2026-10-26T08:0{minute}:00+00:00")
         await tick(hass, setup["freezer"], timedelta(minutes=50))
+    # While the lamp is gone, its diagnostic sensor's updates are no signs of life (no fake bars)
+    assert device.record["events"] == before
     assert device.unavailable_since is not None
     assert (device.status, device.reason["key"]) == ("failed", "unavailable")
     # Dashboards read silent_since: the start of the outage, not the diagnostic sensor's last report
