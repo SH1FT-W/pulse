@@ -7,6 +7,7 @@ import time
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import area_registry as ar, device_registry as dr, entity_registry as er
+from homeassistant.util import dt as dt_util
 
 from common import add_device, seed, tick
 from custom_components.pulse.const import DOMAIN
@@ -148,6 +149,14 @@ async def test_govee_cloud_lamp_reports_unavailable(hass: HomeAssistant, setup):
         await tick(hass, setup["freezer"], timedelta(minutes=50))
     assert device.unavailable_since is not None
     assert (device.status, device.reason["key"]) == ("failed", "unavailable")
+    # Dashboards read silent_since: the start of the outage, not the diagnostic sensor's last report
+    status = next(
+        s
+        for s in hass.states.async_all("sensor")
+        if s.attributes.get("reason_key") == "unavailable" and "stehlampe" in s.entity_id
+    )
+    assert status.attributes["silent_since"] == status.attributes["unavailable_since"]
+    assert status.attributes["silent_since"] == dt_util.utc_from_timestamp(device.unavailable_since).isoformat()
     # Back
     hass.states.async_set(lamp.entities["light"], "off")
     await hass.async_block_till_done()

@@ -533,6 +533,28 @@ export function quietSince(device: Device): number | null {
   return typeof device.silence_start === 'number' ? device.silence_start : silenceStart(device);
 }
 
+/** Unreachable as the current problem: since when (server `unavailable_since`), otherwise null. */
+export function goneSince(device: Device): number | null {
+  if (device.ignored || SEVERITY[device.status] < 1) return null;
+  if (device.reason_key !== 'unavailable' && device.reason_key !== 'unavailable_usual') return null;
+  return typeof device.unavailable_since === 'number' ? device.unavailable_since : null;
+}
+
+/** Time on the right of a row: start of the outage or silence, otherwise "vor 3 Min." (last report). */
+export function rowTime(
+  language: string,
+  device: Device,
+  now: number,
+  timeZone?: string,
+  timeFormat?: TimeFormat
+): string {
+  const gone = goneSince(device);
+  if (gone !== null) return formatWhen(language, gone, now, timeZone, timeFormat);
+  if (isSilent(device) && device.last_activity !== null)
+    return formatWhen(language, device.last_activity, now, timeZone, timeFormat);
+  return ago(language, device.last_activity, now);
+}
+
 /** Sporadic reports since the start of the silence (0 = real silence or older server). */
 export function strays(device: Device): number {
   return typeof device.strays === 'number' && device.strays > 0 ? device.strays : 0;
@@ -789,6 +811,8 @@ export const ROOMS_FROM = 12;
 
 /** "Seit 4 Tagen still" (silent for 4 days) for the breaking-off bar; only on silence, not on low battery. */
 export function silenceFlag(language: string, device: Device, now: number): string | null {
+  const gone = goneSince(device);
+  if (gone !== null) return t(language, 'flag_gone', { span: span(language, now - gone) });
   const since = quietSince(device);
   if (!isSilent(device) || since === null) return null;
   return t(language, strays(device) ? 'flag_strays' : 'flag_silent', {
@@ -885,8 +909,16 @@ export function detailHeadline(
     return { text: t(language, 'dh_radio_only'), tone: tone(device.status) };
   if (key === 'battery_missing')
     return { text: t(language, 'dh_battery_missing'), tone: tone(device.status) };
-  if (key === 'unavailable' || key === 'unavailable_usual')
-    return { text: t(language, 'dh_unavailable'), tone: tone(device.status) };
+  if (key === 'unavailable' || key === 'unavailable_usual') {
+    const gone = goneSince(device);
+    return {
+      text:
+        gone === null
+          ? t(language, 'dh_unavailable')
+          : t(language, 'dh_unavailable_for', { span: span(language, now - gone) }),
+      tone: tone(device.status),
+    };
+  }
   if (key === 'partner') return { text: t(language, 'dh_partner'), tone: tone(device.status) };
   if (key.startsWith('battery') && device.battery.level !== null)
     return {
@@ -1023,6 +1055,12 @@ const MAX_STRAYS = 2;
  * starts before the gap; the strays then appear as bars on the dashed line.
  */
 export function silentIndex(device: Device, dayStarts: number[]): number {
+  // Unreachable: the bar stops where the outage began (diagnostic sensors may keep reporting meanwhile)
+  const gone = goneSince(device);
+  if (gone !== null && dayStarts.length >= 2) {
+    const at = stripIndex(gone, dayStarts);
+    return at < 0 ? 0 : at + 1;
+  }
   const since = silenceStart(device);
   if (!isSilent(device) || since === null || dayStarts.length < 2) return -1;
   // New server: the start of the silence is fixed (stray rule there); window after that report

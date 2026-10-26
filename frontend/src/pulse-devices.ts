@@ -1,21 +1,19 @@
 import { css, html, LitElement, nothing } from 'lit';
 import { defineOnce, dropdownValue, inputValue } from './ha';
 import {
-  ago,
   applyFilter,
   axisColumns,
   criticalChange,
   type DeviceFilter,
   dayLabels,
-  formatWhen,
   type GroupBy,
   gapFractions,
   groupDevices,
-  isSilent,
   memoize,
   needsAction,
   rhythmPill,
   rhythmTone,
+  rowTime,
   search,
   silentIndex,
   statusKey,
@@ -155,10 +153,7 @@ export class PulseDevices extends LitElement {
   private renderRow(d: Device) {
     const lang = this.language;
     const word = statusWord(lang, d, this.now);
-    const time =
-      isSilent(d) && d.last_activity !== null
-        ? formatWhen(lang, d.last_activity, this.now, this.timeZone, this.timeFormat)
-        : ago(lang, d.last_activity, this.now);
+    const time = rowTime(lang, d, this.now, this.timeZone, this.timeFormat);
     const symbol = d.ignored ? 'ok' : rhythmTone(d);
     const menu = this.readonly
       ? nothing

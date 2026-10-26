@@ -2,6 +2,11 @@
 
 After 1.1.0, releases use calendar versions `YY.M.N` (year, month, number of the release in that month), e.g. `26.10.4`. They count as newer than every 1.x version, so updates through HACS work as before.
 
+## 26.10.11 – 2026-10-26
+
+### Fixed
+- An unreachable device showed the time of its last report instead of when it went: a Govee lamp gone for five days read *Failed · 2 min ago*, because its diagnostic sensors keep reporting on every cloud poll. Row time, rhythm bar ("Unreachable for 5 days", the bar stops where the outage began) and the device headline now start at the outage. The status sensor's `silent_since` is the start of the outage for unreachable devices (dashboards like Casora show the right time), and the new attribute `unavailable_since` has it on its own.
+
 ## 26.10.10 – 2026-10-26
 
 ### Fixed

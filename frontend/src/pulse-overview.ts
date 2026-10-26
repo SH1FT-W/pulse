@@ -1,7 +1,6 @@
 import { css, html, LitElement, nothing } from 'lit';
 import { defineOnce } from './ha';
 import {
-  ago,
   axisColumns,
   batteryDevices,
   batteryLine,
@@ -9,12 +8,10 @@ import {
   type DeviceFilter,
   dayLabels,
   dueLine,
-  formatWhen,
   gapFractions,
   groups,
   hero,
   heroSentences,
-  isSilent,
   lastReplaced,
   type MonitorKey,
   memoize,
@@ -23,6 +20,7 @@ import {
   ROOMS_FROM,
   rhythmPill,
   rhythmTone,
+  rowTime,
   shortDate,
   silentIndex,
   statusWord,
@@ -123,10 +121,7 @@ export class PulseOverview extends LitElement {
   private renderRow(d: Device, showRoom = true) {
     const lang = this.language;
     const word = statusWord(lang, d, this.now);
-    const time =
-      isSilent(d) && d.last_activity !== null
-        ? formatWhen(lang, d.last_activity, this.now, this.timeZone, this.timeFormat)
-        : ago(lang, d.last_activity, this.now);
+    const time = rowTime(lang, d, this.now, this.timeZone, this.timeFormat);
     const symbol = d.ignored ? 'ok' : rhythmTone(d);
     return html`<button class="mrow rowgrid" type="button" @click=${() => this.fire('open', { id: d.id })}>
       <span class="nm">

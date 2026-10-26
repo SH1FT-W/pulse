@@ -25,6 +25,7 @@ import {
   formatVoltage,
   formatWhen,
   gapFractions,
+  goneSince,
   groupDevices,
   groups,
   heartbeatSilence,
@@ -56,6 +57,7 @@ import {
   resample,
   rhythmPill,
   rhythmTone,
+  rowTime,
   search,
   settingsHero,
   shortDate,
@@ -468,6 +470,34 @@ describe('Richtung Puls', () => {
     const g = monitorGroups([lock, door, cellar, learning, device('I', { ignored: true })]);
     expect(g.map((x) => x.key)).toEqual(['need', 'watch', 'rhythm', 'learning']);
     expect(monitorGroups([lock]).map((x) => x.key)).toEqual(['rhythm']);
+  });
+
+  it('Nicht erreichbar: Zeit, Leiste und Schlagzeile ab Beginn des Ausfalls', () => {
+    // Govee lamp: diagnostic sensors keep reporting (last_activity recent), the lamp is gone for 5 days
+    const lamp = device('Deckenleuchte', {
+      status: 'failed',
+      reason_key: 'unavailable',
+      last_activity: NOW - 120,
+      unavailable_since: NOW - 5 * D,
+    });
+    expect(goneSince(lamp)).toBe(NOW - 5 * D);
+    expect(rowTime('de', lamp, NOW, 'UTC')).toBe(formatWhen('de', NOW - 5 * D, NOW, 'UTC'));
+    expect(rowTime('de', { ...lamp, status: 'ok', reason_key: 'ok_mains' }, NOW, 'UTC')).toBe(
+      'vor 2 Min.'
+    );
+    expect(rhythmPill('de', lamp, NOW)).toBe('Seit 5 Tagen nicht erreichbar');
+    expect(detailHeadline('de', lamp, NOW).text).toBe('Seit 5 Tagen nicht erreichbar.');
+    const start = NOW - 7 * D;
+    const starts = Array.from({ length: 8 }, (_, i) => start + i * D);
+    expect(silentIndex(lamp, starts)).toBe(
+      Math.floor((lamp.unavailable_since! - start) / (2 * H)) + 1
+    );
+    // Ignored or without a time from the server: as before
+    expect(goneSince({ ...lamp, ignored: true })).toBeNull();
+    expect(goneSince({ ...lamp, unavailable_since: null })).toBeNull();
+    expect(detailHeadline('de', { ...lamp, unavailable_since: null }, NOW).text).toBe(
+      'Nicht erreichbar.'
+    );
   });
 
   it('Stille in der Leiste', () => {

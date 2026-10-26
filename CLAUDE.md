@@ -64,7 +64,8 @@ es hört nur zu (Zustände, „gemeldet ohne Änderung“, Zigbee2MQTT-Nachricht
 - Takt je Gerät aus `RhythmCache` (neu gelernt nur bei neuen Meldungen). Meldungen werden auf eine je 120 s
   ausgedünnt (`THIN_SECONDS`, `MAX_EVENTS` 6000 = 7 Tage auch für BLE). Rhythmusleiste: 12 Fenster je Kalendertag.
 - Start/Stopp: `_stopped` + `_z2m_lock` – ein Neuladen während des Starts hinterlässt keinen zweiten Wächter/Listener.
-- Entitäten schreiben nur bei Änderung (`PulseEntity._handle_update`); Attribute stabil (`reason_key`, `silent_since`),
+- Entitäten schreiben nur bei Änderung (`PulseEntity._handle_update`); Attribute stabil (`reason_key`, `silent_since` –
+  bei `unavailable`/`unavailable_usual` der Ausfallbeginn, `unavailable_since`),
   keine laufend wechselnden Sätze. Lesen (Panel, `pulse/subscribe`, `pulse/heartbeat`) für alle, Schreiben nur Admins.
 - Sturm-Bremse: während `_tick` sammelt der Notifier Problem-Mitteilungen (`async_begin_tick`/`async_end_tick`);
   ab `PROBLEM_BURST_MIN` (3) im selben Takt eine gemeinsame, nie kritische (`push_burst` bei still/weg, sonst
