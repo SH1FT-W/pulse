@@ -610,10 +610,16 @@ class PulseMonitor:
                 offline[entity_id] = STATE_OFF
         result = await async_load_outages(self.hass, sorted(watch), HISTORY_DAYS, offline, self._starts(), OUTAGE_MIN)
         keep_from = time.time() - KEEP_DAYS * DAY
-        for entity_id, spans in result.items():
-            if spans and (owner := watch.get(entity_id)) is not None:
-                record = owner.record
-                record["outages"] = merge_outages(record.get("outages", []), spans, keep_from)
+        for entity_id, (spans, running) in result.items():
+            owner = watch.get(entity_id)
+            if owner is None:
+                continue
+            if spans:
+                owner.record["outages"] = merge_outages(owner.record.get("outages", []), spans, keep_from)
+            # Gone since before the restart: after a start HA (and thus Pulse) only knows "unavailable since the
+            # start"; the recorder knows when it really went (a lamp gone for days is "failed" right away)
+            if owner.unavailable_since is not None and running is not None and running < owner.unavailable_since:
+                owner.unavailable_since = running
 
     # ── Reports ──────────────────────────────────────────────────────────
 

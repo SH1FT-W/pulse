@@ -3,13 +3,15 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
+import time
+from unittest.mock import AsyncMock, patch
 
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from common import add_device, tick
-from custom_components.pulse.history import outage_spans
+from custom_components.pulse.history import outage_spans, running_outage
 from custom_components.pulse.rhythm import Facts, Rhythm, evaluate, merge_outages, usual_outage
 from custom_components.pulse.store import migrate
 
@@ -106,6 +108,14 @@ def test_outage_spans_only_finished_ones():
     assert outage_spans(slow, starts=[restart]) == []
     blip = [_state("on", T0), _state("unavailable", T0 + HOUR), _state("on", T0 + HOUR + 30)]
     assert outage_spans(blip, shortest=20 * MINUTE) == []
+
+
+def test_running_outage_keeps_its_real_start():
+    restart = T0 + 2 * HOUR
+    rows = [_state("on", T0), _state("unavailable", T0 + HOUR), _state("unavailable", restart)]
+    assert running_outage(rows) == T0 + HOUR
+    assert running_outage([*rows, _state("off", T0 + 3 * HOUR)]) is None
+    assert running_outage([_state("on", T0), _state("off", T0 + HOUR)], "off") == T0 + HOUR
 
 
 # ── Discovery ────────────────────────────────────────────────────────────
@@ -221,3 +231,22 @@ async def test_config_switch_does_not_keep_the_lamp_reachable(hass: HomeAssistan
     hass.states.async_set(lamp.entities["light"], "unavailable")
     await hass.async_block_till_done()
     assert device.unavailable_since is not None
+
+
+async def test_gone_since_before_the_restart_fails_right_away(hass: HomeAssistant, setup):
+    monitor = setup["monitor"]
+    lamp = add_device(
+        hass, "ceiling", "Deckenleuchte", [("light", "light", None)], manufacturer="Govee", platform="govee"
+    )
+    hass.states.async_set(lamp.entities["light"], "unavailable")
+    monitor.async_rediscover()
+    await hass.async_block_till_done()
+    device = monitor.devices[lamp.device_id]
+    assert device.unavailable_since is not None  # HA only knows: since the start
+    gone = time.time() - 3 * DAY
+    result = {lamp.entities["light"]: ([], gone)}
+    with patch("custom_components.pulse.monitor.async_load_outages", AsyncMock(return_value=result)):
+        await monitor._async_learn_outages()
+    assert device.unavailable_since == gone
+    await tick(hass, setup["freezer"], timedelta(minutes=1))
+    assert (device.status, device.reason["key"]) == ("failed", "unavailable")

@@ -73,6 +73,21 @@ def outage_spans(
     return spans
 
 
+def running_outage(states: Iterable[Any], offline: str | None = None) -> float | None:
+    """Start of an outage that is still running at the end (None if the entity is there). The row HA rewrites
+    on start keeps an outage that began before the restart, so this is its real start."""
+    since: float | None = None
+    for state in states:
+        if not isinstance(state, State):
+            continue
+        if state.state == STATE_UNAVAILABLE or (offline is not None and state.state == offline):
+            if since is None:
+                since = state.last_updated.timestamp()
+        elif state.state not in NOT_REAL:
+            since = None
+    return since
+
+
 async def _async_read[T](
     hass: HomeAssistant, entity_ids: list[str], days: int, boil: Callable[[str, list[Any]], T]
 ) -> dict[str, T]:
@@ -126,11 +141,18 @@ async def async_load_outages(
     offline: Mapping[str, str] | None = None,
     starts: Sequence[float] = (),
     shortest: float = 0.0,
-) -> dict[str, list[tuple[float, float]]]:
-    """Per entity the finished outages of the last `days` days (`offline`: entity → its "gone" state)."""
+) -> dict[str, tuple[list[tuple[float, float]], float | None]]:
+    """Per entity (finished outages, start of the one still running) of the last `days` days (`offline`:
+    entity → its "gone" state)."""
     offline = offline or {}
     return await _async_read(
-        hass, entity_ids, days, lambda e, states: outage_spans(states, offline.get(e), starts, shortest)
+        hass,
+        entity_ids,
+        days,
+        lambda e, states: (
+            outage_spans(states, offline.get(e), starts, shortest),
+            running_outage(states, offline.get(e)),
+        ),
     )
 
 

@@ -2,6 +2,11 @@
 
 After 1.1.0, releases use calendar versions `YY.M.N` (year, month, number of the release in that month), e.g. `26.10.4`. They count as newer than every 1.x version, so updates through HACS work as before.
 
+## 26.10.9b3 – 2026-10-26 (beta)
+
+### Fixed
+- A device that was already unreachable before Home Assistant restarted counted as unreachable only since the restart, and showed *In rhythm* for the first 20 minutes. Pulse now takes the real start from the recorder, so a lamp gone for days is *Failed* right after the restart.
+
 ## 26.10.9b2 – 2026-10-26 (beta)
 
 ### Changed

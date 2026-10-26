@@ -88,7 +88,8 @@ es hört nur zu (Zustände, „gemeldet ohne Änderung“, Zigbee2MQTT-Nachricht
   und Einstellungs-Schalter bleiben bei Govee da, Konnektivität bleibt „on“), Meldungen heben „unavailable“ nicht auf (`_activity`). Bewertung: nicht regelmäßig →
   `ok_mains`, Stille zählt nicht, nur `unavailable`; regelmäßig (≤ `REGULAR_LONGEST`) → Stille zählt normal.
   Gelernte Erreichbarkeit: `record["outages"]` ([Start, Ende] ≥ `OUTAGE_MIN`, live in `_reachable_again`, beim Start aus
-  dem Recorder `history.async_load_outages`), ≥ `OUTAGE_HABIT` in `KEEP_DAYS` ohne HA-Pause und nicht im Neustart-Fenster
+  dem Recorder `history.async_load_outages`; ein noch laufender Ausfall (`history.running_outage`) setzt
+  `unavailable_since` auf den echten Beginn vor dem Neustart), ≥ `OUTAGE_HABIT` in `KEEP_DAYS` ohne HA-Pause und nicht im Neustart-Fenster
   (`rhythm.near_start`: Integration lädt; ein vor dem Neustart begonnener Ausfall kommt mit echtem Start aus dem Recorder)
   → `rhythm.usual_outage`;
   dann weg = `unavailable_usual` (watch), erst > max(2× längster, 1 Tag) `unavailable` check, nie failed.
