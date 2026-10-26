@@ -112,6 +112,36 @@ async def test_mqtt_mains_device_needs_zigbee(hass: HomeAssistant, setup):
     assert monitor.devices[router.device_id].spec.icon == "mdi:lightbulb-outline"
 
 
+async def test_govee_cloud_lamp_reports_unavailable(hass: HomeAssistant, setup):
+    monitor = setup["monitor"]
+    monitor.store.settings["mains_beta"] = True
+    lamp = add_device(
+        hass,
+        "floor_lamp",
+        "Stehlampe",
+        [
+            ("light", "light", None),
+            ("sensor", "last_update_received", "timestamp"),
+            ("binary_sensor", "connectivity", "connectivity"),
+        ],
+        manufacturer="Govee",
+        model="H6076",
+        platform="govee",
+    )
+    hass.states.async_set(lamp.entities["light"], "off")
+    hass.states.async_set(lamp.entities["connectivity"], "on")
+    monitor.async_rediscover()
+    await hass.async_block_till_done()
+    device = monitor.devices[lamp.device_id]
+    assert device.spec.mains and device.spec.reachable_via == lamp.entities["connectivity"]
+    # Govee says the lamp is offline (unplugged, Wi-Fi lost)
+    hass.states.async_set(lamp.entities["connectivity"], "off")
+    await hass.async_block_till_done()
+    assert device.unavailable_since is not None
+    await tick(hass, setup["freezer"], timedelta(hours=2, minutes=1))
+    assert (device.status, device.reason["key"]) == ("failed", "unavailable")
+
+
 async def test_own_templates(hass: HomeAssistant, setup, hass_ws_client):
     monitor = setup["monitor"]
     devices = setup["devices"]

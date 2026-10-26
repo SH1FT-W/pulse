@@ -122,8 +122,9 @@ CLOUD_INTEGRATIONS: Final = frozenset(
 INACTIVE_DOMAINS: Final = {"update", "button", "scene", "text", "image"}
 # Important devices: stricter limits, immediate (optionally critical) notification
 CRITICAL_BINARY_CLASSES: Final = {"moisture", "smoke", "gas", "carbon_monoxide", "safety"}
-# Beta "mains-powered devices": only local integrations whose devices hang now and then (Zigbee router stops
-# reporting, Wi-Fi plug stuck). Zigbee2MQTT devices come through "mqtt" and must have an IEEE address.
+# Beta "mains-powered devices": local integrations whose devices hang now and then (Zigbee router stops
+# reporting, Wi-Fi plug stuck), plus cloud ones with their own connectivity sensor.
+# Zigbee2MQTT devices come through "mqtt" and must have an IEEE address.
 MAINS_INTEGRATIONS: Final = frozenset(
     {
         "zha",
@@ -144,6 +145,7 @@ MAINS_INTEGRATIONS: Final = frozenset(
         "yeelight",
         "wiz",
         "govee_light_local",
+        "govee",  # Govee cloud (custom integration): its connectivity sensor tells when a lamp is gone
         "twinkly",
         "elgato",
         "fritzbox",

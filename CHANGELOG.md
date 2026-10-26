@@ -2,6 +2,11 @@
 
 After 1.1.0, releases use calendar versions `YY.M.N` (year, month, number of the release in that month), e.g. `26.10.4`. They count as newer than every 1.x version, so updates through HACS work as before.
 
+## 26.10.9b1 – 2026-10-26 (beta)
+
+### Fixed
+- **Beta: mains-powered devices.** Lamps of the Govee cloud integration (`govee`) are watched too. Pulse only knew the local Govee integration, so an offline Govee lamp was never reported. Its connectivity sensor now marks it unreachable.
+
 ## 26.10.8 – 2026-10-19
 
 ### Added

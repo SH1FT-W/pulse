@@ -25,12 +25,7 @@ const WELCOME: Feature[] = [
  * After an update: what is new in this version, in the user's words. Replace on every release
  * (1 to 4 entries). As of 26.10.7.
  */
-export const WHATS_NEW: Feature[] = [
-  { icon: 'mdi:power-plug-outline', title: 'new_mains_title', text: 'new_mains_text' },
-  { icon: 'mdi:text-box-edit-outline', title: 'new_texts_title', text: 'new_texts_text' },
-  { icon: 'mdi:label-outline', title: 'new_labels_title', text: 'new_labels_text' },
-  { icon: 'mdi:translate', title: 'new_languages_title', text: 'new_languages_text' },
-];
+export const WHATS_NEW: Feature[] = [];
 
 const CHANGELOG_URL = 'https://github.com/SH1FT-W/pulse/blob/main/CHANGELOG.md';
 
