@@ -82,6 +82,8 @@ es hört nur zu (Zustände, „gemeldet ohne Änderung“, Zigbee2MQTT-Nachricht
 - Begründungen in Nutzersprache: `pulse/subscribe {language}` → `snapshot(language)`; das Panel abonniert bei
   Sprachwechsel neu. Zeitformat aus `hass.locale.time_format` (`timeFormatOf`, `formatWhen`).
 - Zigbee2MQTT nicht da beim Start (Broker langsam): `_tick` versucht es alle `Z2M_RETRY` (5 Min.) erneut.
+- Kind-Geräte (`DeviceRegistry.child_devices`, ab HA 2026.11 Tuya-Kanäle, Z-Wave-Endpunkte, Objektive …): `discover` rechnet ihre
+  Entitäten und Labels dem Elterngerät zu, sie werden nie eigene Pulse-Geräte (abgeschaltete Kinder zählen nicht).
 - Labels (`LABEL_IMPORTANT`/`LABEL_IGNORE` an Gerät oder Entität, auch eigenen) → `spec.label`, schlägt den Panel-Schalter
   (Panel sperrt ihn), `pulse_ignore` schlägt `pulse_important`; Label-Wechsel → `_reobserve` wie Ignorieren per Schalter.
 - Beta Netzgeräte (`settings.mains_beta`, Standard an seit 26.10.9, Minor 8 schaltet es einmalig für alle ein): `discover(mains=True)` nimmt Geräte ohne Batterie: kein

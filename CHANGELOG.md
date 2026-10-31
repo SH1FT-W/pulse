@@ -2,6 +2,11 @@
 
 After 1.1.0, releases use calendar versions `YY.M.N` (year, month, number of the release in that month), e.g. `26.10.4`. They count as newer than every 1.x version, so updates through HACS work as before.
 
+## 26.10.15 – 2026-10-31
+
+### Fixed
+- Ready for Home Assistant 2026.11: some integrations (Tuya, Z-Wave, ESPHome, MQTT, Reolink dual-lens cameras) now file a device's channels, endpoints or lenses as *child devices*. Pulse counts the entities of child devices for their parent device again, so a sensor keeps its contact or button as an action, a power strip keeps its sockets in the mains beta, and labels on a child device apply to the device. Child devices never show up as devices of their own. Nothing changes for older Home Assistant versions.
+
 ## 26.10.14 – 2026-10-26
 
 ### Fixed

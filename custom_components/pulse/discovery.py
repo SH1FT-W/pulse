@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import Any
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import area_registry as ar, device_registry as dr, entity_registry as er
@@ -136,10 +137,19 @@ def discover(hass: HomeAssistant, mains: bool = False) -> dict[str, DeviceSpec]:
     # devices under a media player or from an entry that has media players (except radio bridges)
     media_devices: set[str] = set()
     media_entries: set[str] = set()
+    # Child devices (a lens, a channel, an endpoint) are lightweight parts of their parent device in a registry of
+    # their own (`DeviceRegistry.child_devices`, used by Tuya, Z-Wave, ESPHome … from HA 2026.11); their entities
+    # belong to the parent here. getattr: older HA versions have no child devices.
+    children: dict[str, list[Any]] = {}  # ChildDeviceEntry
+    parent_of: dict[str, str] = {}
+    for child in getattr(devices, "child_devices", ()):
+        parent_of[child.id] = child.parent_device_id
+        if child.disabled_by is None:
+            children.setdefault(child.parent_device_id, []).append(child)
     for e in entities.entities.values():
         if e.domain == "media_player":
             if e.device_id:
-                media_devices.add(e.device_id)
+                media_devices.add(parent_of.get(e.device_id, e.device_id))
             if e.config_entry_id and e.platform not in HUB_PLATFORMS:
                 media_entries.add(e.config_entry_id)
     for device in devices.devices:
@@ -147,7 +157,13 @@ def discover(hass: HomeAssistant, mains: bool = False) -> dict[str, DeviceSpec]:
             continue
         if device.via_device_id in media_devices or _entry_ids(device) & media_entries:
             continue
-        entries = [e for e in er.async_entries_for_device(entities, device.id) if e.disabled_by is None]
+        parts = children.get(device.id, [])
+        entries = [
+            e
+            for part in (device, *parts)
+            for e in er.async_entries_for_device(entities, part.id)
+            if e.disabled_by is None
+        ]
         own = [e for e in entries if e.platform != DOMAIN]
         if not own:
             continue
@@ -203,7 +219,7 @@ def discover(hass: HomeAssistant, mains: bool = False) -> dict[str, DeviceSpec]:
             e.domain == "binary_sensor" and _device_class(e) in CRITICAL_BINARY_CLASSES for e in own
         )
         area = areas.async_get_area(device.area_id) if device.area_id else None
-        labels = set(device.labels).union(*(e.labels for e in entries))
+        labels = set(device.labels).union(*(p.labels for p in parts), *(e.labels for e in entries))
         label = "ignore" if LABEL_IGNORE in labels else "important" if LABEL_IMPORTANT in labels else None
         found[device.id] = DeviceSpec(
             device_id=device.id,
