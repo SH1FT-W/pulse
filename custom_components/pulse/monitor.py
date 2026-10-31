@@ -21,7 +21,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     EVENT_STATE_CHANGED,
     EVENT_STATE_REPORTED,
-    STATE_OFF,
+    STATE_HOME,
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
@@ -71,7 +71,7 @@ from .const import (
     THIN_SECONDS,
     TICK,
 )
-from .discovery import DeviceSpec, discover
+from .discovery import DeviceSpec, candidates as discovery_candidates, discover
 from .forecast import Forecast
 from .history import async_load_history, async_load_outages, load_forecasts
 from .notifier import Notifier
@@ -401,7 +401,11 @@ class PulseMonitor:
 
     @callback
     def _rediscover(self) -> None:
-        specs = discover(self.hass, mains=bool(self.store.settings.get("mains_beta")))
+        specs = discover(
+            self.hass,
+            mains=bool(self.store.settings.get("mains_beta")),
+            manual=self.store.settings.get("manual_devices") or (),
+        )
         now = time.time()
         new: list[str] = []
         relabeled: list[str] = []
@@ -560,9 +564,12 @@ class PulseMonitor:
 
     # ── History ──────────────────────────────────────────────────────────
 
-    async def async_bootstrap(self) -> None:
-        """Learn the last days from history; Pulse then knows the rhythm right away."""
-        entity_ids = sorted(self._alive)
+    async def async_bootstrap(self, only: set[str] | None = None) -> None:
+        """Learn the last days from history; Pulse then knows the rhythm right away.
+
+        `only`: just these devices (added by hand while running); the first full run still decides `bootstrapped`.
+        """
+        entity_ids = sorted(e for e in self._alive if only is None or self._entity_map.get(e) in only)
         starts = [float(span[0]) for span in self.store.uptime]
         result = await async_load_history(self.hass, entity_ids, HISTORY_DAYS, starts)
         if self._stopped:
@@ -586,18 +593,26 @@ class PulseMonitor:
                 for ts in actions:
                     merge_event(device.record["actions"], ts, keep_from, MAX_EVENTS)
         for device in self.devices.values():
+            if only is not None and device.device_id not in only:
+                continue
             if device.record["events"] and (
                 device.record.get("first_seen") is None or device.record["events"][0] < device.record["first_seen"]
             ):
                 device.record["first_seen"] = device.record["events"][0]
-        await self._async_learn_outages()
+        await self._async_learn_outages(only)
         if self._stopped:
+            return
+        if only is not None:
+            for device_id in only:
+                if (device := self.devices.get(device_id)) is not None:
+                    self._evaluate(device, time.time(), announce=False)
+            self.async_update()
             return
         self.bootstrapped = True
         _LOGGER.debug("History read: %s entities", len(result))
         self._tick(dt_util.utcnow())
 
-    async def _async_learn_outages(self) -> None:
+    async def _async_learn_outages(self, only: set[str] | None = None) -> None:
         """From the recorder: past outages of mains devices, and for every device that is gone right now since
         when it really is (after an HA start only "unavailable since the start" is known).
 
@@ -609,13 +624,15 @@ class PulseMonitor:
         offline: dict[str, str] = {}
         for device in self.devices.values():
             spec = device.spec
+            if only is not None and spec.device_id not in only:
+                continue
             if not spec.mains and not self._gone_now(device):
                 continue
             if spec.mains and spec.main_entities:
                 entity_ids = list(spec.main_entities)
             elif spec.connectivity:
                 entity_ids = [spec.connectivity]
-                offline[spec.connectivity] = STATE_OFF
+                offline[spec.connectivity] = spec.offline_state
             else:
                 entity_ids = list(spec.entities)
             if entity_ids:
@@ -651,12 +668,20 @@ class PulseMonitor:
         """Unreachable at the moment: marked so, or all its entities unavailable / the integration says offline."""
         if device.unavailable_since is not None:
             return True
-        via = device.spec.connectivity
-        if via is not None and self.hass.states.is_state(via, STATE_OFF):
+        if self._offline(device.spec):
             return True
         states = [self.hass.states.get(e) for e in device.spec.entities]
         known = [s for s in states if s is not None]
         return bool(known) and all(s.state == STATE_UNAVAILABLE for s in known)
+
+    def _offline(self, spec: DeviceSpec) -> bool:
+        """The integration says the device is unreachable: connectivity "off", a router's tracker "not_home"."""
+        via = spec.connectivity
+        state = self.hass.states.get(via) if via is not None else None
+        if state is None or state.state != spec.offline_state:
+            return False
+        # A GPS tracker's "not_home" only means away
+        return state.domain != "device_tracker" or state.attributes.get("source_type") != "gps"
 
     def _mark_unavailable(self, device: Device, since: float) -> None:
         """Unreachable from `since` on; if the recorder knows it was gone already before the restart, from then."""
@@ -766,8 +791,7 @@ class PulseMonitor:
             # The lamp/plug itself counts, not its diagnostic sensors or config switches (they stay available while
             # the lamp is gone)
             known = [s for s in known if s.entity_id in device.spec.main_entities] or known
-        via = device.spec.connectivity
-        offline = via is not None and self.hass.states.is_state(via, STATE_OFF)
+        offline = self._offline(device.spec)
         gone = bool(known) and all(s.state == STATE_UNAVAILABLE for s in known)
         if offline or gone:
             # Since the last of them went (after an HA restart: since the start, or earlier from the recorder)
@@ -989,6 +1013,7 @@ class PulseMonitor:
             battery_missing_since=record.get("battery_missing_since"),
             reachable=self._reachable(device),
             mains=device.spec.mains,
+            manual=device.spec.manual,
             usual_outage=usual_outage(record.get("outages", ()), now, gaps, KEEP_DAYS, self._starts())
             if device.spec.mains
             else None,
@@ -1003,8 +1028,9 @@ class PulseMonitor:
             states = [self.hass.states.get(e) for e in device.spec.entities]
             reachable = any(s is not None and s.state not in NOT_REAL for s in states)
         else:
-            reachable = self.hass.states.is_state(via, STATE_ON)
-        return self._integration_name(device.spec.integration) if reachable else None
+            online = STATE_HOME if via.startswith("device_tracker.") else STATE_ON
+            reachable = self.hass.states.is_state(via, online)
+        return self.integration_name(device.spec.integration) if reachable else None
 
     @staticmethod
     def _radio_rises(device: Device) -> int:
@@ -1049,11 +1075,11 @@ class PulseMonitor:
                     "ids": ids,
                     "since": min(since_of[d] for d in ids),
                     "count": len(ids),
-                    "name": self._integration_name(integration),
+                    "name": self.integration_name(integration),
                 }
         self.cloud_outages = outages
 
-    def _integration_name(self, domain: str) -> str:
+    def integration_name(self, domain: str) -> str:
         from homeassistant.loader import async_get_loaded_integration
 
         try:
@@ -1300,6 +1326,26 @@ class PulseMonitor:
         self.store.async_delay_save()
         async_dispatcher_send(self.hass, SIGNAL_NEW_DEVICES, [device_id])
         self.async_update()
+
+    def manual_devices(self) -> list[str]:
+        return list(self.store.settings.get("manual_devices") or [])
+
+    def set_manual(self, device_id: str, add: bool) -> None:
+        """Add a device by hand (always watched, like a mains device) or remove it again."""
+        manual = [d for d in self.manual_devices() if d != device_id]
+        if add:
+            manual.append(device_id)
+        self.store.settings = {**self.store.settings, "manual_devices": manual}
+        self.store.async_delay_save()
+        was = device_id in self.devices
+        self._rediscover()
+        if add and not was and device_id in self.devices and self.bootstrapped:
+            # Learn its rhythm and past outages from the recorder right away, as after a start
+            self.hass.async_create_task(self.async_bootstrap({device_id}), eager_start=False)
+
+    def candidates(self) -> list[DeviceSpec]:
+        """Devices that can be added by hand (not watched yet)."""
+        return discovery_candidates(self.hass, self.devices)
 
     def _reobserve(self, device: Device, now: float) -> None:
         """Ignored or watched again (switch or label): the first status after that is no transition."""

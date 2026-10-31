@@ -377,6 +377,7 @@ class Facts:
     battery_missing_since: float | None = None  # battery entity permanently without a value
     reachable: str | None = None  # integration currently reports the device reachable (its name), otherwise None
     mains: bool = False  # beta: mains-powered, an unused lamp is not broken
+    manual: bool = False  # added by hand: watched like a mains device, but maybe not on the mains (camera, vacuum)
     usual_outage: float | None = None  # often unavailable by itself: its longest such outage (`usual_outage`)
 
 
@@ -404,7 +405,7 @@ def evaluate(facts: Facts) -> Verdict:
     if facts.reachable and not regular:
         verdict = Verdict(STATUS_OK, {"key": "ok_reachable", "params": {"via": facts.reachable}})
     elif facts.mains and not regular:
-        verdict = Verdict(STATUS_OK, {"key": "ok_mains", "params": {}})
+        verdict = Verdict(STATUS_OK, {"key": "ok_manual" if facts.manual else "ok_mains", "params": {}})
     elif rhythm.known:
         verdict = Verdict(STATUS_OK, {"key": "ok_rhythm", "params": {"every": rhythm.typical}})
     else:

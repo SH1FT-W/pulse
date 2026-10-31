@@ -6,6 +6,7 @@ from typing import Any
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import voluptuous as vol
 
@@ -62,6 +63,8 @@ def async_register(hass: HomeAssistant) -> None:
         ws_test,
         ws_summary,
         ws_heartbeat,
+        ws_manual_candidates,
+        ws_manual_device,
     ):
         websocket_api.async_register_command(hass, handler)
 
@@ -278,3 +281,45 @@ def ws_heartbeat(hass: HomeAssistant, connection: websocket_api.ActiveConnection
     if (monitor := _need(hass, connection, msg)) is None:
         return
     connection.send_result(msg["id"], monitor.heartbeats(msg["device_ids"]))
+
+
+@websocket_api.websocket_command({vol.Required("type"): "pulse/manual_candidates"})
+@websocket_api.require_admin
+@callback
+def ws_manual_candidates(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]) -> None:
+    """Devices that can be added by hand: everything Pulse does not watch yet (on request, for the picker)."""
+    if (monitor := _need(hass, connection, msg)) is None:
+        return
+    names: dict[str, str] = {}
+    devices = [
+        {
+            "id": spec.device_id,
+            "name": spec.name,
+            "area": spec.area,
+            "manufacturer": spec.manufacturer,
+            "model": spec.model,
+            "integration": spec.integration,
+            "integration_name": names.setdefault(spec.integration, monitor.integration_name(spec.integration)),
+            "icon": spec.icon,
+        }
+        for spec in monitor.candidates()
+    ]
+    devices.sort(key=lambda d: (str(d["area"] or "~").lower(), str(d["name"]).lower()))
+    connection.send_result(msg["id"], {"devices": devices})
+
+
+@websocket_api.websocket_command(
+    {vol.Required("type"): "pulse/manual_device", vol.Required("device_id"): str, vol.Required("add"): bool}
+)
+@websocket_api.require_admin
+@callback
+def ws_manual_device(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]) -> None:
+    """Add a device by hand or remove it again (only devices that exist; removing always works)."""
+    if (monitor := _need(hass, connection, msg)) is None:
+        return
+    device_id = msg["device_id"]
+    if msg["add"] and dr.async_get(hass).async_get(device_id) is None:
+        connection.send_error(msg["id"], "unknown_device", "Unknown device")
+        return
+    monitor.set_manual(device_id, msg["add"])
+    connection.send_result(msg["id"], {"watched": device_id in monitor.devices})

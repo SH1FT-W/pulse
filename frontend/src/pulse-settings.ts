@@ -3,8 +3,10 @@ import { live } from 'lit/directives/live.js';
 import { defineOnce, showToast } from './ha';
 import {
   arrivePersons,
+  candidateLine,
   cleanZ2mBase,
   importantCount,
+  manualDevices,
   monitored,
   settingsHero,
   templateExample,
@@ -195,6 +197,38 @@ export class PulseSettings extends LitElement {
     );
   }
 
+  /** Devices added by hand: one row each (tap = detail, ✕ = remove), then "Add device". */
+  private renderManual() {
+    const lang = this.language;
+    const added = manualDevices(this.snapshot.devices);
+    return html`<section class="section">
+      <h3 class="section-title">${t(lang, 'manual_title')}</h3>
+      <div class="list">
+        ${added.map(
+          (d) => html`<div class="row has-icon manual">
+            <button class="open" type="button" @click=${() => this.fire('open', { id: d.id })}>
+              <ha-icon class="ico" icon=${d.icon}></ha-icon>
+              <span class="label">${d.name}<small>${candidateLine(d)}</small></span>
+            </button>
+            <button
+              class="remove"
+              type="button"
+              aria-label=${t(lang, 'manual_remove', { name: d.name })}
+              title=${t(lang, 'manual_remove', { name: d.name })}
+              @click=${() => this.fire('manual-remove', { id: d.id, name: d.name })}
+            >
+              <ha-icon icon="mdi:minus-circle-outline"></ha-icon>
+            </button>
+          </div>`
+        )}
+        <button class="row action has-icon" type="button" @click=${() => this.fire('manual-add-open')}>
+          <ha-icon class="ico add" icon="mdi:plus"></ha-icon>${t(lang, 'manual_add')}
+        </button>
+      </div>
+      <p class="section-foot">${t(lang, 'manual_hint')}</p>
+    </section>`;
+  }
+
   /** Einstellungen: was Pulse überwacht (Netzgeräte) und was es zusätzlich liest (Zigbee2MQTT). */
   private renderOptionsPage(count: number, mains: number) {
     const lang = this.language;
@@ -222,6 +256,8 @@ export class PulseSettings extends LitElement {
           }
         </div>
       </section>
+
+      ${this.renderManual()}
 
       <section class="section">
         <h3 class="section-title">${t(lang, 'zigbee')}</h3>
@@ -284,7 +320,7 @@ export class PulseSettings extends LitElement {
     const important = importantCount(snap.devices);
     const own = s.templates ?? {};
     const watched = monitored(snap.devices);
-    const mains = watched.filter((d) => d.mains).length;
+    const mains = watched.filter((d) => d.mains && !d.manual).length;
     // Preview with a real device: preferably one with a room
     const example = watched.find((d) => d.area && !d.mains) ?? watched[0];
     if (this.page === 'options') return this.renderOptionsPage(watched.length, mains);
@@ -490,6 +526,65 @@ export class PulseSettings extends LitElement {
       }
       .row .value.t-ok {
         color: var(--pu-ok-text);
+      }
+      /* Device added by hand: the row opens the detail, the minus removes it */
+      .manual {
+        padding: 0;
+        gap: 0;
+      }
+      .manual .open {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-height: max(48px, var(--pu-hit));
+        padding: 6px 4px 6px 16px;
+        border: 0;
+        background: none;
+        color: inherit;
+        font: inherit;
+        text-align: start;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+      }
+      .manual .open .ico {
+        flex: none;
+        color: var(--pu-muted);
+        --mdc-icon-size: 20px;
+      }
+      .manual .open .label small {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .manual .remove {
+        flex: none;
+        display: grid;
+        place-items: center;
+        width: var(--pu-hit);
+        height: var(--pu-hit);
+        margin-inline-end: 6px;
+        border: 0;
+        border-radius: 50%;
+        background: none;
+        color: var(--pu-crit-text);
+        cursor: pointer;
+        --mdc-icon-size: 22px;
+        -webkit-tap-highlight-color: transparent;
+      }
+      .manual button:focus-visible {
+        outline: 2px solid var(--pu-accent);
+        outline-offset: -2px;
+      }
+      @media (hover: hover) {
+        .manual .open:hover,
+        .manual .remove:hover {
+          background: color-mix(in srgb, var(--primary-text-color) 4%, transparent);
+        }
+      }
+      .row > .ico.add {
+        color: var(--pu-accent);
       }
       .capname {
         text-transform: capitalize;

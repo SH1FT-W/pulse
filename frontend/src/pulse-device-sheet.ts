@@ -304,9 +304,11 @@ export class PulseDeviceSheet extends LitElement {
                   ? html`<span class="chip-cloud"><ha-icon icon="mdi:cloud-outline"></ha-icon>${t(lang, 'cloud_device')}</span>`
                   : nothing
               }${
-                mains
-                  ? html`<span class="chip-cloud"><ha-icon icon="mdi:power-plug-outline"></ha-icon>${t(lang, 'mains_chip')}</span>`
-                  : nothing
+                d.manual
+                  ? html`<span class="chip-cloud"><ha-icon icon="mdi:plus-circle-outline"></ha-icon>${t(lang, 'manual_chip')}</span>`
+                  : mains
+                    ? html`<span class="chip-cloud"><ha-icon icon="mdi:power-plug-outline"></ha-icon>${t(lang, 'mains_chip')}</span>`
+                    : nothing
               }</p>`
             : nothing
         }
@@ -374,7 +376,7 @@ export class PulseDeviceSheet extends LitElement {
 
       ${
         mains
-          ? html`<p class="fc muted"><ha-icon icon="mdi:power-plug-outline"></ha-icon><span>${t(lang, 'mains_note')}</span></p>`
+          ? html`<p class="fc muted"><ha-icon icon=${d.manual ? 'mdi:plus-circle-outline' : 'mdi:power-plug-outline'}></ha-icon><span>${t(lang, d.manual ? 'manual_note' : 'mains_note')}</span></p>`
           : html`<section class="stats">
         <div>
           <span>${t(lang, 'battery')}</span>

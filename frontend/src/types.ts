@@ -80,6 +80,8 @@ export interface Device {
   label: 'important' | 'ignore' | null;
   /** Beta: mains-powered, no battery (only with the setting `mains_beta`) */
   mains?: boolean;
+  /** Added by hand in Settings (watched like a mains device, only whether it is reachable) */
+  manual?: boolean;
   last_activity: number | null;
   /**
    * Ab hier zählt die Stille: letzte Meldung oder ein späterer manueller Wechsel. Fehlt bei älteren
@@ -120,6 +122,8 @@ export interface Settings {
   z2m_base: string;
   /** Beta: also watch mains-powered devices */
   mains_beta?: boolean;
+  /** Device IDs added by hand (changed only through `pulse/manual_device`) */
+  manual_devices?: string[];
   /** Own notification texts; null = Pulse's sentence (`template_defaults`) */
   templates?: Partial<Record<TemplateKey, string | null>>;
 }
@@ -180,3 +184,15 @@ export interface NotLoaded {
 }
 
 export type SnapshotMessage = Snapshot | NotLoaded;
+
+/** A device that can be added by hand (`pulse/manual_candidates`). */
+export interface ManualCandidate {
+  id: string;
+  name: string;
+  area: string | null;
+  manufacturer: string | null;
+  model: string | null;
+  integration: string;
+  integration_name: string;
+  icon: string;
+}

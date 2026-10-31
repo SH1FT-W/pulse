@@ -375,4 +375,21 @@ export const DE: Record<keyof typeof EN, string> = {
     'Das HA-Label pulse_important oder pulse_ignore an einem Gerät reicht. Mitteilungen nennen jetzt den Raum.',
   new_languages_title: 'Fünf Sprachen',
   new_languages_text: 'Pulse spricht Deutsch, Englisch, Französisch, Spanisch und Niederländisch.',
+  manual_title: 'Von Hand hinzugefügt',
+  manual_add: 'Gerät hinzufügen',
+  manual_hint:
+    'Kameras, Lautsprecher, Saugroboter oder jedes andere Gerät, das Pulse nicht von selbst überwacht. Pulse meldet, wenn eines nicht mehr erreichbar ist; ob es gerade spielt, wartet oder aus ist, zählt nicht. Geht auch, wenn „Netzgeräte überwachen“ aus ist.',
+  manual_remove: '{name} entfernen',
+  manual_added: '{name} wird jetzt überwacht.',
+  manual_removed: '{name} wird nicht mehr überwacht.',
+  manual_search: 'Name, Raum oder Integration suchen',
+  manual_none: 'Pulse überwacht schon jedes Gerät, das es könnte.',
+  manual_no_match: 'Kein Gerät passt.',
+  manual_loading: 'Geräte werden geladen …',
+  manual_chip: 'Von Hand hinzugefügt',
+  manual_note:
+    'Von Hand hinzugefügt. Pulse achtet darauf, ob es erreichbar ist und, wenn es sich regelmäßig meldet, ob es still wird.',
+  new_manual_title: 'Jedes Gerät hinzufügen',
+  new_manual_text:
+    'Kameras, Echo-Lautsprecher, Saugroboter oder beliebige Netzgeräte: unter Einstellungen hinzufügen, dann meldet Pulse, wenn eines nicht mehr erreichbar ist.',
 };

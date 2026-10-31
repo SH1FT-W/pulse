@@ -96,7 +96,8 @@ After *Battery replaced* the silence counts from the replacement, and the device
 <summary><b>Known limitations</b></summary>
 <br/>
 
-- **Only devices with a battery entity.** Pulse finds devices through `device_class: battery` (a percentage or a "battery low" switch). Devices without one are not monitored.
+- **What Pulse finds by itself.** Battery devices through `device_class: battery` (a percentage or a "battery low" switch) and, with the mains switch on, lamps, plugs, covers and the like. Anything else (cameras, speakers, network devices) only when you add it by hand under *Settings*.
+- **Devices added by hand only show whether they are there.** Pulse cannot tell a camera that streams a frozen picture from a working one; it only notices when Home Assistant marks it unavailable, its connectivity sensor goes off or the router no longer sees it.
 - **Quiet by design is hard to tell from dead.** A device that only reports when something happens, with no periodic battery report, has no rhythm. Pulse learns the longest normal gap, but a door that is rarely opened stays in *Learning* or *Watch* longer: after two days without a report it becomes *Watch* (no notification), only after a week *Check*.
 - **Stuck values are not silence.** A sensor that keeps reporting the same wrong value counts as alive. Pulse watches whether a device talks, not whether what it says is right.
 - **Zigbee2MQTT `last_seen` in payloads.** If the bridge option was once on and is now off, Zigbee2MQTT keeps sending a frozen timestamp. Pulse ignores `last_seen` unless the option is on.
@@ -129,6 +130,13 @@ If Home Assistant was down at summary time, the summary is sent up to two hours 
 **Your own words.** Under *Notifications → Texts* you can rewrite the title and text of each kind of notification (Failed, Check, Battery, Back again). You start from Pulse's sentence and see a live preview on one of your devices. Placeholders: `{name}`, `{area}`, `{reason}`, `{model}`, `{manufacturer}`, `{integration}`. Empty values vanish together with their " · ".
 
 **Beta: mains-powered devices.** On by default since 26.10.9 (switch: *Settings → Watch mains-powered devices*). Pulse also watches devices without a battery: every device of a local integration (ZHA, Zigbee2MQTT, Z-Wave, Matter, ESPHome, Shelly, Hue, TP-Link, WLED and a few more), and from any other integration every device that has a lamp, plug, switch, cover, fan, thermostat, valve or lock (helpers like template or powercalc and service devices don't count). They hang too: Pulse tells you when one is no longer reachable, or when one that usually reports regularly (a plug with a power meter, a Zigbee router) goes silent. A lamp that only reports when it is switched is fine as long as it is reachable. Devices that are often gone by themselves (a console in standby, a Bluetooth lamp that drops out) are learned: at least three outages of 20 minutes or more in two weeks make being gone their habit, shown as *Watch* without a notification, until one stays away for more than twice its longest outage (at least a day).
+
+**Add any device by hand.** Under *Settings → Added by hand → Add device* you pick any device Pulse does not watch by itself: cameras, Echo or HomePod speakers, TVs, robot vacuums, a NAS, a printer. This works whether or not mains-powered devices are watched. Pulse then watches it like a mains-powered device: it tells you when the device is no longer reachable, and only if it usually reports regularly, when it goes silent. What decides "reachable":
+
+- a connectivity sensor of the device (Ping, UniFi "online", cloud "connected"; not a "mop attached" or "cloud" link), or a router's device tracker (UniFi, FRITZ!Box, Nmap): `not_home` means offline, a GPS tracker's `not_home` only means away;
+- otherwise what the device is: its camera, media player, vacuum, lawn mower or alarm panel, else its lamp, plug or remote, else all of its entities. A device is gone only while all of them are `unavailable` at the same time; a speaker that is playing, idle or off is there.
+
+Its battery is ignored (a charging robot vacuum is no battery change), cloud integrations keep their calmer rules, and the HA label `pulse_ignore` and the panel's ignore switch still apply. Remove it again with the minus button in the same list. The list lives in Pulse's storage and survives restarts.
 
 Pulse speaks English, German, French, Spanish and Dutch.
 
@@ -227,7 +235,7 @@ actions:
 
 Requires **Home Assistant 2026.9** or newer. Pulse has no dependencies of its own. The Companion app is optional (for notifications), Zigbee2MQTT is optional (for signs of life), the recorder is optional (for history and forecasts).
 
-Pulse monitors every device that has a battery sensor (`device_class: battery`), including devices that only report "battery low" as on or off. Phones, tablets, vacuums, mowers and devices with power or energy sensors are skipped on purpose. If a device is missing, check that it has a battery entity and that the entity is enabled.
+Pulse monitors every device that has a battery sensor (`device_class: battery`), including devices that only report "battery low" as on or off. Phones, tablets, vacuums, mowers and devices with power or energy sensors are skipped on purpose. If a device is missing, check that it has a battery entity and that the entity is enabled, or add it by hand under *Settings → Added by hand*.
 
 **Without HACS:** download the [latest release](https://github.com/SH1FT-W/pulse/releases/latest), copy its `custom_components/pulse` folder into `/config/custom_components/`, restart Home Assistant and add the integration.
 
@@ -239,7 +247,7 @@ Updates arrive through HACS like any other integration. Since October 2026 Pulse
 <summary><b>Troubleshooting</b></summary>
 <br/>
 
-- **A device is missing.** Check that it has a battery entity, that the entity is enabled, and that the device is not a phone, vacuum, mower or a device with power or energy sensors (skipped on purpose).
+- **A device is missing.** Check that it has a battery entity, that the entity is enabled, and that the device is not a phone, vacuum, mower or a device with power or energy sensors (skipped on purpose). Any device except phones (mobile_app) can be added by hand under *Settings → Added by hand*.
 - **A device shows *Failed* although it works.** Open it in the panel: the reason says what Pulse saw. If it reports rarely, wait a few days for the rhythm to settle, mark it as important or not, or ignore it.
 - **No notifications.** Use *Send test notification* in the panel (or `pulse.send_test`) and check the recipients and the levels.
 - **Diagnostics.** *Settings → Devices & services → Pulse → ⋮ → Download diagnostics* gives the state of every monitored device without names, recipients or persons. Attach it to an issue.

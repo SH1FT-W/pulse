@@ -127,6 +127,12 @@ CRITICAL_BINARY_CLASSES: Final = {"moisture", "smoke", "gas", "carbon_monoxide",
 MAINS_DOMAINS: Final = frozenset(
     {"light", "switch", "fan", "cover", "climate", "valve", "humidifier", "water_heater", "siren", "lock"}
 )
+# Devices added by hand: what the device is decides whether it is there (an Echo's media player, not its
+# do-not-disturb switch of the Alexa cloud); without one of these its lamp/plug/remote (MAINS_DOMAINS), else all
+MANUAL_DOMAINS: Final = frozenset({"camera", "media_player", "vacuum", "lawn_mower", "alarm_control_panel"})
+# A router's device tracker (UniFi, FRITZ!Box, Nmap …) as the reachability of a device added by hand: "not_home" is
+# offline. A GPS tracker's "not_home" only means away (`monitor._offline` checks the source type)
+OFFLINE_TRACKER: Final = "not_home"
 # ... or if it comes from a local integration whose devices are always hardware, also without a lamp or plug
 # (Zigbee router, ESPHome Bluetooth proxy, Shelly input). Zigbee2MQTT devices come through "mqtt" with an
 # IEEE address.
@@ -209,6 +215,8 @@ DEFAULT_SETTINGS: Final[dict[str, Any]] = {
     "recovered": True,
     "z2m_base": Z2M_BASE,
     "mains_beta": True,  # beta (on since 26.10.9): also watch mains-powered devices (see MAINS_DOMAINS)
+    # Device IDs added by hand in the panel: always watched (`discovery._manual`), also with `mains_beta` off
+    "manual_devices": [],
     # Own notification texts, None = Pulse's sentence in the user's language (texts.TEMPLATE_KEYS)
     "templates": {
         "failed_title": None,

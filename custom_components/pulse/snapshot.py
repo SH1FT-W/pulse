@@ -82,6 +82,7 @@ def serialize(
         "ignored": device.ignored,
         "label": device.spec.label,
         "mains": device.spec.mains,
+        "manual": device.spec.manual,
         "last_activity": device.last_activity,
         "silence_from": monitor.silence_from(device),
         "silence_start": monitor.silence_start(device),

@@ -373,4 +373,21 @@ export const EN = {
     'The HA label pulse_important or pulse_ignore on a device is enough. Notifications now name the room.',
   new_languages_title: 'Five languages',
   new_languages_text: 'Pulse speaks English, German, French, Spanish and Dutch.',
+  manual_title: 'Added by hand',
+  manual_add: 'Add device',
+  manual_hint:
+    'Cameras, speakers, robot vacuums or any other device Pulse does not watch by itself. Pulse tells you when one is no longer reachable; whether it is playing, idle or off does not matter. Works also with mains-powered devices switched off.',
+  manual_remove: 'Remove {name}',
+  manual_added: '{name} is watched now.',
+  manual_removed: '{name} is no longer watched.',
+  manual_search: 'Search name, room or integration',
+  manual_none: 'Pulse already watches every device it could.',
+  manual_no_match: 'No device matches.',
+  manual_loading: 'Loading devices …',
+  manual_chip: 'Added by hand',
+  manual_note:
+    'Added by hand. Pulse watches whether it is reachable and, if it reports regularly, whether it goes silent.',
+  new_manual_title: 'Add any device',
+  new_manual_text:
+    'Cameras, Echo speakers, robot vacuums or any network device: add them under Settings, Pulse then tells you when one is no longer reachable.',
 };

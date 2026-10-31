@@ -8,6 +8,7 @@ import {
   batteryDevices,
   batteryFirst,
   batteryLine,
+  candidateLine,
   canEdit,
   cleanZ2mBase,
   cloudLines,
@@ -40,11 +41,14 @@ import {
   isWaiting,
   lastReplaced,
   learningLine,
+  manualDevices,
+  matchCandidates,
   memoize,
   monitorGroups,
   needsAction,
   nextRetryDelay,
   offRhythm,
+  parseCandidates,
   parseHeartbeat,
   partnerLine,
   partnerOptions,
@@ -1068,5 +1072,69 @@ describe('mains-powered devices (beta)', () => {
       device('c', { mains: true, ignored: true }),
     ];
     expect(applyFilter(list, 'mains').map((d) => d.id)).toEqual(['a']);
+  });
+});
+
+describe('devices added by hand', () => {
+  const raw = {
+    devices: [
+      {
+        id: 'c1',
+        name: 'Kamera Einfahrt',
+        area: 'Garten',
+        manufacturer: 'Ubiquiti',
+        model: 'G4',
+        integration: 'unifiprotect',
+        integration_name: 'UniFi Protect',
+        icon: 'mdi:cctv',
+      },
+      { id: 'e1', name: 'Echo Küche', area: null, integration: 'alexa_media' },
+      { id: 42, name: 'broken' },
+      'nonsense',
+    ],
+  };
+
+  it('parses candidates without casts and drops broken entries', () => {
+    const list = parseCandidates(raw);
+    expect(list.map((c) => c.id)).toEqual(['c1', 'e1']);
+    expect(list[1]).toEqual({
+      id: 'e1',
+      name: 'Echo Küche',
+      area: null,
+      manufacturer: null,
+      model: null,
+      integration: 'alexa_media',
+      integration_name: 'alexa_media',
+      icon: 'mdi:devices',
+    });
+    expect(parseCandidates(null)).toEqual([]);
+    expect(parseCandidates({ devices: 'x' })).toEqual([]);
+  });
+
+  it('searches every word in name, room, integration, maker and model', () => {
+    const list = parseCandidates(raw);
+    expect(matchCandidates(list, '').length).toBe(2);
+    expect(matchCandidates(list, 'garten protect').map((c) => c.id)).toEqual(['c1']);
+    expect(matchCandidates(list, 'KÜCHE').map((c) => c.id)).toEqual(['e1']);
+    expect(matchCandidates(list, 'alexa garten')).toEqual([]);
+  });
+
+  it('shows room and integration on the second line', () => {
+    const [cam, echo] = parseCandidates(raw);
+    expect(cam && candidateLine(cam)).toBe('Garten · UniFi Protect');
+    expect(echo && candidateLine(echo)).toBe('alexa_media');
+  });
+
+  it('lists added devices by name and keeps them out of the mains filter', () => {
+    const list = [
+      device('p', { name: 'Steckdose', mains: true }),
+      device('z', { name: 'Zeta', mains: true, manual: true }),
+      device('a', { name: 'Alpha', mains: true, manual: true, ignored: true }),
+    ];
+    expect(manualDevices(list).map((d) => d.id)).toEqual(['a', 'z']);
+    expect(candidateLine({ area: 'Küche', integration: 'alexa_media' })).toBe(
+      'Küche · Alexa media'
+    );
+    expect(applyFilter(list, 'mains').map((d) => d.id)).toEqual(['p']);
   });
 });

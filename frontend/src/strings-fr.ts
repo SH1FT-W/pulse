@@ -383,4 +383,21 @@ export const FR: Record<keyof typeof EN, string> = {
     'Le label HA pulse_important ou pulse_ignore sur un appareil suffit. Les notifications indiquent désormais la pièce.',
   new_languages_title: 'Cinq langues',
   new_languages_text: 'Pulse parle anglais, allemand, français, espagnol et néerlandais.',
+  manual_title: 'Ajoutés à la main',
+  manual_add: 'Ajouter un appareil',
+  manual_hint:
+    'Caméras, enceintes, robots aspirateurs ou tout autre appareil que Pulse ne surveille pas de lui-même. Pulse vous prévient quand l’un d’eux n’est plus joignable ; qu’il joue, attende ou soit éteint ne compte pas. Fonctionne aussi quand la surveillance des appareils sur secteur est désactivée.',
+  manual_remove: 'Retirer {name}',
+  manual_added: '{name} est maintenant surveillé.',
+  manual_removed: '{name} n’est plus surveillé.',
+  manual_search: 'Chercher un nom, une pièce ou une intégration',
+  manual_none: 'Pulse surveille déjà tous les appareils possibles.',
+  manual_no_match: 'Aucun appareil ne correspond.',
+  manual_loading: 'Chargement des appareils …',
+  manual_chip: 'Ajouté à la main',
+  manual_note:
+    'Ajouté à la main. Pulse vérifie qu’il est joignable et, s’il se signale régulièrement, qu’il ne se tait pas.',
+  new_manual_title: 'Ajouter n’importe quel appareil',
+  new_manual_text:
+    'Caméras, enceintes Echo, robots aspirateurs ou tout appareil réseau : ajoutez-les dans Réglages, Pulse vous prévient quand l’un d’eux n’est plus joignable.',
 };

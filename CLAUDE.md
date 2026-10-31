@@ -108,6 +108,17 @@ es hört nur zu (Zustände, „gemeldet ohne Änderung“, Zigbee2MQTT-Nachricht
   → `rhythm.usual_outage`;
   dann weg = `unavailable_usual` (watch), erst > max(2× längster, 1 Tag) `unavailable` check, nie failed.
   Push ohne „Batterie gewechselt“. Ausschalten → `_remove_vanished` entfernt die Entitäten.
+- Von Hand hinzugefügte Geräte (#2, 26.10.15): `settings.manual_devices` (Liste von device_ids, kein Minor nötig – neuer
+  Einstellungs-Schlüssel mit Vorgabe), nur über `pulse/manual_device {device_id, add}` änderbar (nicht über `pulse/settings`),
+  Auswahl `pulse/manual_candidates` (= `discovery.candidates`: alles, was der Hand-Weg baut und noch nicht überwacht ist).
+  `discover(manual=…)`: erst der automatische Weg (`_automatic`, unverändert – Trockenlauf 31.10. mit Prod-Registry: 140/46
+  Geräte identisch), nur wenn der ablehnt `_manual` (`spec.manual`, `mains=True`, Batterie ignoriert): unabhängig von
+  `mains_beta`, umgeht EXCLUDED_DOMAINS und Medien-Zubehör, nicht `EXCLUDED_PLATFORMS`/Dienste/Helfer. Entitäten aller
+  Nicht-Helfer-Integrationen; Erreichbarkeit = Konnektivitäts-Sensor (ohne `NOT_REACHABILITY`: mop/attach/cloud/wan …) oder
+  Router-`device_tracker` (`spec.offline_state` „not_home“, GPS zählt nie: `monitor._offline`, `_reachable` „home“);
+  `main_entities` = `MANUAL_DOMAINS` (Kamera, Media-Player, Sauger …), sonst MAINS_DOMAINS + remote, sonst leer (= alle).
+  Grund `ok_manual`, Panel: Einstellungen → „Von Hand hinzugefügt“ (`pulse-add-sheet.ts`, Chip/Notiz im Detail),
+  Netzgeräte-Zähler/Filter ohne Hand-Geräte. Neu hinzugefügt + bootstrapped → `async_bootstrap({id})` liest nur dessen Verlauf.
 - Eigene Texte (`settings.templates`, je `TEMPLATE_KEYS` None = Standard): `notifier.compose` → `texts.render`
   (Platzhalter `TEMPLATE_VARS`, leere Werte verschwinden samt „ · “, `{area}` leer, wenn schon im Namen).
   Standard = `template_defaults(Sprache der Mitteilungen)`, im Snapshot `template_defaults`/`template_vars`.
@@ -164,7 +175,7 @@ Panel-Version kommt aus `manifest.json` (vite.config) – nach dem Versionssprun
   in Python `pytest` (Abdeckung ≥ 95 %), `uvx ruff@0.16.9 check . && uvx ruff@0.16.9 format --check .` (dieselbe
   Version wie in ci.yml), `uvx mypy@2.3.1 --python-executable <venv>/bin/python`,
   `python tools/pruefe-uebersetzungen.py` (strings.json gegen translations/*.json), hassfest per Docker.
-- Tests laufen mit der Evenlight-venv (gleiche HA-Version): `~/Software/evenlight/.venv/bin/python -m pytest -q -p no:logging`.
+- Tests laufen mit der Recall-venv (Evenlight hat keine mehr): `LC_ALL=en_US.UTF-8 TZ=UTC ~/Software/recall/.venv/bin/python -m pytest -q -p no:logging`.
 - UI im eigenen Docker-Test-HA `pulse-test` (Port 8126, siehe ~/pulse-test/ZUGANG.txt) ansehen.
   flode-test, casora-test, evenlight-test gehören anderen Projekten.
 - unique_ids nicht ändern (`<device_id>_problem|status|last_report`, Hub `<entry_id>_problems|monitored`). Entity-IDs

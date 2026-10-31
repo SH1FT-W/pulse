@@ -4,6 +4,9 @@ After 1.1.0, releases use calendar versions `YY.M.N` (year, month, number of the
 
 ## 26.10.15 – 2026-10-31
 
+### Added
+- **Add any device by hand** (#2). Under *Settings → Added by hand → Add device* you pick a device Pulse does not watch by itself: a camera, an Echo or HomePod, a TV, a robot vacuum, a NAS or any other network device. Pulse then tells you when it is no longer reachable. What decides: a connectivity sensor of the device (not a "mop attached" or "cloud" link) or a router's device tracker (UniFi, FRITZ!Box, Nmap; `not_home` = offline, a GPS tracker's only means away), otherwise its camera, media player, vacuum, mower or alarm panel, else its lamp, plug or remote, else all its entities, and only when all of them are unavailable at the same time. Playing, idle or off is no outage. Silence only counts for devices that usually report regularly, cloud devices keep their calmer rules, the battery of such a device is ignored (a charging vacuum is no battery change), and ignoring (switch or `pulse_ignore` label) works as for every device. It works whether or not mains-powered devices are watched, and a newly added device learns its rhythm and past outages from the recorder right away. The minus button in the same list removes it again, its Pulse entities go with it. "New in Pulse" says so.
+
 ### Fixed
 - Ready for Home Assistant 2026.11: some integrations (Tuya, Z-Wave, ESPHome, MQTT, Reolink dual-lens cameras) now file a device's channels, endpoints or lenses as *child devices*. Pulse counts the entities of child devices for their parent device again, so a sensor keeps its contact or button as an action, a power strip keeps its sockets in the mains beta, and labels on a child device apply to the device. Child devices never show up as devices of their own. Nothing changes for older Home Assistant versions.
 

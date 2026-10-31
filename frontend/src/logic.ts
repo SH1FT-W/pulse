@@ -9,6 +9,7 @@ import type {
   Forecast,
   ForecastReason,
   Level,
+  ManualCandidate,
   Settings,
   Snapshot,
   Status,
@@ -454,7 +455,7 @@ export function applyFilter(
   if (filter === 'ignored') return devices.filter((d) => d.ignored);
   if (filter === 'important') return monitored(devices).filter((d) => d.critical);
   if (filter === 'battery') return batteryDevices(devices, due);
-  if (filter === 'mains') return monitored(devices).filter((d) => d.mains);
+  if (filter === 'mains') return monitored(devices).filter((d) => d.mains && !d.manual);
   return monitored(devices).filter((d) => d.status === filter);
 }
 
@@ -1324,4 +1325,61 @@ export function templateExample(device: Device | undefined): Record<string, stri
     manufacturer: device.manufacturer,
     integration: device.integration,
   };
+}
+
+function textOrNull(value: unknown): string | null {
+  return typeof value === 'string' && value !== '' ? value : null;
+}
+
+/** Validate the `pulse/manual_candidates` response (without casts); unusable entries are dropped. */
+export function parseCandidates(value: unknown): ManualCandidate[] {
+  if (typeof value !== 'object' || value === null) return [];
+  const raw: unknown = Reflect.get(value, 'devices');
+  if (!Array.isArray(raw)) return [];
+  const result: ManualCandidate[] = [];
+  for (const item of raw) {
+    if (typeof item !== 'object' || item === null) continue;
+    const id: unknown = Reflect.get(item, 'id');
+    const name: unknown = Reflect.get(item, 'name');
+    if (typeof id !== 'string' || typeof name !== 'string') continue;
+    const integration = textOrNull(Reflect.get(item, 'integration')) ?? '';
+    result.push({
+      id,
+      name,
+      area: textOrNull(Reflect.get(item, 'area')),
+      manufacturer: textOrNull(Reflect.get(item, 'manufacturer')),
+      model: textOrNull(Reflect.get(item, 'model')),
+      integration,
+      integration_name: textOrNull(Reflect.get(item, 'integration_name')) ?? integration,
+      icon: textOrNull(Reflect.get(item, 'icon')) ?? 'mdi:devices',
+    });
+  }
+  return result;
+}
+
+/** Search in the add sheet: every word must appear in name, room, integration, maker or model. */
+export function matchCandidates(list: ManualCandidate[], query: string): ManualCandidate[] {
+  const words = query.toLocaleLowerCase().split(/\s+/).filter(Boolean);
+  if (!words.length) return list;
+  return list.filter((c) => {
+    const text = [c.name, c.area, c.integration_name, c.integration, c.manufacturer, c.model]
+      .filter(Boolean)
+      .join(' ')
+      .toLocaleLowerCase();
+    return words.every((w) => text.includes(w));
+  });
+}
+
+/** Second line of a device in the add sheet and in the list of added devices: room · integration. */
+export function candidateLine(c: {
+  area: string | null;
+  integration_name?: string;
+  integration: string;
+}): string {
+  return [c.area, c.integration_name ?? integrationName(c.integration)].filter(Boolean).join(' · ');
+}
+
+/** Devices added by hand (also ignored ones: they stay in the list to be removed), by name. */
+export function manualDevices(devices: Device[]): Device[] {
+  return devices.filter((d) => d.manual).sort((a, b) => a.name.localeCompare(b.name));
 }

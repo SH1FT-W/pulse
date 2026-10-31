@@ -378,4 +378,21 @@ export const NL: Record<keyof typeof EN, string> = {
     'Het HA-label pulse_important of pulse_ignore op een apparaat is genoeg. Meldingen noemen nu de ruimte.',
   new_languages_title: 'Vijf talen',
   new_languages_text: 'Pulse spreekt Engels, Duits, Frans, Spaans en Nederlands.',
+  manual_title: 'Met de hand toegevoegd',
+  manual_add: 'Apparaat toevoegen',
+  manual_hint:
+    'Camera’s, speakers, robotstofzuigers of elk ander apparaat dat Pulse niet vanzelf bewaakt. Pulse meldt wanneer er een niet meer bereikbaar is; of het speelt, wacht of uit staat telt niet. Werkt ook als het bewaken van apparaten op netstroom uit staat.',
+  manual_remove: '{name} verwijderen',
+  manual_added: '{name} wordt nu bewaakt.',
+  manual_removed: '{name} wordt niet meer bewaakt.',
+  manual_search: 'Zoek naam, ruimte of integratie',
+  manual_none: 'Pulse bewaakt al elk apparaat dat het kan.',
+  manual_no_match: 'Geen apparaat gevonden.',
+  manual_loading: 'Apparaten laden …',
+  manual_chip: 'Met de hand toegevoegd',
+  manual_note:
+    'Met de hand toegevoegd. Pulse let erop of het bereikbaar is en, als het zich regelmatig meldt, of het stil wordt.',
+  new_manual_title: 'Elk apparaat toevoegen',
+  new_manual_text:
+    'Camera’s, Echo-speakers, robotstofzuigers of elk netwerkapparaat: voeg ze toe onder Instellingen, dan meldt Pulse wanneer er een niet meer bereikbaar is.',
 };

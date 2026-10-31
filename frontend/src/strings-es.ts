@@ -378,4 +378,21 @@ export const ES: Record<keyof typeof EN, string> = {
     'Basta con la etiqueta de HA pulse_important o pulse_ignore en un dispositivo. Las notificaciones ya indican el área.',
   new_languages_title: 'Cinco idiomas',
   new_languages_text: 'Pulse habla inglés, alemán, francés, español y neerlandés.',
+  manual_title: 'Añadidos a mano',
+  manual_add: 'Añadir dispositivo',
+  manual_hint:
+    'Cámaras, altavoces, robots aspiradores o cualquier otro dispositivo que Pulse no vigila por sí mismo. Pulse avisa cuando uno deja de estar accesible; que esté reproduciendo, en espera o apagado no cuenta. Funciona también con la vigilancia de dispositivos de red eléctrica desactivada.',
+  manual_remove: 'Quitar {name}',
+  manual_added: 'Ahora se vigila {name}.',
+  manual_removed: '{name} ya no se vigila.',
+  manual_search: 'Buscar nombre, habitación o integración',
+  manual_none: 'Pulse ya vigila todos los dispositivos posibles.',
+  manual_no_match: 'Ningún dispositivo coincide.',
+  manual_loading: 'Cargando dispositivos …',
+  manual_chip: 'Añadido a mano',
+  manual_note:
+    'Añadido a mano. Pulse vigila que esté accesible y, si da señales con regularidad, que no se quede en silencio.',
+  new_manual_title: 'Añade cualquier dispositivo',
+  new_manual_text:
+    'Cámaras, altavoces Echo, robots aspiradores o cualquier dispositivo de red: añádelos en Ajustes y Pulse avisará cuando uno deje de estar accesible.',
 };

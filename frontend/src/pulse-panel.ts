@@ -18,6 +18,7 @@ import {
   memoize,
   monitored,
   nextRetryDelay,
+  parseCandidates,
   parseSpans,
   RETRY_FIRST,
   timeFormatOf,
@@ -26,8 +27,9 @@ import {
 import { WHATS_NEW, type ZigbeeOffer } from './pulse-welcome';
 import { t } from './strings';
 import { shared, tokens } from './styles';
-import type { Settings, Snapshot, SnapshotMessage } from './types';
+import type { ManualCandidate, Settings, Snapshot, SnapshotMessage } from './types';
 import { detectMode, markSeen, type StorageLike, type WelcomeMode } from './welcome';
+import './pulse-add-sheet';
 import './pulse-device-sheet';
 import './pulse-mark';
 import './pulse-devices';
@@ -95,6 +97,8 @@ export class PulsePanel extends LitElement {
     filter: { state: true },
     confirmZigbee: { state: true },
     confirmHealth: { state: true },
+    addOpen: { state: true },
+    candidates: { state: true },
   };
 
   declare hass: HomeAssistant | undefined;
@@ -113,6 +117,10 @@ export class PulsePanel extends LitElement {
   declare confirmZigbee: boolean;
   /** Rückfrage vor dem Einschalten der Z2M-Health-Prüfung („Funk-Zähler“) */
   declare confirmHealth: boolean;
+  /** Sheet "Add device" open (Settings → Added by hand) */
+  declare addOpen: boolean;
+  /** Devices that can be added by hand; null = loading */
+  declare candidates: ManualCandidate[] | null;
 
   private unsub: Promise<Unsubscribe> | null = null;
   private clock: number | undefined;
@@ -137,6 +145,8 @@ export class PulsePanel extends LitElement {
     this.filter = null;
     this.confirmZigbee = false;
     this.confirmHealth = false;
+    this.addOpen = false;
+    this.candidates = null;
   }
 
   private get language(): string {
@@ -353,6 +363,32 @@ export class PulsePanel extends LitElement {
     await this.call({ type: 'pulse/enable_z2m_health' }, t(this.language, 'zigbee_sent'));
   }
 
+  /** Open "Add device" and load what can be added (fresh each time: devices come and go). */
+  private async onAddOpen(): Promise<void> {
+    if (this.readonly) return;
+    this.candidates = null;
+    this.addOpen = true;
+    const result = await this.call({ type: 'pulse/manual_candidates' });
+    this.candidates = parseCandidates(result);
+  }
+
+  private async onManualAdd(id: string): Promise<void> {
+    const name = this.candidates?.find((c) => c.id === id)?.name ?? '';
+    this.addOpen = false;
+    await this.call(
+      { type: 'pulse/manual_device', device_id: id, add: true },
+      t(this.language, 'manual_added', { name })
+    );
+  }
+
+  private async onManualRemove(id: string, name: string): Promise<void> {
+    if (this.readonly) return;
+    await this.call(
+      { type: 'pulse/manual_device', device_id: id, add: false },
+      t(this.language, 'manual_removed', { name })
+    );
+  }
+
   private onPartnerDismiss(id: string, partner: string): void {
     if (this.readonly) return;
     void this.call({
@@ -498,6 +534,9 @@ export class PulsePanel extends LitElement {
           this.filter = e.detail.filter;
           this.go('devices');
         }}
+        @manual-add-open=${() => void this.onAddOpen()}
+        @manual-remove=${(e: CustomEvent<{ id: string; name: string }>) =>
+          void this.onManualRemove(e.detail.id, e.detail.name)}
       ></pulse-settings>`;
     }
     if (this.view === 'devices') {
@@ -669,7 +708,16 @@ export class PulsePanel extends LitElement {
                   <button slot="footer" class="pbtn primary" type="button" @click=${() => void this.onConfirmHealth()}>
                     ${t(lang, 'zigbee_confirm_go')}
                   </button>
-                </pulse-sheet>`
+                </pulse-sheet>
+                <pulse-add-sheet
+                  .open=${this.addOpen}
+                  .language=${lang}
+                  .candidates=${this.candidates}
+                  @add=${(e: CustomEvent<{ id: string }>) => void this.onManualAdd(e.detail.id)}
+                  @closed=${() => {
+                    this.addOpen = false;
+                  }}
+                ></pulse-add-sheet>`
             : nothing
         }
       </main>

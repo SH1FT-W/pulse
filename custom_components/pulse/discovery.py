@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from collections.abc import Collection
+from dataclasses import dataclass, field, replace
+import re
 from typing import Any
 
 from homeassistant.core import HomeAssistant
@@ -22,6 +24,8 @@ from .const import (
     LABEL_IMPORTANT,
     MAINS_DOMAINS,
     MAINS_INTEGRATIONS,
+    MANUAL_DOMAINS,
+    OFFLINE_TRACKER,
 )
 
 
@@ -61,6 +65,9 @@ class DeviceSpec:
     mains: bool = False
     # Mains devices: the lamp/plug/cover itself (no config switch); they decide whether the device is reachable
     main_entities: list[str] = field(default_factory=list)
+    # Added by hand in the panel (`settings.manual_devices`) and only watched because of that: watched like a mains
+    # device (reachable or not), whatever Pulse would otherwise think of it
+    manual: bool = False
 
     @property
     def connectivity(self) -> str | None:
@@ -68,9 +75,20 @@ class DeviceSpec:
         return None if self.reachable_via in (None, "matter") else self.reachable_via
 
     @property
+    def offline_state(self) -> str:
+        """State of `connectivity` that means unreachable: "off", for a router's device tracker "not_home"."""
+        via = self.connectivity or ""
+        return OFFLINE_TRACKER if via.startswith("device_tracker.") else "off"
+
+    @property
     def cloud(self) -> bool:
         """Polling cloud integration: its rhythm is the cloud's, not the device's."""
         return self.integration in CLOUD_INTEGRATIONS
+
+
+# Connectivity sensors that say nothing about the device being reachable (seen in real homes): a robot vacuum's
+# mop "attached", a meter's attachment, a Shelly's cloud link, a router's WAN, a mounted share
+NOT_REACHABILITY = re.compile(r"attach|cloud|backend|wan|internet|mount|mop|water_box", re.IGNORECASE)
 
 
 # Icon by what the device measures (first matching rule wins)
@@ -103,14 +121,23 @@ MAINS_ICONS: tuple[tuple[str, str | None, str], ...] = (
     ("fan", None, "mdi:fan"),
     ("switch", None, "mdi:power-socket-eu"),
 )
+# Devices added by hand: also what automatic discovery leaves out (EXCLUDED_DOMAINS), and plain network devices
+MANUAL_ICONS: tuple[tuple[str, str | None, str], ...] = (
+    ("vacuum", None, "mdi:robot-vacuum"),
+    ("lawn_mower", None, "mdi:robot-mower-outline"),
+    ("media_player", None, "mdi:speaker"),
+    *MAINS_ICONS,
+    ("device_tracker", None, "mdi:lan-connect"),
+    ("binary_sensor", "connectivity", "mdi:lan-connect"),
+)
 DEFAULT_ICON = "mdi:battery-heart-variant"
 MAINS_ICON = "mdi:power-plug-outline"
 
 
-def icon_for(entries: list[er.RegistryEntry], mains: bool = False) -> str:
+def icon_for(entries: list[er.RegistryEntry], mains: bool = False, manual: bool = False) -> str:
     # What the device is: first its regular entities (a camera's diagnostic chip temperature is no thermometer),
     # only then all (a smoke detector whose smoke sensor its integration files under diagnostics)
-    rules = ICONS + MAINS_ICONS if mains else ICONS
+    rules = ICONS + MANUAL_ICONS if manual else ICONS + MAINS_ICONS if mains else ICONS
     regular = [e for e in entries if e.entity_category is None]
     for candidates in (regular, entries):
         for domain, device_class, icon in rules:
@@ -127,8 +154,12 @@ def ieee_of(device: dr.DeviceEntry) -> str | None:
     return None
 
 
-def discover(hass: HomeAssistant, mains: bool = False) -> dict[str, DeviceSpec]:
-    """Battery devices; with `mains` (beta) also mains-powered devices (lamps, plugs, covers … see MAINS_DOMAINS)."""
+def discover(hass: HomeAssistant, mains: bool = False, manual: Collection[str] = ()) -> dict[str, DeviceSpec]:
+    """Battery devices; with `mains` (beta) also mains-powered devices (lamps, plugs, covers … see MAINS_DOMAINS).
+
+    Devices in `manual` (added by hand in the panel) are always watched, also when automatic discovery leaves them
+    out (camera, media player, robot vacuum, any network device): like a mains device, whether it is reachable.
+    """
     devices = dr.async_get(hass)
     entities = er.async_get(hass)
     areas = ar.async_get(hass)
@@ -155,8 +186,6 @@ def discover(hass: HomeAssistant, mains: bool = False) -> dict[str, DeviceSpec]:
     for device in devices.devices:
         if device.disabled_by is not None:
             continue
-        if device.via_device_id in media_devices or _entry_ids(device) & media_entries:
-            continue
         parts = children.get(device.id, [])
         entries = [
             e
@@ -165,85 +194,164 @@ def discover(hass: HomeAssistant, mains: bool = False) -> dict[str, DeviceSpec]:
             if e.disabled_by is None
         ]
         own = [e for e in entries if e.platform != DOMAIN]
-        if not own:
+        if not own or {e.platform for e in own} & EXCLUDED_PLATFORMS:
             continue
-        platforms = {e.platform for e in own}
-        if platforms & EXCLUDED_PLATFORMS:
-            continue
-        if any(e.domain in EXCLUDED_DOMAINS for e in own):
-            continue
-        percent = next(
-            (e.entity_id for e in own if e.domain == "sensor" and _device_class(e) == "battery"),
-            None,
-        )
-        flag = next((e.entity_id for e in own if e.domain == "binary_sensor" and _device_class(e) == "battery"), None)
-        battery = percent or flag
-        # Main integration = the one with the most entities; helpers on top (template, powercalc) don't count
-        counts: dict[str, int] = {}
-        for e in own:
-            counts[e.platform] = counts.get(e.platform, 0) + 1
-        real = {p: n for p, n in counts.items() if p not in HELPER_PLATFORMS} or counts
-        integration = max(real, key=lambda p: real[p])
-        if battery is None:
-            # Beta: mains-powered devices: a real device (no service, no helper) whose own integration gives it a
-            # lamp, plug, cover …, or any device of a local hardware integration (MQTT only Zigbee2MQTT)
-            if not mains or device.entry_type is not None or integration in HELPER_PLATFORMS:
-                continue
-            if integration not in MAINS_INTEGRATIONS and not any(
-                e.platform == integration and e.domain in MAINS_DOMAINS and e.entity_category is None for e in own
-            ):
-                continue
-            if integration == "mqtt" and ieee_of(device) is None:
-                continue
-        elif any(e.domain == "sensor" and _device_class(e) in EXCLUDED_SENSOR_CLASSES for e in own):
-            continue  # home battery / power station, not a battery sensor
-        mine = [e for e in own if e.platform == integration and e.domain not in INACTIVE_DOMAINS]
-        # The integration's own reachability flag tells whether the device is reachable, it is no sign of life
-        connectivity = next(
-            (e.entity_id for e in mine if e.domain == "binary_sensor" and _device_class(e) == "connectivity"),
-            None,
-        )
-        mine = [e for e in mine if e.entity_id != connectivity]
-        if battery is None and not mine:
-            continue  # mains device without anything that could report
-        voltage = next(
-            (e.entity_id for e in mine if e.domain == "sensor" and _device_class(e) == "voltage"),
-            None,
-        )
-        actions = [
-            e.entity_id
-            for e in mine
-            if e.domain in ACTION_DOMAINS and e.entity_category is None and _device_class(e) != "battery"
-        ]
-        critical = any(e.domain == "lock" for e in own) or any(
-            e.domain == "binary_sensor" and _device_class(e) in CRITICAL_BINARY_CLASSES for e in own
-        )
         area = areas.async_get_area(device.area_id) if device.area_id else None
         labels = set(device.labels).union(*(p.labels for p in parts), *(e.labels for e in entries))
-        label = "ignore" if LABEL_IGNORE in labels else "important" if LABEL_IMPORTANT in labels else None
-        found[device.id] = DeviceSpec(
+        base = DeviceSpec(
             device_id=device.id,
             name=device.name_by_user or device.name or device.id,
             area=area.name if area else None,
             manufacturer=device.manufacturer,
             model=device.model,
-            integration=integration,
+            integration="",
             identifiers=set(device.identifiers),
             connections=set(device.connections),
-            entities=[e.entity_id for e in mine],
-            actions=actions,
-            battery=battery,
-            battery_low=flag if percent else None,
-            voltage=voltage,
-            critical=critical,
             ieee=ieee_of(device),
-            icon=icon_for(own, mains=battery is None),
-            reachable_via="matter" if integration == "matter" else connectivity,
-            label=label,
-            mains=battery is None,
-            main_entities=[e.entity_id for e in mine if e.domain in MAINS_DOMAINS and e.entity_category is None],
+            label="ignore" if LABEL_IGNORE in labels else "important" if LABEL_IMPORTANT in labels else None,
         )
+        media = device.via_device_id in media_devices or bool(_entry_ids(device) & media_entries)
+        spec = None if media else _automatic(base, device, own, mains)
+        if spec is None and device.id in manual:
+            spec = _manual(hass, base, device, own)
+        if spec is not None:
+            found[device.id] = spec
     return found
+
+
+def _main_integration(own: list[er.RegistryEntry]) -> str:
+    """The one with the most entities; helpers on top (template, powercalc) don't count."""
+    counts: dict[str, int] = {}
+    for e in own:
+        counts[e.platform] = counts.get(e.platform, 0) + 1
+    real = {p: n for p, n in counts.items() if p not in HELPER_PLATFORMS} or counts
+    return max(real, key=lambda p: real[p])
+
+
+def _critical(own: list[er.RegistryEntry]) -> bool:
+    return any(e.domain == "lock" for e in own) or any(
+        e.domain == "binary_sensor" and _device_class(e) in CRITICAL_BINARY_CLASSES for e in own
+    )
+
+
+def _actions(mine: list[er.RegistryEntry]) -> list[str]:
+    return [
+        e.entity_id
+        for e in mine
+        if e.domain in ACTION_DOMAINS and e.entity_category is None and _device_class(e) != "battery"
+    ]
+
+
+def _automatic(base: DeviceSpec, device: dr.DeviceEntry, own: list[er.RegistryEntry], mains: bool) -> DeviceSpec | None:
+    """What Pulse watches by itself: battery devices, with `mains` also mains-powered devices."""
+    if any(e.domain in EXCLUDED_DOMAINS for e in own):
+        return None
+    percent = next(
+        (e.entity_id for e in own if e.domain == "sensor" and _device_class(e) == "battery"),
+        None,
+    )
+    flag = next((e.entity_id for e in own if e.domain == "binary_sensor" and _device_class(e) == "battery"), None)
+    battery = percent or flag
+    integration = _main_integration(own)
+    if battery is None:
+        # Beta: mains-powered devices: a real device (no service, no helper) whose own integration gives it a
+        # lamp, plug, cover …, or any device of a local hardware integration (MQTT only Zigbee2MQTT)
+        if not mains or device.entry_type is not None or integration in HELPER_PLATFORMS:
+            return None
+        if integration not in MAINS_INTEGRATIONS and not any(
+            e.platform == integration and e.domain in MAINS_DOMAINS and e.entity_category is None for e in own
+        ):
+            return None
+        if integration == "mqtt" and base.ieee is None:
+            return None
+    elif any(e.domain == "sensor" and _device_class(e) in EXCLUDED_SENSOR_CLASSES for e in own):
+        return None  # home battery / power station, not a battery sensor
+    mine = [e for e in own if e.platform == integration and e.domain not in INACTIVE_DOMAINS]
+    # The integration's own reachability flag tells whether the device is reachable, it is no sign of life
+    connectivity = next(
+        (e.entity_id for e in mine if e.domain == "binary_sensor" and _device_class(e) == "connectivity"),
+        None,
+    )
+    mine = [e for e in mine if e.entity_id != connectivity]
+    if battery is None and not mine:
+        return None  # mains device without anything that could report
+    return replace(
+        base,
+        integration=integration,
+        entities=[e.entity_id for e in mine],
+        actions=_actions(mine),
+        battery=battery,
+        battery_low=flag if percent else None,
+        voltage=next((e.entity_id for e in mine if e.domain == "sensor" and _device_class(e) == "voltage"), None),
+        critical=_critical(own),
+        icon=icon_for(own, mains=battery is None),
+        reachable_via="matter" if integration == "matter" else connectivity,
+        mains=battery is None,
+        main_entities=[e.entity_id for e in mine if e.domain in MAINS_DOMAINS and e.entity_category is None],
+    )
+
+
+def _gps(hass: HomeAssistant, entity_id: str) -> bool:
+    """A GPS tracker's "not_home" only means away; not known yet (HA starting): `monitor._offline` checks again."""
+    state = hass.states.get(entity_id)
+    return state is not None and state.attributes.get("source_type") == "gps"
+
+
+def _manual(
+    hass: HomeAssistant, base: DeviceSpec, device: dr.DeviceEntry, own: list[er.RegistryEntry]
+) -> DeviceSpec | None:
+    """A device added by hand: watched like a mains device, from all of its (non-helper) integrations.
+
+    Its battery is ignored (a robot vacuum charges, that is no battery change). Reachable or not decides: a
+    connectivity sensor (preferably of its own integration) or a router's device tracker, else its main entities
+    (lamp, camera, media player, vacuum …), else all of them. A media player that is idle or off is there.
+    """
+    if device.entry_type is not None:
+        return None  # a service (weather, sun), not a device
+    integration = _main_integration(own)
+    if integration in HELPER_PLATFORMS:
+        return None
+    mine = [e for e in own if e.platform not in HELPER_PLATFORMS and e.domain not in INACTIVE_DOMAINS]
+    flags = [
+        e
+        for e in mine
+        if e.domain == "binary_sensor"
+        and _device_class(e) == "connectivity"
+        and not NOT_REACHABILITY.search(e.translation_key or e.entity_id)
+    ]
+    trackers = [e for e in mine if e.domain == "device_tracker" and not _gps(hass, e.entity_id)]
+    reach = sorted(flags, key=lambda e: e.platform != integration) or trackers
+    connectivity = reach[0].entity_id if reach else None
+    mine = [e for e in mine if e.entity_id != connectivity]
+    if not mine and connectivity is None:
+        return None  # nothing that could tell whether it is there
+    return replace(
+        base,
+        integration=integration,
+        entities=[e.entity_id for e in mine],
+        actions=_actions(mine),
+        critical=_critical(own),
+        icon=icon_for(own, mains=True, manual=True),
+        reachable_via="matter" if integration == "matter" else connectivity,
+        mains=True,
+        main_entities=_main_of_manual(mine),
+        manual=True,
+    )
+
+
+def _main_of_manual(mine: list[er.RegistryEntry]) -> list[str]:
+    regular = [e for e in mine if e.entity_category is None]
+    for domains in (MANUAL_DOMAINS, MAINS_DOMAINS | {"remote"}):
+        if found := [e.entity_id for e in regular if e.domain in domains]:
+            return found
+    return []
+
+
+def candidates(hass: HomeAssistant, watched: Collection[str]) -> list[DeviceSpec]:
+    """Devices that can be added by hand: everything Pulse could watch that it does not watch yet."""
+    every = {d.id for d in dr.async_get(hass).devices}
+    found = discover(hass, mains=False, manual=every - set(watched))
+    return [spec for spec in found.values() if spec.manual]
 
 
 def _entry_ids(device: dr.DeviceEntry) -> set[str]:
