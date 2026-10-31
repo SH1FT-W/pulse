@@ -267,12 +267,15 @@ def _automatic(base: DeviceSpec, device: dr.DeviceEntry, own: list[er.RegistryEn
     elif any(e.domain == "sensor" and _device_class(e) in EXCLUDED_SENSOR_CLASSES for e in own):
         return None  # home battery / power station, not a battery sensor
     mine = [e for e in own if e.platform == integration and e.domain not in INACTIVE_DOMAINS]
-    # The integration's own reachability flag tells whether the device is reachable, it is no sign of life
+    # The integration's own reachability flag tells whether the device is reachable, it is no sign of life.
+    # Flags that say nothing about reachability (a Shelly's cloud link, a mop attached) are skipped as the
+    # reachability source, but stay out of the reports as well.
+    flags = [e for e in mine if e.domain == "binary_sensor" and _device_class(e) == "connectivity"]
     connectivity = next(
-        (e.entity_id for e in mine if e.domain == "binary_sensor" and _device_class(e) == "connectivity"),
+        (e.entity_id for e in flags if not NOT_REACHABILITY.search(e.translation_key or e.entity_id)),
         None,
     )
-    mine = [e for e in mine if e.entity_id != connectivity]
+    mine = [e for e in mine if e not in flags]
     if battery is None and not mine:
         return None  # mains device without anything that could report
     return replace(

@@ -188,3 +188,29 @@ async def test_cloud_connectivity_and_rebuild(hass: HomeAssistant, setup):
     other = monitor.store.record("not_cloud")
     other["rebuild_events"] = True
     assert monitor.devices.get("not_cloud") is None
+
+
+async def test_cloud_link_flag_is_no_reachability(hass: HomeAssistant, setup):
+    """A Shelly's cloud link (connectivity class) says nothing about the device being reachable."""
+    monitor: PulseMonitor = setup["monitor"]
+    plug = add_device(
+        hass,
+        "plug",
+        "Steckdose",
+        [
+            ("sensor", "battery", "battery"),
+            ("binary_sensor", "cloud", "connectivity"),
+            ("sensor", "temperature", "temperature"),
+        ],
+        manufacturer="Shelly",
+        model="Plus Plug S",
+        platform="shelly",
+    )
+    hass.states.async_set(plug.entities["battery"], "80")
+    hass.states.async_set(plug.entities["cloud"], "off")
+    monitor._rediscover()
+    await hass.async_block_till_done()
+    device = monitor.devices[plug.device_id]
+    assert device.spec.reachable_via is None
+    assert plug.entities["cloud"] not in device.spec.entities
+    assert device.unavailable_since is None

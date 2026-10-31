@@ -9,6 +9,7 @@ After 1.1.0, releases use calendar versions `YY.M.N` (year, month, number of the
 
 ### Fixed
 - Ready for Home Assistant 2026.11: some integrations (Tuya, Z-Wave, ESPHome, MQTT, Reolink dual-lens cameras) now file a device's channels, endpoints or lenses as *child devices*. Pulse counts the entities of child devices for their parent device again, so a sensor keeps its contact or button as an action, a power strip keeps its sockets in the mains beta, and labels on a child device apply to the device. Child devices never show up as devices of their own. Nothing changes for older Home Assistant versions.
+- Connectivity sensors that say nothing about a device being reachable (a Shelly's cloud link, a router's WAN or internet, a mop attached) no longer decide whether an automatically found device is reachable. A Shelly with its cloud switched off stays fine, and a router counts as gone only when it is offline, not when the internet is down.
 
 ## 26.10.14 – 2026-10-26
 
