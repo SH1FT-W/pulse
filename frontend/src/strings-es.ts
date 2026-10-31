@@ -364,6 +364,9 @@ export const ES: Record<keyof typeof EN, string> = {
   tpl_preview: 'Vista previa',
   tpl_reset: 'Usar predeterminado',
   tpl_save: 'Guardar',
+  new_local_title: 'Más dispositivos por sí solos',
+  new_local_text:
+    'Los asistentes de voz con ESPHome como el Home Assistant Voice PE y los coordinadores SMLIGHT ahora se vigilan por sí solos. Un coordinador por wifi ya no cuenta como desaparecido solo porque su Ethernet esté apagado.',
   new_mains_title: 'Los dispositivos a la red ya están activos',
   new_mains_text:
     'Pulse ahora también vigila lámparas, enchufes e interruptores conectados a la red, de cualquier integración. Aprende los que suelen estar apagados. Desactívalo en Ajustes.',

@@ -361,6 +361,9 @@ export const DE: Record<keyof typeof EN, string> = {
   tpl_preview: 'Vorschau',
   tpl_reset: 'Standard verwenden',
   tpl_save: 'Sichern',
+  new_local_title: 'Mehr Geräte von selbst',
+  new_local_text:
+    'Sprachassistenten mit ESPHome wie der Home Assistant Voice PE und SMLIGHT-Koordinatoren werden jetzt von selbst überwacht. Ein Koordinator im WLAN gilt nicht mehr als weg, nur weil sein Ethernet aus ist.',
   new_mains_title: 'Netzgeräte sind jetzt dabei',
   new_mains_text:
     'Pulse achtet jetzt auch auf Lampen, Steckdosen und Schalter am Strom, aus jeder Integration. Geräte, die oft aus sind, lernt es kennen. Abschalten unter Einstellungen.',

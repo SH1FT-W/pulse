@@ -911,6 +911,8 @@ var Je = {
 	tpl_preview: "Vorschau",
 	tpl_reset: "Standard verwenden",
 	tpl_save: "Sichern",
+	new_local_title: "Mehr Geräte von selbst",
+	new_local_text: "Sprachassistenten mit ESPHome wie der Home Assistant Voice PE und SMLIGHT-Koordinatoren werden jetzt von selbst überwacht. Ein Koordinator im WLAN gilt nicht mehr als weg, nur weil sein Ethernet aus ist.",
 	new_mains_title: "Netzgeräte sind jetzt dabei",
 	new_mains_text: "Pulse achtet jetzt auch auf Lampen, Steckdosen und Schalter am Strom, aus jeder Integration. Geräte, die oft aus sind, lernt es kennen. Abschalten unter Einstellungen.",
 	new_layout_title: "Übersichtlicher",
@@ -1270,6 +1272,8 @@ var Je = {
 	tpl_preview: "Preview",
 	tpl_reset: "Use default",
 	tpl_save: "Save",
+	new_local_title: "More devices by themselves",
+	new_local_text: "ESPHome voice assistants like the Home Assistant Voice PE and SMLIGHT coordinators are now watched by themselves. A coordinator on Wi-Fi no longer counts as gone just because its Ethernet is off.",
 	new_mains_title: "Mains-powered devices are now on",
 	new_mains_text: "Pulse now also watches lamps, plugs and switches on the mains, from any integration. Devices that are often off are learned. Turn it off under Settings.",
 	new_layout_title: "Easier to scan",
@@ -1631,6 +1635,8 @@ var Je = {
 		tpl_preview: "Aperçu",
 		tpl_reset: "Rétablir par défaut",
 		tpl_save: "Enregistrer",
+		new_local_title: "Plus d’appareils tout seuls",
+		new_local_text: "Les assistants vocaux ESPHome comme le Home Assistant Voice PE et les coordinateurs SMLIGHT sont désormais surveillés tout seuls. Un coordinateur en Wi-Fi ne compte plus comme absent simplement parce que son Ethernet est coupé.",
 		new_mains_title: "Les appareils sur secteur sont activés",
 		new_mains_text: "Pulse surveille désormais aussi lampes, prises et interrupteurs sur secteur, de toute intégration. Les appareils souvent éteints sont appris. À désactiver sous Réglages.",
 		new_layout_title: "Plus lisible",
@@ -1991,6 +1997,8 @@ var Je = {
 		tpl_preview: "Vista previa",
 		tpl_reset: "Usar predeterminado",
 		tpl_save: "Guardar",
+		new_local_title: "Más dispositivos por sí solos",
+		new_local_text: "Los asistentes de voz con ESPHome como el Home Assistant Voice PE y los coordinadores SMLIGHT ahora se vigilan por sí solos. Un coordinador por wifi ya no cuenta como desaparecido solo porque su Ethernet esté apagado.",
 		new_mains_title: "Los dispositivos a la red ya están activos",
 		new_mains_text: "Pulse ahora también vigila lámparas, enchufes e interruptores conectados a la red, de cualquier integración. Aprende los que suelen estar apagados. Desactívalo en Ajustes.",
 		new_layout_title: "Más claro",
@@ -2351,6 +2359,8 @@ var Je = {
 		tpl_preview: "Voorbeeld",
 		tpl_reset: "Standaard gebruiken",
 		tpl_save: "Opslaan",
+		new_local_title: "Meer apparaten vanzelf",
+		new_local_text: "Spraakassistenten met ESPHome zoals de Home Assistant Voice PE en SMLIGHT-coördinatoren worden nu vanzelf bewaakt. Een coördinator op wifi telt niet meer als weg, alleen omdat zijn ethernet uit staat.",
 		new_mains_title: "Apparaten op netstroom staan nu aan",
 		new_mains_text: "Pulse let nu ook op lampen, stekkers en schakelaars op netstroom, uit elke integratie. Apparaten die vaak uit staan leert Pulse kennen. Uitzetten onder Instellingen.",
 		new_layout_title: "Overzichtelijker",
@@ -3696,13 +3706,13 @@ var q = o`
 		text: "welcome_notify_text"
 	}
 ], Gn = [{
+	icon: "mdi:speaker",
+	title: "new_local_title",
+	text: "new_local_text"
+}, {
 	icon: "mdi:plus-circle-outline",
 	title: "new_manual_title",
 	text: "new_manual_text"
-}, {
-	icon: "mdi:power-plug-outline",
-	title: "new_mains_title",
-	text: "new_mains_text"
 }], Kn = "https://github.com/SH1FT-W/pulse/blob/main/CHANGELOG.md";
 M("pulse-welcome", class extends A {
 	static {
@@ -7382,7 +7392,7 @@ function kr() {
 	let e = Or();
 	if (!e) return null;
 	try {
-		return Xn(e, "26.10.15", Gn.length > 0);
+		return Xn(e, "26.10.16", Gn.length > 0);
 	} catch {
 		return null;
 	}
@@ -7596,7 +7606,7 @@ var jr = class extends A {
 		this.welcome = null;
 		let e = Or();
 		try {
-			e && Zn(e, "26.10.15");
+			e && Zn(e, "26.10.16");
 		} catch {}
 	}
 	zigbeeOffer(e) {
@@ -7762,7 +7772,7 @@ var jr = class extends A {
         @partner-dismiss=${(e) => this.onPartnerDismiss(e.detail.id, e.detail.partner)}
       >
         ${this.renderHead()} ${this.renderContent()}
-        <p class="version muted">${N(t, "version", { version: "26.10.15" })}</p>
+        <p class="version muted">${N(t, "version", { version: "26.10.16" })}</p>
         ${e ? w`<pulse-device-sheet
                   .open=${n !== null}
                   .device=${n}
@@ -7787,7 +7797,7 @@ var jr = class extends A {
                 <pulse-welcome
                   .mode=${this.welcome}
                   .language=${t}
-                  .version=${"26.10.15"}
+                  .version=${"26.10.16"}
                   .zigbee=${this.zigbeeOffer(e)}
                   @closed=${() => this.welcomeDone()}
                   @enable-z2m=${() => {

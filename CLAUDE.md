@@ -119,6 +119,10 @@ es hört nur zu (Zustände, „gemeldet ohne Änderung“, Zigbee2MQTT-Nachricht
   `main_entities` = `MANUAL_DOMAINS` (Kamera, Media-Player, Sauger …), sonst MAINS_DOMAINS + remote, sonst leer (= alle).
   Grund `ok_manual`, Panel: Einstellungen → „Von Hand hinzugefügt“ (`pulse-add-sheet.ts`, Chip/Notiz im Detail),
   Netzgeräte-Zähler/Filter ohne Hand-Geräte. Neu hinzugefügt + bootstrapped → `async_bootstrap({id})` liest nur dessen Verlauf.
+- Mehr Geräte von selbst (26.10.16, Nachtrag #2): Media-Player einer `MAINS_INTEGRATIONS`-Integration (ESPHome Voice PE) = Netzgerät,
+  `main_entities` = Media-Player (nur wenn das einzige ausgeschlossene Domain `media_player` ist und keine Batterie), `smlight` in
+  `MAINS_INTEGRATIONS`; `NOT_REACHABILITY` auch ethernet/wifi/wlan/vpn (SLZB im WLAN: ethernet aus). Trockenlauf 31.10. Prod: 140/46 unverändert.
+  Offen: Z2M-Geräte ohne eingeschaltete Entität (`if not own: continue`, auch nicht von Hand wählbar).
 - Eigene Texte (`settings.templates`, je `TEMPLATE_KEYS` None = Standard): `notifier.compose` → `texts.render`
   (Platzhalter `TEMPLATE_VARS`, leere Werte verschwinden samt „ · “, `{area}` leer, wenn schon im Namen).
   Standard = `template_defaults(Sprache der Mitteilungen)`, im Snapshot `template_defaults`/`template_vars`.

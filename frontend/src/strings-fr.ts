@@ -369,6 +369,9 @@ export const FR: Record<keyof typeof EN, string> = {
   tpl_preview: 'Aperçu',
   tpl_reset: 'Rétablir par défaut',
   tpl_save: 'Enregistrer',
+  new_local_title: 'Plus d’appareils tout seuls',
+  new_local_text:
+    'Les assistants vocaux ESPHome comme le Home Assistant Voice PE et les coordinateurs SMLIGHT sont désormais surveillés tout seuls. Un coordinateur en Wi-Fi ne compte plus comme absent simplement parce que son Ethernet est coupé.',
   new_mains_title: 'Les appareils sur secteur sont activés',
   new_mains_text:
     'Pulse surveille désormais aussi lampes, prises et interrupteurs sur secteur, de toute intégration. Les appareils souvent éteints sont appris. À désactiver sous Réglages.',

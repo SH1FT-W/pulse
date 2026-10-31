@@ -2,6 +2,14 @@
 
 After 1.1.0, releases use calendar versions `YY.M.N` (year, month, number of the release in that month), e.g. `26.10.4`. They count as newer than every 1.x version, so updates through HACS work as before.
 
+## 26.10.16 – 2026-10-31
+
+### Added
+- **More devices found by themselves** (follow-up to #2). Voice assistants of local hardware (ESPHome, for example the Home Assistant Voice PE) are watched as mains-powered devices: their media player decides whether they are there, playing, idle or off is fine. Media players of cloud integrations and battery devices with a media player stay out as before. SMLIGHT coordinators (SLZB) are watched as local hardware. "New in Pulse" says so.
+
+### Fixed
+- Connectivity sensors that only tell which link a device uses (Ethernet, Wi-Fi, WLAN, VPN) no longer decide whether it is reachable, for found and added devices alike. An SMLIGHT coordinator on Wi-Fi has its Ethernet sensor off and stayed "not reachable".
+
 ## 26.10.15 – 2026-10-31
 
 ### Added

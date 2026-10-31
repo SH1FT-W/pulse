@@ -31,7 +31,9 @@ Integrationen, deren Entitäten oder Attribute dieses Repo liest (Domain, was ge
 - `mqtt` / Zigbee2MQTT: Themen `<base>/bridge/devices|info|state|event|health` und `<base>/#`, Feld `last_seen` (`z2m.py`).
 - `matter`: Gerät gilt als erreichbar, solange es nicht `unavailable` ist (`discovery.py` `reachable_via`).
 - `govee` (Govee-Cloud, eigene Integration): Lampe wird `unavailable`, Konnektivitäts-Sensor bleibt dabei „on“, Diagnose-Sensoren melden weiter (`monitor.py` `_check_availability`, `tests/test_mains_templates.py`).
-- Konnektivitäts-Sensoren fremder Integrationen bei von Hand hinzugefügten Geräten: Übersetzungsschlüssel/Entity-ID mit `attach`, `cloud`, `wan`, `mop` … sagen nichts über die Erreichbarkeit (Roborock `mop_attached`, Shelly `cloud`, IOmeter `attachment_status`; `discovery.py` `NOT_REACHABILITY`).
+- Konnektivitäts-Sensoren fremder Integrationen bei von Hand hinzugefügten Geräten: Übersetzungsschlüssel/Entity-ID mit `attach`, `cloud`, `wan`, `mop` … sagen nichts über die Erreichbarkeit (Roborock `mop_attached`, Shelly `cloud`, IOmeter `attachment_status`; `discovery.py` `NOT_REACHABILITY`). Gilt seit 26.10.16 auch für automatisch gefundene Geräte, dazu Sensoren für die Verbindungsart `ethernet`, `wifi`, `vpn` (`tests/test_local_media.py`).
+- `smlight`: Konnektivitäts-Sensoren `ethernet` (standardmäßig an), `wifi`, `vpn` (standardmäßig aus) und `internet`, alle Diagnose; ein SLZB im WLAN hat `ethernet` aus. Sonst nur Diagnose-Sensoren und Einstellungs-Schalter (`const.py` `MAINS_INTEGRATIONS`, `tests/test_local_media.py`).
+- `esphome`: Sprachassistenten (Voice PE) bringen einen `media_player` mit; Geräte mit Media-Player aus lokalen Hardware-Integrationen sind Netzgeräte (`discovery.py` `_automatic`, `tests/test_local_media.py`).
 - `powercalc`, `template` u. a. (`const.py` `HELPER_PLATFORMS`): hängen eigene Entitäten an fremde Geräte, zählen nie als deren Integration.
 - Cloud-Integrationen aus `const.py` `CLOUD_INTEGRATIONS` (Netatmo u. a.): nur Wertänderungen zählen.
 

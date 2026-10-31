@@ -26,8 +26,8 @@ const WELCOME: Feature[] = [
  * (1 to 4 entries). As of 26.10.15.
  */
 export const WHATS_NEW: Feature[] = [
+  { icon: 'mdi:speaker', title: 'new_local_title', text: 'new_local_text' },
   { icon: 'mdi:plus-circle-outline', title: 'new_manual_title', text: 'new_manual_text' },
-  { icon: 'mdi:power-plug-outline', title: 'new_mains_title', text: 'new_mains_text' },
 ];
 
 const CHANGELOG_URL = 'https://github.com/SH1FT-W/pulse/blob/main/CHANGELOG.md';

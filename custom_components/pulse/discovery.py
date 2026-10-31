@@ -87,8 +87,11 @@ class DeviceSpec:
 
 
 # Connectivity sensors that say nothing about the device being reachable (seen in real homes): a robot vacuum's
-# mop "attached", a meter's attachment, a Shelly's cloud link, a router's WAN, a mounted share
-NOT_REACHABILITY = re.compile(r"attach|cloud|backend|wan|internet|mount|mop|water_box", re.IGNORECASE)
+# mop "attached", a meter's attachment, a Shelly's cloud link, a router's WAN, a mounted share, which link a device
+# uses (an SMLIGHT coordinator on Wi-Fi has its Ethernet sensor off, its VPN is optional)
+NOT_REACHABILITY = re.compile(
+    r"attach|cloud|backend|wan|internet|mount|mop|water_box|ethernet|wi_?fi|wlan|vpn", re.IGNORECASE
+)
 
 
 # Icon by what the device measures (first matching rule wins)
@@ -244,7 +247,11 @@ def _actions(mine: list[er.RegistryEntry]) -> list[str]:
 
 def _automatic(base: DeviceSpec, device: dr.DeviceEntry, own: list[er.RegistryEntry], mains: bool) -> DeviceSpec | None:
     """What Pulse watches by itself: battery devices, with `mains` also mains-powered devices."""
-    if any(e.domain in EXCLUDED_DOMAINS for e in own):
+    excluded = {e.domain for e in own if e.domain in EXCLUDED_DOMAINS}
+    # A media player of local hardware (ESPHome voice satellite) is a mains device like a lamp; elsewhere media
+    # players, vacuums and trackers stay out (cloud speakers, battery accessories, phones)
+    local_media = excluded == {"media_player"} and _main_integration(own) in MAINS_INTEGRATIONS
+    if excluded and not (mains and local_media):
         return None
     percent = next(
         (e.entity_id for e in own if e.domain == "sensor" and _device_class(e) == "battery"),
@@ -264,6 +271,8 @@ def _automatic(base: DeviceSpec, device: dr.DeviceEntry, own: list[er.RegistryEn
             return None
         if integration == "mqtt" and base.ieee is None:
             return None
+    elif excluded:
+        return None  # battery devices with a media player are no battery sensors in Pulse's sense
     elif any(e.domain == "sensor" and _device_class(e) in EXCLUDED_SENSOR_CLASSES for e in own):
         return None  # home battery / power station, not a battery sensor
     mine = [e for e in own if e.platform == integration and e.domain not in INACTIVE_DOMAINS]
@@ -287,10 +296,10 @@ def _automatic(base: DeviceSpec, device: dr.DeviceEntry, own: list[er.RegistryEn
         battery_low=flag if percent else None,
         voltage=next((e.entity_id for e in mine if e.domain == "sensor" and _device_class(e) == "voltage"), None),
         critical=_critical(own),
-        icon=icon_for(own, mains=battery is None),
+        icon=icon_for(own, mains=battery is None, manual=bool(excluded)),
         reachable_via="matter" if integration == "matter" else connectivity,
         mains=battery is None,
-        main_entities=[e.entity_id for e in mine if e.domain in MAINS_DOMAINS and e.entity_category is None],
+        main_entities=[e.entity_id for e in mine if e.domain in MAINS_DOMAINS | excluded and e.entity_category is None],
     )
 
 

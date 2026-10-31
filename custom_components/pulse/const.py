@@ -162,6 +162,7 @@ MAINS_INTEGRATIONS: Final = frozenset(
         "bond",
         "lutron_caseta",
         "insteon",
+        "smlight",
     }
 )
 # Helpers built on top of other devices: never the device's own integration (Govee lamp + powercalc sensors)

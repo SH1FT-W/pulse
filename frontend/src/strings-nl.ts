@@ -365,6 +365,9 @@ export const NL: Record<keyof typeof EN, string> = {
   tpl_preview: 'Voorbeeld',
   tpl_reset: 'Standaard gebruiken',
   tpl_save: 'Opslaan',
+  new_local_title: 'Meer apparaten vanzelf',
+  new_local_text:
+    'Spraakassistenten met ESPHome zoals de Home Assistant Voice PE en SMLIGHT-coördinatoren worden nu vanzelf bewaakt. Een coördinator op wifi telt niet meer als weg, alleen omdat zijn ethernet uit staat.',
   new_mains_title: 'Apparaten op netstroom staan nu aan',
   new_mains_text:
     'Pulse let nu ook op lampen, stekkers en schakelaars op netstroom, uit elke integratie. Apparaten die vaak uit staan leert Pulse kennen. Uitzetten onder Instellingen.',

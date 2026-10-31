@@ -359,6 +359,9 @@ export const EN = {
   tpl_preview: 'Preview',
   tpl_reset: 'Use default',
   tpl_save: 'Save',
+  new_local_title: 'More devices by themselves',
+  new_local_text:
+    'ESPHome voice assistants like the Home Assistant Voice PE and SMLIGHT coordinators are now watched by themselves. A coordinator on Wi-Fi no longer counts as gone just because its Ethernet is off.',
   new_mains_title: 'Mains-powered devices are now on',
   new_mains_text:
     'Pulse now also watches lamps, plugs and switches on the mains, from any integration. Devices that are often off are learned. Turn it off under Settings.',
