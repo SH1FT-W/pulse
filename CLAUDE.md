@@ -107,6 +107,11 @@ es hört nur zu (Zustände, „gemeldet ohne Änderung“, Zigbee2MQTT-Nachricht
   → `rhythm.usual_outage`;
   dann weg = `unavailable_usual` (watch), erst > max(2× längster, 1 Tag) `unavailable` check, nie failed.
   Push ohne „Batterie gewechselt“. Ausschalten → `_remove_vanished` entfernt die Entitäten.
+- Wichtiges Gerät nicht erreichbar: „Prüfen“ nach `settings.important_unreachable_minutes` (2/5/10/20, Standard 10,
+  `IMPORTANT_UNREACHABLE_CHOICES`, `Facts.critical_unreachable`), „Ausgefallen“ bleibt bei 1 Std., normale Geräte 20 Min./2 Std. (#4).
+- `problem_since` am Status-Sensor (`record["problem_since"]`/`problem_of` = „status|reason“, `monitor._track_problem`):
+  seit wann Pulse das aktuelle Problem meldet, übersteht Neustarts; ein nicht beobachteter Beginn (erste Bewertung nach
+  Start/Update) nimmt `silent_since`. Casoras Glocke nimmt es als Zeitpunkt (sonst zählte ein Ausfall als schon gelesen).
 - Von Hand hinzugefügte Geräte: `settings.manual_devices` (Liste von device_ids, kein Minor nötig – neuer
   Einstellungs-Schlüssel mit Vorgabe), nur über `pulse/manual_device {device_id, add}` änderbar (nicht über `pulse/settings`),
   Auswahl `pulse/manual_candidates` (= `discovery.candidates`: alles, was der Hand-Weg baut und noch nicht überwacht ist).

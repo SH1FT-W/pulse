@@ -52,7 +52,7 @@ async def async_setup_entry(
 class StatusSensor(PulseDeviceEntity, SensorEntity):
     # Stabile Werte für Automationen (kein laufend wechselnder Satz); nicht in den Verlauf
     _unrecorded_attributes = frozenset(
-        {"reason_key", "silent_since", "unavailable_since", "typical_interval", "snoozed_until"}
+        {"reason_key", "silent_since", "unavailable_since", "problem_since", "typical_interval", "snoozed_until"}
     )
     _attr_device_class = SensorDeviceClass.ENUM
     _attr_options = STATUSES
@@ -71,17 +71,17 @@ class StatusSensor(PulseDeviceEntity, SensorEntity):
         device = self.device
         if device is None:
             return {}
-        since = self.monitor.silence_start(device)
+        since = self.monitor.silent_since(device)
         gone = device.unavailable_since
-        # Unreachable: the problem began when the device went, not with its last report (a Govee lamp's
-        # diagnostic sensors keep reporting while the lamp is gone); consumers like dashboards read silent_since
-        if gone is not None and device.reason.get("key") in ("unavailable", "unavailable_usual"):
-            since = gone
+        reported = device.record.get("problem_since")
         snooze = device.record.get("snooze_until")
         return {
             "reason_key": device.reason.get("key"),
             "silent_since": dt_util.utc_from_timestamp(since).isoformat() if since else None,
             "unavailable_since": dt_util.utc_from_timestamp(gone).isoformat() if gone else None,
+            # Since when Pulse reports this problem (status + reason), None without a problem; dashboards use it
+            # as the time of the notice (silent_since is the start of the silence, often long before)
+            "problem_since": dt_util.utc_from_timestamp(reported).isoformat() if reported else None,
             "typical_interval": round(device.rhythm.typical) if device.rhythm.typical else None,
             "critical": device.critical,
             "snoozed_until": dt_util.utc_from_timestamp(snooze).isoformat() if snooze else None,

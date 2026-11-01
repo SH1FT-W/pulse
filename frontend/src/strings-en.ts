@@ -299,6 +299,8 @@ export const EN = {
   mark_important: 'Mark as important',
   unmark_important: 'No longer important',
   important_devices: 'Important devices',
+  important_unreachable: 'Important device unreachable',
+  after_minutes: 'after {n} min',
   filter_important: 'Important',
   filter_battery: 'Battery',
   ignore_action: 'Stop monitoring',
@@ -359,6 +361,9 @@ export const EN = {
   tpl_preview: 'Preview',
   tpl_reset: 'Use default',
   tpl_save: 'Save',
+  new_unreachable_title: 'Important devices sooner',
+  new_unreachable_text:
+    'How long an important device may be unreachable before Pulse says “Check” is now up to you, under Settings › Special cases: 2, 5, 10 or 20 minutes.',
   new_local_title: 'More devices by themselves',
   new_local_text:
     'ESPHome voice assistants like the Home Assistant Voice PE and SMLIGHT coordinators are now watched by themselves. A coordinator on Wi-Fi no longer counts as gone just because its Ethernet is off.',

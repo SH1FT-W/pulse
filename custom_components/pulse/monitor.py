@@ -47,11 +47,13 @@ from homeassistant.util import dt as dt_util
 
 from . import battery as batt
 from .const import (
+    DEFAULT_SETTINGS,
     DOMAIN,
     EVENT_BATTERY_REPLACED,
     EVENT_STATUS_CHANGED,
     HEARTBEAT_MINUTES,
     HISTORY_DAYS,
+    IMPORTANT_UNREACHABLE_CHOICES,
     KEEP_DAYS,
     MAX_EVENTS,
     MERGE_SECONDS,
@@ -961,6 +963,39 @@ class PulseMonitor:
         """Start of the silence by the stray rule (one reference point for status, panel, `silent_since`)."""
         return device.silence_start if device.evaluated else self.silence_from(device)
 
+    def silent_since(self, device: Device) -> float | None:
+        """`silent_since` of the status sensor: start of the silence, for "unreachable" the start of the outage.
+
+        A Govee lamp's diagnostic sensors keep reporting while the lamp is gone, so the problem began when the
+        device went, not with its last report.
+        """
+        gone = device.unavailable_since
+        if gone is not None and device.reason.get("key") in ("unavailable", "unavailable_usual"):
+            return gone
+        return self.silence_start(device)
+
+    def _track_problem(self, device: Device, now: float, observed: bool) -> None:
+        """`record["problem_since"]`: since when Pulse reports the current problem (status + reason).
+
+        Kept across restarts (a dashboard must not show it as new after each restart); a problem Pulse did not see
+        begin (first evaluation after start or update) keeps the start of the silence/outage instead of "now".
+        """
+        record = device.record
+        if not device.problem:
+            if record.get("problem_since") is not None or record.get("problem_of") is not None:
+                record["problem_since"] = record["problem_of"] = None
+                self.store.async_delay_save()
+            return
+        key = f"{device.status}|{device.reason.get('key')}"
+        if record.get("problem_of") == key and record.get("problem_since") is not None:
+            return
+        since = now
+        if not observed:
+            start = self.silent_since(device)
+            since = min(start, now) if start is not None else now
+        record["problem_of"], record["problem_since"] = key, since
+        self.store.async_delay_save()
+
     def downtime_gaps(self) -> list[tuple[float, float]]:
         """Times when HA was not running (from the own uptime); they do not count toward the silence."""
         uptime = self.store.uptime
@@ -1014,10 +1049,18 @@ class PulseMonitor:
             reachable=self._reachable(device),
             mains=device.spec.mains,
             manual=device.spec.manual,
+            critical_unreachable=self.critical_unreachable(),
             usual_outage=usual_outage(record.get("outages", ()), now, gaps, KEEP_DAYS, self._starts())
             if device.spec.mains
             else None,
         )
+
+    def critical_unreachable(self) -> float:
+        """Seconds an important device may be unreachable before "prüfen" (check), from the settings."""
+        minutes = self.store.settings.get("important_unreachable_minutes")
+        if minutes not in IMPORTANT_UNREACHABLE_CHOICES:
+            minutes = DEFAULT_SETTINGS["important_unreachable_minutes"]
+        return float(minutes) * 60
 
     def _reachable(self, device: Device) -> str | None:
         """Name of the integration if it currently lists the device as reachable itself (Matter sub, cloud flag)."""
@@ -1120,6 +1163,7 @@ class PulseMonitor:
         if device.ignored:
             device.status, device.reason = STATUS_LEARNING, {"key": "learning", "params": {}}
             ir.async_delete_issue(self.hass, DOMAIN, f"failed_{device.device_id}")
+            self._track_problem(device, now, False)
             return
         device.rhythm = self.rhythms.get(device.device_id, device.record["events"])
         self._track_battery_missing(device, now)
@@ -1134,6 +1178,7 @@ class PulseMonitor:
         first = not device.baseline
         if self.bootstrapped:
             device.baseline = True
+        self._track_problem(device, now, announce and self.bootstrapped and not first)
         if device.status == STATUS_FAILED:
             ir.async_create_issue(
                 self.hass,

@@ -38,6 +38,8 @@ def default_record() -> dict[str, Any]:
         "first_seen": None,
         "partner_dismissed": [],  # dismissed partner suggestions (device IDs)
         "battery_missing_since": None,  # battery entity without a value since
+        "problem_since": None,  # since when the current problem is reported (`monitor._track_problem`)
+        "problem_of": None,  # "<status>|<reason_key>" of that problem
         "outages": [],  # mains devices: [start, end] of past "unavailable" spans that ended by themselves
     }
 

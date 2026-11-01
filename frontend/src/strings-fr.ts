@@ -308,6 +308,8 @@ export const FR: Record<keyof typeof EN, string> = {
   mark_important: 'Marquer comme important',
   unmark_important: 'Plus important',
   important_devices: 'Appareils importants',
+  important_unreachable: 'Appareil important injoignable',
+  after_minutes: 'après {n} min',
   filter_important: 'Importants',
   filter_battery: 'Pile',
   ignore_action: 'Ne plus surveiller',
@@ -369,6 +371,9 @@ export const FR: Record<keyof typeof EN, string> = {
   tpl_preview: 'Aperçu',
   tpl_reset: 'Rétablir par défaut',
   tpl_save: 'Enregistrer',
+  new_unreachable_title: 'Appareils importants plus tôt',
+  new_unreachable_text:
+    'Combien de temps un appareil important peut rester injoignable avant que Pulse indique « À vérifier » : à choisir sous Paramètres › Cas particuliers : 2, 5, 10 ou 20 minutes.',
   new_local_title: 'Plus d’appareils tout seuls',
   new_local_text:
     'Les assistants vocaux ESPHome comme le Home Assistant Voice PE et les coordinateurs SMLIGHT sont désormais surveillés tout seuls. Un coordinateur en Wi-Fi ne compte plus comme absent simplement parce que son Ethernet est coupé.',

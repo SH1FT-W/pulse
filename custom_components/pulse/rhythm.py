@@ -377,6 +377,7 @@ class Facts:
     battery_missing_since: float | None = None  # battery entity permanently without a value
     reachable: str | None = None  # integration currently reports the device reachable (its name), otherwise None
     mains: bool = False  # beta: mains-powered, an unused lamp is not broken
+    critical_unreachable: float = 10 * 60.0  # important device unreachable → "prüfen" (check) after (seconds)
     manual: bool = False  # added by hand: watched like a mains device, but maybe not on the mains (camera, vacuum)
     usual_outage: float | None = None  # often unavailable by itself: its longest such outage (`usual_outage`)
 
@@ -477,7 +478,7 @@ def evaluate(facts: Facts) -> Verdict:
                 verdict = _gone(verdict, Verdict(STATUS_WATCH, {"key": "unavailable_usual", "params": params}))
         elif gone >= (HOUR if facts.critical else 2 * HOUR):
             verdict = _gone(verdict, Verdict(STATUS_FAILED, {"key": "unavailable", "params": params}))
-        elif gone >= (10 * MINUTE if facts.critical else 20 * MINUTE):
+        elif gone >= (facts.critical_unreachable if facts.critical else 20 * MINUTE):
             verdict = _gone(verdict, Verdict(STATUS_CHECK, {"key": "unavailable", "params": params}))
 
     # 3. Cross-check: the partner was active several times, this device was not

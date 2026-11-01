@@ -20,6 +20,9 @@ import type { Settings, Snapshot, TemplateKind } from './types';
 import './pulse-dayband';
 import './pulse-picker';
 
+/** Choices for "important device unreachable" (minutes, as in `const.IMPORTANT_UNREACHABLE_CHOICES`) */
+const UNREACHABLE_MINUTES = [2, 5, 10, 20] as const;
+
 type LevelKey = keyof Settings['levels'];
 
 /**
@@ -391,6 +394,15 @@ export class PulseSettings extends LitElement {
         <div class="list">
           ${this.switchRow('critical', s.critical_alerts, (on) => this.save({ critical_alerts: on }), 'critical_hint')}
           ${this.linkRow(t(lang, 'important_devices'), String(important), () => this.fire('show-devices', { filter: 'important' }))}
+          ${this.pickerRow(
+            'important_unreachable',
+            String(s.important_unreachable_minutes ?? 10),
+            UNREACHABLE_MINUTES.map((n) => ({
+              value: String(n),
+              label: t(lang, 'after_minutes', { n }),
+            })),
+            (v) => this.save({ important_unreachable_minutes: Number(v) })
+          )}
           ${this.switchRow(
             'arrive',
             s.arrive_home.enabled,

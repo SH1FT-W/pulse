@@ -299,6 +299,8 @@ export const DE: Record<keyof typeof EN, string> = {
   mark_important: 'Als wichtig markieren',
   unmark_important: 'Nicht mehr wichtig',
   important_devices: 'Wichtige Geräte',
+  important_unreachable: 'Wichtiges Gerät nicht erreichbar',
+  after_minutes: 'nach {n} Min.',
   filter_important: 'Wichtig',
   filter_battery: 'Batterie',
   ignore_action: 'Nicht mehr überwachen',
@@ -361,6 +363,9 @@ export const DE: Record<keyof typeof EN, string> = {
   tpl_preview: 'Vorschau',
   tpl_reset: 'Standard verwenden',
   tpl_save: 'Sichern',
+  new_unreachable_title: 'Wichtige Geräte schneller',
+  new_unreachable_text:
+    'Wie lange ein wichtiges Gerät nicht erreichbar sein darf, bis Pulse „Prüfen“ meldet, stellst du unter Einstellungen › Besonderes ein: 2, 5, 10 oder 20 Minuten.',
   new_local_title: 'Mehr Geräte von selbst',
   new_local_text:
     'Sprachassistenten mit ESPHome wie der Home Assistant Voice PE und SMLIGHT-Koordinatoren werden jetzt von selbst überwacht. Ein Koordinator im WLAN gilt nicht mehr als weg, nur weil sein Ethernet aus ist.',

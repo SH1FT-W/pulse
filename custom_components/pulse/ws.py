@@ -11,7 +11,15 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import voluptuous as vol
 
 from .battery import BATTERY_TYPES, CHEMISTRIES
-from .const import DOMAIN, NOTIFY_DAILY, NOTIFY_NOW, NOTIFY_OFF, SIGNAL_UPDATE, SNOOZE_MAX_HOURS
+from .const import (
+    DOMAIN,
+    IMPORTANT_UNREACHABLE_CHOICES,
+    NOTIFY_DAILY,
+    NOTIFY_NOW,
+    NOTIFY_OFF,
+    SIGNAL_UPDATE,
+    SNOOZE_MAX_HOURS,
+)
 from .monitor import PulseMonitor
 from .store import merge_settings
 from .texts import TEMPLATE_KEYS
@@ -181,6 +189,7 @@ SETTINGS_SCHEMA = vol.Schema(
         vol.Optional("critical_alerts"): bool,
         vol.Optional("arrive_home"): {vol.Optional("enabled"): bool, vol.Optional("persons"): [str]},
         vol.Optional("recovered"): bool,
+        vol.Optional("important_unreachable_minutes"): vol.In(IMPORTANT_UNREACHABLE_CHOICES),
         vol.Optional("z2m_base"): TOPIC,
         vol.Optional("mains_beta"): bool,
         vol.Optional("templates"): {vol.Optional(key): vol.Any(None, TEMPLATE) for key in TEMPLATE_KEYS},

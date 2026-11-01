@@ -303,6 +303,8 @@ export const NL: Record<keyof typeof EN, string> = {
   mark_important: 'Als belangrijk markeren',
   unmark_important: 'Niet meer belangrijk',
   important_devices: 'Belangrijke apparaten',
+  important_unreachable: 'Belangrijk apparaat onbereikbaar',
+  after_minutes: 'na {n} min',
   filter_important: 'Belangrijk',
   filter_battery: 'Batterij',
   ignore_action: 'Niet meer bewaken',
@@ -365,6 +367,9 @@ export const NL: Record<keyof typeof EN, string> = {
   tpl_preview: 'Voorbeeld',
   tpl_reset: 'Standaard gebruiken',
   tpl_save: 'Opslaan',
+  new_unreachable_title: 'Belangrijke apparaten sneller',
+  new_unreachable_text:
+    'Hoe lang een belangrijk apparaat onbereikbaar mag zijn voordat Pulse „Controleren” meldt, kies je onder Instellingen › Bijzondere gevallen: 2, 5, 10 of 20 minuten.',
   new_local_title: 'Meer apparaten vanzelf',
   new_local_text:
     'Spraakassistenten met ESPHome zoals de Home Assistant Voice PE en SMLIGHT-coördinatoren worden nu vanzelf bewaakt. Een coördinator op wifi telt niet meer als weg, alleen omdat zijn ethernet uit staat.',

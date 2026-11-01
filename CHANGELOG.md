@@ -2,6 +2,12 @@
 
 After 1.1.0, releases use calendar versions `YY.M.N` (year, month, number of the release in that month), e.g. `26.10.4`. They count as newer than every 1.x version, so updates through HACS work as before.
 
+## 26.11.1 – 2026-11-01
+
+### Added
+- **Choose when an unreachable important device is reported** (#4). Under *Settings → Special cases* you set how long an important device may be unreachable before Pulse says *Check*: 2, 5, 10 or 20 minutes (default 10, as before). *Failed* stays at one hour, other devices keep 20 minutes and two hours. "New in Pulse" says so.
+- The status sensor has a new attribute `problem_since`: since when Pulse reports the current problem (status and reason), kept across restarts, empty without a problem. `silent_since` stays the start of the silence or outage. Dashboards use it as the time of the notice; Casora's bell (26.11.2) shows a Pulse notice as new even when the outage began before the bell was last opened.
+
 ## 26.10.16 – 2026-10-31
 
 ### Added

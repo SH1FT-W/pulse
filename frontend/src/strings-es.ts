@@ -303,6 +303,8 @@ export const ES: Record<keyof typeof EN, string> = {
   mark_important: 'Marcar como importante',
   unmark_important: 'Ya no es importante',
   important_devices: 'Dispositivos importantes',
+  important_unreachable: 'Dispositivo importante no disponible',
+  after_minutes: 'tras {n} min',
   filter_important: 'Importantes',
   filter_battery: 'Pila',
   ignore_action: 'Dejar de supervisar',
@@ -364,6 +366,9 @@ export const ES: Record<keyof typeof EN, string> = {
   tpl_preview: 'Vista previa',
   tpl_reset: 'Usar predeterminado',
   tpl_save: 'Guardar',
+  new_unreachable_title: 'Dispositivos importantes antes',
+  new_unreachable_text:
+    'Cuánto tiempo puede estar no disponible un dispositivo importante antes de que Pulse diga «Revisar»: elígelo en Ajustes › Casos especiales: 2, 5, 10 o 20 minutos.',
   new_local_title: 'Más dispositivos por sí solos',
   new_local_text:
     'Los asistentes de voz con ESPHome como el Home Assistant Voice PE y los coordinadores SMLIGHT ahora se vigilan por sí solos. Un coordinador por wifi ya no cuenta como desaparecido solo porque su Ethernet esté apagado.',

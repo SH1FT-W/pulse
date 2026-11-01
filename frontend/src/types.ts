@@ -119,6 +119,8 @@ export interface Settings {
   critical_alerts: boolean;
   arrive_home: { enabled: boolean; persons: string[] };
   recovered: boolean;
+  /** Important device unreachable: "Prüfen" (check) after this many minutes (2, 5, 10 or 20) */
+  important_unreachable_minutes?: number;
   z2m_base: string;
   /** Beta: also watch mains-powered devices */
   mains_beta?: boolean;

@@ -214,6 +214,8 @@ DEFAULT_SETTINGS: Final[dict[str, Any]] = {
     "critical_alerts": True,
     "arrive_home": {"enabled": False, "persons": []},  # deliver only once one of the persons is home
     "recovered": True,
+    # Important device unreachable: "Prüfen" (check) after this many minutes (IMPORTANT_UNREACHABLE_CHOICES)
+    "important_unreachable_minutes": 10,
     "z2m_base": Z2M_BASE,
     "mains_beta": True,  # beta (on since 26.10.9): also watch mains-powered devices (see MAINS_DOMAINS)
     # Device IDs added by hand in the panel: always watched (`discovery._manual`), also with `mains_beta` off
@@ -230,6 +232,8 @@ DEFAULT_SETTINGS: Final[dict[str, Any]] = {
         "recovered_message": None,
     },
 }
+
+IMPORTANT_UNREACHABLE_CHOICES: Final = (2, 5, 10, 20)
 
 # Reasons reported by the "Batterie" (battery) level instead of "Prüfen" (check)
 BATTERY_REASONS: Final = frozenset({"battery_low", "battery_low_flag"})
