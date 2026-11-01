@@ -15,7 +15,7 @@ es hört nur zu (Zustände, „gemeldet ohne Änderung“, Zigbee2MQTT-Nachricht
   Rhythmusleiste), `battery.py` (Bibliothek nur sicherer Modelle, Wechsel-Erkennung, Einkaufsliste),
   `texts.py` (Sätze de/en – Panel, Push und Reparatur sagen dasselbe), `forecast.py` (Laufzeit-Vorhersage),
   `partners.py` (Partner-Vorschläge). `snapshot.py` baut Snapshot/serialize fürs Panel (aus `monitor.py` ausgelagert).
-- Stille (1.1): ein Bezugspunkt `silence_start` + `strays` (`rhythm.silence_start`, Ausreißer-Regel: nach einer Lücke
+- Stille: ein Bezugspunkt `silence_start` + `strays` (`rhythm.silence_start`, Ausreißer-Regel: nach einer Lücke
   ≥ max(6 h, 3× Takt, längster Abstand) zählen ≤ 2 vereinzelte Meldungen nicht – zwei im üblichen Takt = läuft
   wieder; eine echte Aktion nach der Lücke oder „Batterie gewechselt“ beendet die Stille sofort). Gilt für Status, `silent_since`, Texte
   (`silent_strays`) und Panel. HA-Pausen (Lücken in `store.uptime` ≥ `UPTIME_SLACK`) zählen nie als Stille
@@ -30,8 +30,7 @@ es hört nur zu (Zustände, „gemeldet ohne Änderung“, Zigbee2MQTT-Nachricht
   aber als `radio_only` (höchstens check: erreichbar, schickt aber keine Werte). Konnektivität aus →
   `unavailable_since`; der Sensor selbst ist kein Lebenszeichen (nicht in `spec.entities`).
 - Neustart-Zeilen im Recorder: HA schreibt beim Start jeden Zustand neu → `rhythm.restart_echoes` (erste Zeile je Start
-  in [Start − 2 Min., Start + 5 Min.] nach einer früheren) zählt in `history.real_reports` nicht. Minor 7 hat solche
-  gespeicherten Meldungen entfernt und Cloud-Geräte einmal aus dem Verlauf neu aufgebaut (`record["rebuild_events"]`).
+  in [Start − 2 Min., Start + 5 Min.] nach einer früheren) zählt in `history.real_reports` nicht.
 - Batterie: Warn-Sensor neben Prozent (`spec.battery_low`) an → `battery_low_flag` gewinnt (`battery.flag_conflict`);
   Batterie-Entität ≥ 24 h ohne Wert, Rest meldet → `battery_missing` (`record["battery_missing_since"]`).
   Vorhersage einmal am Tag (`_async_daily`, nach Bootstrap): Stundenmittel der Langzeitstatistik
@@ -60,7 +59,7 @@ es hört nur zu (Zustände, „gemeldet ohne Änderung“, Zigbee2MQTT-Nachricht
   Spannung immer in mV (`_millivolts`, Volt-Sensoren werden umgerechnet).
 - Nach „Batterie gewechselt“ zählt die Stille ab dem Wechsel (`silence_from`, auch im Snapshot), Status „wartet auf
   die erste Meldung“ (`waiting_first`, watch); Rückgängig stellt `notified` wieder her (`notified_before_replace`).
-- Tagespause (`rhythm.daily_quiet`, `Rhythm.quiet`): Median des längsten Abstands je 24-h-Scheibe (ab 3 vollen Tagen); `Rhythm.span` = max(longest, quiet) zählt für `limits` und die Ausreißer-Regel, „regelmäßig“ (`REGULAR_LONGEST`) bleibt am Perzentil `longest`. Grund: Lichtsensor nachts still (HWR-Fehlalarme 19.10.).
+- Tagespause (`rhythm.daily_quiet`, `Rhythm.quiet`): Median des längsten Abstands je 24-h-Scheibe (ab 3 vollen Tagen); `Rhythm.span` = max(longest, quiet) zählt für `limits` und die Ausreißer-Regel, „regelmäßig“ (`REGULAR_LONGEST`) bleibt am Perzentil `longest`. Grund: Lichtsensoren sind nachts still.
 - Takt je Gerät aus `RhythmCache` (neu gelernt nur bei neuen Meldungen). Meldungen werden auf eine je 120 s
   ausgedünnt (`THIN_SECONDS`, `MAX_EVENTS` 6000 = 7 Tage auch für BLE). Rhythmusleiste: 12 Fenster je Kalendertag.
 - Start/Stopp: `_stopped` + `_z2m_lock` – ein Neuladen während des Starts hinterlässt keinen zweiten Wächter/Listener.
@@ -86,7 +85,7 @@ es hört nur zu (Zustände, „gemeldet ohne Änderung“, Zigbee2MQTT-Nachricht
   Entitäten und Labels dem Elterngerät zu, sie werden nie eigene Pulse-Geräte (abgeschaltete Kinder zählen nicht).
 - Labels (`LABEL_IMPORTANT`/`LABEL_IGNORE` an Gerät oder Entität, auch eigenen) → `spec.label`, schlägt den Panel-Schalter
   (Panel sperrt ihn), `pulse_ignore` schlägt `pulse_important`; Label-Wechsel → `_reobserve` wie Ignorieren per Schalter.
-- Beta Netzgeräte (`settings.mains_beta`, Standard an seit 26.10.9, Minor 8 schaltet es einmalig für alle ein): `discover(mains=True)` nimmt Geräte ohne Batterie: kein
+- Beta Netzgeräte (`settings.mains_beta`, Standard an): `discover(mains=True)` nimmt Geräte ohne Batterie: kein
   Dienst-Gerät (`entry_type`), Hauptintegration (meiste Entitäten ohne `HELPER_PLATFORMS` wie template/powercalc) ist
   eine lokale Hardware-Integration (`MAINS_INTEGRATIONS`, auch ohne Lampe: BLE-Proxy, Zigbee-Router) oder gibt ihm eine
   `MAINS_DOMAINS`-Entität ohne entity_category (jede Integration, z. B. Govee-Cloud, Chihiros) (MQTT nur mit IEEE =
@@ -96,8 +95,8 @@ es hört nur zu (Zustände, „gemeldet ohne Änderung“, Zigbee2MQTT-Nachricht
   gespeicherte Meldungen aus Ausfallzeiten (`rhythm.without_spans`). Ausfall = alle entscheidenden Entitäten gleichzeitig
   `unavailable` (`rhythm.device_outages`; Netzgerät: `main_entities`, sonst Konnektivität, sonst alle); nur `unavailable`
   ist weg, `unknown` ist da (Sirene!). Löschen laufender Ausfälle nur, wenn das Gerät jetzt nicht erreichbar ist.
-  Regression 26.10.12 (Reolink „Flur“ 10 Tage Meldungen gelöscht) → 26.10.13. Abrufe allgemein zu erkennen (Gleichschritt,
-  iot_class) wurde am 26.10. an Prod-Daten verworfen: kleine Integrationen nicht trennbar, ZHA meldet `local_polling`. Bewertung: nicht regelmäßig →
+  Abrufe allgemein erkennen (Gleichschritt, iot_class) geht nicht: kleine Integrationen nicht trennbar, ZHA meldet
+  `local_polling`. Bewertung: nicht regelmäßig →
   `ok_mains`, Stille zählt nicht, nur `unavailable`; regelmäßig (≤ `REGULAR_LONGEST`) → Stille zählt normal.
   Gelernte Erreichbarkeit: `record["outages"]` ([Start, Ende] ≥ `OUTAGE_MIN`, live in `_reachable_again`, beim Start aus
   dem Recorder `history.async_load_outages`; ein noch laufender Ausfall (`history.running_outage`) setzt
@@ -108,20 +107,20 @@ es hört nur zu (Zustände, „gemeldet ohne Änderung“, Zigbee2MQTT-Nachricht
   → `rhythm.usual_outage`;
   dann weg = `unavailable_usual` (watch), erst > max(2× längster, 1 Tag) `unavailable` check, nie failed.
   Push ohne „Batterie gewechselt“. Ausschalten → `_remove_vanished` entfernt die Entitäten.
-- Von Hand hinzugefügte Geräte (#2, 26.10.15): `settings.manual_devices` (Liste von device_ids, kein Minor nötig – neuer
+- Von Hand hinzugefügte Geräte: `settings.manual_devices` (Liste von device_ids, kein Minor nötig – neuer
   Einstellungs-Schlüssel mit Vorgabe), nur über `pulse/manual_device {device_id, add}` änderbar (nicht über `pulse/settings`),
   Auswahl `pulse/manual_candidates` (= `discovery.candidates`: alles, was der Hand-Weg baut und noch nicht überwacht ist).
-  `discover(manual=…)`: erst der automatische Weg (`_automatic`, unverändert – Trockenlauf 31.10. mit Prod-Registry: 140/46
-  Geräte identisch), nur wenn der ablehnt `_manual` (`spec.manual`, `mains=True`, Batterie ignoriert): unabhängig von
+  `discover(manual=…)`: erst der automatische Weg (`_automatic`, darf sich dadurch
+  nie ändern), nur wenn der ablehnt `_manual` (`spec.manual`, `mains=True`, Batterie ignoriert): unabhängig von
   `mains_beta`, umgeht EXCLUDED_DOMAINS und Medien-Zubehör, nicht `EXCLUDED_PLATFORMS`/Dienste/Helfer. Entitäten aller
   Nicht-Helfer-Integrationen; Erreichbarkeit = Konnektivitäts-Sensor (ohne `NOT_REACHABILITY`: mop/attach/cloud/wan …) oder
   Router-`device_tracker` (`spec.offline_state` „not_home“, GPS zählt nie: `monitor._offline`, `_reachable` „home“);
   `main_entities` = `MANUAL_DOMAINS` (Kamera, Media-Player, Sauger …), sonst MAINS_DOMAINS + remote, sonst leer (= alle).
   Grund `ok_manual`, Panel: Einstellungen → „Von Hand hinzugefügt“ (`pulse-add-sheet.ts`, Chip/Notiz im Detail),
   Netzgeräte-Zähler/Filter ohne Hand-Geräte. Neu hinzugefügt + bootstrapped → `async_bootstrap({id})` liest nur dessen Verlauf.
-- Mehr Geräte von selbst (26.10.16, Nachtrag #2): Media-Player einer `MAINS_INTEGRATIONS`-Integration (ESPHome Voice PE) = Netzgerät,
+- Mehr Geräte von selbst: Media-Player einer `MAINS_INTEGRATIONS`-Integration (ESPHome Voice PE) = Netzgerät,
   `main_entities` = Media-Player (nur wenn das einzige ausgeschlossene Domain `media_player` ist und keine Batterie), `smlight` in
-  `MAINS_INTEGRATIONS`; `NOT_REACHABILITY` auch ethernet/wifi/wlan/vpn (SLZB im WLAN: ethernet aus). Trockenlauf 31.10. Prod: 140/46 unverändert.
+  `MAINS_INTEGRATIONS`; `NOT_REACHABILITY` auch ethernet/wifi/wlan/vpn (SLZB im WLAN: ethernet aus).
   Offen: Z2M-Geräte ohne eingeschaltete Entität (`if not own: continue`, auch nicht von Hand wählbar).
 - Eigene Texte (`settings.templates`, je `TEMPLATE_KEYS` None = Standard): `notifier.compose` → `texts.render`
   (Platzhalter `TEMPLATE_VARS`, leere Werte verschwinden samt „ · “, `{area}` leer, wenn schon im Namen).
@@ -138,36 +137,8 @@ es hört nur zu (Zustände, „gemeldet ohne Änderung“, Zigbee2MQTT-Nachricht
   `entity.py`/`binary_sensor.py`/`sensor.py` (Entitäten hängen über `device_entry` am Gerät der anderen
   Integration – kein eigenes Gerät pro Sensor), `services.py`, `ws.py`, `panel.py`.
 
-**Panel** (`frontend/src/`): Lit, ein Element pro Datei (`pulse-*.ts`), `static properties` + `declare`, keine
-Decorators. Optik „Puls“ (Richtung C): Kopf = Zeichen + „Pulse“ + Reiter mit Unterstrich (`pulse-segmented`)
-Übersicht/Geräte/Mitteilungen/Einstellungen (`/pulse`, `/pulse/devices`, `/pulse/settings`, `/pulse/options`; beide letzten
-`pulse-settings` mit `page` notify|options, Einstellungen = Netzgeräte + Zigbee2MQTT; Reiterleiste wischt bei Platzmangel); Übersicht = große Schlagzeile
-(`hero`/`heroSentences` in `logic.ts`), „Dein Tag mit Pulse“ (`pulse-dayband`), Monitor mit einer Rhythmusleiste je
-Gerät (`pulse-rhythm`: bricht bei Stille ab, rot gestrichelt + „Seit X still“; „Im Takt“ ab 12 Geräten nach Raum
-einklappbar), Detail mit Herzschlag-Kalender (`pulse-heartbeat`, Daten per `pulse/heartbeat`, 15-min-Fenster je Kalendertag
-ab `day_starts` (Zeitumstellung: 92/100 Fenster) aus `BinCache` – nur bei neuer Meldung/neuem Tag neu gerechnet) und Partner-Vergleich. Dunkel leuchten die Leisten
-(`--pulse-glow`). Systemschrift, Container-Queries für schmale Panels, Pillen-Knöpfe + ⋮ (`ha-dropdown`),
-Listen als iOS-Inset-Listen (`.section`/`.list`/`.row` in `styles.ts`; Schalter-Zeilen sind als Ganzes tippbar,
-`.row.tappable`), Auswahl rechts in Zeilen über `pulse-picker` (ha-dropdown mit Haken; ab 13 Einträgen ein Blatt, das
-beim gewählten Wert steht – z. B. Uhrzeiten 24 h). `pulse-sheet` = Blatt (Desktop Dialog, Handy Bottom-Sheet mit
-Wischen, Seite dahinter gesperrt). Dunkel setzt das Panel `[dark]` → erhöhte Flächen (`--pulse-sheet-*`, `--pulse-raised`).
-Eine Akzentfarbe: das Panel überschreibt `--primary-color` und HAs Schalter-Farben mit Pulse-Violett. Touch-Ziele
-≥ 44 px über `--pu-hit`, Hover nur unter `@media (hover: hover)`. Zigbee-Lebenszeichen nur nach Rückfrage
-(Blatt im Panel), „Batterie gewechselt“ mit Rückgängig (`pulse/replaced_undo`, schließt das Blatt, sonst läge es
-über HAs Hinweis). Kopf ohne Hauptaktion; ⋮ in der App-Leiste. Willkommen/„Neu in Pulse“ in `pulse-welcome.ts` + `welcome.ts` (localStorage
-`pulse.seenVersion`; bei jedem Release WHATS_NEW ersetzen). Anzeige-Logik in `logic.ts` (getestet). Texte nur in `strings-<sprache>.ts` (en, de, fr, es, nl – neue Schlüssel immer in allen fünf; Server-Sätze: `texts.py` de/en + `texts_i18n.py` fr/es/nl, `translations/*.json`). Farben aus
-HA-Theme-Variablen (`styles.ts`, Akzent `--pulse-accent`). `www/pulse-panel.js` ist Build-Ausgabe.
-Panel 1.1: Schlagzeile stellt Probleme vorn („3 Geräte / brauchen dich.“ rot/orange, „7 von 10 im Takt.“ darunter,
-Verlauf nur wenn alle im Takt; `hero().tone/sub`). Zeiten über `formatWhen(…, now)`: heute nur Uhrzeit, < 6 Tage
-Wochentag, sonst Datum. Begriffe: Ausgefallen/Prüfen (= „Braucht dich“), Im Blick, Im Takt, Nicht überwacht.
-Stille aus `silence_start`/`strays` (Rückfall: eigene `silentIndex`-Rechnung), Stille-Linie spart `no_data` aus
-(`subtractSpans`). Neue Gründe `radio_only`, `battery_missing`, `startup_waiting`, `cloud_outage` (Cloud-Geräte nie
-Einzelalarm: grau, „Im Blick“, Sammelhinweis aus `summary.cloud_outages`). Vorhersage nur als grober Bereich
-(`forecastText`), Einkaufsliste aus `summary.due_batteries` (`dueLine`), Batterie-Kachel antippbar (Filter
-`battery`), wichtige Geräte mit Stern + Filter `important`. Funk-Zähler (`pulse/enable_z2m_health`) und
-Zigbee-Lebenszeichen auch unter Einstellungen → Zigbee2MQTT, nur nach Rückfrage. Partner-Vorschläge im Detail
-(`pulse/device {partner}` / `pulse/partner_suggestion_dismiss`). Abo-Fehler: letzter Stand bleibt + Hinweis.
-Panel-Version kommt aus `manifest.json` (vite.config) – nach dem Versionssprung neu bauen.
+**Panel** (`frontend/src/`): Lit. Aufbau, Optik und Begriffe stehen in `frontend/CLAUDE.md` (lädt automatisch,
+sobald Claude dort arbeitet).
 
 ## Regeln
 
@@ -179,7 +150,7 @@ Panel-Version kommt aus `manifest.json` (vite.config) – nach dem Versionssprun
   in Python `pytest` (Abdeckung ≥ 95 %), `uvx ruff@0.16.9 check . && uvx ruff@0.16.9 format --check .` (dieselbe
   Version wie in ci.yml), `uvx mypy@2.3.1 --python-executable <venv>/bin/python`,
   `python tools/pruefe-uebersetzungen.py` (strings.json gegen translations/*.json), hassfest per Docker.
-- Tests laufen mit der Recall-venv (Evenlight hat keine mehr): `LC_ALL=en_US.UTF-8 TZ=UTC ~/Software/recall/.venv/bin/python -m pytest -q -p no:logging`.
+- Tests laufen mit der Recall-venv: `LC_ALL=en_US.UTF-8 TZ=UTC ~/Software/recall/.venv/bin/python -m pytest -q -p no:logging`.
 - UI im eigenen Docker-Test-HA `pulse-test` (Port 8126, siehe ~/pulse-test/ZUGANG.txt) ansehen.
   flode-test, casora-test, evenlight-test gehören anderen Projekten.
 - unique_ids nicht ändern (`<device_id>_problem|status|last_report`, Hub `<entry_id>_problems|monitored`). Entity-IDs
@@ -189,13 +160,8 @@ Panel-Version kommt aus `manifest.json` (vite.config) – nach dem Versionssprun
 
 ## Release
 
-- **Kalender-Versionen `YY.M.N`** ab dem Release nach 1.1.0: Jahr zweistellig, Monat ohne führende Null, N = laufende
-  Nummer des Releases im Monat ab 1 (alle veröffentlichten GitHub-Releases des Monats zählen, auch alte X.Y.Z; bloße Tags nicht). Jedes Release – Funktion
-  oder Bugfix – bekommt einfach die nächste Nummer, kein Major/Minor/Patch mehr. Nummer: `tools/next-version`
-  (z. B. `26.10.4`; neuer Monat beginnt wieder bei `.1`; gemeinsame Vorlage aus repo-vorlagen, byteidentisch).
-  Nie führende Nullen (`26.3.1`, nicht `26.03.1`).
+- Versionen `YY.M.N` nur über `tools/next-version` (Regeln in der globalen CLAUDE.md), nie führende Nullen.
 - Version gleich in `custom_components/pulse/manifest.json` und `frontend/package.json`, Panel danach neu bauen
   (Version kommt über vite.config ins Panel), CHANGELOG-Abschnitt `## <version> – <datum>`, WHATS_NEW in
   `pulse-welcome.ts` (zeigt sich einmal pro Version).
 - Tag und Release-Titel ohne „v“ (`gh release create 26.10.4 --title "26.10.4"`), Notizen englisch.
-  HACS/HA vergleichen per AwesomeVersion: `26.10.x` gilt als neuer als `1.1.0`, `26.10.10` als neuer als `26.10.9`.
