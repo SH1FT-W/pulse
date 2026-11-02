@@ -136,7 +136,7 @@ es hört nur zu (Zustände, „gemeldet ohne Änderung“, Zigbee2MQTT-Nachricht
   Geräte, erst beim Heimkommen, keine Wiederholungen über `record["notified"]`, Aktionen aus der App).
 - `store.py` (.storage/pulse.devices: Meldungen, Einstellungen pro Gerät, Mitteilungs-Einstellungen; Minor 8: `outages`).
   `async_delay_save` plant nur, wenn nichts ansteht (HA verschiebt sonst bei jedem Aufruf – es wurde nie gespeichert).
-  Nicht mehr überwachte Geräte (noch in der Registry, mit eigenen Entitäten oder deaktiviert): Pulse-Entitäten
+  Nicht mehr überwachte Geräte (noch in der Registry, auch ganz ohne eigene Entitäten – MQTT löscht ein Gerät nicht, solange Pulse-Entitäten daran hängen) erst nach `CLEANUP_GRACE` (1 Std., Z2M/ESPHome legen Entitäten kurz neu an; `_vanished_since`, `_tick` schaut nach), bei Nutzeraktionen nur für die betroffenen Geräte sofort (`at_once`); deaktivierte Geräte nie (HA brächte die Entitäten sonst deaktiviert zurück): Pulse-Entitäten
   entfernen, Datensatz gekürzt behalten, `SIGNAL_REMOVED_DEVICES` → Plattformen vergessen sie (kommen neu wieder).
   Snapshot fürs Abo einmal je Update und Sprache (`snapshot_cached`).
   `entity.py`/`binary_sensor.py`/`sensor.py` (Entitäten hängen über `device_entry` am Gerät der anderen

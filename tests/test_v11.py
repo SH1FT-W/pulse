@@ -17,7 +17,7 @@ from pytest_homeassistant_custom_component.common import async_capture_events, a
 
 from common import SOURCE, add_device, report_back, seed, set_states, source_entry, standard_devices, tick
 from custom_components.pulse.const import DOMAIN, EVENT_BATTERY_REPLACED
-from custom_components.pulse.monitor import UPTIME_SAVE_EVERY, PulseMonitor
+from custom_components.pulse.monitor import CLEANUP_GRACE, UPTIME_SAVE_EVERY, PulseMonitor
 
 HOUR = 3600.0
 DAY = 86400.0
@@ -369,6 +369,8 @@ async def test_unmonitored_device_loses_and_regains_entities(hass: HomeAssistant
     monitor._rediscover()
     await hass.async_block_till_done()
     assert door.device_id not in monitor.devices
+    assert reg.async_get(problem) is not None  # erst nach der Wartezeit (Integration legt evtl. gerade neu an)
+    await tick(hass, setup["freezer"], timedelta(seconds=CLEANUP_GRACE + 60))
     assert reg.async_get(problem) is None and hass.states.get(problem) is None
     record = monitor.store.devices[door.device_id]
     assert len(record["events"]) == 100  # Datensatz bleibt, gekürzt

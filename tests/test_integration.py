@@ -19,7 +19,7 @@ from pytest_homeassistant_custom_component.common import (
 
 from common import add_device, report_back, seed, tick
 from custom_components.pulse.const import DOMAIN, EVENT_BATTERY_REPLACED, EVENT_STATUS_CHANGED
-from custom_components.pulse.monitor import PulseMonitor
+from custom_components.pulse.monitor import CLEANUP_GRACE, PulseMonitor
 
 
 async def test_single_instance(hass: HomeAssistant, setup):
@@ -678,17 +678,149 @@ async def test_vanished_device_cleans_up(hass: HomeAssistant, setup):
     assert entry is not None and entry.device_id == successor.device_id
 
 
-async def test_device_without_entities_keeps_pulse_entities(hass: HomeAssistant, setup):
-    """Gerät noch in der Registry (z. B. Integration gerade nicht geladen) → nichts löschen."""
+async def test_device_without_own_entities_loses_pulse_entities(hass: HomeAssistant, setup):
+    """Gerät in Z2M gelöscht: MQTT entfernt die Entitäten, das Gerät aber nicht, solange noch Pulse-Entitäten
+    daran hängen (mqtt `async_cleanup_device_registry`). Pulse muss seine drei Entitäten trotzdem entfernen –
+    nach einer Wartezeit, denn Z2M (Umbenennen) und ESPHome legen Entitäten kurz neu an."""
     monitor: PulseMonitor = setup["monitor"]
     devices = setup["devices"]
     door_id = devices["door"].device_id
     reg = er.async_get(hass)
+    problem = "binary_sensor.turkontakt_wohnungstur_pulse_problem"
+    seed(monitor, door_id, 60, 500, time.time())
     for entity_id in devices["door"].entities.values():
         reg.async_remove(entity_id)
     await hass.async_block_till_done()
     monitor._rediscover()
     await hass.async_block_till_done()
     assert door_id not in monitor.devices
-    assert door_id in monitor.store.devices
+    assert reg.async_get(problem) is not None  # Wartezeit läuft
+    assert len(monitor.store.devices[door_id]["events"]) == 500
+    await tick(hass, setup["freezer"], timedelta(seconds=CLEANUP_GRACE - 120))
+    assert reg.async_get(problem) is not None
+    await tick(hass, setup["freezer"], timedelta(minutes=3))
+    assert not er.async_entries_for_device(reg, door_id, include_disabled_entities=True)
+    assert hass.states.get(problem) is None
+    assert len(monitor.store.devices[door_id]["events"]) == 100  # Datensatz bleibt gekürzt, falls es wiederkommt
+    assert not monitor._vanished_since
+    # Leeres Gerät jetzt von Hand gelöscht → auch der Datensatz geht
+    dr.async_get(hass).async_remove_device(door_id)
+    await hass.async_block_till_done()
+    monitor._rediscover()
+    await hass.async_block_till_done()
+    assert door_id not in monitor.store.devices
+
+
+async def test_entities_recreated_quickly_keep_pulse_entities(hass: HomeAssistant, setup):
+    """Z2M-Umbenennen/ESPHome: alle Entitäten kurz weg und neu → Pulse-Entitäten und voller Datensatz bleiben."""
+    monitor: PulseMonitor = setup["monitor"]
+    door = setup["devices"]["door"]
+    reg = er.async_get(hass)
+    problem = "binary_sensor.turkontakt_wohnungstur_pulse_problem"
+    seed(monitor, door.device_id, 60, 500, time.time())
+    for entity_id in door.entities.values():
+        reg.async_remove(entity_id)
+    await hass.async_block_till_done()
+    monitor._rediscover()
+    await hass.async_block_till_done()
+    assert monitor._vanished_since
+    successor = add_device(
+        hass,
+        "door",
+        "Türkontakt Wohnungstür",
+        [("binary_sensor", "contact", "door"), ("sensor", "battery", "battery"), ("sensor", "voltage", "voltage")],
+        ieee="0x0002",
+    )
+    assert successor.device_id == door.device_id
+    hass.states.async_set(successor.entities["battery"], "90")
+    monitor._rediscover()
+    await tick(hass, setup["freezer"], timedelta(seconds=CLEANUP_GRACE + 60))
+    assert door.device_id in monitor.devices and not monitor._vanished_since
+    assert reg.async_get(problem) is not None
+    assert len(monitor.store.devices[door.device_id]["events"]) >= 500
+
+
+async def test_helper_entity_left_still_waits(hass: HomeAssistant, setup):
+    """Z2M legt neu an, eine powercalc-Entität bleibt am Gerät → trotzdem Wartezeit, voller Datensatz bleibt."""
+    monitor: PulseMonitor = setup["monitor"]
+    door = setup["devices"]["door"]
+    reg = er.async_get(hass)
+    problem = "binary_sensor.turkontakt_wohnungstur_pulse_problem"
+    reg.async_get_or_create("sensor", "powercalc", "door_power", device_id=door.device_id)
+    seed(monitor, door.device_id, 60, 500, time.time())
+    for entity_id in door.entities.values():
+        reg.async_remove(entity_id)
+    await hass.async_block_till_done()
+    monitor._rediscover()
+    await hass.async_block_till_done()
+    assert door.device_id not in monitor.devices
+    assert reg.async_get(problem) is not None
+    assert len(monitor.store.devices[door.device_id]["events"]) == 500
+
+
+async def test_marker_dropped_when_pulse_entities_removed_elsewhere(hass: HomeAssistant, setup, monkeypatch):
+    """Pulse-Entitäten in der Wartezeit von Hand gelöscht → kein Merker bleibt, kein discover jede Minute."""
+    monitor: PulseMonitor = setup["monitor"]
+    door = setup["devices"]["door"]
+    reg = er.async_get(hass)
+    for entity_id in door.entities.values():
+        reg.async_remove(entity_id)
+    await hass.async_block_till_done()
+    monitor._rediscover()
+    assert monitor._vanished_since
+    for entry in [e for e in reg.entities.values() if e.platform == DOMAIN and e.unique_id.startswith(door.device_id)]:
+        reg.async_remove(entry.entity_id)
+    await tick(hass, setup["freezer"], timedelta(seconds=10))  # entprelltes discover nach den Registry-Events
+    assert not monitor._vanished_since
+    calls: list[bool] = []
+    monkeypatch.setattr(monitor, "_rediscover", lambda at_once=False: calls.append(at_once))
+    await tick(hass, setup["freezer"], timedelta(seconds=CLEANUP_GRACE + 60))
+    await tick(hass, setup["freezer"], timedelta(minutes=1))
+    assert not calls
+
+
+async def test_user_action_spares_unrelated_waiting_device(hass: HomeAssistant, setup):
+    """Netzgeräte-Beta umgeschaltet, während Z2M ein anderes Gerät neu anlegt → dessen Wartezeit gilt weiter."""
+    monitor: PulseMonitor = setup["monitor"]
+    door = setup["devices"]["door"]
+    reg = er.async_get(hass)
+    seed(monitor, door.device_id, 60, 500, time.time())
+    for entity_id in door.entities.values():
+        reg.async_remove(entity_id)
+    await hass.async_block_till_done()
+    monitor._rediscover()
+    monitor.async_rediscover()
+    await hass.async_block_till_done()
     assert reg.async_get("binary_sensor.turkontakt_wohnungstur_pulse_problem") is not None
+    assert len(monitor.store.devices[door.device_id]["events"]) == 500
+
+
+async def test_disabled_device_keeps_pulse_entities_for_return(hass: HomeAssistant, setup):
+    """Gerät > 1 Std. deaktiviert, dann wieder aktiv → Pulse-Entitäten aktiv zurück (nicht disabled_by=device)."""
+    monitor: PulseMonitor = setup["monitor"]
+    door = setup["devices"]["door"]
+    reg = er.async_get(hass)
+    problem = "binary_sensor.turkontakt_wohnungstur_pulse_problem"
+    dr.async_get(hass).async_update_device(door.device_id, disabled_by=dr.DeviceEntryDisabler.USER)
+    await tick(hass, setup["freezer"], timedelta(seconds=10))
+    assert door.device_id not in monitor.devices
+    await tick(hass, setup["freezer"], timedelta(seconds=CLEANUP_GRACE + 60))
+    assert reg.async_get(problem) is not None and not monitor._vanished_since
+    dr.async_get(hass).async_update_device(door.device_id, disabled_by=None)
+    await tick(hass, setup["freezer"], timedelta(seconds=10))
+    entry = reg.async_get(problem)
+    assert entry is not None and entry.disabled_by is None
+    assert door.device_id in monitor.devices
+
+
+async def test_unloaded_integration_keeps_pulse_entities(hass: HomeAssistant, setup):
+    """Fremde Integration nicht geladen (HA-Start, Setup-Fehler): Registry-Einträge bleiben → nichts entfernen."""
+    monitor: PulseMonitor = setup["monitor"]
+    door = setup["devices"]["door"]
+    for entity_id in door.entities.values():
+        hass.states.async_remove(entity_id)
+    await hass.async_block_till_done()
+    monitor._rediscover()
+    await tick(hass, setup["freezer"], timedelta(seconds=CLEANUP_GRACE + 60))
+    assert door.device_id in monitor.devices and not monitor._vanished_since
+    assert er.async_get(hass).async_get("binary_sensor.turkontakt_wohnungstur_pulse_problem") is not None

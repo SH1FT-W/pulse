@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import asyncio
 from bisect import bisect_left, bisect_right
-from collections.abc import Callable
+from collections.abc import Callable, Collection
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from functools import partial
@@ -126,6 +126,9 @@ DAY = 86400.0
 YIELD_EVERY = 2000
 # Devices no longer monitored: this many reports stay in the record
 TRIM_KEEP = 100
+# A device that is still registered but no longer found is cleaned up only after this long: Zigbee2MQTT (renaming
+# with new entity IDs, discovery switched off/on) and ESPHome remove and recreate all entities within seconds
+CLEANUP_GRACE = 60 * 60
 # Cloud outage: at least this many devices of the same cloud whose silence began this close together
 CLOUD_OUTAGE_MIN = 2
 CLOUD_SPREAD = 2 * 3600.0
@@ -278,6 +281,7 @@ class PulseMonitor:
         self._snapshots: dict[str | None, tuple[int, dict[str, Any]]] = {}
         self.started_at = time.time()
         self._z2m_tried = self.started_at  # last attempt to subscribe to Zigbee2MQTT
+        self._vanished_since: dict[str, float] = {}  # device_id → monotonic time first seen registered but not found
         self._uptime_saved = self.started_at  # uptime stamp last handed over for saving
         self._rediscover_debouncer = Debouncer(
             hass, _LOGGER, cooldown=5, immediate=False, function=self._async_rediscover
@@ -393,16 +397,16 @@ class PulseMonitor:
 
     @callback
     def async_rediscover(self) -> None:
-        """Find devices again now (setting `mains_beta` switched)."""
+        """Find devices again now (setting `mains_beta` switched): the mains devices go at once (user's choice)."""
         if not self._stopped:
-            self._rediscover()
+            self._rediscover(at_once={d for d, device in self.devices.items() if device.spec.mains})
 
     async def _async_rediscover(self) -> None:
         if not self._stopped:
             self._rediscover()
 
     @callback
-    def _rediscover(self) -> None:
+    def _rediscover(self, at_once: Collection[str] = ()) -> None:
         specs = discover(
             self.hass,
             mains=bool(self.store.settings.get("mains_beta")),
@@ -442,7 +446,7 @@ class PulseMonitor:
             self.bins.forget(device_id)
             self.rhythms.forget(device_id)
             ir.async_delete_issue(self.hass, DOMAIN, f"failed_{device_id}")
-        self._remove_vanished(specs)
+        self._remove_vanished(specs, at_once)
         self._entity_map = {e: d.device_id for d in self.devices.values() for e in d.spec.entities}
         self._alive = set(self._entity_map)
         for d in self.devices.values():
@@ -459,32 +463,45 @@ class PulseMonitor:
         self.async_update()
 
     @callback
-    def _remove_vanished(self, specs: dict[str, DeviceSpec]) -> None:
+    def _remove_vanished(self, specs: dict[str, DeviceSpec], at_once: Collection[str] = ()) -> None:
         """Clean up devices that are no longer monitored.
 
         - Device gone for good (e.g. integration replaced): remove own entities and record; otherwise
           the Pulse entities stay orphaned and the successor device gets `_2` IDs.
-        - Device still there but no longer monitored (battery entity gone, device disabled): remove own
-          entities, keep the record (reports trimmed); if it comes back they are recreated
-          (same unique_id, same entity ID).
-        - Device without own entities (integration currently not loaded/being rebuilt): touch nothing.
+        - Device disabled: touch nothing. HA disables our entities with it and only re-enables existing ones;
+          removed ones would come back with `disabled_by=device` from `deleted_entities` and stay disabled.
+        - Device still there but no longer monitored (battery entity gone, all its entities removed): after
+          `CLEANUP_GRACE` (`_tick` looks again) remove own entities, keep the record (reports trimmed); if it comes
+          back they are recreated (same unique_id, same entity ID). A device deleted in Zigbee2MQTT stays in the
+          registry while any entity hangs on it (mqtt `async_cleanup_device_registry` counts ours too), so waiting
+          for it to go would keep the Pulse entities orphaned forever. The grace period is there because Zigbee2MQTT
+          and ESPHome remove and recreate all entities of a device within seconds. An integration that is merely not
+          loaded keeps its registry entries; the device is then still discovered and never gets here. `at_once`:
+          devices the user just changed (mains devices when the beta is switched, the device added/removed by hand),
+          no grace period for them.
         """
         devices = dr.async_get(self.hass)
         entities = er.async_get(self.hass)
         gone: set[str] = set()
         unmonitored: set[str] = set()
+        clock = time.monotonic()
+        waiting: dict[str, float] = {}
         for entry in er.async_entries_for_config_entry(entities, self.entry.entry_id):
             device_id = entry.unique_id.split("_", 1)[0]
             if not _DEVICE_ID.fullmatch(device_id) or device_id in specs:
                 continue
-            device = devices.async_get(device_id)
-            if device is None:
+            if (device := devices.async_get(device_id)) is None:
                 gone.add(device_id)
-            elif self._no_longer_monitored(entities, device_id, device.disabled_by is not None):
-                unmonitored.add(device_id)
-            else:
+            elif device.disabled_by is not None:
                 continue
+            else:
+                since = waiting.setdefault(device_id, self._vanished_since.get(device_id, clock))
+                if device_id not in at_once and clock - since < CLEANUP_GRACE:
+                    continue
+                unmonitored.add(device_id)
             entities.async_remove(entry.entity_id)
+        # Rebuilt on every pass: devices whose Pulse entities went another way leave no marker behind
+        self._vanished_since = {d: t for d, t in waiting.items() if d not in unmonitored}
         gone |= {d for d in self.store.devices if d not in specs and devices.async_get(d) is None}
         for device_id in gone:
             if self.store.devices.pop(device_id, None) is not None:
@@ -497,13 +514,6 @@ class PulseMonitor:
         if gone or unmonitored:
             _LOGGER.info("%s devices are no longer monitored, cleaned up", len(gone | unmonitored))
             async_dispatcher_send(self.hass, SIGNAL_REMOVED_DEVICES, sorted(gone | unmonitored))
-
-    @staticmethod
-    def _no_longer_monitored(entities: er.EntityRegistry, device_id: str, disabled: bool) -> bool:
-        """Device disabled or still has its own entities (so deliberately no longer monitored)."""
-        return disabled or any(
-            e.platform != DOMAIN and e.disabled_by is None for e in er.async_entries_for_device(entities, device_id)
-        )
 
     def battery_level(self, device: Device) -> float | None:
         """Current battery value (percent, for warning sensors 5 = low)."""
@@ -934,6 +944,8 @@ class PulseMonitor:
             self.notifier.async_end_tick()
         self._announce_cloud_outages()
         self.notifier.async_tick_summary()
+        if self._vanished_since and time.monotonic() - min(self._vanished_since.values()) >= CLEANUP_GRACE:
+            self._rediscover()  # devices no longer found for long enough: clean up their Pulse entities
         if (
             self.z2m is None
             and "mqtt" in self.hass.config.components
@@ -1383,7 +1395,7 @@ class PulseMonitor:
         self.store.settings = {**self.store.settings, "manual_devices": manual}
         self.store.async_delay_save()
         was = device_id in self.devices
-        self._rediscover()
+        self._rediscover(at_once={device_id})
         if add and not was and device_id in self.devices and self.bootstrapped:
             # Learn its rhythm and past outages from the recorder right away, as after a start
             self.hass.async_create_task(self.async_bootstrap({device_id}), eager_start=False)

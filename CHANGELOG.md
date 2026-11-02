@@ -2,6 +2,12 @@
 
 After 1.1.0, releases use calendar versions `YY.M.N` (year, month, number of the release in that month), e.g. `26.10.4`. They count as newer than every 1.x version, so updates through HACS work as before.
 
+## 26.11.4 – 2026-11-02
+
+### Fixed
+- Pulse now removes its own entities (problem, status, last report) when a device has no entities of its own left, for example after deleting it in Zigbee2MQTT. Before, they stayed behind as "unavailable", and the empty device could not go away either, because Home Assistant's MQTT integration only removes a device once no entities are attached to it, Pulse's included. Pulse keeps the shortened record; if the device comes back, its entities return with the same IDs. Leftovers from earlier versions are cleaned up an hour after Pulse starts. The empty device itself stays in Home Assistant until you delete it.
+- Pulse now waits an hour before it cleans up a device that is still in Home Assistant but no longer monitored, because Zigbee2MQTT (renaming a device with new entity IDs) and ESPHome briefly remove and recreate all entities of a device. Before, such a moment could cost a device its Pulse entities and most of its learned reports. Changes you make yourself (Mains devices beta, devices added by hand) still apply at once to the devices they concern. A disabled device keeps its (disabled) Pulse entities, so they come back enabled with the device.
+
 ## 26.11.3 – 2026-11-02
 
 ### Added
