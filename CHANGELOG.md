@@ -2,6 +2,11 @@
 
 After 1.1.0, releases use calendar versions `YY.M.N` (year, month, number of the release in that month), e.g. `26.10.4`. They count as newer than every 1.x version, so updates through HACS work as before.
 
+## 26.11.2 – 2026-11-02
+
+### Fixed
+- Setup no longer stops at the first step with "Unknown error" when an integration registers device identifiers with more than two parts, as the core HVV Departures integration does (#6). Pulse only reads the first two parts and leaves such devices alone.
+
 ## 26.11.1 – 2026-11-01
 
 ### Added

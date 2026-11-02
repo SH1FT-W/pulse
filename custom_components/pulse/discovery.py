@@ -151,9 +151,10 @@ def icon_for(entries: list[er.RegistryEntry], mains: bool = False, manual: bool 
 
 
 def ieee_of(device: dr.DeviceEntry) -> str | None:
-    for domain, ident in device.identifiers:
-        if domain == "mqtt" and ident.startswith("zigbee2mqtt_0x"):
-            return ident.removeprefix("zigbee2mqtt_")
+    # Identifiers are not always pairs (core hvv_departures registers 4-tuples), so never unpack a fixed length
+    for ident in device.identifiers:
+        if len(ident) >= 2 and ident[0] == "mqtt" and str(ident[1]).startswith("zigbee2mqtt_0x"):
+            return str(ident[1]).removeprefix("zigbee2mqtt_")
     return None
 
 
