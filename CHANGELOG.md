@@ -2,6 +2,11 @@
 
 After 1.1.0, releases use calendar versions `YY.M.N` (year, month, number of the release in that month), e.g. `26.10.4`. They count as newer than every 1.x version, so updates through HACS work as before.
 
+## 26.11.3 – 2026-11-02
+
+### Added
+- **Remind later for longer** (#7). "Remind later" in the device sheet and in the device menu now offers tomorrow, in a week or in a month instead of only tomorrow. Notifications get a second action "Remind in a week" next to "Remind tomorrow" (three actions with "Battery replaced", the most Android shows). The `pulse.snooze` action already took up to a year. "New in Pulse" says so.
+
 ## 26.11.2 – 2026-11-02
 
 ### Fixed

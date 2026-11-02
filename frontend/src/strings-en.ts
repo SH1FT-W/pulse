@@ -34,8 +34,13 @@ export const EN = {
   off: 'Off',
   replaced: 'Battery replaced',
   replaced_done: 'Change recorded',
-  later: 'Remind tomorrow',
-  later_done: 'Pulse will remind you tomorrow',
+  later: 'Remind later',
+  later_24: 'Remind tomorrow',
+  later_168: 'Remind in a week',
+  later_720: 'Remind in a month',
+  later_done_24: 'Pulse will remind you tomorrow',
+  later_done_168: 'Pulse will remind you in a week',
+  later_done_720: 'Pulse will remind you in a month',
   snoozed_until: 'Reminds {when}',
   details: 'Details',
   ignore: 'Not monitored',
@@ -364,6 +369,9 @@ export const EN = {
   new_unreachable_title: 'Important devices sooner',
   new_unreachable_text:
     'How long an important device may be unreachable before Pulse says “Check” is now up to you, under Settings › Special cases: 2, 5, 10 or 20 minutes.',
+  new_snooze_title: 'Remind me later',
+  new_snooze_text:
+    '“Remind later” now offers tomorrow, in a week or in a month. Notifications also get “Remind in a week”.',
   new_local_title: 'More devices by themselves',
   new_local_text:
     'ESPHome voice assistants like the Home Assistant Voice PE and SMLIGHT coordinators are now watched by themselves. A coordinator on Wi-Fi no longer counts as gone just because its Ethernet is off.',

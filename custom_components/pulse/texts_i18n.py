@@ -64,6 +64,7 @@ MORE_TEXTS: dict[str, dict[str, str]] = {
         "push_test_msg": "Voici à quoi ressemblent les notifications de Pulse.",
         "action_replaced": "Pile remplacée",
         "action_later": "Rappeler demain",
+        "action_later_week": "Rappeler dans une semaine",
     },
     "es": {
         "silent": "En silencio desde hace {since}. Suele dar señales {every}.",
@@ -120,6 +121,7 @@ MORE_TEXTS: dict[str, dict[str, str]] = {
         "push_test_msg": "Así se ven las notificaciones de Pulse.",
         "action_replaced": "Pila cambiada",
         "action_later": "Recordar mañana",
+        "action_later_week": "Recordar en una semana",
     },
     "nl": {
         "silent": "Al {since} stil. Meldt zich normaal {every}.",
@@ -176,5 +178,6 @@ MORE_TEXTS: dict[str, dict[str, str]] = {
         "push_test_msg": "Zo zien meldingen van Pulse eruit.",
         "action_replaced": "Batterij vervangen",
         "action_later": "Morgen herinneren",
+        "action_later_week": "Over een week herinneren",
     },
 }

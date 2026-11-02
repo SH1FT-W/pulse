@@ -36,8 +36,13 @@ export const DE: Record<keyof typeof EN, string> = {
   off: 'Aus',
   replaced: 'Batterie gewechselt',
   replaced_done: 'Wechsel eingetragen',
-  later: 'Morgen erinnern',
-  later_done: 'Pulse erinnert dich morgen',
+  later: 'Später erinnern',
+  later_24: 'Morgen erinnern',
+  later_168: 'In einer Woche erinnern',
+  later_720: 'In einem Monat erinnern',
+  later_done_24: 'Pulse erinnert dich morgen',
+  later_done_168: 'Pulse erinnert dich in einer Woche',
+  later_done_720: 'Pulse erinnert dich in einem Monat',
   snoozed_until: 'Erinnert {when}',
   details: 'Details',
   ignore: 'Nicht überwacht',
@@ -366,6 +371,9 @@ export const DE: Record<keyof typeof EN, string> = {
   new_unreachable_title: 'Wichtige Geräte schneller',
   new_unreachable_text:
     'Wie lange ein wichtiges Gerät nicht erreichbar sein darf, bis Pulse „Prüfen“ meldet, stellst du unter Einstellungen › Besonderes ein: 2, 5, 10 oder 20 Minuten.',
+  new_snooze_title: 'Länger erinnern',
+  new_snooze_text:
+    '„Später erinnern“ bietet jetzt morgen, in einer Woche oder in einem Monat an. In der Mitteilung gibt es dafür zusätzlich „In einer Woche erinnern“.',
   new_local_title: 'Mehr Geräte von selbst',
   new_local_text:
     'Sprachassistenten mit ESPHome wie der Home Assistant Voice PE und SMLIGHT-Koordinatoren werden jetzt von selbst überwacht. Ein Koordinator im WLAN gilt nicht mehr als weg, nur weil sein Ethernet aus ist.',

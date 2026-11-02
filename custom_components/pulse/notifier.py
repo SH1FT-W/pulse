@@ -14,6 +14,7 @@ from homeassistant.util import dt as dt_util
 from . import battery as batt, forecast as fc
 from .const import (
     ACTION_LATER,
+    ACTION_LATER_WEEK,
     ACTION_REPLACED,
     BATTERY_REASONS,
     NOTIFY_DAILY,
@@ -21,6 +22,7 @@ from .const import (
     NOTIFY_OFF,
     SEVERITY,
     SILENT_REASONS,
+    SNOOZE_WEEK_HOURS,
     STATUS_CHECK,
     STATUS_FAILED,
 )
@@ -434,12 +436,17 @@ class Notifier:
         }
         if actions:
             later = {"action": f"{ACTION_LATER}{SEP}{device.device_id}", "title": text(self.language, "action_later")}
+            week = {
+                "action": f"{ACTION_LATER_WEEK}{SEP}{device.device_id}",
+                "title": text(self.language, "action_later_week"),
+            }
             replaced = {
                 "action": f"{ACTION_REPLACED}{SEP}{device.device_id}",
                 "title": text(self.language, "action_replaced"),
             }
             # Mains-powered (beta): there is no battery to change
-            data["actions"] = [later] if device.spec.mains else [replaced, later]
+            # Android shows at most three actions
+            data["actions"] = [later, week] if device.spec.mains else [replaced, later, week]
         if critical:
             data["push"] = {"sound": {"name": "default", "critical": 1, "volume": 1.0}}
             data["channel"] = "alarm_stream"  # Android: klingelt auch bei „Nicht stören“
@@ -552,3 +559,5 @@ class Notifier:
             self.monitor.mark_replaced(device_id, "manual")
         elif kind == ACTION_LATER:
             self.monitor.snooze(device_id, 24)
+        elif kind == ACTION_LATER_WEEK:
+            self.monitor.snooze(device_id, SNOOZE_WEEK_HOURS)

@@ -38,8 +38,13 @@ export const FR: Record<keyof typeof EN, string> = {
   off: 'Désactivé',
   replaced: 'Pile remplacée',
   replaced_done: 'Changement enregistré',
-  later: 'Rappeler demain',
-  later_done: 'Pulse vous le rappellera demain',
+  later: 'Rappeler plus tard',
+  later_24: 'Rappeler demain',
+  later_168: 'Rappeler dans une semaine',
+  later_720: 'Rappeler dans un mois',
+  later_done_24: 'Pulse vous le rappellera demain',
+  later_done_168: 'Pulse vous le rappellera dans une semaine',
+  later_done_720: 'Pulse vous le rappellera dans un mois',
   snoozed_until: 'Rappel {when}',
   details: 'Détails',
   ignore: 'Non surveillé',
@@ -374,6 +379,9 @@ export const FR: Record<keyof typeof EN, string> = {
   new_unreachable_title: 'Appareils importants plus tôt',
   new_unreachable_text:
     'Combien de temps un appareil important peut rester injoignable avant que Pulse indique « À vérifier » : à choisir sous Paramètres › Cas particuliers : 2, 5, 10 ou 20 minutes.',
+  new_snooze_title: 'Rappel plus tard',
+  new_snooze_text:
+    '« Rappeler plus tard » propose maintenant demain, dans une semaine ou dans un mois. Les notifications ont aussi « Rappeler dans une semaine ».',
   new_local_title: 'Plus d’appareils tout seuls',
   new_local_text:
     'Les assistants vocaux ESPHome comme le Home Assistant Voice PE et les coordinateurs SMLIGHT sont désormais surveillés tout seuls. Un coordinateur en Wi-Fi ne compte plus comme absent simplement parce que son Ethernet est coupé.',

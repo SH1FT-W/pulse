@@ -484,6 +484,20 @@ export function needsAction(device: Device): boolean {
 }
 
 /** Reasons of the "Batterie" (battery) level (like `BATTERY_REASONS` on the server). */
+/** "Remind me" periods in the panel (#7): tomorrow, in a week, in a month. The server allows up to a year. */
+export const SNOOZE_CHOICES = [
+  { value: 'later_24', hours: 24, done: 'later_done_24' },
+  { value: 'later_168', hours: 168, done: 'later_done_168' },
+  { value: 'later_720', hours: 720, done: 'later_done_720' },
+] as const;
+
+export type SnoozeChoice = (typeof SNOOZE_CHOICES)[number];
+
+/** Snooze choice for a menu value (`later_24` …), otherwise null. */
+export function snoozeChoice(value: string | null): SnoozeChoice | null {
+  return SNOOZE_CHOICES.find((c) => c.value === value) ?? null;
+}
+
 export const BATTERY_REASONS: ReadonlySet<string> = new Set(['battery_low', 'battery_low_flag']);
 
 /** "Batterie gewechselt" (battery changed) is the main action only for a battery reason, else "Morgen erinnern". */

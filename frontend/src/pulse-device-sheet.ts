@@ -1,5 +1,5 @@
 import { css, html, LitElement, nothing, type PropertyValues } from 'lit';
-import { defineOnce, navigateTo } from './ha';
+import { defineOnce, dropdownValue, navigateTo } from './ha';
 import {
   ago,
   axisColumns,
@@ -23,8 +23,10 @@ import {
   partnerSuggestions,
   rhythmPill,
   rhythmTone,
+  SNOOZE_CHOICES,
   shortDate,
   silentIndex,
+  snoozeChoice,
   type TimeFormat,
   tone,
 } from './logic';
@@ -246,6 +248,11 @@ export class PulseDeviceSheet extends LitElement {
     </div>`;
   }
 
+  private onLater(d: Device, event: Event): void {
+    const value = dropdownValue(event);
+    if (snoozeChoice(value)) this.fire('later', { id: d.id, choice: value });
+  }
+
   private renderBody(d: Device) {
     const lang = this.language;
     const b = d.battery;
@@ -289,9 +296,12 @@ export class PulseDeviceSheet extends LitElement {
             <span class="muted small">${t(lang, 'snoozed_until', { when: formatWhen(lang, d.snooze_until, this.now, zone, this.timeFormat) })}</span>
             <button class="pbtn" type="button" @click=${() => this.fire('snooze-cancel', { id: d.id })}>${t(lang, 'snooze_cancel')}</button>
           </span>`
-        : html`<button class=${primary ? 'pbtn primary' : 'pbtn'} type="button" @click=${() => this.fire('later', { id: d.id })}>
-            <ha-icon icon="mdi:bell-sleep-outline"></ha-icon>${t(lang, 'later')}
-          </button>`;
+        : html`<ha-dropdown placement="bottom-start" @wa-select=${(e: Event) => this.onLater(d, e)}>
+            <button slot="trigger" class=${primary ? 'pbtn primary' : 'pbtn'} type="button">
+              <ha-icon icon="mdi:bell-sleep-outline"></ha-icon>${t(lang, 'later')}
+            </button>
+            ${SNOOZE_CHOICES.map((c) => html`<ha-dropdown-item value=${c.value}>${t(lang, c.value)}</ha-dropdown-item>`)}
+          </ha-dropdown>`;
     // Battery reason: "Batterie gewechselt" (battery changed) first; otherwise remind is the sensible main action
     const battery = batteryFirst(d);
     const mains = d.mains === true;

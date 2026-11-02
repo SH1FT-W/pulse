@@ -62,6 +62,7 @@ import {
   rhythmPill,
   rhythmTone,
   rowTime,
+  SNOOZE_CHOICES,
   search,
   settingsHero,
   shortDate,
@@ -70,6 +71,7 @@ import {
   silenceStart,
   silentIndex,
   sinceDay,
+  snoozeChoice,
   span,
   statusWord,
   strays,
@@ -1136,5 +1138,28 @@ describe('devices added by hand', () => {
       'Küche · Alexa media'
     );
     expect(applyFilter(list, 'mains').map((d) => d.id)).toEqual(['p']);
+  });
+});
+
+describe('snoozeChoice (#7)', () => {
+  it('offers tomorrow, a week and a month', () => {
+    expect(SNOOZE_CHOICES.map((c) => c.hours)).toEqual([24, 168, 720]);
+    expect(snoozeChoice('later_168')?.hours).toBe(168);
+    expect(snoozeChoice('later_720')?.done).toBe('later_done_720');
+  });
+
+  it('ignores other menu values', () => {
+    expect(snoozeChoice('later')).toBeNull();
+    expect(snoozeChoice('details')).toBeNull();
+    expect(snoozeChoice(null)).toBeNull();
+  });
+
+  it('has a label and a confirmation in every language', () => {
+    for (const lang of ['en', 'de', 'fr', 'es', 'nl'])
+      for (const c of SNOOZE_CHOICES) {
+        expect(t(lang, c.value)).not.toBe('');
+        expect(t(lang, c.done)).not.toBe('');
+      }
+    expect(t('de', 'later_168')).toBe('In einer Woche erinnern');
   });
 });

@@ -421,6 +421,18 @@ async def test_notification_actions(hass: HomeAssistant, setup):
     assert len(monitor.devices[thermo_id].record["replaced"]) == 1
 
 
+async def test_notification_action_week(hass: HomeAssistant, setup):
+    """#7: "Remind in a week" from the notification snoozes for seven days, not one."""
+    monitor = setup["monitor"]
+    thermo_id = setup["devices"]["thermo"].device_id
+    before = time.time()
+    hass.bus.async_fire("mobile_app_notification_action", {"action": f"PULSE_LATER_WEEK::{thermo_id}"})
+    await hass.async_block_till_done()
+    until = monitor.devices[thermo_id].record["snooze_until"]
+    assert until is not None
+    assert 7 * 86400 - 60 <= until - before <= 7 * 86400 + 60
+
+
 async def test_daily_summary(hass: HomeAssistant, setup):
     monitor = setup["monitor"]
     devices = setup["devices"]

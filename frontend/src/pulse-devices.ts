@@ -14,8 +14,10 @@ import {
   rhythmPill,
   rhythmTone,
   rowTime,
+  SNOOZE_CHOICES,
   search,
   silentIndex,
+  snoozeChoice,
   statusKey,
   statusWord,
   type TimeFormat,
@@ -121,7 +123,7 @@ export class PulseDevices extends LitElement {
     const value = dropdownValue(event);
     if (value === 'details') this.fire('open', { id: device.id });
     else if (value === 'replaced') this.fire('replaced', { id: device.id });
-    else if (value === 'later') this.fire('later', { id: device.id });
+    else if (snoozeChoice(value)) this.fire('later', { id: device.id, choice: value });
     else if (value === 'important')
       this.fire('device-change', {
         id: device.id,
@@ -163,7 +165,14 @@ export class PulseDevices extends LitElement {
           </ha-icon-button>
           <ha-dropdown-item value="details"><ha-icon slot="icon" icon="mdi:information-outline"></ha-icon>${t(lang, 'details')}</ha-dropdown-item>
           ${d.mains ? nothing : html`<ha-dropdown-item value="replaced"><ha-icon slot="icon" icon="mdi:battery-sync-outline"></ha-icon>${t(lang, 'replaced')}</ha-dropdown-item>`}
-          ${needsAction(d) ? html`<ha-dropdown-item value="later"><ha-icon slot="icon" icon="mdi:bell-sleep-outline"></ha-icon>${t(lang, 'later')}</ha-dropdown-item>` : nothing}
+          ${
+            needsAction(d)
+              ? SNOOZE_CHOICES.map(
+                  (c) =>
+                    html`<ha-dropdown-item value=${c.value}><ha-icon slot="icon" icon="mdi:bell-sleep-outline"></ha-icon>${t(lang, c.value)}</ha-dropdown-item>`
+                )
+              : nothing
+          }
           ${
             d.ignored || d.label
               ? nothing

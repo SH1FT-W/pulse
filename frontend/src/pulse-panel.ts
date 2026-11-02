@@ -21,6 +21,7 @@ import {
   parseCandidates,
   parseSpans,
   RETRY_FIRST,
+  snoozeChoice,
   timeFormatOf,
   validTimeZone,
 } from './logic';
@@ -616,11 +617,14 @@ export class PulsePanel extends LitElement {
           this.openId = e.detail.id;
         }}
         @replaced=${(e: CustomEvent<{ id: string }>) => void this.onReplaced(e.detail.id)}
-        @later=${(e: CustomEvent<{ id: string }>) =>
-          void this.call(
-            { type: 'pulse/snooze', device_id: e.detail.id, hours: 24 },
-            t(lang, 'later_done')
-          )}
+        @later=${(e: CustomEvent<{ id: string; choice: string }>) => {
+          const choice = snoozeChoice(e.detail.choice);
+          if (choice)
+            void this.call(
+              { type: 'pulse/snooze', device_id: e.detail.id, hours: choice.hours },
+              t(lang, choice.done)
+            );
+        }}
         @snooze-cancel=${(e: CustomEvent<{ id: string }>) =>
           void this.call(
             { type: 'pulse/snooze', device_id: e.detail.id, hours: 0 },

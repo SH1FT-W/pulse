@@ -68,6 +68,7 @@ TEXTS: dict[str, dict[str, str]] = {
         "push_test_msg": "So sehen Mitteilungen von Pulse aus.",
         "action_replaced": "Batterie gewechselt",
         "action_later": "Morgen erinnern",
+        "action_later_week": "In einer Woche erinnern",
     },
     "en": {
         "silent": "Silent for {since}. Usually reports {every}.",
@@ -124,6 +125,7 @@ TEXTS: dict[str, dict[str, str]] = {
         "push_test_msg": "This is what notifications from Pulse look like.",
         "action_replaced": "Battery replaced",
         "action_later": "Remind tomorrow",
+        "action_later_week": "Remind in a week",
     },
 }
 

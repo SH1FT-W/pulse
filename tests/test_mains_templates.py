@@ -89,14 +89,14 @@ async def test_mains_beta_switch(hass: HomeAssistant, setup, hass_ws_client):
     assert snap["mains"] and snap["status"] == "ok" and snap["reason_key"] == "ok_mains"
     own = [e for e in er.async_get(hass).entities.values() if e.platform == DOMAIN and e.device_id == plug.device_id]
     assert own
-    # Gone for two hours: failed, the push only offers "later"
+    # Gone for two hours: failed, the push only offers "later" (tomorrow or in a week)
     hass.states.async_set(plug.entities["switch"], "unavailable")
     hass.states.async_set(plug.entities["power"], "unavailable")
     await tick(hass, setup["freezer"], timedelta(hours=2, minutes=1))
     assert device.status == "failed"
     push = setup["pushes"][-1]
     assert push.data["title"] == "Steckdose Kaffee antwortet nicht"
-    assert [a["action"].split("::")[0] for a in push.data["data"]["actions"]] == ["PULSE_LATER"]
+    assert [a["action"].split("::")[0] for a in push.data["data"]["actions"]] == ["PULSE_LATER", "PULSE_LATER_WEEK"]
     # Off again: no longer monitored, its Pulse entities are removed
     await client.send_json_auto_id({"type": "pulse/settings", "settings": {"mains_beta": False}})
     assert (await client.receive_json())["success"]

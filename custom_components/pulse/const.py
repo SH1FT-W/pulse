@@ -205,6 +205,8 @@ NOTIFY_OFF: Final = "off"
 
 ACTION_REPLACED: Final = "PULSE_REPLACED"
 ACTION_LATER: Final = "PULSE_LATER"
+ACTION_LATER_WEEK: Final = "PULSE_LATER_WEEK"  # "remind in a week" (#7)
+SNOOZE_WEEK_HOURS: Final = 7 * 24
 
 DEFAULT_SETTINGS: Final[dict[str, Any]] = {
     "targets": None,  # None = all mobile_app services

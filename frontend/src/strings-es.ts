@@ -37,8 +37,13 @@ export const ES: Record<keyof typeof EN, string> = {
   off: 'Desactivado',
   replaced: 'Pila cambiada',
   replaced_done: 'Cambio registrado',
-  later: 'Recordar mañana',
-  later_done: 'Pulse te lo recordará mañana',
+  later: 'Recordar más tarde',
+  later_24: 'Recordar mañana',
+  later_168: 'Recordar en una semana',
+  later_720: 'Recordar en un mes',
+  later_done_24: 'Pulse te lo recordará mañana',
+  later_done_168: 'Pulse te lo recordará en una semana',
+  later_done_720: 'Pulse te lo recordará en un mes',
   snoozed_until: 'Recordará {when}',
   details: 'Detalles',
   ignore: 'No supervisado',
@@ -369,6 +374,9 @@ export const ES: Record<keyof typeof EN, string> = {
   new_unreachable_title: 'Dispositivos importantes antes',
   new_unreachable_text:
     'Cuánto tiempo puede estar no disponible un dispositivo importante antes de que Pulse diga «Revisar»: elígelo en Ajustes › Casos especiales: 2, 5, 10 o 20 minutos.',
+  new_snooze_title: 'Recordar más tarde',
+  new_snooze_text:
+    '«Recordar más tarde» ahora ofrece mañana, en una semana o en un mes. Las notificaciones también tienen «Recordar en una semana».',
   new_local_title: 'Más dispositivos por sí solos',
   new_local_text:
     'Los asistentes de voz con ESPHome como el Home Assistant Voice PE y los coordinadores SMLIGHT ahora se vigilan por sí solos. Un coordinador por wifi ya no cuenta como desaparecido solo porque su Ethernet esté apagado.',

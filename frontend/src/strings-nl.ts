@@ -37,8 +37,13 @@ export const NL: Record<keyof typeof EN, string> = {
   off: 'Uit',
   replaced: 'Batterij vervangen',
   replaced_done: 'Wissel genoteerd',
-  later: 'Morgen herinneren',
-  later_done: 'Pulse herinnert je morgen',
+  later: 'Later herinneren',
+  later_24: 'Morgen herinneren',
+  later_168: 'Over een week herinneren',
+  later_720: 'Over een maand herinneren',
+  later_done_24: 'Pulse herinnert je morgen',
+  later_done_168: 'Pulse herinnert je over een week',
+  later_done_720: 'Pulse herinnert je over een maand',
   snoozed_until: 'Herinnert {when}',
   details: 'Details',
   ignore: 'Niet bewaakt',
@@ -370,6 +375,9 @@ export const NL: Record<keyof typeof EN, string> = {
   new_unreachable_title: 'Belangrijke apparaten sneller',
   new_unreachable_text:
     'Hoe lang een belangrijk apparaat onbereikbaar mag zijn voordat Pulse „Controleren” meldt, kies je onder Instellingen › Bijzondere gevallen: 2, 5, 10 of 20 minuten.',
+  new_snooze_title: 'Later herinneren',
+  new_snooze_text:
+    '„Later herinneren” biedt nu morgen, over een week of over een maand. Meldingen hebben ook „Over een week herinneren”.',
   new_local_title: 'Meer apparaten vanzelf',
   new_local_text:
     'Spraakassistenten met ESPHome zoals de Home Assistant Voice PE en SMLIGHT-coördinatoren worden nu vanzelf bewaakt. Een coördinator op wifi telt niet meer als weg, alleen omdat zijn ethernet uit staat.',
