@@ -10,7 +10,7 @@ It only listens, never polls. No battery wasted, no automation left guessing.</p
 
 [![Version](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2FSH1FT-W%2Fpulse%2Fmain%2Fcustom_components%2Fpulse%2Fmanifest.json&query=%24.version&label=version&style=flat-square&color=6D5DFC&labelColor=0E0D14)](https://github.com/SH1FT-W/pulse/releases/latest)
 [![Home Assistant](https://img.shields.io/badge/Home%20Assistant-2026.9%2B-6D5DFC?style=flat-square&labelColor=0E0D14&logo=homeassistant&logoColor=white)](https://www.home-assistant.io)
-[![HACS](https://img.shields.io/badge/HACS-default-6D5DFC?style=flat-square&labelColor=0E0D14)](https://hacs.xyz)
+[![Marketplace](https://img.shields.io/badge/Marketplace-default-6D5DFC?style=flat-square&labelColor=0E0D14)](https://hacs.xyz)
 [![Quality scale](https://img.shields.io/badge/quality%20scale-platinum%20(self--assessed)-6D5DFC?style=flat-square&labelColor=0E0D14)](custom_components/pulse/quality_scale.yaml)
 [![License](https://img.shields.io/badge/license-Apache%202.0-6D5DFC?style=flat-square&labelColor=0E0D14)](LICENSE)
 
@@ -226,9 +226,11 @@ actions:
 <sub><b>INSTALLATION</b></sub>
 ## Three minutes. Then it just listens.
 
-[![Open in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=SH1FT-W&repository=pulse&category=integration)
+[![Open in the Marketplace](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=SH1FT-W&repository=pulse&category=integration)
 
-1. Pulse is in the HACS default store: click **Open in HACS** above, or search for **Pulse** in HACS.
+The Marketplace is under Settings → Marketplace. On Home Assistant before 2026.11 it is still called HACS.
+
+1. Pulse is in the Marketplace: click **Open in the Marketplace** above, or search for **Pulse** in the Marketplace.
 2. Download **Pulse** and restart Home Assistant.
 3. *Settings → Devices & services → Add integration → Pulse*. One click. Pulse finds your battery devices itself.
 4. Open **Pulse** in the sidebar. Admins can change everything, other users see the panel read only.
@@ -237,11 +239,11 @@ Requires **Home Assistant 2026.9** or newer. Pulse has no dependencies of its ow
 
 Pulse monitors every device that has a battery sensor (`device_class: battery`), including devices that only report "battery low" as on or off. Phones, tablets, vacuums, mowers and devices with power or energy sensors are skipped on purpose. If a device is missing, check that it has a battery entity and that the entity is enabled, or add it by hand under *Settings → Added by hand*.
 
-**Without HACS:** download the [latest release](https://github.com/SH1FT-W/pulse/releases/latest), copy its `custom_components/pulse` folder into `/config/custom_components/`, restart Home Assistant and add the integration.
+**Without the Marketplace:** download the [latest release](https://github.com/SH1FT-W/pulse/releases/latest), copy its `custom_components/pulse` folder into `/config/custom_components/`, restart Home Assistant and add the integration.
 
 ### Versions
 
-Updates arrive through HACS like any other integration. Since October 2026 Pulse uses calendar versions **`YY.M.N`**: two-digit year, month without a leading zero, and the number of the release in that month. `26.10.4` is the fourth release of October 2026, and the next month starts again at `.1`. There is no major, minor or patch anymore; every release, feature or fix, simply gets the next number. Tags, release titles and the version badge are just the number, without a leading "v". The jump from `1.1.0` to `26.10.4` was intended: Home Assistant and HACS see `26.10.x` as newer than every `1.x`, so updates are offered as usual. After an update the panel shows what is new once.
+Updates arrive through the Marketplace like any other integration. Since October 2026 Pulse uses calendar versions **`YY.M.N`**: two-digit year, month without a leading zero, and the number of the release in that month. `26.10.4` is the fourth release of October 2026, and the next month starts again at `.1`. There is no major, minor or patch anymore; every release, feature or fix, simply gets the next number. Tags, release titles and the version badge are just the number, without a leading "v". The jump from `1.1.0` to `26.10.4` was intended: Home Assistant and the Marketplace see `26.10.x` as newer than every `1.x`, so updates are offered as usual. After an update the panel shows what is new once.
 
 <details>
 <summary><b>Troubleshooting</b></summary>
@@ -267,7 +269,7 @@ Updates arrive through HACS like any other integration. Since October 2026 Pulse
 
 1. *Settings → Devices & services → Pulse → ⋮ → Delete*. This removes the panel, the Pulse entities on your devices, open repairs and the stored data (`.storage/pulse.devices`).
 2. If you turned on Zigbee signs of life, `last_seen` and availability stay on in Zigbee2MQTT. Switch them off in Zigbee2MQTT under *Settings → Advanced* and *Settings → Availability* if you don't want them.
-3. Remove Pulse in HACS and restart Home Assistant.
+3. Remove Pulse in the Marketplace and restart Home Assistant.
 
 </details>
 
