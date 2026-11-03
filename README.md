@@ -10,7 +10,7 @@ It only listens, never polls. No battery wasted, no automation left guessing.</p
 
 [![Version](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2FSH1FT-W%2Fpulse%2Fmain%2Fcustom_components%2Fpulse%2Fmanifest.json&query=%24.version&label=version&style=flat-square&color=6D5DFC&labelColor=0E0D14)](https://github.com/SH1FT-W/pulse/releases/latest)
 [![Home Assistant](https://img.shields.io/badge/Home%20Assistant-2026.9%2B-6D5DFC?style=flat-square&labelColor=0E0D14&logo=homeassistant&logoColor=white)](https://www.home-assistant.io)
-[![HACS](https://img.shields.io/badge/HACS-custom%20repository-6D5DFC?style=flat-square&labelColor=0E0D14)](https://hacs.xyz)
+[![HACS](https://img.shields.io/badge/HACS-default-6D5DFC?style=flat-square&labelColor=0E0D14)](https://hacs.xyz)
 [![Quality scale](https://img.shields.io/badge/quality%20scale-platinum%20(self--assessed)-6D5DFC?style=flat-square&labelColor=0E0D14)](custom_components/pulse/quality_scale.yaml)
 [![License](https://img.shields.io/badge/license-Apache%202.0-6D5DFC?style=flat-square&labelColor=0E0D14)](LICENSE)
 
@@ -228,8 +228,8 @@ actions:
 
 [![Open in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=SH1FT-W&repository=pulse&category=integration)
 
-1. Click **Open in HACS** above, or add `https://github.com/SH1FT-W/pulse` by hand under HACS → *Integrations* → ⋮ → *Custom repositories* (type *Integration*).
-2. Install **Pulse** and restart Home Assistant.
+1. Pulse is in the HACS default store: click **Open in HACS** above, or search for **Pulse** in HACS.
+2. Download **Pulse** and restart Home Assistant.
 3. *Settings → Devices & services → Add integration → Pulse*. One click. Pulse finds your battery devices itself.
 4. Open **Pulse** in the sidebar. Admins can change everything, other users see the panel read only.
 
