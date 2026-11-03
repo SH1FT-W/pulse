@@ -15,17 +15,25 @@ PANEL_FILE = "pulse-panel.js"
 DATA_STATIC = "pulse_static_registered"
 
 
+def _panel_version(path: Path) -> int | None:
+    """Modification time of the built panel as cache buster, None if it was not built."""
+    if not path.exists():
+        return None
+    return int(path.stat().st_mtime)
+
+
 async def async_register_panel(hass: HomeAssistant) -> None:
     """Panel nur registrieren, wenn das Frontend läuft (in Tests nicht)."""
     if "frontend" not in hass.config.components or hass.http is None:
         return
     www = Path(__file__).parent / "www"
-    if not (www / PANEL_FILE).exists():
+    # File system access runs in the executor, never on the event loop.
+    version = await hass.async_add_executor_job(_panel_version, www / PANEL_FILE)
+    if version is None:
         return
     if not hass.data.get(DATA_STATIC):
         await hass.http.async_register_static_paths([StaticPathConfig(STATIC_URL, str(www), False)])
         hass.data[DATA_STATIC] = True
-    version = int((www / PANEL_FILE).stat().st_mtime)
     await panel_custom.async_register_panel(
         hass,
         webcomponent_name="pulse-panel",
