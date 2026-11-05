@@ -14,8 +14,9 @@ STORE_KEY: Final = "pulse.devices"
 STORE_VERSION: Final = 1
 # 2: uptime, 3: source per battery change, false changes dropped, 4: volts → mV, arrive home as a list,
 # 5: summary day (summary_sent/summary_pending), 6: dismissed partner suggestions, battery missing since,
-# cloud outage reported, Z2M health requested, 7: restart echoes dropped, cloud reports rebuilt
-STORE_MINOR: Final = 8
+# cloud outage reported, Z2M health requested, 7: restart echoes dropped, cloud reports rebuilt, 8: outages,
+# 9: registry changes (`registry_changes`)
+STORE_MINOR: Final = 9
 
 # Dispatcher: something changed (resend the panel, update entities)
 SIGNAL_UPDATE: Final = "pulse_update"
@@ -38,6 +39,11 @@ SEVERITY: Final = {STATUS_OK: 0, STATUS_LEARNING: 0, STATUS_WATCH: 1, STATUS_CHE
 
 # How far back Pulse looks (learning) and what the rhythm bar shows
 HISTORY_DAYS: Final = 10
+# HA rewrites an entity's state right after its registry entry or its device's name changed (rename, icon, area,
+# unit, new entity ID); a row this close after such a change is that rewrite, not a report of the device
+REGISTRY_ECHO: Final = 2.0
+# Remembered registry changes per entity (older than HISTORY_DAYS are dropped anyway)
+REGISTRY_CHANGES_MAX: Final = 50
 KEEP_DAYS: Final = 14
 STRIP_DAYS: Final = 7
 STRIP_BUCKET_HOURS: Final = 2

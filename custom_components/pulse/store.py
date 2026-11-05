@@ -2,14 +2,23 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 import copy
+import time
 from typing import Any
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import Store
 
-from .const import DEFAULT_SETTINGS, STORE_KEY, STORE_MINOR, STORE_VERSION
-from .rhythm import restart_echoes
+from .const import (
+    DEFAULT_SETTINGS,
+    HISTORY_DAYS,
+    REGISTRY_CHANGES_MAX,
+    STORE_KEY,
+    STORE_MINOR,
+    STORE_VERSION,
+)
+from .rhythm import DAY, restart_echoes
 
 SAVE_DELAY = 60
 # Reports arrive constantly: they may wait longer (on stop everything is saved immediately anyway)
@@ -107,7 +116,19 @@ def migrate(old_minor: int, data: dict[str, Any]) -> dict[str, Any]:
         for record in data.get("devices", {}).values():
             record.setdefault("outages", [])
         data.setdefault("settings", {})["mains_beta"] = True
+    if old_minor < 9:
+        # 26.11.5: registry changes per entity (HA rewrites the state then; that row is no report)
+        data.setdefault("registry_changes", {})
     return data
+
+
+def _recent(changes: Any, keep: float) -> dict[str, list[float]]:
+    """Registry changes from `keep` on, entities without any left dropped."""
+    result: dict[str, list[float]] = {}
+    for entity_id, stamps in (changes or {}).items():
+        if recent := sorted(float(ts) for ts in stamps if ts >= keep)[-REGISTRY_CHANGES_MAX:]:
+            result[entity_id] = recent
+    return result
 
 
 class PulseStore:
@@ -125,6 +146,9 @@ class PulseStore:
         # Cloud integrations whose outage was already reported (integration → since)
         self.cloud_notified: dict[str, float] = {}
         self.z2m_health_at: float | None = None
+        # Entity → times of its registry changes (rename, icon, unit, new entity ID, device renamed) within the
+        # history window: HA rewrites the state right after, that row is no report (live and from the recorder)
+        self.registry_changes: dict[str, list[float]] = {}
         # A delayed save is pending; do not schedule again (HA would otherwise keep pushing it back)
         self._save_pending = False
         self._save_due: float | None = None
@@ -142,6 +166,19 @@ class PulseStore:
         self.summary_pending = data.get("summary_pending")
         self.cloud_notified = dict(data.get("cloud_notified") or {})
         self.z2m_health_at = data.get("z2m_health_at")
+        self.registry_changes = _recent(data.get("registry_changes"), time.time() - HISTORY_DAYS * DAY)
+
+    def remember_registry_change(self, entity_ids: Iterable[str], ts: float, moved_from: str | None = None) -> None:
+        """Registry change of these entities at `ts`; `moved_from`: their old entity ID, whose changes move along
+        (the recorder hangs the old rows on the new ID). Older than the history window is dropped."""
+        changes = self.registry_changes
+        if moved_from is not None and (old := changes.pop(moved_from, None)):
+            for entity_id in entity_ids:
+                changes[entity_id] = [*old, *changes.get(entity_id, ())]
+        for entity_id in entity_ids:
+            changes.setdefault(entity_id, []).append(ts)
+        self.registry_changes = _recent(changes, ts - HISTORY_DAYS * DAY)
+        self.async_delay_save()
 
     def record(self, device_id: str) -> dict[str, Any]:
         if device_id not in self.devices:
@@ -183,6 +220,7 @@ class PulseStore:
             "summary_pending": self.summary_pending,
             "cloud_notified": self.cloud_notified,
             "z2m_health_at": self.z2m_health_at,
+            "registry_changes": self.registry_changes,
         }
 
     async def async_remove(self) -> None:

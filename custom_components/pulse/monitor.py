@@ -27,6 +27,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import (
+    CoreState,
     Event,
     EventStateChangedData,
     EventStateReportedData,
@@ -75,14 +76,7 @@ from .const import (
 )
 from .discovery import DeviceSpec, candidates as discovery_candidates, discover
 from .forecast import Forecast
-from .history import (
-    Registry,
-    async_load_history,
-    async_load_outages,
-    load_forecasts,
-    registry_echo,
-    registry_rewrite,
-)
+from .history import async_load_history, async_load_outages, load_forecasts, registry_rewrite
 from .notifier import Notifier
 from .partners import PartnerInput, Suggestion, suggest
 from .rhythm import (
@@ -320,6 +314,16 @@ class PulseMonitor:
                 er.EVENT_ENTITY_REGISTRY_UPDATED, self._registry_changed, event_filter=self._entity_relevant
             )
         )
+        self._unsubs.append(
+            self.hass.bus.async_listen(
+                er.EVENT_ENTITY_REGISTRY_UPDATED, self._remember_entity_change, event_filter=self._entity_rewritten
+            )
+        )
+        self._unsubs.append(
+            self.hass.bus.async_listen(
+                dr.EVENT_DEVICE_REGISTRY_UPDATED, self._remember_device_change, event_filter=self._device_rewritten
+            )
+        )
         self._unsubs.append(async_track_time_interval(self.hass, self._tick, TICK))
         self._unsubs.append(async_at_started(self.hass, self._started))
         self.notifier.async_start()
@@ -402,6 +406,47 @@ class PulseMonitor:
         if entry is not None and entry.platform == DOMAIN:
             return action == "update" and "labels" in (event_data.get("changes") or ())
         return action != "update" or bool(ENTITY_CHANGES & set(event_data.get("changes") or ()))
+
+    # ── Registry changes: HA rewrites the state, the device said nothing ──
+
+    @callback
+    def _entity_rewritten(self, event_data: Any) -> bool:
+        """Every update of a watched entity's registry entry makes HA write its state again (helpers/entity.py
+        `_async_process_registry_update_or_remove`); a new entity ID re-adds it under the new ID."""
+        return event_data["action"] == "update" and (
+            event_data["entity_id"] in self._entity_map or event_data.get("old_entity_id") in self._entity_map
+        )
+
+    @staticmethod
+    @callback
+    def _device_rewritten(event_data: Any) -> bool:
+        """Only a new device name makes HA write its entities again (helpers/entity.py
+        `_async_device_registry_updated`)."""
+        return event_data["action"] == "update" and bool(
+            {"name", "name_by_user"} & set(event_data.get("changes") or ())
+        )
+
+    @callback
+    def _remember_entity_change(self, event: Event[er.EventEntityRegistryUpdatedData]) -> None:
+        """Remembered before HA's rewrite reaches Pulse: HA queues the state event fired while it hands the
+        registry change to its listeners until all of them have it (core.py `async_fire_internal`)."""
+        if self.hass.state is not CoreState.running:
+            return  # while HA starts, integrations update their entries before the first state (a restart echo)
+        data = event.data
+        old = data.get("old_entity_id")
+        moved = old if isinstance(old, str) else None
+        self.store.remember_registry_change([data["entity_id"]], event.time_fired_timestamp, moved)
+
+    @callback
+    def _remember_device_change(self, event: Event[dr.EventDeviceRegistryUpdatedData]) -> None:
+        if self.hass.state is not CoreState.running:
+            return
+        entries = er.async_entries_for_device(er.async_get(self.hass), event.data["device_id"])
+        if entity_ids := [e.entity_id for e in entries if e.entity_id in self._entity_map]:
+            self.store.remember_registry_change(entity_ids, event.time_fired_timestamp)
+
+    def _registry_rewrite(self, entity_id: str, written: float) -> bool:
+        return registry_rewrite(written, self.store.registry_changes.get(entity_id, ()))
 
     @callback
     def async_rediscover(self) -> None:
@@ -591,8 +636,7 @@ class PulseMonitor:
         """
         entity_ids = sorted(e for e in self._alive if only is None or self._entity_map.get(e) in only)
         starts = [float(span[0]) for span in self.store.uptime]
-        registry = {e: self._registry(e) for e in entity_ids}
-        result = await async_load_history(self.hass, entity_ids, HISTORY_DAYS, starts, registry)
+        result = await async_load_history(self.hass, entity_ids, HISTORY_DAYS, starts, self.store.registry_changes)
         if self._stopped:
             return
         keep_from = time.time() - KEEP_DAYS * DAY
@@ -755,10 +799,8 @@ class PulseMonitor:
             return
         if device.cloud and old.state == new.state:
             return  # Cloud: a new poll without a new value is no sign of life of the device
-        if registry_rewrite(old, new) or (
-            old.state == new.state and registry_echo(new.last_updated.timestamp(), self._registry(entity_id))
-        ):
-            return  # Device or entity renamed / changed in the registry: HA rewrote the state, the device said nothing
+        if self._registry_rewrite(entity_id, new.last_updated.timestamp()):
+            return  # Renamed, unit or entity ID changed: HA rewrote the state (a unit converted), no report
         # Battery changes only from real transitions (never from restart echoes)
         if entity_id in (device.spec.battery, device.spec.voltage):
             self._check_battery(device, now, entity_id)
@@ -782,21 +824,13 @@ class PulseMonitor:
             return
         if device.cloud:
             return  # Cloud: same value again = only the cloud's polling rhythm
-        if registry_echo(new.last_reported.timestamp(), self._registry(entity_id)):
-            return  # Registry changed (area, name without effect on the state): HA rewrote the same state
+        if self._registry_rewrite(entity_id, new.last_reported.timestamp()):
+            return  # Registry changed without effect on the attributes: HA rewrote the same state
         # Same value reported again: confirms (or discards) a pending battery jump
         if entity_id in (device.spec.battery, device.spec.voltage) and device.record.get("pending_jump"):
             self._check_battery(device, time.time(), entity_id)
         if entity_id in self._alive:
             self._activity(device, new.last_reported.timestamp(), False)
-
-    def _registry(self, entity_id: str) -> Registry:
-        """When the entity's registry entry and its device were last changed (HA rewrites the state then)."""
-        entry = er.async_get(self.hass).async_get(entity_id)
-        if entry is None:
-            return Registry()
-        dev = dr.async_get(self.hass).async_get(entry.device_id) if entry.device_id else None
-        return Registry(entry.modified_at.timestamp(), dev.modified_at.timestamp() if dev is not None else None)
 
     def _activity(self, device: Device, ts: float, action: bool) -> None:
         if device.spec.mains and device.unavailable_since is not None:
