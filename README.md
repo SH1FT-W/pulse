@@ -31,8 +31,10 @@ Pulse only listens. It never asks a device anything, so it costs no battery and 
 Every status comes with a reason in plain words: *Silent for 5 days. Usually reports every 30 minutes.* Pulse needs about seven reports to know a rhythm; until then a device is *Learning*. Failed devices also show up under **Settings > Repairs** and disappear on their own when they report again.
 
 <p align="center">
-<img src="docs/images/detail.png" width="46%" alt="Device detail: a headline reading Silent for 5 days, the buttons Remind tomorrow and Battery replaced, a heartbeat calendar with one row per day where the silent days are red dashed lines, and the battery with its forecast status." />
-<img src="docs/images/iphone-dark.png" width="32%" alt="Pulse on an iPhone in dark mode: the headline, the rhythm strips glowing in the dark, failed devices first." />
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/overview-dark.png" />
+  <img src="docs/images/overview-light.png" alt="The Pulse overview: the headline 3 devices need you, 9 of 12 in rhythm, the day with the summary at 18:00 and quiet hours, and the three failed devices with their rhythm strips over 7 days, where the silent stretches are red dashed lines." />
+</picture>
 </p>
 
 **New in 26.11:** remind later in a week or a month, and you choose how fast an unreachable important device is reported. Every change is in the [changelog](CHANGELOG.md).
@@ -82,6 +84,13 @@ Through the Companion app (`notify.mobile_app_*`). New phones are added automati
 - **One message for an outage.** Three or more devices silent in the same minute is a hub or bridge, not the batteries. The same for a cloud outage.
 
 Under **Notifications > Texts** you can rewrite title and text of each kind, with a live preview and placeholders `{name}`, `{area}`, `{reason}`, `{model}`, `{manufacturer}`, `{integration}`.
+
+<p align="center">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme-screens-dark.webp" />
+  <img src="docs/images/readme-screens-light.webp" alt="Left, the device sheet of a silent aquarium thermometer: Silent for 5 days, the menu Remind later open with tomorrow, in a week and in a month, and the heartbeat calendar with red dashed days. Right, the notification settings on a phone: times for the summary and quiet hours, and under Special cases the choice how long an important device may be unreachable, 2, 5, 10 or 20 minutes." />
+</picture>
+</p>
 
 <a id="zigbee2mqtt"></a>
 ## Zigbee2MQTT
