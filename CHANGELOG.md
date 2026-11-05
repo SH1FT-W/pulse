@@ -2,6 +2,11 @@
 
 After 1.1.0, releases use calendar versions `YY.M.N` (year, month, number of the release in that month), e.g. `26.10.4`. They count as newer than every 1.x version, so updates through HACS work as before.
 
+## 26.11.5-beta.1 – 2026-11-05
+
+### Fixed
+- A mains device that suddenly drops out much more often than before is no longer taken for one that is often switched off. Pulse learns that a device which goes unavailable by itself again and again (a TV in standby, a lamp behind a wall switch) is off by habit, and then only keeps an eye on an outage. A smart plug that had been reliable for weeks and then lost its connection 15 times in six days was learned the same way, so its next outage was never reported. Now Pulse compares the last 7 days with the 7 days before: with at least 5 outages and twice as many as before, the device is getting worse, not off by habit. It shows "Keeps dropping out" (check) while it is back, and an outage counts like any device's again: check after 20 minutes, failed with a notification after two hours. A device Pulse has watched for less than eight days is not compared yet.
+
 ## 26.11.4 – 2026-11-02
 
 ### Fixed

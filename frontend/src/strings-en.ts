@@ -170,6 +170,7 @@ export const EN = {
   sent_battery: '{name} needs a new battery soon.',
   sent_battery_low: '{name} needs a new battery.',
   sent_unavailable: '{name} is unreachable.',
+  sent_unavailable_often: '{name} keeps dropping out.',
   sent_partner: '{name} is silent while {partner} is active.',
   sent_other: '{name}: {reason}',
   sent_more: 'And {count} more.',
@@ -197,6 +198,7 @@ export const EN = {
   dh_silent: 'Silent for {span}.',
   dh_unavailable: 'Unreachable.',
   dh_unavailable_for: 'Unreachable for {span}.',
+  dh_unavailable_often: 'Keeps dropping out.',
   dh_partner: 'Silent, partner active.',
   dh_battery: 'Battery at {level}%.',
   dh_learning: 'Still learning.',
@@ -369,6 +371,9 @@ export const EN = {
   new_unreachable_title: 'Important devices sooner',
   new_unreachable_text:
     'How long an important device may be unreachable before Pulse says “Check” is now up to you, under Settings › Special cases: 2, 5, 10 or 20 minutes.',
+  new_often_title: 'Getting worse? Pulse notices',
+  new_often_text:
+    'If a mains device suddenly drops out much more often than the week before, Pulse no longer takes it for a habit: it shows “Keeps dropping out” and reports an outage after two hours again.',
   new_snooze_title: 'Remind me later',
   new_snooze_text:
     '“Remind later” now offers tomorrow, in a week or in a month. Notifications also get “Remind in a week”.',

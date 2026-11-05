@@ -586,6 +586,7 @@ const OFF_RHYTHM = new Set([
   'silent_new',
   'unavailable',
   'unavailable_usual',
+  'unavailable_often',
   'partner',
   'radio_only',
 ]);
@@ -770,6 +771,7 @@ export function heroSentences(
     if (key === 'battery_soon') return mention(language, 'sent_battery', d, {});
     if (key === 'unavailable' || key === 'unavailable_usual')
       return mention(language, 'sent_unavailable', d, {});
+    if (key === 'unavailable_often') return mention(language, 'sent_unavailable_often', d, {});
     if (key === 'startup_waiting') return mention(language, 'sent_startup', d, {});
     if (key === 'radio_only') return mention(language, 'sent_radio_only', d, {});
     if (key === 'battery_missing') return mention(language, 'sent_battery_missing', d, {});
@@ -934,6 +936,8 @@ export function detailHeadline(
       tone: tone(device.status),
     };
   }
+  if (key === 'unavailable_often')
+    return { text: t(language, 'dh_unavailable_often'), tone: tone(device.status) };
   if (key === 'partner') return { text: t(language, 'dh_partner'), tone: tone(device.status) };
   if (key.startsWith('battery') && device.battery.level !== null)
     return {

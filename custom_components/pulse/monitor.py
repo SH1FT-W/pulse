@@ -93,6 +93,7 @@ from .rhythm import (
     merge_outages,
     near_start,
     no_data,
+    outages_worsening,
     overlap,
     silence_start,
     strip,
@@ -1063,6 +1064,9 @@ class PulseMonitor:
             manual=device.spec.manual,
             critical_unreachable=self.critical_unreachable(),
             usual_outage=usual_outage(record.get("outages", ()), now, gaps, KEEP_DAYS, self._starts())
+            if device.spec.mains
+            else None,
+            worsening=outages_worsening(record.get("outages", ()), now, gaps, self._starts(), record.get("first_seen"))
             if device.spec.mains
             else None,
         )

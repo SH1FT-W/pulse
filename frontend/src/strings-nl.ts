@@ -172,6 +172,7 @@ export const NL: Record<keyof typeof EN, string> = {
   sent_battery: '{name} heeft binnenkort een nieuwe batterij nodig.',
   sent_battery_low: '{name} heeft een nieuwe batterij nodig.',
   sent_unavailable: '{name} is onbereikbaar.',
+  sent_unavailable_often: '{name} valt vaak weg.',
   sent_partner: '{name} is stil terwijl {partner} actief is.',
   sent_other: '{name}: {reason}',
   sent_more: 'En nog {count}.',
@@ -199,6 +200,7 @@ export const NL: Record<keyof typeof EN, string> = {
   dh_silent: 'Al {span} stil.',
   dh_unavailable: 'Onbereikbaar.',
   dh_unavailable_for: 'Al {span} onbereikbaar.',
+  dh_unavailable_often: 'Valt vaak weg.',
   dh_partner: 'Stil, partner actief.',
   dh_battery: 'Batterij op {level}%.',
   dh_learning: 'Leert nog.',
@@ -375,6 +377,9 @@ export const NL: Record<keyof typeof EN, string> = {
   new_unreachable_title: 'Belangrijke apparaten sneller',
   new_unreachable_text:
     'Hoe lang een belangrijk apparaat onbereikbaar mag zijn voordat Pulse „Controleren” meldt, kies je onder Instellingen › Bijzondere gevallen: 2, 5, 10 of 20 minuten.',
+  new_often_title: 'Wordt het erger? Pulse ziet het',
+  new_often_text:
+    'Valt een apparaat op het stroomnet ineens veel vaker weg dan de week ervoor, dan ziet Pulse dat niet meer als gewoonte: het toont „Valt vaak weg” en meldt een uitval weer na twee uur.',
   new_snooze_title: 'Later herinneren',
   new_snooze_text:
     '„Later herinneren” biedt nu morgen, over een week of over een maand. Meldingen hebben ook „Over een week herinneren”.',

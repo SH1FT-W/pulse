@@ -12,7 +12,15 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from common import add_device, tick
 from custom_components.pulse.history import outage_spans, running_outage
-from custom_components.pulse.rhythm import Facts, Rhythm, device_outages, evaluate, merge_outages, usual_outage
+from custom_components.pulse.rhythm import (
+    Facts,
+    Rhythm,
+    device_outages,
+    evaluate,
+    merge_outages,
+    outages_worsening,
+    usual_outage,
+)
 from custom_components.pulse.store import migrate
 
 MINUTE = 60.0
@@ -313,3 +321,76 @@ async def test_icon_from_what_the_device_is(hass: HomeAssistant, setup):
         reg.async_update_entity(smoke.entities[key], entity_category=EntityCategory.DIAGNOSTIC)
     monitor.async_rediscover()
     assert monitor.devices[smoke.device_id].spec.icon == "mdi:smoke-detector-variant"
+
+
+# ── Getting worse is no habit ────────────────────────────────────────────
+
+
+def _trockner_outages(now: float) -> list[list[float]]:
+    """Owner's Eve plug (05.11.2026): reliable for weeks, then 15 outages ≥ 20 min within six days."""
+    starts = [5.8, 5.5, 3.4, 2.8, 2.7, 2.3, 2.0, 1.8, 1.4, 1.3, 1.2, 1.1, 1.0, 0.7, 0.6]
+    lengths = [0.4, 0.7, 0.6, 0.8, 6.4, 2.5, 1.7, 5.5, 0.5, 1.9, 1.1, 0.9, 0.7, 2.0, 2.1]
+    return [[now - s * DAY, now - s * DAY + h * HOUR] for s, h in zip(starts, lengths, strict=True)]
+
+
+def test_outages_getting_worse():
+    now = T0 + 30 * DAY
+    outages = _trockner_outages(now)
+    # Known for two weeks, none in the week before: getting worse (first recent outage, count)
+    assert outages_worsening(outages, now, observed_since=now - 14 * DAY) == (outages[0][0], 15)
+    # Too new to compare (less than a day of the week before), or never seen: no judgement
+    assert outages_worsening(outages, now, observed_since=now - 7 * DAY - HOUR) is None
+    assert outages_worsening(outages, now) is None
+    # Just as often before (a console in standby every night): its habit
+    nightly = [[now - d * DAY, now - d * DAY + 8 * HOUR] for d in range(1, 14)]
+    assert outages_worsening(nightly, now, observed_since=now - 20 * DAY) is None
+    # Owner's ceiling spot: two shared Thread outages (every device at once) and one long one, nothing before.
+    # Fewer than WORSE_MIN: no sign of the spot itself getting worse
+    spot = [outages[0], outages[1], [now - 0.3 * DAY, now - 0.3 * DAY + 3 * HOUR]]
+    assert outages_worsening(spot, now, observed_since=now - 26 * DAY) is None
+    assert outages_worsening(outages[:5], now, observed_since=now - 14 * DAY) == (outages[0][0], 5)
+
+
+def test_worse_outages_are_reported_not_learned():
+    now = T0
+    worse = (now - 6 * DAY, 15)
+    facts = Facts(
+        now=now,
+        rhythm=Rhythm(186.0, 900.0, 200),
+        last_activity=now - 2 * HOUR,
+        mains=True,
+        unavailable_since=now - 2 * HOUR,
+        usual_outage=6.4 * HOUR,
+        worsening=worse,
+    )
+    # Gone for two hours: failed like any plug, the learned habit does not hide it
+    verdict = evaluate(facts)
+    assert (verdict.status, verdict.reason["key"]) == ("failed", "unavailable")
+    # Back again: still "prüfen" (check), it keeps dropping out
+    back = evaluate(Facts(**{**facts.__dict__, "last_activity": now - MINUTE, "unavailable_since": None}))
+    assert (back.status, back.reason["key"]) == ("check", "unavailable_often")
+    assert back.reason["params"] == {"count": 15}
+
+
+async def test_plug_dropping_out_more_and_more_is_reported(hass: HomeAssistant, setup):
+    monitor = setup["monitor"]
+    monitor.store.settings["mains_beta"] = True
+    plug = add_device(
+        hass, "plug", "Trockner", [("switch", "switch", None)], manufacturer="Eve Systems", platform="matter"
+    )
+    hass.states.async_set(plug.entities["switch"], "on")
+    monitor.async_rediscover()
+    await hass.async_block_till_done()
+    device = monitor.devices[plug.device_id]
+    now = time.time()
+    device.record["first_seen"] = now - 26 * DAY
+    device.record["outages"] = _trockner_outages(now)
+    freezer = setup["freezer"]
+    pushes = setup["pushes"]
+    before = len(pushes)
+    hass.states.async_set(plug.entities["switch"], "unavailable")
+    await tick(hass, freezer, timedelta(minutes=25))
+    assert (device.status, device.reason["key"]) == ("check", "unavailable")
+    await tick(hass, freezer, timedelta(hours=2))
+    assert (device.status, device.reason["key"]) == ("failed", "unavailable")
+    assert any("Trockner" in p.data.get("title", "") + p.data.get("message", "") for p in pushes[before:])

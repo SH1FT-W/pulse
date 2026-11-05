@@ -566,6 +566,11 @@ describe('Richtung Puls', () => {
     expect(
       detailHeadline('de', device('s', { status: 'watch', reason_key: 'unavailable_usual' }), NOW)
     ).toEqual({ text: 'Nicht erreichbar.', tone: 'warn' });
+    // Back, but keeps dropping out (much more often than the week before): check, not "im Takt"
+    expect(
+      detailHeadline('de', device('o', { status: 'check', reason_key: 'unavailable_often' }), NOW)
+        .text
+    ).toBe('Fällt oft aus.');
     expect(
       detailHeadline('de', device('p', { status: 'check', reason_key: 'partner' }), NOW).text
     ).toBe('Schweigt, Partner aktiv.');

@@ -49,6 +49,11 @@ BATTERY_MISSING_AFTER = DAY
 # "im Blick" (watch), only after a week "prüfen" (check), otherwise every quiet door would be in the daily summary
 SILENT_NEW_WATCH = 2 * DAY
 SILENT_NEW_CHECK = 7 * DAY
+# Learned availability: outages of the last WORSE_WINDOW compared with the one before (`outages_worsening`)
+WORSE_WINDOW = 7 * DAY
+# ... and at least this many in it: a shared Thread/Zigbee outage hits every device at once, two or three of those
+# in a week are no sign of one device getting worse (owner's spots, 05.11.2026)
+WORSE_MIN = 5
 
 # A reachable device whose longest normal gap is at most this reports on its own (presence sensor, outdoor module):
 # its silence still counts. Longer gaps mean it only reports on events (leak sensor, lock), then reachable = fine.
@@ -313,6 +318,38 @@ def usual_outage(
     return max(spans) if len(spans) >= OUTAGE_HABIT else None
 
 
+def outages_worsening(
+    outages: Sequence[Sequence[float]],
+    now: float,
+    gaps: Sequence[tuple[float, float]] = (),
+    starts: Sequence[float] = (),
+    observed_since: float | None = None,
+) -> tuple[float, int] | None:
+    """Outages much more frequent this week than the week before: (start of the first recent one, count), else None.
+
+    A device that was reliable and now keeps dropping out is getting worse (weak radio, a router gone), it is not
+    switched off by habit. Counted like `usual_outage`; needs at least a day of the week before to compare with
+    (a device watched only since recently has nothing to compare). "Much more": at least WORSE_MIN outages and
+    twice the rate of the week before.
+    """
+    if observed_since is None:
+        return None
+    split, begin = now - WORSE_WINDOW, now - 2 * WORSE_WINDOW
+    covered = split - max(begin, observed_since)
+    if covered < DAY:
+        return None
+    counted = sorted(
+        (start, end)
+        for start, end in outages
+        if end - start >= OUTAGE_MIN and overlap(gaps, start, end) == 0 and not near_start(start, starts)
+    )
+    recent = [span for span in counted if span[1] >= split]
+    before = [span for span in counted if begin <= span[1] < split]
+    if len(recent) < WORSE_MIN or len(recent) / WORSE_WINDOW < 2 * len(before) / covered:
+        return None
+    return recent[0][0], len(recent)
+
+
 def silence_start(
     events: Sequence[float],
     rhythm: Rhythm,
@@ -380,6 +417,7 @@ class Facts:
     critical_unreachable: float = 10 * 60.0  # important device unreachable → "prüfen" (check) after (seconds)
     manual: bool = False  # added by hand: watched like a mains device, but maybe not on the mains (camera, vacuum)
     usual_outage: float | None = None  # often unavailable by itself: its longest such outage (`usual_outage`)
+    worsening: tuple[float, int] | None = None  # outages much more frequent lately (`outages_worsening`)
 
 
 SILENCE_KEYS = frozenset({"silent", "silent_new", "radio_only"})
@@ -469,7 +507,7 @@ def evaluate(facts: Facts) -> Verdict:
     if facts.unavailable_since is not None:
         gone = now - facts.unavailable_since
         params = {"since": gone}
-        if facts.usual_outage is not None:
+        if facts.usual_outage is not None and facts.worsening is None:
             # Often away by itself (standby, switched off at the plug): being gone is its habit. At most "watch";
             # only much longer than ever before (twice its longest outage, at least a day) "prüfen" (check)
             if gone >= max(2 * facts.usual_outage, DAY):
@@ -480,6 +518,12 @@ def evaluate(facts: Facts) -> Verdict:
             verdict = _gone(verdict, Verdict(STATUS_FAILED, {"key": "unavailable", "params": params}))
         elif gone >= (facts.critical_unreachable if facts.critical else 20 * MINUTE):
             verdict = _gone(verdict, Verdict(STATUS_CHECK, {"key": "unavailable", "params": params}))
+
+    # Dropping out much more often than it used to: getting worse, not its habit. "Prüfen" (check) also while it is
+    # back, so the owner hears of it (a running outage above is judged like any device's)
+    if facts.worsening is not None:
+        often = Verdict(STATUS_CHECK, {"key": "unavailable_often", "params": {"count": facts.worsening[1]}})
+        verdict = _worse(verdict, often)
 
     # 3. Cross-check: the partner was active several times, this device was not
     if facts.partner_name and facts.partner_actions >= 3:

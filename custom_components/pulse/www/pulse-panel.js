@@ -737,6 +737,7 @@ var Ke = {
 	sent_battery: "{name} braucht bald eine neue Batterie.",
 	sent_battery_low: "{name} braucht eine neue Batterie.",
 	sent_unavailable: "{name} ist nicht erreichbar.",
+	sent_unavailable_often: "{name} fällt oft aus.",
 	sent_partner: "{name} schweigt, obwohl {partner} aktiv ist.",
 	sent_other: "{name}: {reason}",
 	sent_more: "Und {count} weitere.",
@@ -764,6 +765,7 @@ var Ke = {
 	dh_silent: "Still seit {span}.",
 	dh_unavailable: "Nicht erreichbar.",
 	dh_unavailable_for: "Seit {span} nicht erreichbar.",
+	dh_unavailable_often: "Fällt oft aus.",
 	dh_partner: "Schweigt, Partner aktiv.",
 	dh_battery: "Batterie bei {level} %.",
 	dh_learning: "Lernt noch.",
@@ -920,6 +922,8 @@ var Ke = {
 	tpl_save: "Sichern",
 	new_unreachable_title: "Wichtige Geräte schneller",
 	new_unreachable_text: "Wie lange ein wichtiges Gerät nicht erreichbar sein darf, bis Pulse „Prüfen“ meldet, stellst du unter Einstellungen › Besonderes ein: 2, 5, 10 oder 20 Minuten.",
+	new_often_title: "Wird schlechter? Pulse merkt es",
+	new_often_text: "Fällt ein Gerät am Strom plötzlich viel öfter aus als in der Woche davor, gilt das nicht mehr als Gewohnheit: Pulse zeigt „Fällt oft aus“ und meldet einen Ausfall wieder nach zwei Stunden.",
 	new_snooze_title: "Länger erinnern",
 	new_snooze_text: "„Später erinnern“ bietet jetzt morgen, in einer Woche oder in einem Monat an. In der Mitteilung gibt es dafür zusätzlich „In einer Woche erinnern“.",
 	new_local_title: "Mehr Geräte von selbst",
@@ -1109,6 +1113,7 @@ var Ke = {
 	sent_battery: "{name} needs a new battery soon.",
 	sent_battery_low: "{name} needs a new battery.",
 	sent_unavailable: "{name} is unreachable.",
+	sent_unavailable_often: "{name} keeps dropping out.",
 	sent_partner: "{name} is silent while {partner} is active.",
 	sent_other: "{name}: {reason}",
 	sent_more: "And {count} more.",
@@ -1136,6 +1141,7 @@ var Ke = {
 	dh_silent: "Silent for {span}.",
 	dh_unavailable: "Unreachable.",
 	dh_unavailable_for: "Unreachable for {span}.",
+	dh_unavailable_often: "Keeps dropping out.",
 	dh_partner: "Silent, partner active.",
 	dh_battery: "Battery at {level}%.",
 	dh_learning: "Still learning.",
@@ -1292,6 +1298,8 @@ var Ke = {
 	tpl_save: "Save",
 	new_unreachable_title: "Important devices sooner",
 	new_unreachable_text: "How long an important device may be unreachable before Pulse says “Check” is now up to you, under Settings › Special cases: 2, 5, 10 or 20 minutes.",
+	new_often_title: "Getting worse? Pulse notices",
+	new_often_text: "If a mains device suddenly drops out much more often than the week before, Pulse no longer takes it for a habit: it shows “Keeps dropping out” and reports an outage after two hours again.",
 	new_snooze_title: "Remind me later",
 	new_snooze_text: "“Remind later” now offers tomorrow, in a week or in a month. Notifications also get “Remind in a week”.",
 	new_local_title: "More devices by themselves",
@@ -1483,6 +1491,7 @@ var Ke = {
 		sent_battery: "{name} aura bientôt besoin d’une pile neuve.",
 		sent_battery_low: "{name} a besoin d’une pile neuve.",
 		sent_unavailable: "{name} est injoignable.",
+		sent_unavailable_often: "{name} décroche souvent.",
 		sent_partner: "{name} est silencieux alors que {partner} est actif.",
 		sent_other: "{name} : {reason}",
 		sent_more: "Et {count} de plus.",
@@ -1510,6 +1519,7 @@ var Ke = {
 		dh_silent: "Silencieux depuis {span}.",
 		dh_unavailable: "Injoignable.",
 		dh_unavailable_for: "Injoignable depuis {span}.",
+		dh_unavailable_often: "Décroche souvent.",
 		dh_partner: "Silencieux, partenaire actif.",
 		dh_battery: "Pile à {level} %.",
 		dh_learning: "Apprend encore.",
@@ -1666,6 +1676,8 @@ var Ke = {
 		tpl_save: "Enregistrer",
 		new_unreachable_title: "Appareils importants plus tôt",
 		new_unreachable_text: "Combien de temps un appareil important peut rester injoignable avant que Pulse indique « À vérifier » : à choisir sous Paramètres › Cas particuliers : 2, 5, 10 ou 20 minutes.",
+		new_often_title: "Ça empire ? Pulse le voit",
+		new_often_text: "Si un appareil sur secteur décroche soudain bien plus souvent que la semaine d’avant, Pulse n’y voit plus une habitude : il affiche « Décroche souvent » et signale de nouveau une panne après deux heures.",
 		new_snooze_title: "Rappel plus tard",
 		new_snooze_text: "« Rappeler plus tard » propose maintenant demain, dans une semaine ou dans un mois. Les notifications ont aussi « Rappeler dans une semaine ».",
 		new_local_title: "Plus d’appareils tout seuls",
@@ -1856,6 +1868,7 @@ var Ke = {
 		sent_battery: "{name} pronto necesitará una pila nueva.",
 		sent_battery_low: "{name} necesita una pila nueva.",
 		sent_unavailable: "{name} no está disponible.",
+		sent_unavailable_often: "{name} se desconecta a menudo.",
 		sent_partner: "{name} está en silencio mientras {partner} está activo.",
 		sent_other: "{name}: {reason}",
 		sent_more: "Y {count} más.",
@@ -1883,6 +1896,7 @@ var Ke = {
 		dh_silent: "En silencio desde hace {span}.",
 		dh_unavailable: "No disponible.",
 		dh_unavailable_for: "No disponible desde hace {span}.",
+		dh_unavailable_often: "Se desconecta a menudo.",
 		dh_partner: "En silencio, compañero activo.",
 		dh_battery: "Pila al {level} %.",
 		dh_learning: "Aún aprendiendo.",
@@ -2039,6 +2053,8 @@ var Ke = {
 		tpl_save: "Guardar",
 		new_unreachable_title: "Dispositivos importantes antes",
 		new_unreachable_text: "Cuánto tiempo puede estar no disponible un dispositivo importante antes de que Pulse diga «Revisar»: elígelo en Ajustes › Casos especiales: 2, 5, 10 o 20 minutos.",
+		new_often_title: "¿Va a peor? Pulse lo nota",
+		new_often_text: "Si un dispositivo de red se desconecta de pronto mucho más que la semana anterior, Pulse ya no lo toma por costumbre: muestra «Se desconecta a menudo» y avisa de nuevo de un corte a las dos horas.",
 		new_snooze_title: "Recordar más tarde",
 		new_snooze_text: "«Recordar más tarde» ahora ofrece mañana, en una semana o en un mes. Las notificaciones también tienen «Recordar en una semana».",
 		new_local_title: "Más dispositivos por sí solos",
@@ -2229,6 +2245,7 @@ var Ke = {
 		sent_battery: "{name} heeft binnenkort een nieuwe batterij nodig.",
 		sent_battery_low: "{name} heeft een nieuwe batterij nodig.",
 		sent_unavailable: "{name} is onbereikbaar.",
+		sent_unavailable_often: "{name} valt vaak weg.",
 		sent_partner: "{name} is stil terwijl {partner} actief is.",
 		sent_other: "{name}: {reason}",
 		sent_more: "En nog {count}.",
@@ -2256,6 +2273,7 @@ var Ke = {
 		dh_silent: "Al {span} stil.",
 		dh_unavailable: "Onbereikbaar.",
 		dh_unavailable_for: "Al {span} onbereikbaar.",
+		dh_unavailable_often: "Valt vaak weg.",
 		dh_partner: "Stil, partner actief.",
 		dh_battery: "Batterij op {level}%.",
 		dh_learning: "Leert nog.",
@@ -2412,6 +2430,8 @@ var Ke = {
 		tpl_save: "Opslaan",
 		new_unreachable_title: "Belangrijke apparaten sneller",
 		new_unreachable_text: "Hoe lang een belangrijk apparaat onbereikbaar mag zijn voordat Pulse „Controleren” meldt, kies je onder Instellingen › Bijzondere gevallen: 2, 5, 10 of 20 minuten.",
+		new_often_title: "Wordt het erger? Pulse ziet het",
+		new_often_text: "Valt een apparaat op het stroomnet ineens veel vaker weg dan de week ervoor, dan ziet Pulse dat niet meer als gewoonte: het toont „Valt vaak weg” en meldt een uitval weer na twee uur.",
 		new_snooze_title: "Later herinneren",
 		new_snooze_text: "„Later herinneren” biedt nu morgen, over een week of over een maand. Meldingen hebben ook „Over een week herinneren”.",
 		new_local_title: "Meer apparaten vanzelf",
@@ -2795,6 +2815,7 @@ var Wt = /* @__PURE__ */ new Set([
 	"silent_new",
 	"unavailable",
 	"unavailable_usual",
+	"unavailable_often",
 	"partner",
 	"radio_only"
 ]), Gt = /* @__PURE__ */ new Set(["silent", "silent_new"]);
@@ -2911,7 +2932,7 @@ function Zt(e, t, n, r) {
 			let i = Kt(e, a, n, r);
 			return i ? K(e, "sent_silent_since", t, { day: i }) : K(e, "sent_silent_for", t, { span: W(e, n - a) });
 		}
-		return i === "waiting_first" ? K(e, "sent_waiting", t, {}) : i === "battery_low" ? K(e, "sent_battery_low", t, {}) : i === "battery_soon" ? K(e, "sent_battery", t, {}) : i === "unavailable" || i === "unavailable_usual" ? K(e, "sent_unavailable", t, {}) : i === "startup_waiting" ? K(e, "sent_startup", t, {}) : i === "radio_only" ? K(e, "sent_radio_only", t, {}) : i === "battery_missing" ? K(e, "sent_battery_missing", t, {}) : i === "partner" ? K(e, "sent_partner", t, { partner: t.partner_name ?? "" }) : K(e, "sent_other", t, { reason: t.reason });
+		return i === "waiting_first" ? K(e, "sent_waiting", t, {}) : i === "battery_low" ? K(e, "sent_battery_low", t, {}) : i === "battery_soon" ? K(e, "sent_battery", t, {}) : i === "unavailable" || i === "unavailable_usual" ? K(e, "sent_unavailable", t, {}) : i === "unavailable_often" ? K(e, "sent_unavailable_often", t, {}) : i === "startup_waiting" ? K(e, "sent_startup", t, {}) : i === "radio_only" ? K(e, "sent_radio_only", t, {}) : i === "battery_missing" ? K(e, "sent_battery_missing", t, {}) : i === "partner" ? K(e, "sent_partner", t, { partner: t.partner_name ?? "" }) : K(e, "sent_other", t, { reason: t.reason });
 	}), l = i.length - c.length;
 	return {
 		mentions: c,
@@ -3047,7 +3068,10 @@ function ln(e, t, n) {
 			tone: R(t.status)
 		};
 	}
-	return r === "partner" ? {
+	return r === "unavailable_often" ? {
+		text: F(e, "dh_unavailable_often"),
+		tone: R(t.status)
+	} : r === "partner" ? {
 		text: F(e, "dh_partner"),
 		tone: R(t.status)
 	} : r.startsWith("battery") && t.battery.level !== null ? {
@@ -3781,9 +3805,9 @@ var J = o`
 		text: "welcome_notify_text"
 	}
 ], Kn = [{
-	icon: "mdi:bell-sleep-outline",
-	title: "new_snooze_title",
-	text: "new_snooze_text"
+	icon: "mdi:power-plug-off-outline",
+	title: "new_often_title",
+	text: "new_often_text"
 }], qn = "https://github.com/SH1FT-W/pulse/blob/main/CHANGELOG.md";
 N("pulse-welcome", class extends A {
 	static {
@@ -7489,7 +7513,7 @@ function Mr() {
 	let e = jr();
 	if (!e) return null;
 	try {
-		return Zn(e, "26.11.4", Kn.length > 0);
+		return Zn(e, "26.11.5-beta.1", Kn.length > 0);
 	} catch {
 		return null;
 	}
@@ -7703,7 +7727,7 @@ var Pr = class extends A {
 		this.welcome = null;
 		let e = jr();
 		try {
-			e && Qn(e, "26.11.4");
+			e && Qn(e, "26.11.5-beta.1");
 		} catch {}
 	}
 	zigbeeOffer(e) {
@@ -7872,7 +7896,7 @@ var Pr = class extends A {
         @partner-dismiss=${(e) => this.onPartnerDismiss(e.detail.id, e.detail.partner)}
       >
         ${this.renderHead()} ${this.renderContent()}
-        <p class="version muted">${F(t, "version", { version: "26.11.4" })}</p>
+        <p class="version muted">${F(t, "version", { version: "26.11.5-beta.1" })}</p>
         ${e ? w`<pulse-device-sheet
                   .open=${n !== null}
                   .device=${n}
@@ -7897,7 +7921,7 @@ var Pr = class extends A {
                 <pulse-welcome
                   .mode=${this.welcome}
                   .language=${t}
-                  .version=${"26.11.4"}
+                  .version=${"26.11.5-beta.1"}
                   .zigbee=${this.zigbeeOffer(e)}
                   @closed=${() => this.welcomeDone()}
                   @enable-z2m=${() => {

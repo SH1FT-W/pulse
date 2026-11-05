@@ -176,6 +176,7 @@ export const FR: Record<keyof typeof EN, string> = {
   sent_battery: '{name} aura bientôt besoin d’une pile neuve.',
   sent_battery_low: '{name} a besoin d’une pile neuve.',
   sent_unavailable: '{name} est injoignable.',
+  sent_unavailable_often: '{name} décroche souvent.',
   sent_partner: '{name} est silencieux alors que {partner} est actif.',
   sent_other: '{name} : {reason}',
   sent_more: 'Et {count} de plus.',
@@ -203,6 +204,7 @@ export const FR: Record<keyof typeof EN, string> = {
   dh_silent: 'Silencieux depuis {span}.',
   dh_unavailable: 'Injoignable.',
   dh_unavailable_for: 'Injoignable depuis {span}.',
+  dh_unavailable_often: 'Décroche souvent.',
   dh_partner: 'Silencieux, partenaire actif.',
   dh_battery: 'Pile à {level} %.',
   dh_learning: 'Apprend encore.',
@@ -379,6 +381,9 @@ export const FR: Record<keyof typeof EN, string> = {
   new_unreachable_title: 'Appareils importants plus tôt',
   new_unreachable_text:
     'Combien de temps un appareil important peut rester injoignable avant que Pulse indique « À vérifier » : à choisir sous Paramètres › Cas particuliers : 2, 5, 10 ou 20 minutes.',
+  new_often_title: 'Ça empire ? Pulse le voit',
+  new_often_text:
+    'Si un appareil sur secteur décroche soudain bien plus souvent que la semaine d’avant, Pulse n’y voit plus une habitude : il affiche « Décroche souvent » et signale de nouveau une panne après deux heures.',
   new_snooze_title: 'Rappel plus tard',
   new_snooze_text:
     '« Rappeler plus tard » propose maintenant demain, dans une semaine ou dans un mois. Les notifications ont aussi « Rappeler dans une semaine ».',

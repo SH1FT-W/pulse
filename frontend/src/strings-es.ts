@@ -173,6 +173,7 @@ export const ES: Record<keyof typeof EN, string> = {
   sent_battery: '{name} pronto necesitará una pila nueva.',
   sent_battery_low: '{name} necesita una pila nueva.',
   sent_unavailable: '{name} no está disponible.',
+  sent_unavailable_often: '{name} se desconecta a menudo.',
   sent_partner: '{name} está en silencio mientras {partner} está activo.',
   sent_other: '{name}: {reason}',
   sent_more: 'Y {count} más.',
@@ -200,6 +201,7 @@ export const ES: Record<keyof typeof EN, string> = {
   dh_silent: 'En silencio desde hace {span}.',
   dh_unavailable: 'No disponible.',
   dh_unavailable_for: 'No disponible desde hace {span}.',
+  dh_unavailable_often: 'Se desconecta a menudo.',
   dh_partner: 'En silencio, compañero activo.',
   dh_battery: 'Pila al {level} %.',
   dh_learning: 'Aún aprendiendo.',
@@ -374,6 +376,9 @@ export const ES: Record<keyof typeof EN, string> = {
   new_unreachable_title: 'Dispositivos importantes antes',
   new_unreachable_text:
     'Cuánto tiempo puede estar no disponible un dispositivo importante antes de que Pulse diga «Revisar»: elígelo en Ajustes › Casos especiales: 2, 5, 10 o 20 minutos.',
+  new_often_title: '¿Va a peor? Pulse lo nota',
+  new_often_text:
+    'Si un dispositivo de red se desconecta de pronto mucho más que la semana anterior, Pulse ya no lo toma por costumbre: muestra «Se desconecta a menudo» y avisa de nuevo de un corte a las dos horas.',
   new_snooze_title: 'Recordar más tarde',
   new_snooze_text:
     '«Recordar más tarde» ahora ofrece mañana, en una semana o en un mes. Las notificaciones también tienen «Recordar en una semana».',

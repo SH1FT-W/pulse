@@ -169,6 +169,7 @@ export const DE: Record<keyof typeof EN, string> = {
   sent_battery: '{name} braucht bald eine neue Batterie.',
   sent_battery_low: '{name} braucht eine neue Batterie.',
   sent_unavailable: '{name} ist nicht erreichbar.',
+  sent_unavailable_often: '{name} fällt oft aus.',
   sent_partner: '{name} schweigt, obwohl {partner} aktiv ist.',
   sent_other: '{name}: {reason}',
   sent_more: 'Und {count} weitere.',
@@ -196,6 +197,7 @@ export const DE: Record<keyof typeof EN, string> = {
   dh_silent: 'Still seit {span}.',
   dh_unavailable: 'Nicht erreichbar.',
   dh_unavailable_for: 'Seit {span} nicht erreichbar.',
+  dh_unavailable_often: 'Fällt oft aus.',
   dh_partner: 'Schweigt, Partner aktiv.',
   dh_battery: 'Batterie bei {level} %.',
   dh_learning: 'Lernt noch.',
@@ -371,6 +373,9 @@ export const DE: Record<keyof typeof EN, string> = {
   new_unreachable_title: 'Wichtige Geräte schneller',
   new_unreachable_text:
     'Wie lange ein wichtiges Gerät nicht erreichbar sein darf, bis Pulse „Prüfen“ meldet, stellst du unter Einstellungen › Besonderes ein: 2, 5, 10 oder 20 Minuten.',
+  new_often_title: 'Wird schlechter? Pulse merkt es',
+  new_often_text:
+    'Fällt ein Gerät am Strom plötzlich viel öfter aus als in der Woche davor, gilt das nicht mehr als Gewohnheit: Pulse zeigt „Fällt oft aus“ und meldet einen Ausfall wieder nach zwei Stunden.',
   new_snooze_title: 'Länger erinnern',
   new_snooze_text:
     '„Später erinnern“ bietet jetzt morgen, in einer Woche oder in einem Monat an. In der Mitteilung gibt es dafür zusätzlich „In einer Woche erinnern“.',

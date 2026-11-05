@@ -26,7 +26,7 @@ const WELCOME: Feature[] = [
  * (1 to 4 entries). As of 26.10.15.
  */
 export const WHATS_NEW: Feature[] = [
-  { icon: 'mdi:bell-sleep-outline', title: 'new_snooze_title', text: 'new_snooze_text' },
+  { icon: 'mdi:power-plug-off-outline', title: 'new_often_title', text: 'new_often_text' },
 ];
 
 const CHANGELOG_URL = 'https://github.com/SH1FT-W/pulse/blob/main/CHANGELOG.md';
