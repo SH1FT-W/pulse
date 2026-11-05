@@ -42,10 +42,12 @@ HISTORY_DAYS: Final = 10
 # HA rewrites an entity's state right after its registry entry or its device's name changed (rename, icon, area,
 # unit, new entity ID); a row this close after such a change is that rewrite, not a report of the device
 REGISTRY_ECHO: Final = 2.0
-# A new entity ID makes HA remove the entity and add it again under the new ID; its first row comes once the
-# integration's `async_added_to_hass` is done (seconds on a slow host or with many renames at once). Nothing can be
-# written under the new ID before, so the first row after the change is that rewrite, as long as it comes this soon
-# (later, the re-add failed and the row is the integration's next start)
+# A new entity ID: up to HA 2026.10 (and for custom entity classes not switched over since) HA removes the entity
+# and adds it again under the new ID; its first row comes once the integration's `async_added_to_hass` is done
+# (seconds on a slow host or with many renames at once). From 2026.11 HA changes the ID of core entities in place
+# (states.async_remove(old), async_entity_id_changed) and writes the new row at once, well within REGISTRY_ECHO.
+# Either way nothing can be written under the new ID before, so the first row after the change is that rewrite, as
+# long as it comes this soon (later, the re-add failed and the row is the integration's next start)
 ENTITY_ID_ECHO: Final = 300.0
 # Remembered registry changes per entity (older than HISTORY_DAYS are dropped anyway)
 REGISTRY_CHANGES_MAX: Final = 50
