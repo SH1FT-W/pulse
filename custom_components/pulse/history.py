@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable, Mapping, Sequence
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
-from typing import Any
+from typing import Any, NamedTuple
 
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -30,10 +30,30 @@ NOT_REAL = {STATE_UNAVAILABLE, STATE_UNKNOWN, ""}
 CHUNK = 3  # keep small: chatty sensors have tens of thousands of rows per day
 # Attributes HA rewrites when the user renames the device or entity or changes an entity's settings in the
 # registry; a row (or state change) that only changes these is no report of the device
-# At most this many attribute-only rows: then read the entity again with attributes (`same_value_rows`)
-ATTRIBUTE_ROWS = 30
-ATTRIBUTE_READ_MAX = 2000  # and at most this many rows in all
 METADATA = frozenset({ATTR_FRIENDLY_NAME, ATTR_ICON, ATTR_ENTITY_PICTURE, ATTR_DEVICE_CLASS, ATTR_UNIT_OF_MEASUREMENT})
+# HA rewrites an entity's state right after its registry entry or device changed (renamed, area, icon, unit, new
+# entity ID); a write this close after such a change is that rewrite, not a report of the device
+REGISTRY_ECHO = 2.0
+# Read again with attributes: at most the last this many rows of an entity. They decide its last report; a quiet
+# device has fewer rows in all, and for one with more a rename further back is one report among hundreds
+ATTRIBUTE_ROWS = 200
+
+
+class Registry(NamedTuple):
+    """When the entity's registry entry and its device were last changed (`modified_at`, None = unknown)."""
+
+    entity: float | None = None
+    device: float | None = None
+
+
+NO_REGISTRY = Registry()
+
+
+def registry_echo(written: float, registry: Registry, device: bool = True) -> bool:
+    """A write right after a registry change of the entity (or, with `device`, of its device)."""
+    stamps = (registry.entity, registry.device) if device else (registry.entity,)
+    # HA rewrites after the change, never before it
+    return any(stamp is not None and 0 <= written - stamp <= REGISTRY_ECHO for stamp in stamps)
 
 
 def metadata_only(old: Mapping[str, Any], new: Mapping[str, Any]) -> bool:
@@ -43,56 +63,77 @@ def metadata_only(old: Mapping[str, Any], new: Mapping[str, Any]) -> bool:
     return bool(changed) and changed <= METADATA
 
 
-def same_value_rows(states: Sequence[Any]) -> bool:
-    """A few rows repeat the value of a real predecessor without being a new state object (`last_changed` before
-    `last_updated`: only the attributes changed): only their attributes can tell a rename from a report. A new state
-    object (the row HA writes on start, `force_update`) has `last_changed == last_updated` and needs none. Many such
-    rows (thermostats) or many rows at all (a chatty sensor) are not worth reading again: one row more or less does
-    not change what Pulse learns about a device that reports this often."""
-    if len(states) > ATTRIBUTE_READ_MAX:
-        return False
+def registry_rewrite(old: State, new: State) -> bool:
+    """HA rewrote the state after a registry change: same value with only metadata changed, or a value converted
+    to another unit (entity options; the unit and at most other metadata changed). A unit that only appears or
+    disappears is no conversion."""
+    if old.state != new.state:
+        units = (old.attributes.get(ATTR_UNIT_OF_MEASUREMENT), new.attributes.get(ATTR_UNIT_OF_MEASUREMENT))
+        if None in units or units[0] == units[1]:
+            return False  # checked first: every new value of a chatty sensor passes here
+    return metadata_only(old.attributes, new.attributes)
+
+
+def attribute_window(
+    states: Sequence[Any], starts: Sequence[float] = (), registry: Registry = NO_REGISTRY
+) -> int | None:
+    """Index from which an entity's rows (read without attributes) must be read again with them, None = not needed.
+
+    Only the attributes tell a rename from a report when a row repeats the value of its real predecessor: an
+    attribute-only row, but also a new state object with `force_update` (`last_changed == last_updated` there,
+    for a rename too). The row HA writes on start (`starts`) needs none, it never counts. A new value right after
+    a change of the entity's registry entry may be converted to a new unit. Read are the last `ATTRIBUTE_ROWS`
+    rows (plus the one before, to compare with), not more: they decide the last report.
+    """
+    first = max(0, len(states) - ATTRIBUTE_ROWS - 1)
     previous: str | None = None
-    count = 0
-    for state in states:
+    for state in states[first:]:
         if not isinstance(state, State):
             continue
-        if state.state not in NOT_REAL and state.state == previous and state.last_changed < state.last_updated:
-            count += 1
-            if count > ATTRIBUTE_ROWS:
-                return False
-        previous = None if state.state in NOT_REAL else state.state
-    return count > 0
+        if state.state in NOT_REAL:
+            previous = None
+            continue
+        written = state.last_updated.timestamp()
+        if previous is not None and (
+            (state.state == previous and not near_start(written, starts))
+            or registry_echo(written, registry, device=False)
+        ):
+            return first
+        previous = state.state
+    return None
 
 
-def real_reports(states: Iterable[Any], starts: Sequence[float] = ()) -> tuple[list[float], list[float]]:
+def real_reports(
+    states: Iterable[Any], starts: Sequence[float] = (), registry: Registry = NO_REGISTRY, compare_from: int = 0
+) -> tuple[list[float], list[float]]:
     """(Signs of life, actions) from a sequence of states.
 
     A sign of life is every row whose predecessor was already a real value; a value right after
     "unavailable" is a restart echo, as is the row HA rewrites on start (`starts`: own starts from
-    `store.uptime`). An action is a real change to a different value. A row with the same value that only
-    changes metadata (device or entity renamed, `metadata_only`) is no sign of life; that needs the attributes.
+    `store.uptime`). An action is a real change to a different value. A rewrite after a registry change is no
+    sign of life: by its attributes (`registry_rewrite`; only rows from `compare_from` on have them, the ones
+    before were read without), the same value also by its time right after the last change (`registry`, from
+    `modified_at`: covers a rewrite with identical attributes, `force_update` or a new entity ID).
     """
     stamps: list[float] = []  # all real rows
     rows: list[tuple[float, float, bool]] = []  # (updated, changed, different value) with a real predecessor
     previous: State | None = None
-    for state in states:
+    for index, state in enumerate(states):
         if not isinstance(state, State):
             continue  # minimal_response returns dicts for follow-up rows; not expected here
         if state.state in NOT_REAL:
             previous = None
             continue
-        if (
-            previous is not None
-            and state.state == previous.state
-            and metadata_only(previous.attributes, state.attributes)
-        ):
-            stamps.append(state.last_updated.timestamp())  # still a row for `restart_echoes`
-            previous = state
-            continue
         updated = state.last_updated.timestamp()
-        stamps.append(updated)
+        stamps.append(updated)  # also a rewrite: still a row for `restart_echoes`
         if previous is not None:
-            rows.append((updated, state.last_changed.timestamp(), state.state != previous.state))
+            same = state.state == previous.state
+            if (same and registry_echo(updated, registry)) or (
+                index > compare_from and registry_rewrite(previous, state)
+            ):
+                previous = state
+                continue
+            rows.append((updated, state.last_changed.timestamp(), not same))
         previous = state
     echoes = restart_echoes(stamps, starts) if starts else set()
     reports = [updated for updated, _, _ in rows if updated not in echoes]
@@ -145,12 +186,13 @@ async def _async_read[T](
     hass: HomeAssistant,
     entity_ids: list[str],
     days: int,
-    boil: Callable[[str, list[Any]], T],
-    attributes_if: Callable[[list[Any]], bool] | None = None,
+    boil: Callable[[str, list[Any], int], T],
+    attributes_from: Callable[[str, list[Any]], int | None] | None = None,
 ) -> dict[str, T]:
-    """Per entity `boil(entity_id, states)` over the last `days` days. Empty if no recorder is running.
+    """Per entity `boil(entity_id, states, compare_from)` over the last `days` days. Empty if no recorder is running.
 
-    `attributes_if`: read an entity again with its attributes if its rows (without) need them.
+    `attributes_from`: index from which an entity's rows (read without attributes) are needed with them; those are
+    read again and `compare_from` says from where on they have them (else the end: none has).
     """
     if not entity_ids or "recorder" not in hass.config.components:
         return {}
@@ -163,10 +205,10 @@ async def _async_read[T](
         # have tens of thousands of rows, and all state objects at once cost a lot of memory
         result: dict[str, T] = {}
 
-        def query(ids: list[str], no_attributes: bool) -> dict[str, list[Any]]:
+        def query(ids: list[str], since: datetime, no_attributes: bool) -> dict[str, list[Any]]:
             return history.get_significant_states(
                 hass,
-                start,
+                since,
                 None,
                 ids,
                 None,
@@ -177,15 +219,21 @@ async def _async_read[T](
             )
 
         for i in range(0, len(entity_ids), CHUNK):
-            rows = query(entity_ids[i : i + CHUNK], True)
+            rows = query(entity_ids[i : i + CHUNK], start, True)
             # Boil down and release right away: never more than one chunk of state objects in memory
             for entity_id in list(rows):
                 states = rows.pop(entity_id)
-                if attributes_if is not None and attributes_if(states):
-                    # Only for a few attribute-only rows (renamed) in a quiet entity: read with attributes
-                    del states
-                    states = query([entity_id], False).get(entity_id, [])
-                result[entity_id] = boil(entity_id, states)
+                compare_from = len(states)
+                first = attributes_from(entity_id, states) if attributes_from is not None else None
+                if first is not None:
+                    # Only the last rows, from the first one on (the recorder reads after `since`)
+                    since = states[first].last_updated - timedelta(microseconds=1)
+                    tail = query([entity_id], since, False).get(entity_id, [])
+                    if tail and isinstance(tail[0], State) and tail[0].last_updated == states[first].last_updated:
+                        states = [*states[:first], *tail]
+                        compare_from = first
+                    del tail
+                result[entity_id] = boil(entity_id, states, compare_from)
             del rows
         return result
 
@@ -197,11 +245,23 @@ async def _async_read[T](
 
 
 async def async_load_history(
-    hass: HomeAssistant, entity_ids: list[str], days: int, starts: Sequence[float] = ()
+    hass: HomeAssistant,
+    entity_ids: list[str],
+    days: int,
+    starts: Sequence[float] = (),
+    registry: Mapping[str, Registry] | None = None,
 ) -> dict[str, tuple[list[float], list[float]]]:
-    """Per entity (signs of life, actions) of the last `days` days. Empty if no recorder is running."""
+    """Per entity (signs of life, actions) of the last `days` days. Empty if no recorder is running.
+
+    `registry`: per entity when its registry entry and device were last changed (HA rewrote the state then).
+    """
+    registry = registry or {}
     return await _async_read(
-        hass, entity_ids, days, lambda _, states: real_reports(states, starts), attributes_if=same_value_rows
+        hass,
+        entity_ids,
+        days,
+        lambda e, states, compare_from: real_reports(states, starts, registry.get(e, NO_REGISTRY), compare_from),
+        attributes_from=lambda e, states: attribute_window(states, starts, registry.get(e, NO_REGISTRY)),
     )
 
 
@@ -220,7 +280,7 @@ async def async_load_outages(
         hass,
         entity_ids,
         days,
-        lambda e, states: (
+        lambda e, states, _: (
             outage_spans(states, offline.get(e), starts, shortest),
             running_outage(states, offline.get(e)),
         ),

@@ -75,7 +75,14 @@ from .const import (
 )
 from .discovery import DeviceSpec, candidates as discovery_candidates, discover
 from .forecast import Forecast
-from .history import async_load_history, async_load_outages, load_forecasts, metadata_only
+from .history import (
+    Registry,
+    async_load_history,
+    async_load_outages,
+    load_forecasts,
+    registry_echo,
+    registry_rewrite,
+)
 from .notifier import Notifier
 from .partners import PartnerInput, Suggestion, suggest
 from .rhythm import (
@@ -122,9 +129,6 @@ UPTIME_SAVE_EVERY = 5 * 60
 Z2M_RETRY = 5 * 60
 
 NOT_REAL = {STATE_UNAVAILABLE, STATE_UNKNOWN}
-# HA rewrites an entity's state right after its registry entry or device changed (renamed, area, icon); a write
-# without a new value this close to such a change is that rewrite, not a report of the device
-REGISTRY_ECHO = 2.0
 DAY = 86400.0
 # Reading history: briefly yield the event loop after this many inserted reports
 YIELD_EVERY = 2000
@@ -587,7 +591,8 @@ class PulseMonitor:
         """
         entity_ids = sorted(e for e in self._alive if only is None or self._entity_map.get(e) in only)
         starts = [float(span[0]) for span in self.store.uptime]
-        result = await async_load_history(self.hass, entity_ids, HISTORY_DAYS, starts)
+        registry = {e: self._registry(e) for e in entity_ids}
+        result = await async_load_history(self.hass, entity_ids, HISTORY_DAYS, starts, registry)
         if self._stopped:
             return
         keep_from = time.time() - KEEP_DAYS * DAY
@@ -750,8 +755,8 @@ class PulseMonitor:
             return
         if device.cloud and old.state == new.state:
             return  # Cloud: a new poll without a new value is no sign of life of the device
-        if old.state == new.state and (
-            metadata_only(old.attributes, new.attributes) or self._registry_echo(entity_id, new.last_updated)
+        if registry_rewrite(old, new) or (
+            old.state == new.state and registry_echo(new.last_updated.timestamp(), self._registry(entity_id))
         ):
             return  # Device or entity renamed / changed in the registry: HA rewrote the state, the device said nothing
         # Battery changes only from real transitions (never from restart echoes)
@@ -777,7 +782,7 @@ class PulseMonitor:
             return
         if device.cloud:
             return  # Cloud: same value again = only the cloud's polling rhythm
-        if self._registry_echo(entity_id, new.last_reported):
+        if registry_echo(new.last_reported.timestamp(), self._registry(entity_id)):
             return  # Registry changed (area, name without effect on the state): HA rewrote the same state
         # Same value reported again: confirms (or discards) a pending battery jump
         if entity_id in (device.spec.battery, device.spec.voltage) and device.record.get("pending_jump"):
@@ -785,16 +790,13 @@ class PulseMonitor:
         if entity_id in self._alive:
             self._activity(device, new.last_reported.timestamp(), False)
 
-    def _registry_echo(self, entity_id: str, written: datetime) -> bool:
-        """The entity's registry entry or its device was changed just now (HA rewrites the state then)."""
+    def _registry(self, entity_id: str) -> Registry:
+        """When the entity's registry entry and its device were last changed (HA rewrites the state then)."""
         entry = er.async_get(self.hass).async_get(entity_id)
         if entry is None:
-            return False
-        stamps = [entry.modified_at]
-        if entry.device_id and (dev := dr.async_get(self.hass).async_get(entry.device_id)) is not None:
-            stamps.append(dev.modified_at)
-        # HA rewrites after the change, never before it
-        return any(0 <= (written - stamp).total_seconds() <= REGISTRY_ECHO for stamp in stamps)
+            return Registry()
+        dev = dr.async_get(self.hass).async_get(entry.device_id) if entry.device_id else None
+        return Registry(entry.modified_at.timestamp(), dev.modified_at.timestamp() if dev is not None else None)
 
     def _activity(self, device: Device, ts: float, action: bool) -> None:
         if device.spec.mains and device.unavailable_since is not None:
