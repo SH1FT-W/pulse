@@ -2,6 +2,11 @@
 
 After 1.1.0, releases use calendar versions `YY.M.N` (year, month, number of the release in that month), e.g. `26.10.4`. They count as newer than every 1.x version, so updates through HACS work as before.
 
+## 26.11.5 – unreleased
+
+### Fixed
+- Renaming a device or changing an entity's settings in Home Assistant (name, icon, area, aliases) no longer counts as a report of the device. Home Assistant rewrites the entities' states right after such a change, and Pulse took that for a sign of life: a sensor that had been silent for five days showed "just now" after it was renamed, also after the next restart, because the recorder keeps the rewritten row. Now a state with the same value that only changes the name or icon, or comes right after a registry change, is ignored, live and when Pulse reads the history. New values, the same value reported again and the same value with new data in its attributes still count. A new entity ID still counts once when Pulse reads the history after a restart.
+
 ## 26.11.5-beta.1 – 2026-11-05
 
 ### Fixed
