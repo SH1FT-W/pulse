@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 import copy
+import math
 import time
 from typing import Any
 
@@ -119,14 +120,31 @@ def migrate(old_minor: int, data: dict[str, Any]) -> dict[str, Any]:
     if old_minor < 9:
         # 26.11.5: registry changes per entity (HA rewrites the state then; that row is no report)
         data.setdefault("registry_changes", {})
+    if old_minor < 10:
+        # 26.11.5: which of them gave the entity a new ID (HA adds it again, its first row may come later)
+        data.setdefault("entity_id_changes", {})
     return data
 
 
+def _stamps(stamps: Any, keep: float) -> list[float]:
+    """Valid times from `keep` on, sorted, the latest REGISTRY_CHANGES_MAX (anything else in the store is dropped)."""
+    if not isinstance(stamps, list):
+        return []
+    valid = [
+        float(ts)
+        for ts in stamps
+        if isinstance(ts, int | float) and not isinstance(ts, bool) and math.isfinite(ts) and ts >= keep
+    ]
+    return sorted(valid)[-REGISTRY_CHANGES_MAX:]
+
+
 def _recent(changes: Any, keep: float) -> dict[str, list[float]]:
-    """Registry changes from `keep` on, entities without any left dropped."""
+    """Registry changes from `keep` on, entities without any left (and broken entries) dropped."""
+    if not isinstance(changes, dict):
+        return {}
     result: dict[str, list[float]] = {}
-    for entity_id, stamps in (changes or {}).items():
-        if recent := sorted(float(ts) for ts in stamps if ts >= keep)[-REGISTRY_CHANGES_MAX:]:
+    for entity_id, stamps in changes.items():
+        if isinstance(entity_id, str) and (recent := _stamps(stamps, keep)):
             result[entity_id] = recent
     return result
 
@@ -148,7 +166,11 @@ class PulseStore:
         self.z2m_health_at: float | None = None
         # Entity → times of its registry changes (rename, icon, unit, new entity ID, device renamed) within the
         # history window: HA rewrites the state right after, that row is no report (live and from the recorder)
+        # Kept for every entity with a device (not only watched ones): a device added later, or an entity ID that
+        # changes twice before Pulse searches again, still knows its changes
         self.registry_changes: dict[str, list[float]] = {}
+        # The subset that gave the entity a new ID (`history.ENTITY_ID_ECHO`)
+        self.entity_id_changes: dict[str, list[float]] = {}
         # A delayed save is pending; do not schedule again (HA would otherwise keep pushing it back)
         self._save_pending = False
         self._save_due: float | None = None
@@ -166,19 +188,33 @@ class PulseStore:
         self.summary_pending = data.get("summary_pending")
         self.cloud_notified = dict(data.get("cloud_notified") or {})
         self.z2m_health_at = data.get("z2m_health_at")
-        self.registry_changes = _recent(data.get("registry_changes"), time.time() - HISTORY_DAYS * DAY)
+        keep = time.time() - HISTORY_DAYS * DAY
+        self.registry_changes = _recent(data.get("registry_changes"), keep)
+        self.entity_id_changes = _recent(data.get("entity_id_changes"), keep)
 
     def remember_registry_change(self, entity_ids: Iterable[str], ts: float, moved_from: str | None = None) -> None:
         """Registry change of these entities at `ts`; `moved_from`: their old entity ID, whose changes move along
-        (the recorder hangs the old rows on the new ID). Older than the history window is dropped."""
-        changes = self.registry_changes
-        if moved_from is not None and (old := changes.pop(moved_from, None)):
-            for entity_id in entity_ids:
-                changes[entity_id] = [*old, *changes.get(entity_id, ())]
+        (the recorder hangs the old rows on the new ID), also along a chain A → B → C.
+
+        Changes the lists in place and only prunes the touched entities (a device renamed with many entities, or
+        many integrations updating their entries while HA starts, must not rebuild everything each time); the rest
+        is pruned when saving. A history read gets its own copy (`registry_snapshot`)."""
+        keep = ts - HISTORY_DAYS * DAY
         for entity_id in entity_ids:
-            changes.setdefault(entity_id, []).append(ts)
-        self.registry_changes = _recent(changes, ts - HISTORY_DAYS * DAY)
+            for changes in (self.registry_changes, self.entity_id_changes):
+                if moved_from is not None and (old := changes.pop(moved_from, None)):
+                    changes[entity_id] = [*old, *changes.get(entity_id, ())]
+            self.registry_changes[entity_id] = _stamps([*self.registry_changes.get(entity_id, ()), ts], keep)
+            if moved_from is not None:
+                self.entity_id_changes[entity_id] = _stamps([*self.entity_id_changes.get(entity_id, ()), ts], keep)
         self.async_delay_save()
+
+    def registry_snapshot(self) -> tuple[dict[str, list[float]], dict[str, list[float]]]:
+        """Copies of (registry changes, entity ID changes) for a history read in the executor."""
+        return (
+            {e: list(v) for e, v in self.registry_changes.items()},
+            {e: list(v) for e, v in self.entity_id_changes.items()},
+        )
 
     def record(self, device_id: str) -> dict[str, Any]:
         if device_id not in self.devices:
@@ -211,6 +247,9 @@ class PulseStore:
         await self._store.async_save(self._data())
 
     def _data(self) -> dict[str, Any]:
+        keep = time.time() - HISTORY_DAYS * DAY
+        self.registry_changes = _recent(self.registry_changes, keep)
+        self.entity_id_changes = _recent(self.entity_id_changes, keep)
         return {
             "devices": self.devices,
             "settings": self.settings,
@@ -221,6 +260,7 @@ class PulseStore:
             "cloud_notified": self.cloud_notified,
             "z2m_health_at": self.z2m_health_at,
             "registry_changes": self.registry_changes,
+            "entity_id_changes": self.entity_id_changes,
         }
 
     async def async_remove(self) -> None:

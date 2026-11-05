@@ -13,9 +13,9 @@ from homeassistant.core import HomeAssistant, State
 from homeassistant.util import dt as dt_util
 
 from .battery import LEVEL_LOW
-from .const import REGISTRY_ECHO
+from .const import ENTITY_ID_ECHO, REGISTRY_ECHO
 from .forecast import Forecast, predict
-from .rhythm import near_start, restart_echoes
+from .rhythm import RESTART_AFTER, near_start, restart_echoes
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,35 +31,54 @@ def registry_rewrite(written: float, changes: Sequence[float]) -> bool:
 
 
 def real_reports(
-    states: Iterable[Any], starts: Sequence[float] = (), changes: Sequence[float] = ()
+    states: Iterable[Any],
+    starts: Sequence[float] = (),
+    changes: Sequence[float] = (),
+    moves: Sequence[float] = (),
 ) -> tuple[list[float], list[float]]:
     """(Signs of life, actions) from a sequence of states.
 
     A sign of life is every row whose predecessor was already a real value; a value right after
     "unavailable" is a restart echo, as is the row HA rewrites on start (`starts`: own starts from
     `store.uptime`). An action is a real change to a different value. A row right after a registry change
-    (`changes`) is HA's rewrite: no sign of life, no action, and no candidate for the restart echo (otherwise a
-    rename shortly before a restart would use up the echo and the real start row would count). Its value stays
-    the predecessor of the next row (a unit change converts the value).
+    (`changes`) is HA's rewrite: no sign of life, no action. Its value stays the predecessor of the next row (a unit
+    change converts the value). After a new entity ID (`moves`) the first row is the re-added entity, also when it
+    comes later than REGISTRY_ECHO (up to ENTITY_ID_ECHO).
+
+    A rewrite before an own start is no candidate for the restart echo (otherwise a rename shortly before a restart
+    would use up the echo and the real start row would count). One from the start on is: an integration loading
+    after Pulse updates its entries right before its start row, which then is both, and the next real report must
+    not become the echo.
     """
     stamps: list[float] = []  # all real rows
+    rewrites: list[float] = []  # rows HA rewrote after a registry change (with a real predecessor)
     rows: list[tuple[float, float, bool]] = []  # (updated, changed, different value) with a real predecessor
     previous: str | None = None
+    pending = sorted(moves)
+    move = 0
     for state in states:
         if not isinstance(state, State):
             continue  # minimal_response returns dicts for follow-up rows; not expected here
+        updated = state.last_updated.timestamp()
+        readded = False
+        while move < len(pending) and pending[move] <= updated:
+            readded = readded or updated - pending[move] <= ENTITY_ID_ECHO
+            move += 1
         if state.state in NOT_REAL:
             previous = None
             continue
-        updated = state.last_updated.timestamp()
-        if previous is not None and registry_rewrite(updated, changes):
+        if previous is not None and (readded or registry_rewrite(updated, changes)):
+            rewrites.append(updated)
             previous = state.state
             continue
         stamps.append(updated)
         if previous is not None:
             rows.append((updated, state.last_changed.timestamp(), state.state != previous))
         previous = state.state
-    echoes = restart_echoes(stamps, starts) if starts else set()
+    echoes: set[float] = set()
+    if starts:
+        candidates = stamps + [ts for ts in rewrites if any(start <= ts <= start + RESTART_AFTER for start in starts)]
+        echoes = restart_echoes(sorted(candidates), starts)
     reports = [updated for updated, _, _ in rows if updated not in echoes]
     actions = [changed for updated, changed, other in rows if other and updated not in echoes]
     return reports, actions
@@ -151,12 +170,17 @@ async def async_load_history(
     days: int,
     starts: Sequence[float] = (),
     changes: Mapping[str, Sequence[float]] | None = None,
+    moves: Mapping[str, Sequence[float]] | None = None,
 ) -> dict[str, tuple[list[float], list[float]]]:
-    """Per entity (signs of life, actions) of the last `days` days (`changes`: entity → its registry changes).
-    Empty if no recorder is running."""
+    """Per entity (signs of life, actions) of the last `days` days (`changes`: entity → its registry changes,
+    `moves`: those that gave it a new ID; both copies, the executor reads them). Empty if no recorder is running."""
     changes = changes or {}
+    moves = moves or {}
     return await _async_read(
-        hass, entity_ids, days, lambda e, states: real_reports(states, starts, sorted(changes.get(e, ())))
+        hass,
+        entity_ids,
+        days,
+        lambda e, states: real_reports(states, starts, sorted(changes.get(e, ())), moves.get(e, ())),
     )
 
 

@@ -15,8 +15,8 @@ STORE_VERSION: Final = 1
 # 2: uptime, 3: source per battery change, false changes dropped, 4: volts → mV, arrive home as a list,
 # 5: summary day (summary_sent/summary_pending), 6: dismissed partner suggestions, battery missing since,
 # cloud outage reported, Z2M health requested, 7: restart echoes dropped, cloud reports rebuilt, 8: outages,
-# 9: registry changes (`registry_changes`)
-STORE_MINOR: Final = 9
+# 9: registry changes (`registry_changes`), 10: entity ID changes (`entity_id_changes`)
+STORE_MINOR: Final = 10
 
 # Dispatcher: something changed (resend the panel, update entities)
 SIGNAL_UPDATE: Final = "pulse_update"
@@ -42,6 +42,11 @@ HISTORY_DAYS: Final = 10
 # HA rewrites an entity's state right after its registry entry or its device's name changed (rename, icon, area,
 # unit, new entity ID); a row this close after such a change is that rewrite, not a report of the device
 REGISTRY_ECHO: Final = 2.0
+# A new entity ID makes HA remove the entity and add it again under the new ID; its first row comes once the
+# integration's `async_added_to_hass` is done (seconds on a slow host or with many renames at once). Nothing can be
+# written under the new ID before, so the first row after the change is that rewrite, as long as it comes this soon
+# (later, the re-add failed and the row is the integration's next start)
+ENTITY_ID_ECHO: Final = 300.0
 # Remembered registry changes per entity (older than HISTORY_DAYS are dropped anyway)
 REGISTRY_CHANGES_MAX: Final = 50
 KEEP_DAYS: Final = 14

@@ -27,7 +27,6 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import (
-    CoreState,
     Event,
     EventStateChangedData,
     EventStateReportedData,
@@ -411,11 +410,17 @@ class PulseMonitor:
 
     @callback
     def _entity_rewritten(self, event_data: Any) -> bool:
-        """Every update of a watched entity's registry entry makes HA write its state again (helpers/entity.py
-        `_async_process_registry_update_or_remove`); a new entity ID re-adds it under the new ID."""
-        return event_data["action"] == "update" and (
-            event_data["entity_id"] in self._entity_map or event_data.get("old_entity_id") in self._entity_map
-        )
+        """Every update of an entity's registry entry makes HA write its state again (helpers/entity.py
+        `_async_process_registry_update_or_remove`); a new entity ID re-adds it under the new ID.
+
+        Remembered for every entity with a device except Pulse's own, not only the watched ones: a device Pulse
+        watches later (added by hand, mains devices beta, label, new battery) reads its history then, and an entity
+        ID that changes twice before Pulse searches again (A → B → C within `_rediscover_debouncer`) must carry its
+        changes along. Entities without a device are never watched."""
+        if event_data["action"] != "update":
+            return False
+        entry = er.async_get(self.hass).async_get(event_data["entity_id"])
+        return entry is not None and entry.device_id is not None and entry.platform != DOMAIN
 
     @staticmethod
     @callback
@@ -429,9 +434,11 @@ class PulseMonitor:
     @callback
     def _remember_entity_change(self, event: Event[er.EventEntityRegistryUpdatedData]) -> None:
         """Remembered before HA's rewrite reaches Pulse: HA queues the state event fired while it hands the
-        registry change to its listeners until all of them have it (core.py `async_fire_internal`)."""
-        if self.hass.state is not CoreState.running:
-            return  # while HA starts, integrations update their entries before the first state (a restart echo)
+        registry change to its listeners until all of them have it (core.py `async_fire_internal`).
+
+        Also while HA starts (the frontend can be used then): an integration loading after Pulse that updates its
+        entries right before its start row makes that row a rewrite too, `history.real_reports` lets it still be the
+        restart echo."""
         data = event.data
         old = data.get("old_entity_id")
         moved = old if isinstance(old, str) else None
@@ -439,10 +446,8 @@ class PulseMonitor:
 
     @callback
     def _remember_device_change(self, event: Event[dr.EventDeviceRegistryUpdatedData]) -> None:
-        if self.hass.state is not CoreState.running:
-            return
         entries = er.async_entries_for_device(er.async_get(self.hass), event.data["device_id"])
-        if entity_ids := [e.entity_id for e in entries if e.entity_id in self._entity_map]:
+        if entity_ids := [e.entity_id for e in entries if e.platform != DOMAIN and e.disabled_by is None]:
             self.store.remember_registry_change(entity_ids, event.time_fired_timestamp)
 
     def _registry_rewrite(self, entity_id: str, written: float) -> bool:
@@ -636,9 +641,16 @@ class PulseMonitor:
         """
         entity_ids = sorted(e for e in self._alive if only is None or self._entity_map.get(e) in only)
         starts = [float(span[0]) for span in self.store.uptime]
-        result = await async_load_history(self.hass, entity_ids, HISTORY_DAYS, starts, self.store.registry_changes)
+        # The executor gets copies; changes that come in while it reads are checked afterwards (their rewrite may
+        # already be in the recorder rows it read)
+        changes, moves = self.store.registry_snapshot()
+        result = await async_load_history(self.hass, entity_ids, HISTORY_DAYS, starts, changes, moves)
         if self._stopped:
             return
+        for entity_id, (reports, actions) in result.items():
+            if late := sorted(set(self.store.registry_changes.get(entity_id, ())) - set(changes.get(entity_id, ()))):
+                reports[:] = [ts for ts in reports if not registry_rewrite(ts, late)]
+                actions[:] = [ts for ts in actions if not registry_rewrite(ts, late)]
         keep_from = time.time() - KEEP_DAYS * DAY
         merged = 0
         for entity_id, (reports, actions) in result.items():

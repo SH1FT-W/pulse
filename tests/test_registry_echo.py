@@ -8,6 +8,7 @@ Pulse lädt beim Start (eigener Start in `store.uptime`) und liest die Historie,
 
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 import time
 from typing import Any
@@ -442,22 +443,35 @@ async def test_changes_are_stored_pruned_and_survive_restart(hass: HomeAssistant
     freezer.tick(timedelta(days=HISTORY_DAYS))
     reg.async_update_entity(other, name="Leck neu")
     await hass.async_block_till_done()
+    renamed = time.time()
+    # Beim Merken nur die betroffene Entität beschnitten, der Rest beim Speichern
+    assert monitor_of(hass).store.registry_changes[other] == [renamed]
+    await ha_restart(hass, setup)
     store = monitor_of(hass).store
     assert plain.entity_id not in store.registry_changes
-    assert store.registry_changes[other] == [time.time()]
+    assert store.registry_changes[other] == [renamed]
 
 
-async def test_changes_while_starting_are_not_remembered(hass: HomeAssistant, recorder_mock, freezer):
-    """Während HA startet, ändern Integrationen ihre Registereinträge (neue Fähigkeiten) vor der ersten Zeile:
-    das ist kein Umschreiben, die Startzeile ist ohnehin ein Neustart-Echo."""
+async def test_changes_of_all_device_entities_are_remembered(hass: HomeAssistant, recorder_mock, freezer):
+    """Änderungen aller Entitäten mit Gerät, auch während HA startet; Pulses eigene und solche ohne Gerät nicht."""
     setup = await cellar(hass, freezer)
     monitor = monitor_of(hass)
+    reg = er.async_get(hass)
+    own = [e.entity_id for e in er.async_entries_for_device(reg, setup["device_id"]) if e.platform == DOMAIN]
+    assert own
+    loose = reg.async_get_or_create("sensor", SOURCE, "loose", suggested_object_id="loose")
     hass.set_state(CoreState.starting)
-    er.async_get(hass).async_update_entity(setup["plain"].entity_id, name="Luft")
+    reg.async_update_entity(setup["plain"].entity_id, name="Luft")
+    reg.async_update_entity(loose.entity_id, name="Lose")
     dr.async_get(hass).async_update_device(setup["device_id"], name_by_user="Keller neu")
     await hass.async_block_till_done()
-    assert monitor.store.registry_changes == {}
     hass.set_state(CoreState.running)
+    changes = monitor.store.registry_changes
+    assert setup["plain"].entity_id in changes
+    assert {e.entity_id for e in setup["entities"]} <= set(changes)
+    assert loose.entity_id not in changes
+    assert not set(own) & set(changes)
+    assert monitor.store.entity_id_changes == {}
 
 
 def test_store_migration_adds_registry_changes():
@@ -465,8 +479,10 @@ def test_store_migration_adds_registry_changes():
 
     data = migrate(8, {"devices": {}, "settings": {}})
     assert data["registry_changes"] == {}
+    assert data["entity_id_changes"] == {}
     kept = migrate(9, {"devices": {}, "registry_changes": {"sensor.a": [1.0]}})
     assert kept["registry_changes"] == {"sensor.a": [1.0]}
+    assert kept["entity_id_changes"] == {}
 
 
 async def test_store_from_older_version_loads(hass: HomeAssistant, hass_storage):
@@ -515,3 +531,273 @@ def test_registry_rewrites_in_history_rows():
     # Eine umgeschriebene Zeile direkt nach „unavailable“ bleibt, wie sie war (keine Meldung, aber Neustart-Echo)
     gone = [row("25.0", 0), row("unavailable", 50), row("25.0", 100), row("25.0", 200)]
     assert real_reports(gone, [t0.timestamp() + 60], [change])[0] == [t0.timestamp() + 200]
+
+
+def test_rewrite_after_a_start_may_be_the_restart_echo():
+    """Fund 4, Gegenprobe (reine Logik, live zählt die Meldung ohnehin): lädt eine Integration nach Pulse und ändert
+    dabei ihren Registereintrag, ist ihre Startzeile zugleich Umschreiben und Neustart-Echo. Sie verbraucht das Echo,
+    sonst nähme Pulse beim Nachlesen die nächste echte Meldung als Echo (ein später hinzugefügtes Gerät verlöre sie)."""
+    from datetime import UTC, datetime
+
+    from homeassistant.core import State
+
+    from custom_components.pulse.history import real_reports
+
+    t0 = datetime(2026, 10, 3, 10, tzinfo=UTC)
+    start = t0.timestamp() + 1000
+
+    def row(value: str, at: float) -> State:
+        when = datetime.fromtimestamp(at, UTC)
+        return State("sensor.v", value, None, when, when)
+
+    rows = [row("heat", t0.timestamp()), row("heat", start + 3), row("off", start + 183)]
+    assert real_reports(rows, [start], [start + 3]) == ([start + 183], [start + 183])
+    # Vor dem Start (Umbenennen kurz vor dem Neustart) bleibt es kein Kandidat: die echte Startzeile ist das Echo
+    before = [row("heat", t0.timestamp()), row("heat", start - 60), row("heat", start - 5), row("off", start + 183)]
+    assert real_reports(before, [start], [start - 60]) == ([start + 183], [start + 183])
+
+
+def test_first_row_after_a_new_entity_id():
+    """Fund 3 (reine Logik): nach neuer Entity-ID ist die erste Zeile das Neuanlegen, auch 3 s oder 4 Min. später;
+    nur diese eine, und nicht mehr nach ENTITY_ID_ECHO."""
+    from datetime import UTC, datetime
+
+    from homeassistant.core import State
+
+    from custom_components.pulse.const import ENTITY_ID_ECHO
+    from custom_components.pulse.history import real_reports
+
+    t0 = datetime(2026, 10, 3, 10, tzinfo=UTC).timestamp()
+
+    def row(value: str, at: float) -> State:
+        when = datetime.fromtimestamp(at, UTC)
+        return State("binary_sensor.t", value, None, when, when)
+
+    moved = t0 + 100
+    for delay in (3, 240):
+        rows = [row("off", t0), row("off", t0 + 50), row("off", moved + delay), row("on", moved + delay + 60)]
+        assert real_reports(rows, (), [moved], [moved]) == ([t0 + 50, moved + delay + 60], [moved + delay + 60])
+    late = moved + ENTITY_ID_ECHO + 1
+    rows = [row("off", t0), row("off", late)]
+    assert real_reports(rows, (), [moved], [moved]) == ([late], [])
+    # Zwei Wechsel kurz nacheinander (A → B → C), nur eine Zeile danach: beide damit erledigt
+    rows = [row("off", t0), row("off", moved + 4), row("on", moved + 30)]
+    assert real_reports(rows, (), [moved, moved + 1], [moved, moved + 1]) == ([moved + 30], [moved + 30])
+
+
+# ── Nachbesserung nach der Prüfrunde (Funde 1–6) ─────────────────────────
+
+
+class Slow(Leak):
+    """Lecksensor, dessen `async_added_to_hass` dauert (Pi, viele Umbenennungen auf einmal): HA legt die Entität bei
+    neuer Entity-ID per remove + add neu an, ihre erste Zeile kommt erst danach."""
+
+    freezer: Any = None
+
+    async def async_added_to_hass(self) -> None:
+        await super().async_added_to_hass()
+        if self.freezer is not None:
+            self.freezer.tick(timedelta(seconds=3))
+
+
+async def router(hass: HomeAssistant, setup: dict[str, Any]) -> tuple[Sensor, str]:
+    """Netzgerät ohne Batterie und ohne Lampe/Steckdose: Pulse überwacht es erst, wenn es von Hand dazukommt."""
+    entry = source_entry(hass)
+    platform = MockEntityPlatform(hass, domain="sensor", platform_name=SOURCE)
+    platform.config_entry = entry
+    info = {"identifiers": {(SOURCE, "router")}, "name": "Router", "manufacturer": "AVM"}
+    signal = Sensor("-50", unique_id="router_signal", name="Signal", has_entity_name=True, device_info=info)
+    await platform.async_add_entities([signal])
+    await flush(hass)
+    setup["freezer"].tick(timedelta(seconds=10))  # Neusuche (5 s gedrosselt)
+    await flush(hass)
+    device_id = er.async_get(hass).async_get(signal.entity_id or "").device_id
+    assert device_id is not None
+    assert device_id not in monitor_of(hass).devices
+    return signal, device_id
+
+
+async def test_rename_before_a_device_is_watched(hass: HomeAssistant, recorder_mock, freezer):
+    """Fund 1: Pulse merkt sich Änderungen aller Entitäten, nicht nur der schon überwachten. Netzgerät umbenannt,
+    5 Minuten später von Hand hinzugefügt: die umgeschriebene Zeile zählt beim Nachlesen nicht."""
+    setup = await cellar(hass, freezer)
+    signal, device_id = await router(hass, setup)
+    freezer.tick(timedelta(hours=1))
+    signal._attr_state = "-48"
+    signal.async_write_ha_state()
+    real = time.time()
+    await flush(hass)
+    freezer.tick(timedelta(days=2))
+    er.async_get(hass).async_update_entity(signal.entity_id, name="WLAN")
+    await flush(hass)
+    freezer.tick(timedelta(minutes=5))
+    monitor = monitor_of(hass)
+    monitor.set_manual(device_id, True)
+    await flush(hass)
+    assert monitor.devices[device_id].record["events"][-1] == real
+    freezer.tick(timedelta(minutes=10))
+    await ha_restart(hass, setup)
+    assert monitor_of(hass).devices[device_id].record["events"][-1] == real
+
+
+async def test_entity_id_chain_within_rediscovery_delay(hass: HomeAssistant, recorder_mock, freezer):
+    """Fund 2: A → B → C binnen der 5 s, bevor Pulse neu sucht (B war nie überwacht): die Änderungen wandern
+    bis C mit, keine der umgeschriebenen Zeilen zählt, auch nach Neustart."""
+    setup = await cellar(hass, freezer)
+    leak = setup["leak"]
+    freezer.tick(timedelta(minutes=10))
+    real = await report(hass, setup, leak)
+    freezer.tick(timedelta(days=2))
+    await hass.async_block_till_done()  # abgelaufene Drosselung der Neusuche vorbei
+    reg = er.async_get(hass)
+    reg.async_update_entity(leak.entity_id, new_entity_id="binary_sensor.keller_leck_b")
+    for _ in range(20):  # HA legt die Entität neu an; Pulse sucht erst nach 5 s neu
+        await asyncio.sleep(0)
+    assert hass.states.get("binary_sensor.keller_leck_b") is not None
+    assert "binary_sensor.keller_leck_b" not in monitor_of(hass)._entity_map
+    freezer.tick(timedelta(seconds=1))
+    reg.async_update_entity("binary_sensor.keller_leck_b", new_entity_id="binary_sensor.keller_leck_c")
+    await flush(hass)
+    assert leak.entity_id == "binary_sensor.keller_leck_c"
+    assert events(hass, setup)[-1] == real
+    freezer.tick(timedelta(minutes=10))
+    assert (await ha_restart(hass, setup))[-1] == real
+    assert "binary_sensor.keller_leck_c" in monitor_of(hass).devices[setup["device_id"]].spec.entities
+
+
+async def test_device_rename_right_after_a_new_entity_id(hass: HomeAssistant, recorder_mock, freezer):
+    """Fund 2: Gerät umbenannt, während die neue Entity-ID noch nicht überwacht ist (Neusuche gedrosselt)."""
+    setup = await cellar(hass, freezer)
+    leak = setup["leak"]
+    freezer.tick(timedelta(minutes=10))
+    real = await report(hass, setup, leak)
+    freezer.tick(timedelta(days=2))
+    await hass.async_block_till_done()  # abgelaufene Drosselung der Neusuche vorbei
+    er.async_get(hass).async_update_entity(leak.entity_id, new_entity_id="binary_sensor.keller_leck_neu")
+    for _ in range(20):  # HA legt die Entität neu an; Pulse sucht erst nach 5 s neu
+        await asyncio.sleep(0)
+    assert hass.states.get("binary_sensor.keller_leck_neu") is not None
+    assert "binary_sensor.keller_leck_neu" not in monitor_of(hass)._entity_map
+    freezer.tick(timedelta(seconds=2, milliseconds=500))
+    dr.async_get(hass).async_update_device(setup["device_id"], name_by_user="Keller Bad")
+    await flush(hass)
+    assert events(hass, setup)[-1] == real
+    freezer.tick(timedelta(minutes=10))
+    assert (await ha_restart(hass, setup))[-1] == real
+
+
+async def test_new_entity_id_with_slow_readd(hass: HomeAssistant, recorder_mock, freezer):
+    """Fund 3: neue Entity-ID, die neu angelegte Entität schreibt erst 3 s später: auch diese erste Zeile der
+    neuen ID ist keine Meldung, nach jedem Neustart nicht; eine echte Meldung danach zählt."""
+    setup = await cellar(hass, freezer)
+    entry = source_entry(hass)
+    platform = MockEntityPlatform(hass, domain="binary_sensor", platform_name=SOURCE)
+    platform.config_entry = entry
+    info = {"identifiers": {(SOURCE, "cellar")}}
+    slow = Slow(unique_id="cellar_slow", name="Tür", has_entity_name=True, device_class="door", device_info=info)
+    await platform.async_add_entities([slow])
+    await flush(hass)
+    freezer.tick(timedelta(seconds=10))
+    await flush(hass)
+    setup["entities"].append(slow)
+    assert slow.entity_id in monitor_of(hass).devices[setup["device_id"]].spec.entities
+    freezer.tick(timedelta(minutes=10))
+    real = await report(hass, setup, slow)
+    freezer.tick(timedelta(days=2))
+    Slow.freezer = freezer
+    try:
+        er.async_get(hass).async_update_entity(slow.entity_id, new_entity_id="binary_sensor.keller_tuer_neu")
+        await flush(hass)
+    finally:
+        Slow.freezer = None
+    assert slow.entity_id == "binary_sensor.keller_tuer_neu"
+    assert events(hass, setup)[-1] == real
+    freezer.tick(timedelta(minutes=10))
+    assert (await ha_restart(hass, setup))[-1] == real
+    freezer.tick(timedelta(minutes=10))
+    assert (await ha_restart(hass, setup))[-1] == real
+    freezer.tick(timedelta(minutes=10))
+    after = await report(hass, setup, slow)
+    freezer.tick(timedelta(minutes=10))
+    assert (await ha_restart(hass, setup))[-1] == after
+
+
+async def test_rename_while_ha_starts(hass: HomeAssistant, recorder_mock, freezer):
+    """Fund 4: das Frontend ist bedienbar, während HA noch startet; eine Umbenennung dann ist auch kein
+    Lebenszeichen, live wie nach Neustart."""
+    setup = await cellar(hass, freezer)
+    plain = setup["plain"]
+    freezer.tick(timedelta(minutes=10))
+    real = await report(hass, setup, plain, "21.5")
+    freezer.tick(timedelta(days=2))
+    hass.set_state(CoreState.starting)
+    er.async_get(hass).async_update_entity(plain.entity_id, name="Luft Gewölbe")
+    await hass.async_block_till_done()
+    hass.set_state(CoreState.running)
+    assert events(hass, setup)[-1] == real
+    freezer.tick(timedelta(minutes=10))
+    assert (await ha_restart(hass, setup))[-1] == real
+
+
+async def test_rename_while_history_is_read(hass: HomeAssistant, recorder_mock, freezer):
+    """Fund 5: eine Umbenennung, während Pulse die Historie liest (Executor), zählt auch beim Nachlesen nicht."""
+    from homeassistant.components.recorder import get_instance, history
+
+    setup = await cellar(hass, freezer)
+    plain = setup["plain"]
+    freezer.tick(timedelta(minutes=10))
+    real = await report(hass, setup, plain, "21.5")
+    freezer.tick(timedelta(days=2))
+    original = history.get_significant_states
+    renamed: list[bool] = []
+
+    async def rename() -> None:
+        # Not hass.async_block_till_done: that would wait for the history read waiting here
+        er.async_get(hass).async_update_entity(plain.entity_id, name="Luft Gewölbe")
+        for _ in range(20):
+            await asyncio.sleep(0)
+        await get_instance(hass).async_block_till_done()
+
+    def reading(*args: Any, **kwargs: Any) -> Any:
+        if not renamed:
+            renamed.append(True)
+            asyncio.run_coroutine_threadsafe(rename(), hass.loop).result()
+        return original(*args, **kwargs)
+
+    from unittest.mock import patch
+
+    with patch.object(history, "get_significant_states", reading):
+        await ha_restart(hass, setup)
+    assert renamed
+    assert events(hass, setup)[-1] == real
+    freezer.tick(timedelta(minutes=10))
+    assert (await ha_restart(hass, setup))[-1] == real
+
+
+async def test_broken_registry_changes_in_store(hass: HomeAssistant, hass_storage):
+    """Fund 6: kaputte Einträge im Speicher werden verworfen, Pulse lädt."""
+    from custom_components.pulse.const import STORE_KEY
+    from custom_components.pulse.store import PulseStore
+
+    now = time.time()
+    hass_storage[STORE_KEY] = {
+        "version": 1,
+        "minor_version": 9,
+        "key": STORE_KEY,
+        "data": {
+            "devices": {},
+            "registry_changes": {
+                "sensor.a": [None, "x", now - 60],
+                "sensor.b": "kaputt",
+                "sensor.c": [now - 30],
+                "sensor.d": None,
+            },
+        },
+    }
+    store = PulseStore(hass)
+    await store.async_load()
+    assert store.registry_changes == {"sensor.a": [now - 60], "sensor.c": [now - 30]}
+    hass_storage[STORE_KEY]["data"]["registry_changes"] = ["kein", "dict"]
+    store = PulseStore(hass)
+    await store.async_load()
+    assert store.registry_changes == {}
