@@ -376,6 +376,9 @@ export const DE: Record<keyof typeof EN, string> = {
   new_often_title: 'Wird schlechter? Pulse merkt es',
   new_often_text:
     'Fällt ein Gerät am Strom plötzlich viel öfter aus als in der Woche davor, gilt das nicht mehr als Gewohnheit: Pulse zeigt „Fällt oft aus“ und meldet einen Ausfall wieder nach zwei Stunden.',
+  new_rename_title: 'Umbenennen ist kein Lebenszeichen mehr',
+  new_rename_text:
+    'Benennst du ein Gerät um oder änderst Name, Symbol, Bereich, Einheit oder ID einer Entität, zählt das nicht mehr als Meldung. Ein seit Tagen stiller Sensor bleibt still, auch nach einem Neustart.',
   new_snooze_title: 'Länger erinnern',
   new_snooze_text:
     '„Später erinnern“ bietet jetzt morgen, in einer Woche oder in einem Monat an. In der Mitteilung gibt es dafür zusätzlich „In einer Woche erinnern“.',

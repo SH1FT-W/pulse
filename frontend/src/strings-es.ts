@@ -379,6 +379,9 @@ export const ES: Record<keyof typeof EN, string> = {
   new_often_title: '¿Va a peor? Pulse lo nota',
   new_often_text:
     'Si un dispositivo de red se desconecta de pronto mucho más que la semana anterior, Pulse ya no lo toma por costumbre: muestra «Se desconecta a menudo» y avisa de nuevo de un corte a las dos horas.',
+  new_rename_title: 'Renombrar ya no es señal de vida',
+  new_rename_text:
+    'Renombrar un dispositivo o cambiar el nombre, icono, área, unidad o ID de una entidad ya no cuenta como aviso. Un sensor callado desde hace días sigue callado tras renombrarlo, también después de reiniciar.',
   new_snooze_title: 'Recordar más tarde',
   new_snooze_text:
     '«Recordar más tarde» ahora ofrece mañana, en una semana o en un mes. Las notificaciones también tienen «Recordar en una semana».',

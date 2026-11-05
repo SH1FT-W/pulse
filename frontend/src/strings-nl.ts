@@ -380,6 +380,9 @@ export const NL: Record<keyof typeof EN, string> = {
   new_often_title: 'Wordt het erger? Pulse ziet het',
   new_often_text:
     'Valt een apparaat op het stroomnet ineens veel vaker weg dan de week ervoor, dan ziet Pulse dat niet meer als gewoonte: het toont „Valt vaak weg” en meldt een uitval weer na twee uur.',
+  new_rename_title: 'Hernoemen is geen teken van leven meer',
+  new_rename_text:
+    'Een apparaat hernoemen of naam, pictogram, ruimte, eenheid of ID van een entiteit wijzigen telt niet meer als melding. Een sensor die al dagen stil is, blijft stil na het hernoemen, ook na een herstart.',
   new_snooze_title: 'Later herinneren',
   new_snooze_text:
     '„Later herinneren” biedt nu morgen, over een week of over een maand. Meldingen hebben ook „Over een week herinneren”.',

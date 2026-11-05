@@ -374,6 +374,9 @@ export const EN = {
   new_often_title: 'Getting worse? Pulse notices',
   new_often_text:
     'If a mains device suddenly drops out much more often than the week before, Pulse no longer takes it for a habit: it shows “Keeps dropping out” and reports an outage after two hours again.',
+  new_rename_title: 'Renaming is no sign of life',
+  new_rename_text:
+    'Renaming a device or changing an entity’s name, icon, area, unit or ID no longer counts as a report. A sensor that has been silent for days stays silent after you rename it, also after a restart.',
   new_snooze_title: 'Remind me later',
   new_snooze_text:
     '“Remind later” now offers tomorrow, in a week or in a month. Notifications also get “Remind in a week”.',

@@ -384,6 +384,9 @@ export const FR: Record<keyof typeof EN, string> = {
   new_often_title: 'Ça empire ? Pulse le voit',
   new_often_text:
     'Si un appareil sur secteur décroche soudain bien plus souvent que la semaine d’avant, Pulse n’y voit plus une habitude : il affiche « Décroche souvent » et signale de nouveau une panne après deux heures.',
+  new_rename_title: 'Renommer n’est plus un signe de vie',
+  new_rename_text:
+    'Renommer un appareil ou changer le nom, l’icône, la pièce, l’unité ou l’ID d’une entité ne compte plus comme un signal. Un capteur muet depuis des jours reste muet après l’avoir renommé, même après un redémarrage.',
   new_snooze_title: 'Rappel plus tard',
   new_snooze_text:
     '« Rappeler plus tard » propose maintenant demain, dans une semaine ou dans un mois. Les notifications ont aussi « Rappeler dans une semaine ».',

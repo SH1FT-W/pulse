@@ -924,6 +924,8 @@ var Ke = {
 	new_unreachable_text: "Wie lange ein wichtiges Gerät nicht erreichbar sein darf, bis Pulse „Prüfen“ meldet, stellst du unter Einstellungen › Besonderes ein: 2, 5, 10 oder 20 Minuten.",
 	new_often_title: "Wird schlechter? Pulse merkt es",
 	new_often_text: "Fällt ein Gerät am Strom plötzlich viel öfter aus als in der Woche davor, gilt das nicht mehr als Gewohnheit: Pulse zeigt „Fällt oft aus“ und meldet einen Ausfall wieder nach zwei Stunden.",
+	new_rename_title: "Umbenennen ist kein Lebenszeichen mehr",
+	new_rename_text: "Benennst du ein Gerät um oder änderst Name, Symbol, Bereich, Einheit oder ID einer Entität, zählt das nicht mehr als Meldung. Ein seit Tagen stiller Sensor bleibt still, auch nach einem Neustart.",
 	new_snooze_title: "Länger erinnern",
 	new_snooze_text: "„Später erinnern“ bietet jetzt morgen, in einer Woche oder in einem Monat an. In der Mitteilung gibt es dafür zusätzlich „In einer Woche erinnern“.",
 	new_local_title: "Mehr Geräte von selbst",
@@ -1300,6 +1302,8 @@ var Ke = {
 	new_unreachable_text: "How long an important device may be unreachable before Pulse says “Check” is now up to you, under Settings › Special cases: 2, 5, 10 or 20 minutes.",
 	new_often_title: "Getting worse? Pulse notices",
 	new_often_text: "If a mains device suddenly drops out much more often than the week before, Pulse no longer takes it for a habit: it shows “Keeps dropping out” and reports an outage after two hours again.",
+	new_rename_title: "Renaming is no sign of life",
+	new_rename_text: "Renaming a device or changing an entity’s name, icon, area, unit or ID no longer counts as a report. A sensor that has been silent for days stays silent after you rename it, also after a restart.",
 	new_snooze_title: "Remind me later",
 	new_snooze_text: "“Remind later” now offers tomorrow, in a week or in a month. Notifications also get “Remind in a week”.",
 	new_local_title: "More devices by themselves",
@@ -1678,6 +1682,8 @@ var Ke = {
 		new_unreachable_text: "Combien de temps un appareil important peut rester injoignable avant que Pulse indique « À vérifier » : à choisir sous Paramètres › Cas particuliers : 2, 5, 10 ou 20 minutes.",
 		new_often_title: "Ça empire ? Pulse le voit",
 		new_often_text: "Si un appareil sur secteur décroche soudain bien plus souvent que la semaine d’avant, Pulse n’y voit plus une habitude : il affiche « Décroche souvent » et signale de nouveau une panne après deux heures.",
+		new_rename_title: "Renommer n’est plus un signe de vie",
+		new_rename_text: "Renommer un appareil ou changer le nom, l’icône, la pièce, l’unité ou l’ID d’une entité ne compte plus comme un signal. Un capteur muet depuis des jours reste muet après l’avoir renommé, même après un redémarrage.",
 		new_snooze_title: "Rappel plus tard",
 		new_snooze_text: "« Rappeler plus tard » propose maintenant demain, dans une semaine ou dans un mois. Les notifications ont aussi « Rappeler dans une semaine ».",
 		new_local_title: "Plus d’appareils tout seuls",
@@ -2055,6 +2061,8 @@ var Ke = {
 		new_unreachable_text: "Cuánto tiempo puede estar no disponible un dispositivo importante antes de que Pulse diga «Revisar»: elígelo en Ajustes › Casos especiales: 2, 5, 10 o 20 minutos.",
 		new_often_title: "¿Va a peor? Pulse lo nota",
 		new_often_text: "Si un dispositivo de red se desconecta de pronto mucho más que la semana anterior, Pulse ya no lo toma por costumbre: muestra «Se desconecta a menudo» y avisa de nuevo de un corte a las dos horas.",
+		new_rename_title: "Renombrar ya no es señal de vida",
+		new_rename_text: "Renombrar un dispositivo o cambiar el nombre, icono, área, unidad o ID de una entidad ya no cuenta como aviso. Un sensor callado desde hace días sigue callado tras renombrarlo, también después de reiniciar.",
 		new_snooze_title: "Recordar más tarde",
 		new_snooze_text: "«Recordar más tarde» ahora ofrece mañana, en una semana o en un mes. Las notificaciones también tienen «Recordar en una semana».",
 		new_local_title: "Más dispositivos por sí solos",
@@ -2432,6 +2440,8 @@ var Ke = {
 		new_unreachable_text: "Hoe lang een belangrijk apparaat onbereikbaar mag zijn voordat Pulse „Controleren” meldt, kies je onder Instellingen › Bijzondere gevallen: 2, 5, 10 of 20 minuten.",
 		new_often_title: "Wordt het erger? Pulse ziet het",
 		new_often_text: "Valt een apparaat op het stroomnet ineens veel vaker weg dan de week ervoor, dan ziet Pulse dat niet meer als gewoonte: het toont „Valt vaak weg” en meldt een uitval weer na twee uur.",
+		new_rename_title: "Hernoemen is geen teken van leven meer",
+		new_rename_text: "Een apparaat hernoemen of naam, pictogram, ruimte, eenheid of ID van een entiteit wijzigen telt niet meer als melding. Een sensor die al dagen stil is, blijft stil na het hernoemen, ook na een herstart.",
 		new_snooze_title: "Later herinneren",
 		new_snooze_text: "„Later herinneren” biedt nu morgen, over een week of over een maand. Meldingen hebben ook „Over een week herinneren”.",
 		new_local_title: "Meer apparaten vanzelf",
@@ -3805,6 +3815,10 @@ var J = o`
 		text: "welcome_notify_text"
 	}
 ], Kn = [{
+	icon: "mdi:rename-outline",
+	title: "new_rename_title",
+	text: "new_rename_text"
+}, {
 	icon: "mdi:power-plug-off-outline",
 	title: "new_often_title",
 	text: "new_often_text"
@@ -7513,7 +7527,7 @@ function Mr() {
 	let e = jr();
 	if (!e) return null;
 	try {
-		return Zn(e, "26.11.5-beta.1", Kn.length > 0);
+		return Zn(e, "26.11.5", Kn.length > 0);
 	} catch {
 		return null;
 	}
@@ -7727,7 +7741,7 @@ var Pr = class extends A {
 		this.welcome = null;
 		let e = jr();
 		try {
-			e && Qn(e, "26.11.5-beta.1");
+			e && Qn(e, "26.11.5");
 		} catch {}
 	}
 	zigbeeOffer(e) {
@@ -7896,7 +7910,7 @@ var Pr = class extends A {
         @partner-dismiss=${(e) => this.onPartnerDismiss(e.detail.id, e.detail.partner)}
       >
         ${this.renderHead()} ${this.renderContent()}
-        <p class="version muted">${F(t, "version", { version: "26.11.5-beta.1" })}</p>
+        <p class="version muted">${F(t, "version", { version: "26.11.5" })}</p>
         ${e ? w`<pulse-device-sheet
                   .open=${n !== null}
                   .device=${n}
@@ -7921,7 +7935,7 @@ var Pr = class extends A {
                 <pulse-welcome
                   .mode=${this.welcome}
                   .language=${t}
-                  .version=${"26.11.5-beta.1"}
+                  .version=${"26.11.5"}
                   .zigbee=${this.zigbeeOffer(e)}
                   @closed=${() => this.welcomeDone()}
                   @enable-z2m=${() => {
