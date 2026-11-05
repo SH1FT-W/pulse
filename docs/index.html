@@ -310,7 +310,7 @@ footer .fine { flex-basis: 100%; }
       <a class="btn ghost" href="https://github.com/SH1FT-W/pulse#readme"><span class="en">Read the docs</span><span class="de">Zur Dokumentation</span></a>
     </div>
     <p class="meta reveal d3">
-      <span class="pill"><i></i><span id="pulse-version">Version 26.10.7</span></span>
+      <span class="pill"><i></i><span id="pulse-version">Version 26.11.4</span></span>
       <span class="en">Home Assistant 2026.9 or newer &middot; Free and open source</span><span class="de">Home Assistant 2026.9 oder neuer &middot; Kostenlos und quelloffen</span>
     </p>
     <div class="hero-shot reveal d3">
@@ -336,76 +336,33 @@ footer .fine { flex-basis: 100%; }
 <section id="new" class="tint">
   <div class="wrap">
     <div class="head center reveal">
-      <p class="eyebrow"><span class="en">Just arrived</span><span class="de">Gerade neu</span></p>
-      <h2><span class="en">Forecasts, calm clouds,<br>and new numbers.</span><span class="de">Vorhersagen, ruhige Clouds<br>und neue Nummern.</span></h2>
-      <p class="lead"><span class="en">The latest releases teach Pulse to look ahead, to tell a cloud outage from a dead battery, and to count versions by the calendar.</span><span class="de">Die letzten Releases bringen Pulse bei, vorauszuschauen, einen Cloud-Ausfall von einer leeren Batterie zu unterscheiden und Versionen nach dem Kalender zu zählen.</span></p>
+      <p class="eyebrow"><span class="en">New</span><span class="de">Neu</span></p>
+      <h2><span class="en">Latest in Pulse.</span><span class="de">Neu in Pulse.</span></h2>
     </div>
     <div class="bento">
-      <div class="b s12 band reveal">
-        <div class="txt">
-          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg></div>
-          <div>
-          <span class="k ok">26.10.15</span>
-          <h3><span class="en">Add any device</span><span class="de">Jedes Gerät hinzufügen</span></h3>
-          <p><span class="en">Cameras, Echo and HomePod speakers, TVs, robot vacuums or any network device: under <b>Settings → Added by hand</b> you pick devices Pulse does not watch by itself. Pulse then tells you when one is no longer reachable. Playing, idle or off is fine, only <i>unavailable</i> counts; a connectivity sensor or a router's device tracker (UniFi, FRITZ!Box, Nmap, Ping) says it directly.</span><span class="de">Kameras, Echo- und HomePod-Lautsprecher, Fernseher, Saugroboter oder beliebige Netzgeräte: unter <b>Einstellungen → Von Hand hinzugefügt</b> wählst du Geräte, die Pulse nicht von selbst überwacht. Pulse meldet dann, wenn eines nicht mehr erreichbar ist. Spielt, wartet oder aus ist in Ordnung, nur <i>nicht verfügbar</i> zählt; ein Erreichbarkeits-Sensor oder der Geräte-Tracker des Routers (UniFi, FRITZ!Box, Nmap, Ping) sagt es direkt.</span></p>
-          </div>
-        </div>
-      </div>
-      <div class="b s8 wide reveal">
-        <div class="txt">
-          <span class="k">1.1.0</span>
-          <h3><span class="en">Battery forecast</span><span class="de">Batterie-Vorhersage</span></h3>
-          <p><span class="en">From Home Assistant's long-term statistics Pulse estimates how long a battery will last, as a rough range such as "about 2 to 5 months". The battery card lists what is due in the next eight weeks, so you know what to buy. Coarse or unreliable levels honestly get no forecast, and the panel says why.</span><span class="de">Aus der Langzeitstatistik von Home Assistant schätzt Pulse, wie lange eine Batterie noch hält, als groben Bereich wie „etwa 2 bis 5 Monate“. Die Batterie-Kachel listet, was in den nächsten acht Wochen fällig wird, damit du weißt, was du kaufen musst. Grobe oder unzuverlässige Werte bekommen ehrlicherweise keine Vorhersage, und das Panel sagt, warum.</span></p>
-        </div>
-        <div class="pic">
-          <img class="en" src="images/detail.png" width="1040" height="1584" loading="lazy" alt="Device detail: the headline Silent for 5 days, the buttons Remind tomorrow and Battery replaced, a heartbeat calendar with one row per day, and the battery with its forecast status.">
-          <img class="de" src="images/de/detail.png" width="1040" height="1584" loading="lazy" alt="Device detail in German: the headline Silent for 5 days, the buttons Remind tomorrow and Battery replaced, a heartbeat calendar with one row per day, and the battery with its forecast status.">
-        </div>
-      </div>
-      <div class="b s4 reveal d1">
-        <div class="txt">
-          <span class="k">1.1.0</span>
-          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h3l3-7 4 14 3-9 2 4h5"/></svg></div>
-          <h3><span class="en">Radio, but no values</span><span class="de">Funk, aber keine Werte</span></h3>
-          <p><span class="en">With Zigbee2MQTT's health check Pulse notices devices that still talk to the network but no longer send readings. At most <b>Check</b>, never <b>Failed</b>, and never a sign of life.</span><span class="de">Mit dem Funk-Zähler von Zigbee2MQTT erkennt Pulse Geräte, die noch funken, aber keine Werte mehr schicken. Höchstens <b>Prüfen</b>, nie <b>Ausgefallen</b>, und nie ein Lebenszeichen.</span></p>
-        </div>
-      </div>
       <div class="b s4 reveal">
         <div class="txt">
-          <span class="k">1.1.0</span>
-          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19a4.5 4.5 0 0 0 .5-9 7 7 0 0 0-13.4 2A4 4 0 0 0 6 19z"/></svg></div>
-          <h3><span class="en">Cloud outages stay calm</span><span class="de">Cloud-Ausfälle bleiben ruhig</span></h3>
-          <p><span class="en">When several devices of one cloud integration go quiet together, that is the cloud, not the batteries. Pulse shows them as <b>Watch</b> and sends one message instead of an alarm per device.</span><span class="de">Verstummen mehrere Geräte einer Cloud-Integration gemeinsam, ist das die Cloud, nicht die Batterie. Pulse zeigt sie als <b>Im Blick</b> und schickt eine Mitteilung statt eines Alarms je Gerät.</span></p>
+          <span class="k ok">26.11.3</span>
+          <h3><span class="en">Remind later, for longer</span><span class="de">Später erinnern, auch länger</span></h3>
+          <p><span class="en">Remind tomorrow, in a week or in a month, from the device sheet or right in the notification.</span><span class="de">Morgen, in einer Woche oder in einem Monat erinnern, im Geräte-Blatt oder direkt in der Mitteilung.</span></p>
         </div>
       </div>
       <div class="b s4 reveal d1">
         <div class="txt">
-          <span class="k">1.1.0</span>
-          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="7" cy="12" r="3"/><circle cx="17" cy="12" r="3"/><path d="M10 12h4"/></svg></div>
-          <h3><span class="en">Partner suggestions</span><span class="de">Partner-Vorschläge</span></h3>
-          <p><span class="en">Devices that were active together on several days, such as a lock and its door contact, show up in the device sheet. Accept them and Pulse cross-checks: if one keeps reporting and the other falls silent, it notices early.</span><span class="de">Geräte, die an mehreren Tagen gemeinsam aktiv waren, etwa Schloss und Türkontakt, erscheinen im Geräte-Blatt. Nimmst du sie an, macht Pulse die Gegenprobe: meldet sich eines weiter und das andere nicht, merkt es das früh.</span></p>
+          <span class="k ok">26.11.1</span>
+          <h3><span class="en">You choose how fast</span><span class="de">Du wählst, wie schnell</span></h3>
+          <p><span class="en">Under Settings, Special cases you set after how many minutes an unreachable important device becomes <b>Check</b>: 2, 5, 10 or 20.</span><span class="de">Unter Einstellungen, Besonderes legst du fest, nach wie vielen Minuten ein nicht erreichbares wichtiges Gerät <b>Prüfen</b> wird: 2, 5, 10 oder 20.</span></p>
         </div>
       </div>
       <div class="b s4 reveal d2">
         <div class="txt">
-          <span class="k">1.1.0</span>
-          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="15" height="10" rx="2"/><path d="M21 10v4M7 11v2"/></svg></div>
-          <h3><span class="en">Missing battery entity</span><span class="de">Batterie-Entität fehlt</span></h3>
-          <p><span class="en">A device whose battery sensor has been unavailable for a day while the rest keeps reporting gets its own reason. And a device's own "battery low" sensor now wins over a percentage that still looks fine.</span><span class="de">Ein Gerät, dessen Batteriesensor seit einem Tag nicht verfügbar ist, während der Rest weiter meldet, bekommt eine eigene Begründung. Und ein eigener „Batterie schwach“-Sensor gewinnt jetzt gegen einen Prozentwert, der noch gut aussieht.</span></p>
-        </div>
-      </div>
-      <div class="b s12 band reveal">
-        <div class="txt">
-          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="18" r="1.5"/><path d="M8.5 14.5a5 5 0 0 1 7 0M5.5 11.5a9 9 0 0 1 13 0M2.5 8.5a13 13 0 0 1 19 0"/></svg></div>
-          <div>
-          <span class="k ok">26.10.7</span>
-          <h3><span class="en">Reachable means fine</span><span class="de">Erreichbar heißt in Ordnung</span></h3>
-          <p><span class="en">For Matter devices and cloud devices with a connectivity sensor, such as Netatmo, Pulse now asks the integration whether the device is reachable. A leak sensor without water, a lock that is only used now and then or a rain gauge on a dry day stays in rhythm, while devices that report on their own are still checked for silence. And after a Home Assistant restart, a silent device no longer looks alive for a moment.</span><span class="de">Bei Matter-Geräten und Cloud-Geräten mit Erreichbarkeits-Sensor, etwa Netatmo, fragt Pulse jetzt die Integration, ob das Gerät erreichbar ist. Ein Lecksensor ohne Wasser, ein Schloss, das nur ab und zu benutzt wird, oder ein Regenmesser an einem trockenen Tag bleibt im Takt; Geräte, die von selbst melden, prüft Pulse weiter auf Stille. Und nach einem Neustart von Home Assistant sieht ein stilles Gerät nicht mehr kurz lebendig aus.</span></p>
-          <p style="margin-top:14px"><a href="https://github.com/SH1FT-W/pulse/blob/main/CHANGELOG.md"><span class="en">Read the changelog ›</span><span class="de">Zum Changelog ›</span></a></p>
-          </div>
+          <span class="k ok">26.10.15</span>
+          <h3><span class="en">Add any device</span><span class="de">Jedes Gerät hinzufügen</span></h3>
+          <p><span class="en">Cameras, speakers, TVs, robot vacuums or a NAS: under Settings, Added by hand Pulse tells you when one is no longer reachable.</span><span class="de">Kameras, Lautsprecher, Fernseher, Saugroboter oder ein NAS: unter Einstellungen, Von Hand hinzugefügt meldet Pulse, wenn eines nicht mehr erreichbar ist.</span></p>
         </div>
       </div>
     </div>
+    <p class="cap reveal"><a href="https://github.com/SH1FT-W/pulse/blob/main/CHANGELOG.md"><span class="en">Every change in the changelog</span><span class="de">Alle Änderungen im Changelog</span></a></p>
   </div>
 </section>
 
@@ -449,9 +406,9 @@ footer .fine { flex-basis: 100%; }
       <div class="reveal">
         <ul class="status">
           <li><b class="ok"><span class="en">Good</span><span class="de">Gut</span></b><span class="en">Reporting as usual, about every 30 minutes.</span><span class="de">Meldet sich wie gewohnt, etwa alle 30 Minuten.</span></li>
-          <li><b class="warn"><span class="en">Watch</span><span class="de">Im Blick</span></b><span class="en">A bit late. 2.5 × the typical gap, or the battery is at 20 %.</span><span class="de">Etwas spät. 2,5 × der typische Abstand, oder die Batterie ist bei 20 %.</span></li>
-          <li><b class="warn"><span class="en">Check</span><span class="de">Prüfen</span></b><span class="en">Unusually quiet. 4 × the typical gap, unreachable for 20 minutes, or the partner device keeps firing while this one stays silent.</span><span class="de">Ungewöhnlich still. 4 × der typische Abstand, 20 Minuten nicht erreichbar, oder das Partnergerät meldet sich weiter und dieses nicht.</span></li>
-          <li><b class="bad"><span class="en">Failed</span><span class="de">Ausgefallen</span></b><span class="en">Silent far too long. 8 × the typical gap or unreachable for 2 hours. Shows up under Repairs.</span><span class="de">Viel zu lange still. 8 × der typische Abstand oder 2 Stunden nicht erreichbar. Erscheint unter Reparaturen.</span></li>
+          <li><b class="warn"><span class="en">Watch</span><span class="de">Im Blick</span></b><span class="en">A bit late. 2.5 × the typical gap (important devices 2 ×), or the battery is at 20 % or less.</span><span class="de">Etwas spät. 2,5 × der typische Abstand (wichtige Geräte 2 ×), oder die Batterie ist bei 20 % oder weniger.</span></li>
+          <li><b class="warn"><span class="en">Check</span><span class="de">Prüfen</span></b><span class="en">Unusually quiet. 4 × the typical gap (important 3 ×), unreachable for 20 minutes (important 10, you choose), battery at 10 %, or the partner device keeps firing while this one stays silent.</span><span class="de">Ungewöhnlich still. 4 × der typische Abstand (wichtige 3 ×), 20 Minuten nicht erreichbar (wichtige 10, wählbar), Batterie bei 10 %, oder das Partnergerät meldet sich weiter und dieses nicht.</span></li>
+          <li><b class="bad"><span class="en">Failed</span><span class="de">Ausgefallen</span></b><span class="en">Silent far too long. 8 × the typical gap (important 5 ×) or unreachable for 2 hours (important 1). Shows up under Repairs.</span><span class="de">Viel zu lange still. 8 × der typische Abstand (wichtige 5 ×) oder 2 Stunden nicht erreichbar (wichtige 1). Erscheint unter Reparaturen.</span></li>
         </ul>
       </div>
       <div class="reveal d1">
@@ -460,7 +417,6 @@ footer .fine { flex-basis: 100%; }
           <li><b><span class="en">Honest about gaps.</span><span class="de">Ehrlich bei Lücken.</span></b> <span class="en">Times when Home Assistant wasn't running are hatched and never count as silence. After a start, a device waits one usual gap before anything is said.</span><span class="de">Zeiten, in denen Home Assistant nicht lief, werden schraffiert und zählen nie als Stille. Nach einem Start bekommt jedes Gerät erst einen üblichen Abstand Zeit.</span></li>
           <li><b><span class="en">One stray report is not a recovery.</span><span class="de">Eine vereinzelte Meldung ist keine Erholung.</span></b> <span class="en">After a long silence, two reports in the usual rhythm count, and so does a real action such as a door opening.</span><span class="de">Nach langer Stille zählen zwei Meldungen im üblichen Takt, oder eine echte Aktion wie eine Tür, die aufgeht.</span></li>
           <li><b><span class="en">Battery changes.</span><span class="de">Batteriewechsel.</span></b> <span class="en">Detected from a voltage or level jump or a Zigbee re-join, with a history per device. NiMH rechargeables are exempt from percentage rules because their percentage says nothing.</span><span class="de">Erkannt am Spannungs- oder Füllstandssprung oder einer Zigbee-Neuanmeldung, mit Historie je Gerät. NiMH-Akkus sind von Prozentregeln ausgenommen, ihr Prozentwert sagt nichts.</span></li>
-          <li><b><span class="en">Repairs.</span><span class="de">Reparaturen.</span></b> <span class="en">Failed devices show up under Settings, Repairs, and disappear on their own when they report again.</span><span class="de">Ausgefallene Geräte erscheinen unter Einstellungen, Reparaturen, und verschwinden von selbst, sobald sie sich wieder melden.</span></li>
         </ul>
       </div>
     </div>
@@ -476,7 +432,7 @@ footer .fine { flex-basis: 100%; }
         <p class="lead"><span class="en">Straight to the Companion app. Failures right away, the rest in one daily summary, with quiet hours and "only when someone is home". Never the same message twice.</span><span class="de">Direkt in die Companion-App. Ausfälle sofort, der Rest in einer täglichen Zusammenfassung, mit Ruhezeit und „erst beim Heimkommen“. Nie dieselbe Mitteilung zweimal.</span></p>
         <ul class="points">
           <li><b><span class="en">Critical alerts</span><span class="de">Kritische Mitteilungen</span></b> <span class="en">break through Do Not Disturb when an important device fails.</span><span class="de">durchbrechen „Nicht stören“, wenn ein wichtiges Gerät ausfällt.</span></li>
-          <li><b><span class="en">Buttons</span><span class="de">Knöpfe</span></b> <span class="en">in the notification: Battery replaced, Remind tomorrow.</span><span class="de">in der Mitteilung: Batterie gewechselt, Morgen erinnern.</span></li>
+          <li><b><span class="en">Buttons</span><span class="de">Knöpfe</span></b> <span class="en">in the notification: Battery replaced, Remind tomorrow, Remind in a week.</span><span class="de">in der Mitteilung: Batterie gewechselt, Morgen erinnern, In einer Woche erinnern.</span></li>
           <li><b><span class="en">One message for an outage.</span><span class="de">Eine Mitteilung bei Ausfall.</span></b> <span class="en">If a hub or bridge takes many devices down at once, you get one message naming them, not forty.</span><span class="de">Reißt eine Bridge viele Geräte auf einmal mit, kommt eine Mitteilung mit den Namen, nicht vierzig.</span></li>
           <li><b><span class="en">Batteries to buy</span><span class="de">Batterien zum Kaufen</span></b> <span class="en">in the daily summary, from the forecast.</span><span class="de">in der täglichen Zusammenfassung, aus der Vorhersage.</span></li>
         </ul>
@@ -587,7 +543,6 @@ pulse.send_test</pre>
       <div class="panel manual reveal">
         <h3><span class="en">Without the Marketplace</span><span class="de">Ohne Marketplace</span></h3>
         <p class="muted"><span class="en">Download the <a href="https://github.com/SH1FT-W/pulse/releases/latest">latest release</a>, copy its <code>custom_components/pulse</code> folder into <code>/config/custom_components/</code>, restart Home Assistant and add the Pulse integration.</span><span class="de">Lade das <a href="https://github.com/SH1FT-W/pulse/releases/latest">neueste Release</a> herunter, kopiere den Ordner <code>custom_components/pulse</code> nach <code>/config/custom_components/</code>, starte Home Assistant neu und füge die Integration Pulse hinzu.</span></p>
-        <p class="note"><span class="en">Versions count year.month.number: 26.10.4 is the fourth release of October 2026. They count as newer than every 1.x version.</span><span class="de">Versionen zählen Jahr.Monat.Nummer: 26.10.4 ist das vierte Release im Oktober 2026. Sie gelten als neuer als jede 1.x-Version.</span></p>
       </div>
     </div>
   </div>
