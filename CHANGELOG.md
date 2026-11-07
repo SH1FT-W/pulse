@@ -2,6 +2,12 @@
 
 After 1.1.0, releases use calendar versions `YY.M.N` (year, month, number of the release in that month), e.g. `26.10.4`. They count as newer than every 1.x version, so updates through HACS work as before.
 
+## 26.11.7 – 2026-11-07
+
+### Fixed
+- 26.11.6 could miss a real battery change, and keep an old battery level as reference, on devices that report level and voltage in the same message (Zigbee2MQTT, ZHA and many others). Both shared one pending value, so the one that did not fall cleared the other's pending fall in every message. Now level and voltage each keep their own pending jump and fall, and one never clears the other's. This also fixes an older case where a voltage report cleared a pending level jump, so a new battery whose voltage rose by less than 15 % was not detected.
+- A fall now only counts as confirmed when the next low report is close to the first one (within 10 points or 75 mV). Two different outliers in a row (15 %, then 45 %) no longer become the reference. In the first minutes after Home Assistant starts, a fall never becomes the reference, so an outlier from before the restart cannot come back as a "new battery" (#5).
+
 ## 26.11.6 – 2026-11-07
 
 ### Fixed

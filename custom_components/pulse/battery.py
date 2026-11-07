@@ -54,45 +54,44 @@ LEVEL_JUMP = 25
 LEVEL_JUMP_FROM = 75
 
 
+LEVEL = "level"
+VOLTAGE = "voltage"
+# A confirming report of a fall must be this close to the first low value (otherwise: another outlier)
+LEVEL_CLOSE = 10
+VOLTAGE_CLOSE = 75.0  # mV
+
+
+def jumped(kind: str, old: float | None, new: float | None) -> bool:
+    """A rise of one quantity (level in %, voltage in mV) that no normal wobble explains."""
+    if old is None or new is None:
+        return False
+    if kind == LEVEL:
+        return old <= LEVEL_JUMP_FROM and new - old >= LEVEL_JUMP
+    return old > 0 and new - old >= VOLTAGE_JUMP_ABS and (new - old) / old >= VOLTAGE_JUMP_REL
+
+
+def dropped(kind: str, old: float | None, new: float | None) -> bool:
+    """A fall as big as a battery change, only in the other direction: one report alone may be an outlier."""
+    if old is None or new is None:
+        return False
+    if kind == LEVEL:
+        return old - new >= LEVEL_JUMP
+    return old > 0 and old - new >= VOLTAGE_JUMP_ABS and (old - new) / old >= VOLTAGE_JUMP_REL
+
+
+def close(kind: str, first: float, second: float) -> bool:
+    """The second low report confirms the first one (not a second, different outlier)."""
+    return abs(second - first) <= (LEVEL_CLOSE if kind == LEVEL else VOLTAGE_CLOSE)
+
+
 def is_replacement(
     old_level: float | None,
     new_level: float | None,
     old_voltage: float | None,
     new_voltage: float | None,
 ) -> bool:
-    """Ein Sprung nach oben, den keine normale Schwankung erklärt."""
-    if (
-        old_level is not None
-        and new_level is not None
-        and old_level <= LEVEL_JUMP_FROM
-        and new_level - old_level >= LEVEL_JUMP
-    ):
-        return True
-    return bool(
-        old_voltage is not None
-        and new_voltage is not None
-        and old_voltage > 0
-        and new_voltage - old_voltage >= VOLTAGE_JUMP_ABS
-        and (new_voltage - old_voltage) / old_voltage >= VOLTAGE_JUMP_REL
-    )
-
-
-def is_drop(
-    old_level: float | None,
-    new_level: float | None,
-    old_voltage: float | None,
-    new_voltage: float | None,
-) -> bool:
-    """A fall as big as a battery change, only in the other direction: one report alone may be an outlier."""
-    if old_level is not None and new_level is not None and old_level - new_level >= LEVEL_JUMP:
-        return True
-    return bool(
-        old_voltage is not None
-        and new_voltage is not None
-        and old_voltage > 0
-        and old_voltage - new_voltage >= VOLTAGE_JUMP_ABS
-        and (old_voltage - new_voltage) / old_voltage >= VOLTAGE_JUMP_REL
-    )
+    """A jump up in level or voltage that no normal wobble explains."""
+    return jumped(LEVEL, old_level, new_level) or jumped(VOLTAGE, old_voltage, new_voltage)
 
 
 def shopping_list(items: list[BatteryInfo]) -> str:

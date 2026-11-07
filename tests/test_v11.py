@@ -212,17 +212,22 @@ async def test_one_message_does_not_confirm_its_own_jump(hass: HomeAssistant, se
     hass.states.async_set(door.entities["battery"], "30")
     hass.states.async_set(door.entities["voltage"], "1000")
     await hass.async_block_till_done()
+    # A big fall only becomes the reference once a later report confirms it (#5)
+    await tick(hass, setup["freezer"], timedelta(minutes=10))
+    hass.states.async_set(door.entities["battery"], "29")
+    hass.states.async_set(door.entities["voltage"], "999")
+    await hass.async_block_till_done()
     await tick(hass, setup["freezer"], timedelta(minutes=10))
     hass.states.async_set(door.entities["battery"], "100")
     hass.states.async_set(door.entities["voltage"], "1500")
     await hass.async_block_till_done()
     record = monitor.devices[door.device_id].record
-    assert replaced == [] and record["pending_jump"] is not None
+    assert replaced == [] and set(record["pending_jump"]) == {"level", "voltage"}
     # Ausreißer: die nächste Meldung zeigt wieder die alten Werte → verfällt
     await tick(hass, setup["freezer"], timedelta(minutes=1))
     hass.states.async_set(door.entities["battery"], "30")
     await hass.async_block_till_done()
-    assert replaced == [] and record["pending_jump"] is None
+    assert replaced == [] and "level" not in record["pending_jump"]
 
 
 # ── 6. Text der gemeinsamen Mitteilung, Batterie nicht in der Sturm-Bremse ─

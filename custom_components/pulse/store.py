@@ -38,8 +38,8 @@ def default_record() -> dict[str, Any]:
         "partner": None,
         "replaced": [],
         "replaced_source": [],  # per change: manual / auto / announce
-        "pending_jump": None,  # battery jump that must be confirmed by the next real report
-        "pending_drop": None,  # big fall that must be confirmed before it becomes the reference value
+        "pending_jump": {},  # per quantity (level/voltage): time of a jump the next real report must confirm
+        "pending_drop": {},  # per quantity: [time, value] of a big fall a close later report must confirm
         "snooze_until": None,
         "last_level": None,
         "last_voltage": None,
@@ -124,10 +124,12 @@ def migrate(old_minor: int, data: dict[str, Any]) -> dict[str, Any]:
     if old_minor < 10:
         # 26.11.5: which of them gave the entity a new ID (HA adds it again, its first row may come later)
         data.setdefault("entity_id_changes", {})
-    if old_minor < 11:
-        # 26.11.6: a big fall only becomes the reference once confirmed (single outliers, issue #5)
+    if old_minor < 12:
+        # 26.11.7: pending jumps and falls per quantity (level/voltage), so one entity never clears what the
+        # other still has to confirm (26.11.6 kept one shared value; a pending one is simply dropped)
         for record in data.get("devices", {}).values():
-            record.setdefault("pending_drop", None)
+            record["pending_jump"] = {}
+            record["pending_drop"] = {}
     return data
 
 

@@ -908,58 +908,65 @@ class PulseMonitor:
     def _check_battery(self, device: Device, now: float, entity_id: str | None = None) -> None:
         """Detect a battery change by its jump: only from real reports and confirmed.
 
-        The reference value is the last stable real value. A jump only counts once a later real report
-        (≥ MERGE_SECONDS, not the same radio message) confirms it; in the first minutes after start only
-        the reference value is tracked. A big fall becomes the reference only once confirmed the same way,
-        otherwise a single outlier (BLE sensors report 70, 15, 70) would make the return look like a new
-        battery. Only the entity that just reported is evaluated; the other's value may still come from the
-        previous message.
+        Level and voltage are judged each on their own, with their own reference and their own pending
+        jump or fall: a device reports both in one message, and one must never clear what the other still
+        has to confirm. The reference value is the last stable real value. A jump only counts once a later
+        real report (≥ MERGE_SECONDS, not the same radio message) confirms it; in the first minutes after
+        start only the reference value is tracked. A big fall becomes the reference only once a later report
+        close to it confirms it, and never in the first minutes after start; otherwise a single outlier (BLE
+        sensors report 70, 15, 70) would make the return look like a new battery (#5). Only the entity that
+        just reported is evaluated; the other's value may still come from the previous message.
         """
         record = device.record
         spec = device.spec
-        level = self._battery_percent(spec) if entity_id in (None, spec.battery) else None
-        voltage = self.voltage(device) if entity_id in (None, spec.voltage) else None
-        if level is None and voltage is None:
+        values: dict[str, float] = {}
+        if entity_id in (None, spec.battery) and (level := self._battery_percent(spec)) is not None:
+            values[batt.LEVEL] = level
+        if entity_id in (None, spec.voltage) and (voltage := self.voltage(device)) is not None:
+            values[batt.VOLTAGE] = voltage
+        if not values:
             return
-        if not self._settled(now):
-            record["pending_jump"] = None
-            record["pending_drop"] = None
-            self._set_baseline(record, level, voltage)
-            return
-        if batt.is_drop(record.get("last_level"), level, record.get("last_voltage"), voltage):
-            record["pending_jump"] = None
-            pending_drop = record.get("pending_drop")
-            if pending_drop is None or now - pending_drop < MERGE_SECONDS:
-                if pending_drop is None:
-                    record["pending_drop"] = now  # the next real report must confirm the fall
-                    self.store.async_delay_save()
-                return
-            record["pending_drop"] = None
-            self._set_baseline(record, level, voltage)
-            self.store.async_delay_save()
-            return
-        record["pending_drop"] = None
-        if batt.is_replacement(record.get("last_level"), level, record.get("last_voltage"), voltage):
-            pending = record.get("pending_jump")
-            if pending is None:
-                record["pending_jump"] = now  # remember first; the next real report must confirm it
-                self.store.async_delay_save()
-                return
-            if now - pending < MERGE_SECONDS:
-                return  # the same radio message (battery + voltage) does not confirm itself
-            record["pending_jump"] = None
-            self.mark_replaced(device.device_id, "auto")
-        else:
-            record["pending_jump"] = None
-        self._set_baseline(record, level, voltage)
+        jumps = self._pending(record, "pending_jump")
+        drops = self._pending(record, "pending_drop")
+        settled = self._settled(now)
+        for kind, value in values.items():
+            key = f"last_{kind}"
+            reference = record.get(key)
+            if batt.dropped(kind, reference, value):
+                jumps.pop(kind, None)
+                if not settled:
+                    continue  # a start echo or outlier never becomes the reference
+                pending = drops.get(kind)
+                if not isinstance(pending, list) or not batt.close(kind, float(pending[1]), value):
+                    drops[kind] = [now, value]  # the next real report close to it must confirm the fall
+                    continue
+                if now - float(pending[0]) < MERGE_SECONDS:
+                    continue  # the same radio message does not confirm itself
+                del drops[kind]
+                record[key] = value
+                continue
+            drops.pop(kind, None)
+            if settled and batt.jumped(kind, reference, value):
+                pending_jump = jumps.get(kind)
+                if not isinstance(pending_jump, int | float):
+                    jumps[kind] = now  # remember first; the next real report must confirm it
+                    continue
+                if now - pending_jump < MERGE_SECONDS:
+                    continue
+                del jumps[kind]
+                self.mark_replaced(device.device_id, "auto")  # reads the old (low) reference
+            else:
+                jumps.pop(kind, None)
+            record[key] = value
         self.store.async_delay_save()
 
     @staticmethod
-    def _set_baseline(record: dict[str, Any], level: float | None, voltage: float | None) -> None:
-        if level is not None:
-            record["last_level"] = level
-        if voltage is not None:
-            record["last_voltage"] = voltage
+    def _pending(record: dict[str, Any], key: str) -> dict[str, Any]:
+        """Pending jumps/falls per quantity (level, voltage); anything else stored there is dropped."""
+        pending = record.get(key)
+        if not isinstance(pending, dict):
+            pending = record[key] = {}
+        return pending
 
     # Zigbee2MQTT
     @callback
