@@ -2,7 +2,6 @@
 
 from custom_components.pulse.battery import (
     BatteryInfo,
-    is_replacement,
     level_trusted,
     lookup,
     shopping_list,
@@ -17,15 +16,6 @@ def test_lookup_known_models_only():
     assert lookup("IKEA", "VALLHORN wireless motion sensor") == BatteryInfo("AAA", 3, "nimh")
     assert lookup(None, "Eve Motion 20EBY9901") == BatteryInfo("AA", 2, "alkaline")
     assert lookup("Aqara", "WSDCGQ11LM") is None
-
-
-def test_replacement_detection():
-    assert is_replacement(20, 100, None, None)
-    assert not is_replacement(90, 100, None, None)  # war nicht leer
-    assert not is_replacement(50, 60, None, None)
-    assert is_replacement(None, None, 1120, 1400)
-    assert not is_replacement(None, None, 1300, 1320)
-    assert not is_replacement(None, None, 0, 1300)
 
 
 def test_level_trust_and_shopping_list():

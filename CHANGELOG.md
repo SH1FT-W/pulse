@@ -2,6 +2,20 @@
 
 After 1.1.0, releases use calendar versions `YY.M.N` (year, month, number of the release in that month), e.g. `26.10.4`. They count as newer than every 1.x version, so updates through HACS work as before.
 
+## 26.11.8 – 2026-11-07
+
+### Fixed
+- Battery change detection rebuilt (#5). 26.11.6 and 26.11.7 tried to confirm a battery change, and a big fall, by the next report alone. That cannot work for every device: Bluetooth sensors such as the Shelly BLU H&T send single outliers (15 % between readings of 70 %), a value repeated by the integration looked like a confirmation, and after being unavailable a Zigbee2MQTT device first shows an old stored value and the real one about a minute later (or the other way round). Each of these could still end in a false "New battery", or a real change was missed. Pulse now keeps a short history of the battery level and voltage per device and replaces the pair confirmation of 26.11.6/26.11.7:
+  - A change needs one step up of at least 25 points (or 150 mV and 15 %) from a low level that lasted at least an hour. The low level is the median of the last readings, so a single outlier is never the "before" value. Charging up in small steps never counts.
+  - The new value has to be clearly above everything of the last three days (5 points or 50 mV). Coming back to a level the device already had, after a cold night, a defrost or a charge, is no new battery. In the first day after installing or updating Pulse no change is detected automatically.
+  - The new level has to hold for 6 hours without a report against it, confirmed by a later report or by time alone (devices that only report on change are detected too). A single report back down during that time is taken as an outlier; only staying down drops the change.
+  - A device that was silent or unavailable for days with a flat battery is compared with the last level Pulse knew, so the swap is detected after any length of silence. Bluetooth sensors that advertise every few seconds are stored as one value per minute.
+  - The values in the first 3 minutes after "unavailable" are provisional: a stored old value followed by the real one is ignored. A battery swapped while the device was unavailable is detected with the next real report after those minutes, or after a calm day without another dropout.
+  - The change is recorded at the time of the step, not of the confirmation, so the forecast and "New battery" start at the right time.
+  - Level and voltage of one device, and a change you already marked by hand (within three days), count as one change. If you undo a mark, a real change that was taken for it counts after all.
+  - In the first minutes after Home Assistant starts nothing is confirmed, but a battery changed while Home Assistant was off is still detected once it has run for a while.
+- Pulse's stored data gets the new history; the battery values Pulse already knew are its first entries. Older versions (26.11.5 to 26.11.7) can still read the stored data.
+
 ## 26.11.7 – 2026-11-07
 
 ### Fixed

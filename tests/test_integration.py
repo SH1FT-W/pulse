@@ -236,75 +236,66 @@ async def test_battery_replacement_auto_and_manual(hass: HomeAssistant, setup):
     devices = setup["devices"]
     door_id = devices["door"].device_id
     voltage = devices["door"].entities["voltage"]
-    settle(monitor)
     replaced = async_capture_events(hass, EVENT_BATTERY_REPLACED)
-    # Echter Wechsel: 1,2 V → 1,5 V, von der nächsten Meldung bestätigt
+    # Real change: 1.2 V for days, then 1.5 V, confirmed by a report 6 h later
+    for i in range(8):
+        await tick(hass, setup["freezer"], timedelta(hours=6))
+        hass.states.async_set(voltage, "1190" if i % 2 else "1200")
+    await tick(hass, setup["freezer"], timedelta(hours=1))
     hass.states.async_set(voltage, "1500")
     await hass.async_block_till_done()
-    assert replaced == []  # erst vorgemerkt
-    setup["freezer"].tick(timedelta(seconds=30))
-    hass.states.async_set(voltage, "1500")  # gleicher Wert erneut gemeldet
+    step = time.time()
+    await tick(hass, setup["freezer"], timedelta(minutes=10))
+    hass.states.async_set(voltage, "1500")  # the same value reported again, too soon
+    await hass.async_block_till_done()
+    assert replaced == []  # only a candidate
+    await tick(hass, setup["freezer"], timedelta(hours=5, minutes=55))
+    hass.states.async_set(voltage, "1500")  # held 6 h
     await hass.async_block_till_done()
     assert [e.data["source"] for e in replaced] == ["auto"]
-    assert monitor.devices[door_id].record["replaced_source"] == ["auto"]
-    # Gerät hatte kein Problem und keine schwache Batterie → still im Panel, keine Mitteilung
+    record = monitor.devices[door_id].record
+    assert record["replaced_source"] == ["auto"] and record["replaced"] == [step]
+    # No problem and no low battery before: quiet in the panel, no notification
     await tick(hass, setup["freezer"], timedelta(minutes=4))
     assert not [p for p in setup["pushes"] if p.data["title"] == "Batteriewechsel erkannt"]
-    # derselbe Wechsel zählt nicht doppelt
+    # A short dip and back is not the same change twice
     hass.states.async_set(voltage, "1100")
     hass.states.async_set(voltage, "1500")
-    setup["freezer"].tick(timedelta(seconds=30))
+    await tick(hass, setup["freezer"], timedelta(minutes=10))
     hass.states.async_set(voltage, "1500")
     await hass.async_block_till_done()
     assert len(replaced) == 1
     await hass.services.async_call(DOMAIN, "mark_replaced", {"device_id": door_id}, blocking=True)
     assert [e.data["source"] for e in replaced] == ["auto", "manual"]
-    assert monitor.devices[door_id].record["replaced_source"] == ["auto", "manual"]
+    assert record["replaced_source"] == ["auto", "manual"]
 
 
-async def test_battery_restart_sequence_is_no_replacement(hass: HomeAssistant, setup):
-    """Neustart: unavailable → unknown → 1200 → 1300 (erst gerundet, dann genau) ist kein Wechsel."""
+async def test_restart_values_are_no_replacement(hass: HomeAssistant, setup):
+    """Restart: unavailable → unknown → 1200 → 1300 (rounded first, then exact) is no change, nor NiMH noise."""
     monitor = setup["monitor"]
-    devices = setup["devices"]
-    voltage = devices["door"].entities["voltage"]
-    battery = devices["thermo"].entities["battery"]
+    voltage = setup["devices"]["door"].entities["voltage"]
+    battery = setup["devices"]["thermo"].entities["battery"]
     replaced = async_capture_events(hass, EVENT_BATTERY_REPLACED)
     settle(monitor)
     for value in ("unavailable", "unknown", "1200", "1300", "1300"):
         hass.states.async_set(voltage, value)
         await hass.async_block_till_done()
-    # NiMH-Rauschen und kleine Sprünge zählen nie (unter 15 % bzw. 150 mV)
     for value in ("1150", "1300", "1300"):
+        await tick(hass, setup["freezer"], timedelta(hours=1))
         hass.states.async_set(voltage, value)
         await hass.async_block_till_done()
     assert replaced == []
-    # In den ersten Minuten nach dem Start zählt auch ein großer Sprung nicht
+    # In the first minutes after the start nothing is confirmed, and a jump back down drops the candidate
+    await tick(hass, setup["freezer"], timedelta(hours=2))
     monitor.started_at = time.time()
-    for value in ("1000", "1500", "1500"):
-        hass.states.async_set(voltage, value)
+    for value in ("unknown", "20", "100", "100"):
+        hass.states.async_set(battery, value)
         await hass.async_block_till_done()
-    hass.states.async_set(battery, "unknown")
-    hass.states.async_set(battery, "20")
-    hass.states.async_set(battery, "100")
-    hass.states.async_set(battery, "100")
-    await hass.async_block_till_done()
-    assert replaced == []
-    # Ein Sprung, den die nächste Meldung nicht bestätigt, verfällt
-    settle(monitor)
-    hass.states.async_set(battery, "20")
-    hass.states.async_set(battery, "100")
-    setup["freezer"].tick(timedelta(seconds=30))
+    await tick(hass, setup["freezer"], timedelta(minutes=2))
     hass.states.async_set(battery, "21")
     await hass.async_block_till_done()
+    await tick(hass, setup["freezer"], timedelta(hours=7))
     assert replaced == []
-    # Prozent: 20 → 100 ohne Echo, bestätigt → Wechsel (der tiefe Stand ist erst bestätigt Bezugswert, #5)
-    setup["freezer"].tick(timedelta(seconds=30))
-    hass.states.async_set(battery, "20")
-    hass.states.async_set(battery, "100")
-    setup["freezer"].tick(timedelta(seconds=30))
-    hass.states.async_set(battery, "100")
-    await hass.async_block_till_done()
-    assert [e.data["source"] for e in replaced] == ["auto"]
 
 
 async def test_voltage_in_volts_is_normalised(hass: HomeAssistant, setup):
@@ -315,15 +306,18 @@ async def test_voltage_in_volts_is_normalised(hass: HomeAssistant, setup):
     voltage = devices["door"].entities["voltage"]
     settle(monitor)
     replaced = async_capture_events(hass, EVENT_BATTERY_REPLACED)
-    hass.states.async_set(voltage, "1.21", {"unit_of_measurement": "V"})
-    hass.states.async_set(voltage, "1.22", {"unit_of_measurement": "V"})
+    for _ in range(5):  # a day of history
+        await tick(hass, setup["freezer"], timedelta(hours=6))
+        hass.states.async_set(voltage, "1.21", {"unit_of_measurement": "V"})
+        hass.states.async_set(voltage, "1.22", {"unit_of_measurement": "V"})
     await hass.async_block_till_done()
     door = monitor.devices[door_id]
     assert door.record["last_voltage"] == pytest.approx(1220)
     assert monitor.serialize(door, time.time())["battery"]["voltage"] == pytest.approx(1220)
     assert replaced == []
+    await tick(hass, setup["freezer"], timedelta(hours=1))
     hass.states.async_set(voltage, "1.5", {"unit_of_measurement": "V"})
-    setup["freezer"].tick(timedelta(seconds=30))
+    await tick(hass, setup["freezer"], timedelta(hours=6, minutes=10))
     hass.states.async_set(voltage, "1.5", {"unit_of_measurement": "V"})
     await hass.async_block_till_done()
     assert [e.data["source"] for e in replaced] == ["auto"]
@@ -338,10 +332,11 @@ async def test_replacement_pushes_bundled(hass: HomeAssistant, setup):
     def titles() -> list[str]:
         return [p.data["title"] for p in pushes]
 
-    for device_id in ids:
-        monitor.devices[device_id].record["last_level"] = 10  # alle mit schwacher Batterie
+    def mark(device_id: str, level: float = 10) -> None:
+        monitor.mark_replaced(device_id, "auto", level_before=level)  # low battery before the step
+
     # Einer: nach kurzer Wartezeit eine eigene Mitteilung
-    monitor.mark_replaced(ids[0], "auto")
+    mark(ids[0])
     await tick(hass, setup["freezer"], timedelta(minutes=1))
     assert "Batteriewechsel erkannt" not in titles()
     await tick(hass, setup["freezer"], timedelta(minutes=3))
@@ -350,9 +345,9 @@ async def test_replacement_pushes_bundled(hass: HomeAssistant, setup):
     await tick(hass, setup["freezer"], timedelta(minutes=15))
     pushes.clear()
     for device_id in ids[1:]:
-        monitor.mark_replaced(device_id, "auto")
+        mark(device_id)
     monitor.devices[ids[0]].record["replaced"] = []
-    monitor.mark_replaced(ids[0], "auto")  # vierter auf einmal → Neustart-Artefakt
+    mark(ids[0])  # vierter auf einmal → Neustart-Artefakt
     await tick(hass, setup["freezer"], timedelta(minutes=4))
     assert not [t for t in titles() if "Batteriewechsel" in t]
     # Genau drei: eine gemeinsame
@@ -360,15 +355,14 @@ async def test_replacement_pushes_bundled(hass: HomeAssistant, setup):
     pushes.clear()
     for device_id in ids[:3]:
         monitor.devices[device_id].record["replaced"] = []
-        monitor.mark_replaced(device_id, "auto")
+        mark(device_id)
     await tick(hass, setup["freezer"], timedelta(minutes=4))
     assert [t for t in titles() if "Batteriewechsel" in t] == ["3 Batteriewechsel erkannt"]
     # Ohne Problem und mit voller Batterie: keine Mitteilung
     await tick(hass, setup["freezer"], timedelta(minutes=15))
     pushes.clear()
     monitor.devices[ids[3]].record["replaced"] = []
-    monitor.devices[ids[3]].record["last_level"] = 90
-    monitor.mark_replaced(ids[3], "auto")
+    mark(ids[3], 90)
     await tick(hass, setup["freezer"], timedelta(minutes=4))
     assert not [t for t in titles() if "Batteriewechsel" in t]
 

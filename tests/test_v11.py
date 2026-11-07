@@ -205,29 +205,31 @@ async def test_z2m_identical_echo_without_last_seen(hass: HomeAssistant, mqtt_mo
 
 
 async def test_one_message_does_not_confirm_its_own_jump(hass: HomeAssistant, setup):
+    """Level and voltage in one message are one report each, never a confirmation of each other; an outlier up
+    that the next report takes back is dropped."""
     monitor: PulseMonitor = setup["monitor"]
     door = setup["devices"]["door"]
     replaced = async_capture_events(hass, EVENT_BATTERY_REPLACED)
-    await tick(hass, setup["freezer"], timedelta(minutes=10))
-    hass.states.async_set(door.entities["battery"], "30")
-    hass.states.async_set(door.entities["voltage"], "1000")
-    await hass.async_block_till_done()
-    # A big fall only becomes the reference once a later report confirms it (#5)
-    await tick(hass, setup["freezer"], timedelta(minutes=10))
-    hass.states.async_set(door.entities["battery"], "29")
-    hass.states.async_set(door.entities["voltage"], "999")
-    await hass.async_block_till_done()
-    await tick(hass, setup["freezer"], timedelta(minutes=10))
+    for level, voltage in (("30", "1000"),) * 6 + (("29", "999"), ("29", "998")):  # flat for a day and more
+        await tick(hass, setup["freezer"], timedelta(hours=6))
+        hass.states.async_set(door.entities["battery"], level)
+        hass.states.async_set(door.entities["voltage"], voltage)
+        await hass.async_block_till_done()
+    await tick(hass, setup["freezer"], timedelta(hours=1))
     hass.states.async_set(door.entities["battery"], "100")
     hass.states.async_set(door.entities["voltage"], "1500")
     await hass.async_block_till_done()
-    record = monitor.devices[door.device_id].record
-    assert replaced == [] and set(record["pending_jump"]) == {"level", "voltage"}
-    # Ausreißer: die nächste Meldung zeigt wieder die alten Werte → verfällt
-    await tick(hass, setup["freezer"], timedelta(minutes=1))
-    hass.states.async_set(door.entities["battery"], "30")
-    await hass.async_block_till_done()
-    assert replaced == [] and "level" not in record["pending_jump"]
+    history = monitor.devices[door.device_id].record["battery_history"]
+    assert replaced == [] and history["level"]["candidate"] and history["voltage"]["candidate"]
+    # Outlier: the next reports show the old values again; one could be an outlier down, staying down drops it
+    for level, voltage in (("30", "1000"), ("31", "1001")):
+        await tick(hass, setup["freezer"], timedelta(minutes=10))
+        hass.states.async_set(door.entities["battery"], level)
+        hass.states.async_set(door.entities["voltage"], voltage)
+        await hass.async_block_till_done()
+    assert history["level"]["candidate"] is None and history["voltage"]["candidate"] is None
+    await tick(hass, setup["freezer"], timedelta(hours=7))
+    assert replaced == []
 
 
 # ── 6. Text der gemeinsamen Mitteilung, Batterie nicht in der Sturm-Bremse ─

@@ -1,4 +1,4 @@
-"""Batterie-Wissen: Typen bekannter Modelle und Wechsel-Erkennung – ohne HA-Abhängigkeit."""
+"""Battery knowledge: types of known models and status thresholds, without Home Assistant."""
 
 from __future__ import annotations
 
@@ -44,54 +44,6 @@ def lookup(manufacturer: str | None, model: str | None) -> BatteryInfo | None:
 def level_trusted(chemistry: str | None) -> bool:
     """NiMH hält die Spannung bis kurz vor leer – der Prozentwert sagt dann nichts."""
     return chemistry != NIMH
-
-
-# Spannungssprung, der als Wechsel zählt: relativ UND absolut – NiMH-Rauschen (1,2 ↔ 1,3 V) und
-# Zigbee2MQTTs erst gerundete, dann genaue Spannung nach einem Neustart zählen nie
-VOLTAGE_JUMP_REL = 0.15
-VOLTAGE_JUMP_ABS = 150.0  # mV
-LEVEL_JUMP = 25
-LEVEL_JUMP_FROM = 75
-
-
-LEVEL = "level"
-VOLTAGE = "voltage"
-# A confirming report of a fall must be this close to the first low value (otherwise: another outlier)
-LEVEL_CLOSE = 10
-VOLTAGE_CLOSE = 75.0  # mV
-
-
-def jumped(kind: str, old: float | None, new: float | None) -> bool:
-    """A rise of one quantity (level in %, voltage in mV) that no normal wobble explains."""
-    if old is None or new is None:
-        return False
-    if kind == LEVEL:
-        return old <= LEVEL_JUMP_FROM and new - old >= LEVEL_JUMP
-    return old > 0 and new - old >= VOLTAGE_JUMP_ABS and (new - old) / old >= VOLTAGE_JUMP_REL
-
-
-def dropped(kind: str, old: float | None, new: float | None) -> bool:
-    """A fall as big as a battery change, only in the other direction: one report alone may be an outlier."""
-    if old is None or new is None:
-        return False
-    if kind == LEVEL:
-        return old - new >= LEVEL_JUMP
-    return old > 0 and old - new >= VOLTAGE_JUMP_ABS and (old - new) / old >= VOLTAGE_JUMP_REL
-
-
-def close(kind: str, first: float, second: float) -> bool:
-    """The second low report confirms the first one (not a second, different outlier)."""
-    return abs(second - first) <= (LEVEL_CLOSE if kind == LEVEL else VOLTAGE_CLOSE)
-
-
-def is_replacement(
-    old_level: float | None,
-    new_level: float | None,
-    old_voltage: float | None,
-    new_voltage: float | None,
-) -> bool:
-    """A jump up in level or voltage that no normal wobble explains."""
-    return jumped(LEVEL, old_level, new_level) or jumped(VOLTAGE, old_voltage, new_voltage)
 
 
 def shopping_list(items: list[BatteryInfo]) -> str:

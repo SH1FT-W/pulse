@@ -11,6 +11,7 @@ from typing import Any
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import Store
 
+from . import replacement
 from .const import (
     DEFAULT_SETTINGS,
     HISTORY_DAYS,
@@ -38,8 +39,11 @@ def default_record() -> dict[str, Any]:
         "partner": None,
         "replaced": [],
         "replaced_source": [],  # per change: manual / auto / announce
-        "pending_jump": {},  # per quantity (level/voltage): time of a jump the next real report must confirm
-        "pending_drop": {},  # per quantity: [time, value] of a big fall a close later report must confirm
+        # Battery change detection (`replacement.py`): samples, candidate, provisional value per quantity
+        "battery_history": {},
+        # Unused since 26.11.8; kept as None so 26.11.5-26.11.7 can still load the store (HA never migrates down)
+        "pending_jump": None,
+        "pending_drop": None,
         "snooze_until": None,
         "last_level": None,
         "last_voltage": None,
@@ -130,7 +134,23 @@ def migrate(old_minor: int, data: dict[str, Any]) -> dict[str, Any]:
         for record in data.get("devices", {}).values():
             record["pending_jump"] = {}
             record["pending_drop"] = {}
+    if old_minor < 13:
+        # 26.11.8: battery changes judged on a short history per quantity instead of pending pairs; the history
+        # starts from the last known values. The old keys stay (None) for older versions reading this store.
+        now = time.time()
+        for record in data.get("devices", {}).values():
+            record["pending_jump"] = None
+            record["pending_drop"] = None
+            if not isinstance(record.get("battery_history"), dict):
+                # Kept when present: going back to an older version and up again writes minor 12 over it
+                record["battery_history"] = {}
+            replacement.seed(record, replacement.LEVEL, now, _number(record.get("last_level")))
+            replacement.seed(record, replacement.VOLTAGE, now, _number(record.get("last_voltage")))
     return data
+
+
+def _number(value: Any) -> float | None:
+    return float(value) if isinstance(value, int | float) and not isinstance(value, bool) else None
 
 
 def _stamps(stamps: Any, keep: float) -> list[float]:

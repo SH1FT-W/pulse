@@ -45,7 +45,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.start import async_at_started
 from homeassistant.util import dt as dt_util
 
-from . import battery as batt
+from . import battery as batt, replacement
 from .const import (
     DEFAULT_SETTINGS,
     DOMAIN,
@@ -56,7 +56,6 @@ from .const import (
     IMPORTANT_UNREACHABLE_CHOICES,
     KEEP_DAYS,
     MAX_EVENTS,
-    MERGE_SECONDS,
     OUTAGE_MIN,
     SEVERITY,
     SIGNAL_NEW_DEVICES,
@@ -496,6 +495,9 @@ class PulseMonitor:
                 record["last_level"] = self._battery_percent(spec)
             if record.get("last_voltage") is None and spec.voltage:
                 record["last_voltage"] = _millivolts(self.hass.states.get(spec.voltage))
+            # History for battery change detection, from what Pulse already knew (no-op once it has samples)
+            replacement.seed(record, replacement.LEVEL, now, record.get("last_level"))
+            replacement.seed(record, replacement.VOLTAGE, now, record.get("last_voltage"))
             self.devices[device_id] = device
             self._check_availability(device, now)
             new.append(device_id)
@@ -807,15 +809,28 @@ class PulseMonitor:
         if entity_id == device.spec.connectivity:
             self._evaluate(device, now)  # reachability changed, no sign of life
             return
-        if old is None or old.state in NOT_REAL or new.state in NOT_REAL or self._is_echo(device):
+        kind = self._battery_kind(device, entity_id)
+        if kind is not None and new.state in NOT_REAL:
+            # Zigbee2MQTT shows a cached old value first after "unavailable": the next values are provisional
+            verdict = replacement.unavailable(
+                device.record, kind, list(device.record["replaced"]), settled=self._settled(now)
+            )
+            if verdict is not None:
+                self._battery_replaced(device, verdict)
+            self.store.async_delay_save(SAVE_DELAY_EVENTS)
+        if old is None or new.state in NOT_REAL or self._is_echo(device):
+            return
+        if old.state in NOT_REAL:
+            # Back after unavailable/unknown: no sign of life, but the battery value is a report
+            if kind is not None and not self._registry_rewrite(entity_id, new.last_updated.timestamp()):
+                self._battery_report(device, kind, new)
             return
         if device.cloud and old.state == new.state:
             return  # Cloud: a new poll without a new value is no sign of life of the device
         if self._registry_rewrite(entity_id, new.last_updated.timestamp()):
             return  # Renamed, unit or entity ID changed: HA rewrote the state (a unit converted), no report
-        # Battery changes only from real transitions (never from restart echoes)
-        if entity_id in (device.spec.battery, device.spec.voltage):
-            self._check_battery(device, now, entity_id)
+        if kind is not None:
+            self._battery_report(device, kind, new)  # never from restart echoes (returned above)
         if entity_id not in self._alive:
             return  # Battery/warning entity of another platform: no sign of life of the device
         action = entity_id in device.spec.actions and old.state != new.state
@@ -838,12 +853,9 @@ class PulseMonitor:
             return  # Cloud: same value again = only the cloud's polling rhythm
         if self._registry_rewrite(entity_id, new.last_reported.timestamp()):
             return  # Registry changed without effect on the attributes: HA rewrote the same state
-        # Same value reported again: confirms (or discards) a pending battery jump or fall
-        record = device.record
-        if entity_id in (device.spec.battery, device.spec.voltage) and (
-            record.get("pending_jump") or record.get("pending_drop")
-        ):
-            self._check_battery(device, time.time(), entity_id)
+        # Same value reported again: one more sample for the battery change detection
+        if (kind := self._battery_kind(device, entity_id)) is not None:
+            self._battery_report(device, kind, new)
         if entity_id in self._alive:
             self._activity(device, new.last_reported.timestamp(), False)
 
@@ -905,68 +917,41 @@ class PulseMonitor:
         """Home Assistant has been running long enough that battery values are no longer start echoes."""
         return now - self.started_at >= STARTUP_GRACE
 
-    def _check_battery(self, device: Device, now: float, entity_id: str | None = None) -> None:
-        """Detect a battery change by its jump: only from real reports and confirmed.
-
-        Level and voltage are judged each on their own, with their own reference and their own pending
-        jump or fall: a device reports both in one message, and one must never clear what the other still
-        has to confirm. The reference value is the last stable real value. A jump only counts once a later
-        real report (≥ MERGE_SECONDS, not the same radio message) confirms it; in the first minutes after
-        start only the reference value is tracked. A big fall becomes the reference only once a later report
-        close to it confirms it, and never in the first minutes after start; otherwise a single outlier (BLE
-        sensors report 70, 15, 70) would make the return look like a new battery (#5). Only the entity that
-        just reported is evaluated; the other's value may still come from the previous message.
-        """
-        record = device.record
+    def _battery_kind(self, device: Device, entity_id: str) -> str | None:
+        """Which battery quantity this entity reports (warning sensors without a percentage: none)."""
         spec = device.spec
-        values: dict[str, float] = {}
-        if entity_id in (None, spec.battery) and (level := self._battery_percent(spec)) is not None:
-            values[batt.LEVEL] = level
-        if entity_id in (None, spec.voltage) and (voltage := self.voltage(device)) is not None:
-            values[batt.VOLTAGE] = voltage
-        if not values:
-            return
-        jumps = self._pending(record, "pending_jump")
-        drops = self._pending(record, "pending_drop")
-        settled = self._settled(now)
-        for kind, value in values.items():
-            key = f"last_{kind}"
-            reference = record.get(key)
-            if batt.dropped(kind, reference, value):
-                jumps.pop(kind, None)
-                if not settled:
-                    continue  # a start echo or outlier never becomes the reference
-                pending = drops.get(kind)
-                if not isinstance(pending, list) or not batt.close(kind, float(pending[1]), value):
-                    drops[kind] = [now, value]  # the next real report close to it must confirm the fall
-                    continue
-                if now - float(pending[0]) < MERGE_SECONDS:
-                    continue  # the same radio message does not confirm itself
-                del drops[kind]
-                record[key] = value
-                continue
-            drops.pop(kind, None)
-            if settled and batt.jumped(kind, reference, value):
-                pending_jump = jumps.get(kind)
-                if not isinstance(pending_jump, int | float):
-                    jumps[kind] = now  # remember first; the next real report must confirm it
-                    continue
-                if now - pending_jump < MERGE_SECONDS:
-                    continue
-                del jumps[kind]
-                self.mark_replaced(device.device_id, "auto")  # reads the old (low) reference
-            else:
-                jumps.pop(kind, None)
-            record[key] = value
-        self.store.async_delay_save()
+        if spec.mains:
+            return None  # a plug's supply voltage is no battery
+        if entity_id == spec.battery and not self._battery_flag(spec):
+            return replacement.LEVEL
+        if entity_id == spec.voltage:
+            return replacement.VOLTAGE
+        return None
 
-    @staticmethod
-    def _pending(record: dict[str, Any], key: str) -> dict[str, Any]:
-        """Pending jumps/falls per quantity (level, voltage); anything else stored there is dropped."""
-        pending = record.get(key)
-        if not isinstance(pending, dict):
-            pending = record[key] = {}
-        return pending
+    def _battery_report(self, device: Device, kind: str, state: State) -> None:
+        """One real report of the level or voltage (changed or reported again); see `replacement`."""
+        value = _float(state) if kind == replacement.LEVEL else _millivolts(state)
+        if value is None:
+            return
+        record = device.record
+        record[f"last_{kind}"] = value  # latest raw value (seeds the history, read by older versions)
+        now = time.time()
+        ts = min(state.last_reported.timestamp(), now)
+        verdict = replacement.report(record, kind, ts, value, list(record["replaced"]), settled=self._settled(now))
+        if verdict is not None:
+            self._battery_replaced(device, verdict)
+        self.store.async_delay_save(SAVE_DELAY_EVENTS)
+
+    def _battery_tick(self, device: Device, now: float) -> None:
+        """Time passed: a new level held long enough without a report against it (devices that write on change)."""
+        settled = self._settled(now)
+        for kind in replacement.KINDS:
+            verdict = replacement.tick(device.record, kind, now, list(device.record["replaced"]), settled)
+            if verdict is not None:
+                self._battery_replaced(device, verdict)
+
+    def _battery_replaced(self, device: Device, verdict: replacement.Verdict) -> None:
+        self.mark_replaced(device.device_id, "auto", at=verdict.at, level_before=verdict.level_before)
 
     # Zigbee2MQTT
     @callback
@@ -1033,7 +1018,8 @@ class PulseMonitor:
         self._cloud_pass(now)
         self.notifier.async_begin_tick()
         try:
-            for device in self.devices.values():
+            for device in list(self.devices.values()):
+                self._battery_tick(device, now)
                 self._evaluate(device, now)
         finally:
             self.notifier.async_end_tick()
@@ -1405,23 +1391,31 @@ class PulseMonitor:
 
     # ── Actions ──────────────────────────────────────────────────────────
 
-    def mark_replaced(self, device_id: str, source: str = "manual") -> None:
+    def mark_replaced(
+        self, device_id: str, source: str = "manual", at: float | None = None, level_before: float | None = None
+    ) -> None:
+        """Record a battery change. `at`: when it happened (automatic: the step, which may lie hours back);
+        `level_before`: the level before it (automatic: the robust low level before the step)."""
         device = self.devices.get(device_id)
         if device is None:
             return
         now = time.time()
+        at = now if at is None else min(at, now)
         record = device.record
         replaced: list[float] = record["replaced"]
-        if replaced and now - replaced[-1] < 6 * 3600 and source != "manual":
+        if source != "manual" and any(abs(at - ts) < 6 * 3600 for ts in replaced):
             return  # the same change reports through several values
         # Notification only if the change fixed something: problem or low battery before
-        last_level = record.get("last_level")
-        worth_push = device.problem or (last_level is not None and last_level <= batt.LEVEL_SOON)
+        if level_before is None:
+            level_before = replacement.current(record)  # manual/announce: the robust current level
+        worth_push = device.problem or (level_before is not None and level_before <= batt.LEVEL_SOON)
         sources: list[str] = record.setdefault("replaced_source", [])
         while len(sources) < len(replaced):
             sources.insert(0, "manual")
-        replaced.append(now)
-        sources.append(source)
+        # Sorted by time (an automatic change is recorded at its step, possibly before a later manual one)
+        idx = bisect_right(replaced, at)
+        replaced.insert(idx, at)
+        sources.insert(idx, source)
         del replaced[:-20]
         del sources[:-20]
         device.record["snooze_until"] = None
@@ -1430,7 +1424,7 @@ class PulseMonitor:
         # For "Rückgängig" (undo): what was already reported, otherwise undoing would bring the same notification
         record["notified_before_replace"] = record.get("notified")
         if source != "manual":
-            merge_event(device.record["events"], now, None, MAX_EVENTS)
+            merge_event(device.record["events"], at, None, MAX_EVENTS)
         device.unavailable_since = None
         self._gone_before.pop(device_id, None)
         self.hass.bus.async_fire(

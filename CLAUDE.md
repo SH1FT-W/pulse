@@ -10,7 +10,8 @@ es hört nur zu (Zustände, „gemeldet ohne Änderung“, Zigbee2MQTT-Nachricht
 - `__init__.py` Einstieg, `config_flow.py` ein Klick. `monitor.py` = der Wächter: Geräte finden, Meldungen sammeln
   (State-Events, state_reported, Z2M), aus dem Recorder lernen, jede Minute bewerten, Reparatur-Hinweise, Snapshot.
 - Reine Logik ohne HA, hier zuerst testen: `rhythm.py` (Takt, Grenzen, Stille, Ausfälle, Status mit Begründung),
-  `battery.py`, `texts.py` (de/en – Panel, Push und Reparatur sagen dasselbe), `forecast.py`, `partners.py`, `snapshot.py`.
+  `battery.py`, `replacement.py` (Batteriewechsel), `texts.py` (de/en – Panel, Push und Reparatur sagen dasselbe),
+  `forecast.py`, `partners.py`, `snapshot.py`.
 - `discovery.py` (welche Geräte: Batterie, Beta Netzgeräte, von Hand; Kind-Geräte zählen zum Elterngerät), `z2m.py`,
   `history.py` (Recorder), `notifier.py` (Mitteilungen), `store.py` (.storage/pulse.devices), `entity.py`/
   `binary_sensor.py`/`sensor.py` (hängen am Gerät der anderen Integration, kein eigenes Gerät), `services.py`,
@@ -31,8 +32,12 @@ sobald Claude dort arbeitet).
 - Netzgeräte: Abrufe lassen sich nicht allgemein erkennen (kleine Integrationen nicht trennbar, ZHA meldet
   `local_polling`), manche Integrationen schreiben bei jedem Abruf alle Entitäten neu. Darum zählt nur `unavailable`
   als weg; `unknown` ist da (Sirene!).
-- Batteriewechsel nur aus echten Übergängen, die sich bei einer späteren Meldung bestätigen; > 3 Wechsel in 10 Min.
-  sind ein Neustart-Artefakt (keine Mitteilung).
+- Batteriewechsel aus einem kurzen Verlauf je Größe (Prozent, mV; `replacement.py`, Feld-Daten im Docstring), nie
+  aus Paaren von Meldungen (26.11.6/7 scheiterten daran, #5): BLE-Ausreißer, Z2M wiederholt den Batteriewert mit
+  jeder Nachricht und zeigt nach `unavailable` erst einen alten Wert, manche Geräte schreiben nur bei Änderung.
+  Gefüttert wird mit jeder echten Meldung (Änderung, `state_reported`, auch der Wert nach `unavailable`), nie mit
+  Neustart-/Registry-Echos; der Minutentakt bestätigt einen gehaltenen Sprung. Gespeichert wird der Zeitpunkt des
+  Sprungs, nicht der Bestätigung. > 3 Wechsel in 10 Min. sind ein Neustart-Artefakt (keine Mitteilung).
 - `async_delay_save` plant nur, wenn nichts ansteht: HA verschiebt sonst bei jedem Aufruf, es wurde nie gespeichert.
 - Aufräumen nicht mehr überwachter Geräte erst nach `CLEANUP_GRACE` (Z2M/ESPHome legen Entitäten kurz neu an),
   deaktivierte Geräte nie (HA brächte die Entitäten deaktiviert zurück). MQTT löscht ein Gerät nicht, solange
