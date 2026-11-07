@@ -3814,15 +3814,7 @@ var J = o`
 		title: "welcome_notify_title",
 		text: "welcome_notify_text"
 	}
-], Kn = [{
-	icon: "mdi:rename-outline",
-	title: "new_rename_title",
-	text: "new_rename_text"
-}, {
-	icon: "mdi:power-plug-off-outline",
-	title: "new_often_title",
-	text: "new_often_text"
-}], qn = "https://github.com/SH1FT-W/pulse/blob/main/CHANGELOG.md";
+], Kn = [], qn = "https://github.com/SH1FT-W/pulse/blob/main/CHANGELOG.md";
 N("pulse-welcome", class extends A {
 	static {
 		this.properties = {
@@ -7527,7 +7519,7 @@ function Mr() {
 	let e = jr();
 	if (!e) return null;
 	try {
-		return Zn(e, "26.11.5", Kn.length > 0);
+		return Zn(e, "26.11.6", Kn.length > 0);
 	} catch {
 		return null;
 	}
@@ -7741,7 +7733,7 @@ var Pr = class extends A {
 		this.welcome = null;
 		let e = jr();
 		try {
-			e && Qn(e, "26.11.5");
+			e && Qn(e, "26.11.6");
 		} catch {}
 	}
 	zigbeeOffer(e) {
@@ -7910,7 +7902,7 @@ var Pr = class extends A {
         @partner-dismiss=${(e) => this.onPartnerDismiss(e.detail.id, e.detail.partner)}
       >
         ${this.renderHead()} ${this.renderContent()}
-        <p class="version muted">${F(t, "version", { version: "26.11.5" })}</p>
+        <p class="version muted">${F(t, "version", { version: "26.11.6" })}</p>
         ${e ? w`<pulse-device-sheet
                   .open=${n !== null}
                   .device=${n}
@@ -7935,7 +7927,7 @@ var Pr = class extends A {
                 <pulse-welcome
                   .mode=${this.welcome}
                   .language=${t}
-                  .version=${"26.11.5"}
+                  .version=${"26.11.6"}
                   .zigbee=${this.zigbeeOffer(e)}
                   @closed=${() => this.welcomeDone()}
                   @enable-z2m=${() => {

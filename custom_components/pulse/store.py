@@ -39,6 +39,7 @@ def default_record() -> dict[str, Any]:
         "replaced": [],
         "replaced_source": [],  # per change: manual / auto / announce
         "pending_jump": None,  # battery jump that must be confirmed by the next real report
+        "pending_drop": None,  # big fall that must be confirmed before it becomes the reference value
         "snooze_until": None,
         "last_level": None,
         "last_voltage": None,
@@ -123,6 +124,10 @@ def migrate(old_minor: int, data: dict[str, Any]) -> dict[str, Any]:
     if old_minor < 10:
         # 26.11.5: which of them gave the entity a new ID (HA adds it again, its first row may come later)
         data.setdefault("entity_id_changes", {})
+    if old_minor < 11:
+        # 26.11.6: a big fall only becomes the reference once confirmed (single outliers, issue #5)
+        for record in data.get("devices", {}).values():
+            record.setdefault("pending_drop", None)
     return data
 
 

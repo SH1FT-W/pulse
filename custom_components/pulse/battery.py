@@ -77,6 +77,24 @@ def is_replacement(
     )
 
 
+def is_drop(
+    old_level: float | None,
+    new_level: float | None,
+    old_voltage: float | None,
+    new_voltage: float | None,
+) -> bool:
+    """A fall as big as a battery change, only in the other direction: one report alone may be an outlier."""
+    if old_level is not None and new_level is not None and old_level - new_level >= LEVEL_JUMP:
+        return True
+    return bool(
+        old_voltage is not None
+        and new_voltage is not None
+        and old_voltage > 0
+        and old_voltage - new_voltage >= VOLTAGE_JUMP_ABS
+        and (old_voltage - new_voltage) / old_voltage >= VOLTAGE_JUMP_REL
+    )
+
+
 def shopping_list(items: list[BatteryInfo]) -> str:
     """„2× AAA, 1× CR2032“ – gleiche Typen zusammengezählt."""
     totals: dict[str, int] = {}

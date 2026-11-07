@@ -297,7 +297,8 @@ async def test_battery_restart_sequence_is_no_replacement(hass: HomeAssistant, s
     hass.states.async_set(battery, "21")
     await hass.async_block_till_done()
     assert replaced == []
-    # Prozent: 20 → 100 ohne Echo, bestätigt → Wechsel
+    # Prozent: 20 → 100 ohne Echo, bestätigt → Wechsel (der tiefe Stand ist erst bestätigt Bezugswert, #5)
+    setup["freezer"].tick(timedelta(seconds=30))
     hass.states.async_set(battery, "20")
     hass.states.async_set(battery, "100")
     setup["freezer"].tick(timedelta(seconds=30))

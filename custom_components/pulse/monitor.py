@@ -838,8 +838,11 @@ class PulseMonitor:
             return  # Cloud: same value again = only the cloud's polling rhythm
         if self._registry_rewrite(entity_id, new.last_reported.timestamp()):
             return  # Registry changed without effect on the attributes: HA rewrote the same state
-        # Same value reported again: confirms (or discards) a pending battery jump
-        if entity_id in (device.spec.battery, device.spec.voltage) and device.record.get("pending_jump"):
+        # Same value reported again: confirms (or discards) a pending battery jump or fall
+        record = device.record
+        if entity_id in (device.spec.battery, device.spec.voltage) and (
+            record.get("pending_jump") or record.get("pending_drop")
+        ):
             self._check_battery(device, time.time(), entity_id)
         if entity_id in self._alive:
             self._activity(device, new.last_reported.timestamp(), False)
@@ -907,8 +910,10 @@ class PulseMonitor:
 
         The reference value is the last stable real value. A jump only counts once a later real report
         (≥ MERGE_SECONDS, not the same radio message) confirms it; in the first minutes after start only
-        the reference value is tracked. Only the entity that just reported is evaluated; the other's
-        value may still come from the previous message.
+        the reference value is tracked. A big fall becomes the reference only once confirmed the same way,
+        otherwise a single outlier (BLE sensors report 70, 15, 70) would make the return look like a new
+        battery. Only the entity that just reported is evaluated; the other's value may still come from the
+        previous message.
         """
         record = device.record
         spec = device.spec
@@ -918,8 +923,22 @@ class PulseMonitor:
             return
         if not self._settled(now):
             record["pending_jump"] = None
+            record["pending_drop"] = None
             self._set_baseline(record, level, voltage)
             return
+        if batt.is_drop(record.get("last_level"), level, record.get("last_voltage"), voltage):
+            record["pending_jump"] = None
+            pending_drop = record.get("pending_drop")
+            if pending_drop is None or now - pending_drop < MERGE_SECONDS:
+                if pending_drop is None:
+                    record["pending_drop"] = now  # the next real report must confirm the fall
+                    self.store.async_delay_save()
+                return
+            record["pending_drop"] = None
+            self._set_baseline(record, level, voltage)
+            self.store.async_delay_save()
+            return
+        record["pending_drop"] = None
         if batt.is_replacement(record.get("last_level"), level, record.get("last_voltage"), voltage):
             pending = record.get("pending_jump")
             if pending is None:

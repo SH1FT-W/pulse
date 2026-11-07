@@ -2,6 +2,11 @@
 
 After 1.1.0, releases use calendar versions `YY.M.N` (year, month, number of the release in that month), e.g. `26.10.4`. They count as newer than every 1.x version, so updates through HACS work as before.
 
+## 26.11.6 – 2026-11-07
+
+### Fixed
+- A single battery report far below the usual level no longer leads to "New battery" when the next report is back to normal (#5). Some sensors, for example Shelly BLU H&T, report a level that wobbles between 60 and 75 % and now and then send one outlier of 15 %. Pulse took a fall at once as the new reference, so the return to 70 % looked like a battery change. Now a fall as big as a battery change (25 points, or 150 mV and 15 % of the voltage) only becomes the reference once a later report confirms it, also when the same value is reported again. A single outlier is dropped; a real fast fall followed by a new battery is still detected.
+
 ## 26.11.5 – 2026-11-05
 
 ### Fixed

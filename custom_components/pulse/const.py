@@ -16,7 +16,7 @@ STORE_VERSION: Final = 1
 # 5: summary day (summary_sent/summary_pending), 6: dismissed partner suggestions, battery missing since,
 # cloud outage reported, Z2M health requested, 7: restart echoes dropped, cloud reports rebuilt, 8: outages,
 # 9: registry changes (`registry_changes`), 10: entity ID changes (`entity_id_changes`)
-STORE_MINOR: Final = 10
+STORE_MINOR: Final = 11
 
 # Dispatcher: something changed (resend the panel, update entities)
 SIGNAL_UPDATE: Final = "pulse_update"
