@@ -2,14 +2,14 @@
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/readme-title-dark.webp" />
-  <img src="docs/images/readme-title-light.webp" alt="Pulse: Every sensor has a rhythm." />
+  <img src="docs/images/readme-title-light.webp" alt="Pulse: notices when battery sensors go quiet. Listens, never polls. No battery wasted. In the Marketplace." />
 </picture>
 
 [![Version](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2FSH1FT-W%2Fpulse%2Fmain%2Fcustom_components%2Fpulse%2Fmanifest.json&query=%24.version&label=version&style=flat-square&color=6D5DFC&labelColor=0E0D14)](https://github.com/SH1FT-W/pulse/releases/latest)
 [![Home Assistant](https://img.shields.io/badge/Home%20Assistant-2026.9%2B-6D5DFC?style=flat-square&labelColor=0E0D14&logo=homeassistant&logoColor=white)](https://www.home-assistant.io)
 [![Marketplace](https://img.shields.io/badge/Marketplace-default-6D5DFC?style=flat-square&labelColor=0E0D14)](https://hacs.xyz)
 
-<a href="https://sh1ft-w.github.io/pulse"><b>Website</b></a>&emsp;<a href="#install">Install</a>&emsp;<a href="#set-up">Set up</a>&emsp;<a href="#notifications">Notifications</a>&emsp;<a href="#entities-events-and-actions">Entities</a>&emsp;<a href="CHANGELOG.md">Changelog</a>
+<a href="https://sh1ft-w.github.io/pulse"><b>Website</b></a>&emsp;<a href="#get-started">Get started</a>&emsp;<a href="#notifications">Notifications</a>&emsp;<a href="#entities-events-and-actions">Entities</a>&emsp;<a href="CHANGELOG.md">Changelog</a>
 
 </div>
 
@@ -39,30 +39,18 @@ Every status comes with a reason in plain words: *Silent for 5 days. Usually rep
 
 **New in 26.11:** remind later in a week or a month, and you choose how fast an unreachable important device is reported. Every change is in the [changelog](CHANGELOG.md).
 
-<a id="install"></a>
-## Install
+<a id="get-started"></a><a id="install"></a><a id="set-up"></a>
+## Get started
 
 [![Open in the Marketplace](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=SH1FT-W&repository=pulse&category=integration)
 
-Search for **Pulse** under **Settings > Marketplace** (called HACS before Home Assistant 2026.11), download it and restart Home Assistant.
-
-<details>
-<summary>Install by hand</summary>
-
-1. Download the [latest release](https://github.com/SH1FT-W/pulse/releases/latest).
-2. Copy `custom_components/pulse` into `/config/custom_components/` and restart Home Assistant.
-
-</details>
-
-<a id="set-up"></a>
-## Set up
-
 Pulse needs Home Assistant 2026.9 or newer and nothing else. The Companion app (notifications), Zigbee2MQTT (signs of life) and the recorder (history and forecasts) are optional.
 
-1. **Add the integration.** **Settings > Devices & services > Add integration > Pulse**. One click, Pulse finds your devices itself.
-2. **Open Pulse in the sidebar.** The welcome sheet offers one switch for Zigbee signs of life (see [Zigbee2MQTT](#zigbee2mqtt)). Admins can change everything, other users see the panel read only.
-3. **Mark what matters.** A star makes a device important (tighter limits, see above). Ignore what you never want to hear about.
-4. **Send a test notification** under **Notifications** and check the recipients.
+1. **Install it.** Search for **Pulse** under **Settings > Marketplace** (called HACS before Home Assistant 2026.11), download it and restart Home Assistant.
+2. **Add the integration.** **Settings > Devices & services > Add integration > Pulse**. One click, Pulse finds your devices itself.
+3. **Open Pulse in the sidebar.** The welcome sheet offers one switch for Zigbee signs of life (see [Zigbee2MQTT](#zigbee2mqtt)). Admins can change everything, other users see the panel read only.
+4. **Mark what matters.** A star makes a device important (tighter limits, see above). Ignore what you never want to hear about.
+5. **Send a test notification** under **Notifications** and check the recipients.
 
 Which devices Pulse watches:
 
@@ -71,6 +59,14 @@ Which devices Pulse watches:
 - **Anything else by hand** under **Settings > Added by hand > Add device**: cameras, speakers, TVs, robot vacuums, a NAS. A connectivity sensor or a router's device tracker (UniFi, FRITZ!Box, Nmap) decides whether it is there, otherwise its main entities, and it is gone only while all of them are unavailable.
 
 Pulse speaks English, German, French, Spanish and Dutch.
+
+<details>
+<summary>Install by hand</summary>
+
+1. Download the [latest release](https://github.com/SH1FT-W/pulse/releases/latest).
+2. Copy `custom_components/pulse` into `/config/custom_components/` and restart Home Assistant.
+
+</details>
 
 <a id="notifications"></a>
 ## Notifications
@@ -218,3 +214,11 @@ dev/deploy-test.sh                                           # copy into a Docke
 [Apache 2.0](LICENSE). Copyright 2026 SH1FT-W.
 
 <sub>Pulse is an independent project and is not affiliated with Home Assistant or Nabu Casa.</sub>
+
+<br/>
+
+<div align="center">
+<a href="https://sh1ft-w.github.io"><img src="https://sh1ft-w.github.io/readme/footer.png" width="640" alt="All SH1FT-W projects"></a>
+<br/>
+<sub>More open source for Home Assistant and the Mac at <a href="https://sh1ft-w.github.io">sh1ft-w.github.io</a></sub>
+</div>
