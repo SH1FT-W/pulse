@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import asyncio
 from bisect import bisect_left, bisect_right
+from collections import deque
 from collections.abc import Callable, Collection
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
@@ -112,6 +113,8 @@ HOUR_SECONDS = 3600
 # After Home Assistant starts, battery values come in staggered and rounded; during that time
 # no battery change is detected
 STARTUP_GRACE = 5 * 60
+# Diagnostics: this many of the latest stored signs of life keep their source (in memory only)
+SIGNS_KEPT = 30
 UPTIME_KEEP = 30 * 86400
 UPTIME_MAX = 200
 # The uptime stamp is only saved every 5 minutes (UPTIME_SLACK is 10 minutes), otherwise every
@@ -179,6 +182,9 @@ class Device:
     # Zigbee2MQTT health: message counter last increased (in memory only)
     radio_last: float | None = None
     radio_rises: list[float] = field(default_factory=list)
+    # Diagnostics only (in memory): what the latest stored signs of life came from, and how many came from what
+    signs: deque[tuple[float, str, str]] = field(default_factory=lambda: deque(maxlen=SIGNS_KEPT))
+    sign_counts: dict[str, int] = field(default_factory=dict)
     # Calculated once a day: runtime forecast and partner suggestions
     forecast: Forecast | None = None
     forecast_reason: str | None = None
@@ -224,6 +230,12 @@ class Device:
     @property
     def cloud(self) -> bool:
         return self.spec.cloud
+
+
+def _entity_kind(state: State) -> str:
+    """Kind of entity without its name, for the diagnostics download: "sensor/temperature", "binary_sensor"."""
+    device_class = state.attributes.get("device_class")
+    return f"{state.domain}/{device_class}" if device_class else state.domain
 
 
 def _millivolts(state: State | None) -> float | None:
@@ -834,7 +846,7 @@ class PulseMonitor:
         if entity_id not in self._alive:
             return  # Battery/warning entity of another platform: no sign of life of the device
         action = entity_id in device.spec.actions and old.state != new.state
-        self._activity(device, new.last_updated.timestamp(), action)
+        self._activity(device, new.last_updated.timestamp(), action, (_entity_kind(new), "changed"))
 
     @callback
     def _state_reported(self, event: Event[EventStateReportedData]) -> None:
@@ -857,9 +869,10 @@ class PulseMonitor:
         if (kind := self._battery_kind(device, entity_id)) is not None:
             self._battery_report(device, kind, new)
         if entity_id in self._alive:
-            self._activity(device, new.last_reported.timestamp(), False)
+            self._activity(device, new.last_reported.timestamp(), False, (_entity_kind(new), "reported"))
 
-    def _activity(self, device: Device, ts: float, action: bool) -> None:
+    def _activity(self, device: Device, ts: float, action: bool, source: tuple[str, str]) -> None:
+        """One sign of life; `source` (kind of entity, trigger) is only kept for the diagnostics download."""
         if device.spec.mains and device.unavailable_since is not None:
             # The lamp/plug itself is gone: what its other entities still report (a diagnostic sensor rewritten on
             # every poll of the integration) is no sign of life of the device
@@ -867,6 +880,10 @@ class PulseMonitor:
         keep_from = time.time() - KEEP_DAYS * DAY
         # Thin out very chatty devices (BLE every few seconds) so 7 days fit into the store
         added = merge_event(device.record["events"], ts, keep_from, MAX_EVENTS, THIN_SECONDS)
+        key = ":".join(source)
+        device.sign_counts[key] = device.sign_counts.get(key, 0) + 1
+        if added:
+            device.signs.append((ts, *source))
         if action:
             merge_event(device.record["actions"], ts, keep_from, MAX_EVENTS)
         if not device.spec.mains:
@@ -958,7 +975,7 @@ class PulseMonitor:
     def _z2m_seen(self, ieee: str, ts: float, _exact: bool) -> None:
         device = self.devices.get(self._ieee_map.get(ieee, ""))
         if device is not None:
-            self._activity(device, min(ts, time.time()), False)
+            self._activity(device, min(ts, time.time()), False, ("zigbee2mqtt", "message"))
 
     @callback
     def _z2m_radio(self, ieee: str, ts: float) -> None:

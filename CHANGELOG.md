@@ -2,6 +2,11 @@
 
 After 1.1.0, releases use calendar versions `YY.M.N` (year, month, number of the release in that month), e.g. `26.10.4`. They count as newer than every 1.x version, so updates through HACS work as before.
 
+## 26.11.9 – 2026-11-10
+
+### Changed
+- The diagnostics download now shows where a device's reports come from (#5). Per device it lists the times of the reports of the last 48 hours, for the latest ones the kind of entity (for example `sensor/temperature`) and whether the value changed or the same value was reported again, how many reports came from which kind of entity since Home Assistant started, which kinds of entities count as a sign of life, and when the battery entity last changed and was last reported. Home Assistant's history only shows changes, so a device can still report while its battery value stays the same. Device and entity names stay out of the download as before. The sources are kept in memory only, so they start empty after an update or restart.
+
 ## 26.11.8 – 2026-11-07
 
 ### Fixed

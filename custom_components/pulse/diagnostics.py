@@ -8,19 +8,47 @@ from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
+from .monitor import _entity_kind
+
 if TYPE_CHECKING:
     from . import PulseConfigEntry
     from .monitor import Device, PulseMonitor
 
 TO_REDACT = {"targets", "persons"}
+# Zeitpunkte der gespeicherten Meldungen: so weit zurück, höchstens so viele (die jüngsten)
+RECENT_SPAN = 48 * 3600
+RECENT_MAX = 100
 
 
 def _iso(ts: float | None) -> str | None:
     return dt_util.utc_from_timestamp(ts).isoformat() if ts else None
 
 
+def _kinds(hass: HomeAssistant, entity_ids: list[str]) -> dict[str, int]:
+    """Wie viele Entitäten welcher Art als Lebenszeichen zählen (ohne Namen)."""
+    kinds: dict[str, int] = {}
+    for entity_id in entity_ids:
+        state = hass.states.get(entity_id)
+        kind = _entity_kind(state) if state is not None else entity_id.partition(".")[0]
+        kinds[kind] = kinds.get(kind, 0) + 1
+    return kinds
+
+
+def _battery_entity(hass: HomeAssistant, entity_id: str | None) -> dict[str, Any] | None:
+    """Was HA zur Batterie-Entität zeigt: „zuletzt geändert“ ist nicht „zuletzt gemeldet“."""
+    state = hass.states.get(entity_id) if entity_id else None
+    if state is None:
+        return None
+    return {
+        "state": state.state,
+        "last_changed": state.last_changed.isoformat(),
+        "last_reported": state.last_reported.isoformat(),
+    }
+
+
 def _device(monitor: PulseMonitor, device: Device) -> dict[str, Any]:
     spec, record, rhythm = device.spec, device.record, device.rhythm
+    recent_from = dt_util.utcnow().timestamp() - RECENT_SPAN
     return {
         "integration": spec.integration,
         "manufacturer": spec.manufacturer,
@@ -49,6 +77,13 @@ def _device(monitor: PulseMonitor, device: Device) -> dict[str, Any]:
         "forecast_reason": device.forecast_reason,
         "partner_suggestions": len(device.suggestions),
         "events": len(record["events"]),
+        # Woher die Striche kommen: Zeitpunkte der letzten Meldungen, Quelle der jüngsten (seit dem Start, Art der
+        # Entität und Auslöser, kein Name) und was überhaupt als Lebenszeichen zählt
+        "recent_events": [_iso(ts) for ts in record["events"] if ts >= recent_from][-RECENT_MAX:],
+        "recent_signs": [{"at": _iso(ts), "entity": kind, "trigger": trigger} for ts, kind, trigger in device.signs],
+        "sign_counts": dict(device.sign_counts),
+        "entity_kinds": _kinds(monitor.hass, spec.entities),
+        "battery_state": _battery_entity(monitor.hass, spec.battery),
         "actions": len(record["actions"]),
         # Partner und verworfene Vorschläge sind Geräte-IDs: nur ob/wie viele
         "record": {

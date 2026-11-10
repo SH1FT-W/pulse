@@ -31,6 +31,35 @@ async def test_diagnostics(hass: HomeAssistant, setup):
     assert all(d.name not in text for d in monitor.devices.values())
 
 
+async def test_diagnostics_names_source_of_signs(hass: HomeAssistant, setup):
+    """Woher ein Strich kam: Art der Entität und Auslöser, auch wenn sich die Batterie-Entität nicht ändert (#5)."""
+    monitor = setup["monitor"]
+    thermo = setup["devices"]["thermo"]
+    temperature = thermo.entities["temperature"]
+    hass.states.async_set(temperature, "30.1", hass.states.get(temperature).attributes)
+    await hass.async_block_till_done()
+    data = await async_get_config_entry_diagnostics(hass, setup["entry"])
+    device = monitor.devices[thermo.device_id]
+    entry = data["devices"][list(monitor.devices).index(thermo.device_id)]
+    assert entry["recent_signs"][-1]["trigger"] == "changed"
+    assert entry["recent_signs"][-1]["entity"].startswith("sensor")
+    assert entry["recent_signs"][-1]["at"] == entry["recent_events"][-1]
+    assert sum(entry["sign_counts"].values()) == 1
+    assert sum(entry["entity_kinds"].values()) == len(device.spec.entities)
+    battery = hass.states.get(device.spec.battery)
+    assert entry["battery_state"]["last_changed"] == battery.last_changed.isoformat()
+    # Same value again: counted with its own trigger, the stored mark (thinned) keeps the first source
+    hass.states.async_set(temperature, "30.1", hass.states.get(temperature).attributes)
+    await hass.async_block_till_done()
+    data = await async_get_config_entry_diagnostics(hass, setup["entry"])
+    entry = data["devices"][list(monitor.devices).index(thermo.device_id)]
+    assert any(key.endswith(":reported") for key in entry["sign_counts"])
+    assert len(entry["recent_signs"]) == 1
+    text = str(data)
+    assert temperature not in text
+    assert all(d.name not in text for d in monitor.devices.values())
+
+
 async def test_diagnostics_hides_partner_device_ids(hass: HomeAssistant, setup):
     """Partner und verworfene Vorschläge sind Geräte-IDs und bleiben draußen."""
     monitor = setup["monitor"]
