@@ -2,6 +2,11 @@
 
 After 1.1.0, releases use calendar versions `YY.M.N` (year, month, number of the release in that month), e.g. `26.10.4`. They count as newer than every 1.x version, so updates through HACS work as before.
 
+## 26.11.10-beta.1 – 2026-11-11
+
+### Fixed
+- A Bluetooth device no longer looks alive after every Home Assistant restart (#5). When Home Assistant starts, its Bluetooth integration hands the last advertisement it remembers to every integration that registers (BTHome, Xiaomi BLE and others), and the entities write the same values again although the device sent nothing. Pulse counted that as a report, so a thermometer with an empty battery showed "just reported" after each restart. Now a value reported again unchanged in the first 5 minutes after Home Assistant starts is no sign of life, for every integration. A changed value still counts at once, and battery change detection is unchanged.
+
 ## 26.11.9 – 2026-11-10
 
 ### Changed

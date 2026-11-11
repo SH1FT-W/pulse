@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import time
 
 from homeassistant.core import HomeAssistant
 import yaml
@@ -34,6 +35,7 @@ async def test_diagnostics(hass: HomeAssistant, setup):
 async def test_diagnostics_names_source_of_signs(hass: HomeAssistant, setup):
     """Woher ein Strich kam: Art der Entität und Auslöser, auch wenn sich die Batterie-Entität nicht ändert (#5)."""
     monitor = setup["monitor"]
+    monitor.started_at = time.time() - 600  # past the start: same value again counts (test_restart_replay.py)
     thermo = setup["devices"]["thermo"]
     temperature = thermo.entities["temperature"]
     hass.states.async_set(temperature, "30.1", hass.states.get(temperature).attributes)

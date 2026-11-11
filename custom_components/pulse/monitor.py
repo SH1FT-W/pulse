@@ -868,7 +868,10 @@ class PulseMonitor:
         # Same value reported again: one more sample for the battery change detection
         if (kind := self._battery_kind(device, entity_id)) is not None:
             self._battery_report(device, kind, new)
-        if entity_id in self._alive:
+        if entity_id in self._alive and self._settled(time.time()):
+            # Not right after the start: HA's Bluetooth replays the last stored advertisement to every integration
+            # that registers (`_async_replay_history_for_callback`), the entity writes the same value again (#5).
+            # The battery history above has its own start handling (`settled`).
             self._activity(device, new.last_reported.timestamp(), False, (_entity_kind(new), "reported"))
 
     def _activity(self, device: Device, ts: float, action: bool, source: tuple[str, str]) -> None:
