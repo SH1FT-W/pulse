@@ -74,3 +74,26 @@ sobald Claude dort arbeitet).
   (Version kommt über vite.config ins Panel), CHANGELOG-Abschnitt `## <version> – <datum>`, WHATS_NEW in
   `pulse-welcome.ts` (zeigt sich einmal pro Version).
 - Tag und Release-Titel ohne „v“ (`gh release create 26.10.4 --title "26.10.4"`), Notizen englisch.
+- Betas: `YY.M.NbK` (z. B. `26.11.11b1`, K ab 1) als GitHub-Vorabversion (`--prerelease`), ohne eigene
+  Release-Nummer; das stabile Release danach heißt `YY.M.N`. Alte `-beta.K`-Tags bleiben. (`b` ist PEP 440, HA und
+  HACS sortieren es richtig; `frontend/package.json` ist privat und wird nur als Text gelesen.)
+- CHANGELOG: neue Einträge oben unter `## Unreleased`, beim Release wird daraus die Versionsüberschrift.
+- **Erst Prod, dann Release:** Änderung ins Prod-HA kopieren (`/Volumes/config/custom_components/pulse`, HA-Neustart
+  nur nach Rücksprache), warten bis Pulse den Verlauf gelesen hat (1–2 Min.), Status, Log und betroffene Geräte
+  prüfen, erst dann releasen; danach die Workflows bis grün beobachten. Die Versionsdatei steht dabei schon auf der
+  nächsten Release-Nummer. Ausnahme nur auf Nachfrage: ein kleiner Fix, der nur einen Absturz verhindert (kein neues
+  Verhalten), darf direkt raus (so bei 26.11.2, #6).
+- **Trockenlauf:** Code, der gespeicherte Daten beim Start löscht, kürzt oder umdeutet (Store-Bereinigung, Migration,
+  Zurückdatieren), vor dem Release gegen Daniels echte Prod-Daten trocken laufen lassen (Kopie im Scratchpad, echten
+  Repo-Code importieren, ausgeben, was gelöscht würde; DB-Kopie mit `pragma quick_check` prüfen) und das Ergebnis
+  nennen. Anlass: 26.10.12 löschte 10 Tage Meldungen einer Kamera, weil eine Sirene normal `unknown` ist.
+
+## Issues
+
+- Commits und PRs nennen Issues mit `Refs #n`, nie `Fixes/Closes/Resolves #n` (GitHub schließt sonst beim Push).
+- Status-Labels (`geplant` → `in-arbeit` → `in-beta` → `erledigt` usw.) laut globaler CLAUDE.md selbstständig
+  setzen.
+- Nach einer Beta: behobene Issues auf `in-beta`, in der Sprache des Melders kommentieren (Link zur Beta, Bitte um
+  Rückmeldung, Wiederöffnen erwünscht) und schließen. Nur diese Kommentare ohne Rückfrage, alle anderen erst nach
+  Daniels OK. Nach dem stabilen Release auf `erledigt`.
+- `docs/ha-annahmen.md` mitpflegen, wenn eine Änderung eine Annahme über HA hinzufügt oder ändert.
