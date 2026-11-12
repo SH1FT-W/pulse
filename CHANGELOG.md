@@ -2,6 +2,11 @@
 
 After 1.1.0, releases use calendar versions `YY.M.N` (year, month, number of the release in that month), e.g. `26.10.4`. They count as newer than every 1.x version, so updates through HACS work as before.
 
+## 26.11.11 – 2026-11-12
+
+### Changed
+- An ignored device no longer keeps its Pulse entities (#8). Ignoring a device in the panel, with the `pulse.ignore` action or with the `pulse_ignore` label on the device or one of its own entities now removes its Pulse status, problem and last report entities at once, instead of leaving them unavailable for good, where they showed up in every check for unavailable entities. Watched again, they come back with the same entity IDs, and "last report" stays off if it was off. The device's history in Pulse is kept. Only a `pulse_ignore` label on one of the Pulse entities themselves keeps them (shown as unavailable), because removing them would also remove the label.
+
 ## 26.11.10 – 2026-11-11
 
 ### Fixed

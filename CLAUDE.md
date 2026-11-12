@@ -59,7 +59,7 @@ sobald Claude dort arbeitet).
   in Python `pytest` (Abdeckung ≥ 95 %), `uvx ruff@0.16.9 check . && uvx ruff@0.16.9 format --check .` (dieselbe
   Version wie in ci.yml), `uvx mypy@2.3.1 --python-executable <venv>/bin/python`,
   `python tools/pruefe-uebersetzungen.py` (strings.json gegen translations/*.json), hassfest per Docker.
-- Tests laufen mit der Recall-venv: `LC_ALL=en_US.UTF-8 TZ=UTC ~/Software/recall/.venv/bin/python -m pytest -q -p no:logging`.
+- Tests laufen mit der Repo-venv: `LC_ALL=en_US.UTF-8 TZ=UTC .venv/bin/python -m pytest -q -p no:logging`.
 - UI im eigenen Docker-Test-HA `pulse-test` (Port 8126, siehe ~/pulse-test/ZUGANG.txt) ansehen.
   flode-test, casora-test, evenlight-test gehören anderen Projekten.
 - unique_ids nicht ändern (`<device_id>_problem|status|last_report`, Hub `<entry_id>_problems|monitored`). Entity-IDs

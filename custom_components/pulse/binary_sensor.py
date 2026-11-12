@@ -28,7 +28,7 @@ async def async_setup_entry(
 
     @callback
     def add(device_ids: list[str]) -> None:
-        fresh = [d for d in device_ids if d not in known and d in monitor.devices]
+        fresh = [d for d in device_ids if d not in known and monitor.keeps_entities(d)]
         known.update(fresh)
         async_add_entities(ProblemSensor(monitor, d) for d in fresh)
 

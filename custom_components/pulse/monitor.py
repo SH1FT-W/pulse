@@ -56,6 +56,7 @@ from .const import (
     HISTORY_DAYS,
     IMPORTANT_UNREACHABLE_CHOICES,
     KEEP_DAYS,
+    LABEL_IGNORE,
     MAX_EVENTS,
     OUTAGE_MIN,
     SEVERITY,
@@ -519,6 +520,7 @@ class PulseMonitor:
             self.rhythms.forget(device_id)
             ir.async_delete_issue(self.hass, DOMAIN, f"failed_{device_id}")
         self._remove_vanished(specs, at_once)
+        self._remove_ignored()
         self._entity_map = {e: d.device_id for d in self.devices.values() for e in d.spec.entities}
         self._alive = set(self._entity_map)
         for d in self.devices.values():
@@ -586,6 +588,37 @@ class PulseMonitor:
         if gone or unmonitored:
             _LOGGER.info("%s devices are no longer monitored, cleaned up", len(gone | unmonitored))
             async_dispatcher_send(self.hass, SIGNAL_REMOVED_DEVICES, sorted(gone | unmonitored))
+
+    def keeps_entities(self, device_id: str) -> bool:
+        """The device has Pulse entities: watched, or ignored by a `pulse_ignore` label on one of them.
+
+        An ignored device would only show its entities as unavailable (#8). With the label on a Pulse entity,
+        removing it would take the label along and end the ignore, so those stay.
+        """
+        device = self.devices.get(device_id)
+        if device is None:
+            return False
+        if not device.ignored:
+            return True
+        return any(
+            LABEL_IGNORE in e.labels
+            for e in er.async_entries_for_device(er.async_get(self.hass), device_id, include_disabled_entities=True)
+            if e.platform == DOMAIN
+        )
+
+    @callback
+    def _remove_ignored(self) -> None:
+        """Ignored devices lose their Pulse entities at once (user's choice); watched again they come back with
+        the same unique_id and entity ID. The record stays untouched."""
+        entities = er.async_get(self.hass)
+        removed: set[str] = set()
+        for entry in er.async_entries_for_config_entry(entities, self.entry.entry_id):
+            device_id = entry.unique_id.split("_", 1)[0]
+            if device_id in self.devices and not self.keeps_entities(device_id):
+                entities.async_remove(entry.entity_id)
+                removed.add(device_id)
+        if removed:
+            async_dispatcher_send(self.hass, SIGNAL_REMOVED_DEVICES, sorted(removed))
 
     def battery_level(self, device: Device) -> float | None:
         """Current battery value (percent, for warning sensors 5 = low)."""
@@ -1493,6 +1526,7 @@ class PulseMonitor:
         device.record["ignored"] = ignored
         self._reobserve(device, time.time())
         self.store.async_delay_save()
+        self._remove_ignored()
         async_dispatcher_send(self.hass, SIGNAL_NEW_DEVICES, [device_id])
         self.async_update()
 
