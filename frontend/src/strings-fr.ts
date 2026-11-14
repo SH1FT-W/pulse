@@ -82,6 +82,7 @@ export const FR: Record<keyof typeof EN, string> = {
   partner: 'Appareil partenaire',
   partner_hint:
     'Se déclenchent souvent ensemble, p. ex. serrure et contact de porte. Si l’un se tait, Pulse le remarque plus tôt.',
+  partner_gone: 'Appareil supprimé',
   partner_none: 'Aucun',
   open_device: 'Ouvrir la page de l’appareil',
   just_now: 'à l’instant',
@@ -125,6 +126,12 @@ export const FR: Record<keyof typeof EN, string> = {
   show_welcome: 'Afficher l’accueil',
   open_integration: 'Paramètres de l’intégration',
   // Welcome
+  news_restore_title: 'Réappairé ? Tout reste',
+  news_restore_text:
+    'Si vous supprimez un appareil puis le réappairez, Pulse garde ses réglages pendant 30 jours : type de pile, partenaire et « Non surveillé ».',
+  news_quiet_title: 'Plus discret en arrière-plan',
+  news_quiet_text:
+    'Pulse calcule et écrit beaucoup moins souvent. Le capteur d’état ne remplit plus l’historique à chaque message, et les grandes installations tournent nettement plus légèrement.',
   whats_new_title: 'Nouveautés de Pulse {version}',
   welcome_rhythm_title: 'Connaît chaque rythme',
   welcome_rhythm_text:

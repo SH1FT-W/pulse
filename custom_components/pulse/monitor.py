@@ -102,7 +102,7 @@ from .rhythm import (
     without_spans,
 )
 from .snapshot import serialize, snapshot
-from .store import SAVE_DELAY_EVENTS, PulseStore
+from .store import SAVE_DELAY_EVENTS, PulseStore, default_record
 from .texts import reason_text
 from .z2m import Z2MListener
 
@@ -133,6 +133,22 @@ TRIM_KEEP = 100
 # A device that is still registered but no longer found is cleaned up only after this long: Zigbee2MQTT (renaming
 # with new entity IDs, discovery switched off/on) and ESPHome remove and recreate all entities within seconds
 CLEANUP_GRACE = 60 * 60
+# Record of a device deleted from HA: kept this long, as HA keeps deleted devices and brings them back with the same
+# ID when they are paired again (Z2M/ZHA re-pair, config entry removed and added again); settings survive that
+GONE_KEEP = 30 * 86400
+# What a device brought back after deletion keeps: only its settings. Everything else starts over (reports,
+# problems, battery history and changes), as for a new device; `restored_at` keeps older recorder rows out
+GONE_KEEP_SETTINGS = (
+    "ignored",
+    "critical",
+    "battery_type",
+    "battery_count",
+    "chemistry",
+    "partner",
+    "partner_dismissed",
+)
+# Cached snapshots: one per language of the open panels
+SNAPSHOT_LANGUAGES = 8
 # Cloud outage: at least this many devices of the same cloud whose silence began this close together
 CLOUD_OUTAGE_MIN = 2
 CLOUD_SPREAD = 2 * 3600.0
@@ -258,6 +274,13 @@ def _float(state: State | None) -> float | None:
         return None
 
 
+def _restored_floor(record: dict[str, Any], keep_from: float) -> float:
+    """Recorder rows before this are not read: the history window, for a device paired again after deletion its
+    return (its entity IDs come back with their old rows; the time it was gone is no silence)."""
+    restored = record.get("restored_at")
+    return max(keep_from, restored) if isinstance(restored, int | float) else keep_from
+
+
 class PulseMonitor:
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry, store: PulseStore) -> None:
         self.hass = hass
@@ -281,6 +304,8 @@ class PulseMonitor:
         self._stopped = False
         self._z2m_lock = asyncio.Lock()
         self._no_data_cache: tuple[tuple[float, int, int], list[list[float]]] | None = None
+        self._no_data_events: tuple[tuple[float, float, int, int], list[float]] | None = None
+        self._past_reports = 0  # bumped whenever reports from before now are merged (history read, dated change)
         self._gaps_cache: tuple[tuple[int, float], list[tuple[float, float]]] | None = None
         # Cloud outages of the last tick: integration → {ids, since, count, name}
         self.cloud_outages: dict[str, dict[str, Any]] = {}
@@ -494,6 +519,13 @@ class PulseMonitor:
                     relabeled.append(device_id)
                 continue
             record = self.store.record(device_id)
+            if record.pop("gone_since", None) is not None:
+                # Deleted and brought back by HA with the same ID: its settings stay, its reports start over (the
+                # time it was deleted is no silence; a problem it still has is reported again, as for a new device)
+                kept = {key: record[key] for key in GONE_KEEP_SETTINGS if key in record}
+                record.clear()
+                record.update(default_record(), **kept, restored_at=now)
+                self.store.async_delay_save()
             if record.get("first_seen") is None:
                 record["first_seen"] = now
             if not record.get("battery_type") and (info := batt.lookup(spec.manufacturer, spec.model)):
@@ -518,6 +550,7 @@ class PulseMonitor:
             self.devices.pop(device_id)
             self.bins.forget(device_id)
             self.rhythms.forget(device_id)
+            self._gone_before.pop(device_id, None)  # if it comes back, an old outage start is no longer its own
             ir.async_delete_issue(self.hass, DOMAIN, f"failed_{device_id}")
         self._remove_vanished(specs, at_once)
         self._remove_ignored()
@@ -540,8 +573,9 @@ class PulseMonitor:
     def _remove_vanished(self, specs: dict[str, DeviceSpec], at_once: Collection[str] = ()) -> None:
         """Clean up devices that are no longer monitored.
 
-        - Device gone for good (e.g. integration replaced): remove own entities and record; otherwise
-          the Pulse entities stay orphaned and the successor device gets `_2` IDs.
+        - Device gone for good (e.g. integration replaced): remove own entities at once, otherwise the Pulse
+          entities stay orphaned and the successor device gets `_2` IDs. The record is kept for `GONE_KEEP`
+          (`gone_since`): HA brings a deleted device back with the same ID when it is paired again.
         - Device disabled: touch nothing. HA disables our entities with it and only re-enables existing ones;
           removed ones would come back with `disabled_by=device` from `deleted_entities` and stay disabled.
         - Device still there but no longer monitored (battery entity gone, all its entities removed): after
@@ -577,9 +611,20 @@ class PulseMonitor:
         # Rebuilt on every pass: devices whose Pulse entities went another way leave no marker behind
         self._vanished_since = {d: t for d, t in waiting.items() if d not in unmonitored}
         gone |= {d for d in self.store.devices if d not in specs and devices.async_get(d) is None}
-        for device_id in gone:
-            if self.store.devices.pop(device_id, None) is not None:
+        now = time.time()
+        for device_id in list(gone):
+            if (record := self.store.devices.get(device_id)) is None:
+                continue
+            gone_at = record.get("gone_since")
+            if not isinstance(gone_at, int | float):
+                record["gone_since"] = now
                 self.store.async_delay_save()
+            elif now - gone_at >= GONE_KEEP:
+                self.store.devices.pop(device_id)
+                self.store.async_delay_save()
+                gone.discard(device_id)  # announced when it went
+            else:
+                gone.discard(device_id)  # already gone and announced
         for device_id in unmonitored:
             if (record := self.store.devices.get(device_id)) is not None:
                 del record["events"][:-TRIM_KEEP]
@@ -710,12 +755,16 @@ class PulseMonitor:
             if device is None:
                 continue
             merged += len(reports) + len(actions)
+            since = _restored_floor(device.record, keep_from)
             # Cloud devices: only real value changes; otherwise every cloud poll writes a row
             for ts in actions if device.cloud else reports:
-                merge_event(device.record["events"], ts, keep_from, MAX_EVENTS, THIN_SECONDS)
+                if ts >= since:
+                    merge_event(device.record["events"], ts, since, MAX_EVENTS, THIN_SECONDS)
             if entity_id in device.spec.actions:
                 for ts in actions:
-                    merge_event(device.record["actions"], ts, keep_from, MAX_EVENTS)
+                    if ts >= since:
+                        merge_event(device.record["actions"], ts, since, MAX_EVENTS)
+        self._past_reports += 1  # older reports came in: `no_data` merges them again
         for device in self.devices.values():
             if only is not None and device.device_id not in only:
                 continue
@@ -771,7 +820,10 @@ class PulseMonitor:
             if owner is None or any(e not in result for e in entity_ids):
                 continue  # no history for one of them: unknown, so nothing is assumed
             spans, running = device_outages([result[e] for e in entity_ids], now)
-            spans = [(a, b) for a, b in spans if b - a >= OUTAGE_MIN and not near_start(a, starts)]
+            floor = _restored_floor(owner.record, keep_from)
+            spans = [(a, b) for a, b in spans if b - a >= OUTAGE_MIN and not near_start(a, starts) and a >= floor]
+            if running is not None and running < floor:
+                running = None  # its rows from before it was deleted
             if running is not None and near_start(running, starts):
                 running = None  # only gone since the integration was loading at this start
             gone_now = owner.unavailable_since is not None
@@ -782,6 +834,7 @@ class PulseMonitor:
                 gone = [*spans, *([(running, now)] if running is not None and gone_now else [])]
                 if gone:
                     owner.record["events"] = without_spans(owner.record["events"], gone)
+                    self._past_reports += 1  # `no_data` merges the reports again
             # Gone since before the restart
             if running is not None:
                 self._gone_before[device_id] = running
@@ -1478,6 +1531,7 @@ class PulseMonitor:
         record["notified_before_replace"] = record.get("notified")
         if source != "manual":
             merge_event(device.record["events"], at, None, MAX_EVENTS)
+            self._past_reports += 1
         device.unavailable_since = None
         self._gone_before.pop(device_id, None)
         self.hass.bus.async_fire(
@@ -1651,10 +1705,18 @@ class PulseMonitor:
         chatty = any(d.rhythm.typical is not None and d.rhythm.typical <= HOUR_SECONDS for d in self.monitored())
         events: list[float] = []
         if chatty and first > day_start:
-            for device in self.monitored():
-                own = device.record["events"]
-                events += own[bisect_left(own, day_start) : bisect_left(own, first)]
-            events.sort()
+            # Reports before the first own uptime no longer change (new ones come after it): merged once per day
+            # window and device set, not every minute (sorting every report of every device was the cost)
+            watched = self.monitored()
+            merged_key = (day_start, first, len(watched), self._past_reports)
+            if self._no_data_events is not None and self._no_data_events[0] == merged_key:
+                events = self._no_data_events[1]
+            else:
+                for device in watched:
+                    own = device.record["events"]
+                    events += own[bisect_left(own, day_start) : bisect_left(own, first)]
+                events.sort()
+                self._no_data_events = (merged_key, events)
         value = no_data(uptime, events, day_start, now, chatty)
         self._no_data_cache = (key, value)
         return value
@@ -1673,6 +1735,10 @@ class PulseMonitor:
         if cached is not None and cached[0] == self._generation:
             return cached[1]
         value = snapshot(self, language)
+        # Bounded: the language is whatever a client sends (en-GB stays en-GB for the panel's date formats)
+        self._snapshots = {k: v for k, v in self._snapshots.items() if v[0] == self._generation}
+        if len(self._snapshots) >= SNAPSHOT_LANGUAGES:
+            self._snapshots.clear()
         self._snapshots[language] = (self._generation, value)
         return value
 

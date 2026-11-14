@@ -103,7 +103,7 @@ Attached as diagnostic entities to the monitored device itself:
 | Entity | Shows |
 |:--|:--|
 | `binary_sensor.<device>_pulse_problem` | On for Check or Failed. Attributes `status`, `reason_key` |
-| `sensor.<device>_pulse_status` | `ok`, `learning`, `watch`, `check`, `failed`. Attributes `reason_key`, `silent_since`, `problem_since`, `typical_interval` (s), `critical`, `snoozed_until` |
+| `sensor.<device>_pulse_status` | `ok`, `learning`, `watch`, `check`, `failed`. Attributes `reason_key`, `silent_since` (start of a silence or outage, otherwise empty), `problem_since`, `typical_interval` (s, two significant digits), `critical`, `snoozed_until` |
 | `sensor.<device>_pulse_last_report` | Time of the last report. Disabled by default (one recorder row per report) |
 | `sensor.pulse_problems` | Number of problems, attribute `devices` with `device_id`, `name`, `status`, `reason_key`, `reason` |
 | `sensor.pulse_monitored_devices` | Number of monitored devices |
@@ -112,7 +112,7 @@ Attached as diagnostic entities to the monitored device itself:
 <summary>Events, actions, labels and reason keys</summary>
 
 - **Events:** `pulse_device_status_changed` (`device_id`, `name`, `status`, `previous`, `reason`, `reason_key`; not for the first evaluation after a start) and `pulse_battery_replaced` (`device_id`, `name`, `source`: `manual`, `auto` or `announce`).
-- **Actions:** `pulse.mark_replaced`, `pulse.snooze` (`hours`, 0 cancels), `pulse.ignore`, `pulse.send_test`, `pulse.send_summary` (response `sent`).
+- **Actions:** `pulse.mark_replaced`, `pulse.snooze` (`hours`, 0 cancels), `pulse.ignore`, `pulse.send_test`, `pulse.send_summary` (response `sent`). `ignore`, `send_test` and `send_summary` need an admin, like the panel; automations and scripts can always call them.
 - **Labels:** the Home Assistant label `pulse_important` or `pulse_ignore` on a device or one of its entities wins over the panel switch; `pulse_ignore` wins over `pulse_important`. Ignored devices have no Pulse entities; watched again, they get them back with the same entity IDs. A `pulse_ignore` label on one of the Pulse entities themselves keeps them, shown as unavailable.
 - **`reason_key`:** `ok_rhythm`, `ok_reachable`, `learning`, `silent`, `silent_new`, `silent_strays`, `unavailable`, `partner`, `battery_low`, `battery_low_flag`, `battery_soon`, `battery_missing`, `radio_only`, `cloud_outage`, `startup_waiting`, `waiting_first`.
 

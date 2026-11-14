@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any
 from homeassistant.core import HomeAssistant, ServiceCall, ServiceResponse, SupportsResponse, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.service import async_register_admin_service
 import voluptuous as vol
 
 from .const import DOMAIN, SNOOZE_MAX_HOURS
@@ -58,12 +59,14 @@ def async_register_services(hass: HomeAssistant) -> None:
     async def send_summary(call: ServiceCall) -> ServiceResponse:
         return {"sent": get_monitor(hass).notifier.send_summary()}
 
+    # Open to everyone, like the notification actions: housemates swap batteries (Casora's popup calls it)
     hass.services.async_register(DOMAIN, "mark_replaced", mark_replaced, schema=DEVICE_SCHEMA)
     hass.services.async_register(DOMAIN, "snooze", snooze, schema=SNOOZE_SCHEMA)
-    hass.services.async_register(DOMAIN, "ignore", ignore, schema=IGNORE_SCHEMA)
-    hass.services.async_register(
-        DOMAIN, "send_test", send_test, schema=vol.Schema({}), supports_response=SupportsResponse.OPTIONAL
+    # Admins only, like the panel (ws.py); automations and scripts run without a user and may still call them
+    async_register_admin_service(hass, DOMAIN, "ignore", ignore, schema=IGNORE_SCHEMA)
+    async_register_admin_service(
+        hass, DOMAIN, "send_test", send_test, schema=vol.Schema({}), supports_response=SupportsResponse.OPTIONAL
     )
-    hass.services.async_register(
-        DOMAIN, "send_summary", send_summary, schema=vol.Schema({}), supports_response=SupportsResponse.OPTIONAL
+    async_register_admin_service(
+        hass, DOMAIN, "send_summary", send_summary, schema=vol.Schema({}), supports_response=SupportsResponse.OPTIONAL
     )

@@ -1,4 +1,5 @@
 import { css, html, LitElement, nothing } from 'lit';
+import { repeat } from 'lit/directives/repeat.js';
 import { defineOnce } from './ha';
 import {
   axisColumns,
@@ -155,17 +156,33 @@ export class PulseOverview extends LitElement {
     const title = html`<div class="grp">
       <span>${t(lang, monitorTitle(key))}</span><span class="count">${devices.length}</span>
     </div>`;
-    if (key !== 'rhythm' || devices.length <= ROOMS_FROM)
-      return html`${title}${devices.map((d) => this.renderRow(d))}`;
+    if (key !== 'rhythm' || devices.length < ROOMS_FROM)
+      return html`${title}${repeat(
+        devices,
+        (d) => d.id,
+        (d) => this.renderRow(d)
+      )}`;
     // Viele Geräte im Takt: nach Raum, jeder Raum einklappbar
-    return html`${title}${groups(devices, t(lang, 'no_area')).map((g) => {
-      const closed = this.closed.has(g.area);
-      return html`<button class="room-head" type="button" aria-expanded=${closed ? 'false' : 'true'} @click=${() => this.toggleRoom(g.area)}>
+    return html`${title}${repeat(
+      groups(devices, t(lang, 'no_area')),
+      (g) => g.area,
+      (g) => {
+        const closed = this.closed.has(g.area);
+        return html`<button class="room-head" type="button" aria-expanded=${closed ? 'false' : 'true'} @click=${() => this.toggleRoom(g.area)}>
           <ha-icon icon=${closed ? 'mdi:chevron-right' : 'mdi:chevron-down'}></ha-icon>
           <span>${g.area}</span><span class="count">${g.devices.length}</span>
         </button>
-        ${closed ? nothing : g.devices.map((d) => this.renderRow(d, false))}`;
-    })}`;
+        ${
+          closed
+            ? nothing
+            : repeat(
+                g.devices,
+                (d) => d.id,
+                (d) => this.renderRow(d, false)
+              )
+        }`;
+      }
+    )}`;
   }
 
   /** Zigbee-Lebenszeichen: an = „Aktiv ✓“, sonst tippbar → Rückfrage im Panel. */
@@ -332,7 +349,11 @@ export class PulseOverview extends LitElement {
           <div class="days mono" style=${`grid-template-columns: ${axisColumns(this.dayStarts)}`}>${days.map((d) => html`<span>${d.replace('.', '')}</span>`)}</div>
           <span class="right">${t(lang, 'col_last')}</span>
         </div>
-        ${sections.map((sec) => this.renderSection(sec.key, sec.devices))}
+        ${repeat(
+          sections,
+          (sec) => sec.key,
+          (sec) => this.renderSection(sec.key, sec.devices)
+        )}
       </section>
 
       ${this.renderFacts()}

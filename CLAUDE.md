@@ -43,6 +43,15 @@ sobald Claude dort arbeitet).
   deaktivierte Geräte nie (HA brächte die Entitäten deaktiviert zurück). MQTT löscht ein Gerät nicht, solange
   Pulse-Entitäten daran hängen.
 - Entitäten schreiben nur bei Änderung, Attribute stabil, keine laufend wechselnden Sätze (Recorder).
+- Aus HA gelöschte Geräte: Pulse-Entitäten sofort weg (sonst `_2`-IDs beim Nachfolger), der Datensatz bleibt
+  `GONE_KEEP` (30 Tage, `gone_since`): HA bringt ein neu angelerntes Gerät mit gleicher ID zurück. Dann bleiben nur
+  die Einstellungen (`GONE_KEEP_SETTINGS`), alles andere fängt neu an; `restored_at` hält ältere Recorder-Zeilen
+  draußen (die Entitäten kommen mit alter ID und altem Verlauf zurück, die Löschzeit wäre sonst Stille).
+- Aktionen: `ignore`, `send_test`, `send_summary` nur Admins (wie im Panel); `mark_replaced`/`snooze` offen, weil
+  Mitbewohner Batterien tauschen (Casoras Popup ruft `mark_replaced`, Mitteilungs-Aktionen).
+- Status-Sensor: Attribute ändern sich im Takt nicht (`silent_since` nur bei Stille/Ausfall, `typical_interval` gerundet),
+  sonst schreibt der Recorder bei jeder Meldung eine Zeile. Takt wird bei gesprächigen Geräten gedrosselt neu
+  gelernt (`RhythmCache`, `RELEARN_AFTER`).
 - `problem_since` übersteht Neustarts, weil Casoras Glocke es als Zeitpunkt nimmt (sonst zählte ein Ausfall als
   schon gelesen).
 - Von Hand hinzugefügte Geräte: der automatische Weg in `discover` darf sich dadurch nie ändern.

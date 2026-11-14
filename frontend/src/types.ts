@@ -56,6 +56,7 @@ export interface DueBattery {
 }
 
 export interface CloudOutage {
+  /** Display name of the integration (the server resolves it, e.g. "myStrom") */
   integration: string;
   count: number;
   since: number | null;

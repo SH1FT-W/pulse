@@ -19,7 +19,7 @@ from pytest_homeassistant_custom_component.common import (
 
 from common import add_device, report_back, seed, tick
 from custom_components.pulse.const import DOMAIN, EVENT_BATTERY_REPLACED, EVENT_STATUS_CHANGED
-from custom_components.pulse.monitor import CLEANUP_GRACE, PulseMonitor
+from custom_components.pulse.monitor import CLEANUP_GRACE, GONE_KEEP, PulseMonitor
 
 
 async def test_single_instance(hass: HomeAssistant, setup):
@@ -640,7 +640,9 @@ async def test_store_survives_restart(hass: HomeAssistant, setup, hass_storage):
 
 
 async def test_vanished_device_cleans_up(hass: HomeAssistant, setup):
-    """Gerät endgültig weg (Integration ersetzt) → Pulse-Entitäten + Datensatz weg, Nachfolger ohne _2."""
+    """Gerät endgültig weg (Integration ersetzt) → Pulse-Entitäten weg, Nachfolger ohne _2.
+
+    Der Datensatz wartet `GONE_KEEP` (HA bringt ein gelöschtes Gerät beim neuen Anlernen mit gleicher ID zurück)."""
     monitor: PulseMonitor = setup["monitor"]
     devices = setup["devices"]
     door_id = devices["door"].device_id
@@ -652,7 +654,7 @@ async def test_vanished_device_cleans_up(hass: HomeAssistant, setup):
     monitor._rediscover()
     await hass.async_block_till_done()
     assert door_id not in monitor.devices
-    assert door_id not in monitor.store.devices
+    assert monitor.store.devices[door_id].get("gone_since") is not None
     assert not [e for e in reg.entities.values() if e.platform == DOMAIN and e.unique_id.startswith(door_id)]
     # Hub-Entitäten bleiben
     assert hass.states.get("sensor.pulse_uberwachte_gerate") is not None
@@ -698,11 +700,14 @@ async def test_device_without_own_entities_loses_pulse_entities(hass: HomeAssist
     assert hass.states.get(problem) is None
     assert len(monitor.store.devices[door_id]["events"]) == 100  # Datensatz bleibt gekürzt, falls es wiederkommt
     assert not monitor._vanished_since
-    # Leeres Gerät jetzt von Hand gelöscht → auch der Datensatz geht
+    # Leeres Gerät jetzt von Hand gelöscht → der Datensatz wartet noch GONE_KEEP, dann geht er
     dr.async_get(hass).async_remove_device(door_id)
     await hass.async_block_till_done()
     monitor._rediscover()
     await hass.async_block_till_done()
+    assert monitor.store.devices[door_id].get("gone_since") is not None
+    await tick(hass, setup["freezer"], timedelta(seconds=GONE_KEEP))
+    monitor._rediscover()
     assert door_id not in monitor.store.devices
 
 

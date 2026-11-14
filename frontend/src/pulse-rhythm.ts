@@ -8,6 +8,19 @@ const NARROW = 480;
 const W = 1000;
 const H = 26;
 
+/**
+ * Same content? Every snapshot (up to once a second) brings new arrays; with Lit's default (!==) every bar
+ * of every row would render again. Compared by value, a bar only renders when its windows changed.
+ */
+export function sameBuckets(a: unknown, b: unknown): boolean {
+  if (a === b) return true;
+  if (!Array.isArray(a) || !Array.isArray(b) || a.length !== b.length) return false;
+  return a.every((v, i) => {
+    const w: unknown = b[i];
+    return Array.isArray(v) ? sameBuckets(v, w) : v === w;
+  });
+}
+
 function total(buckets: (number | null)[]): number {
   return buckets.reduce<number>((sum, b) => sum + (b ?? 0), 0);
 }
@@ -22,12 +35,12 @@ function total(buckets: (number | null)[]): number {
  */
 export class PulseRhythm extends LitElement {
   static properties = {
-    buckets: { attribute: false },
+    buckets: { attribute: false, hasChanged: (a: unknown, b: unknown) => !sameBuckets(a, b) },
     tone: { type: String, reflect: true },
     learning: { type: Boolean, reflect: true },
     silentFrom: { type: Number, attribute: false },
     flag: { type: String },
-    gaps: { attribute: false },
+    gaps: { attribute: false, hasChanged: (a: unknown, b: unknown) => !sameBuckets(a, b) },
     days: { type: Number },
     narrow: { state: true },
     width: { state: true },

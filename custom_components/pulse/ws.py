@@ -86,7 +86,9 @@ def _without_recipients(payload: dict[str, Any]) -> dict[str, Any]:
 
 
 # Lesen dürfen alle angemeldeten Nutzer (Mitbewohner tippen auf die Mitteilung), Ändern nur Admins
-@websocket_api.websocket_command({vol.Required("type"): "pulse/subscribe", vol.Optional("language"): str})
+@websocket_api.websocket_command(
+    {vol.Required("type"): "pulse/subscribe", vol.Optional("language"): vol.All(str, vol.Length(max=35))}
+)
 @websocket_api.async_response
 async def ws_subscribe(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]) -> None:
     # Begründungen in der Sprache des Nutzers (das Panel schickt sie mit), sonst in der des Servers

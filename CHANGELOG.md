@@ -2,6 +2,26 @@
 
 After 1.1.0, releases use calendar versions `YY.M.N` (year, month, number of the release in that month), e.g. `26.10.4`. They count as newer than every 1.x version, so updates through HACS work as before.
 
+## 26.11.12 – 2026-11-14
+
+### Fixed
+- A device you delete and pair again keeps its Pulse settings. Home Assistant brings a deleted device back with the same ID when it is paired again (Zigbee2MQTT or ZHA re-pair, an integration removed and set up again), but Pulse had already dropped its record a few seconds after the deletion: "Not monitored", important, battery type and count and partner were gone, and an ignored device started to notify again. Pulse now removes its entities at once as before, but keeps these settings for 30 days. Everything else starts over when the device comes back, as for a new device: its reports from before the deletion are not read back from the history, so the time in between never counts as silence.
+- The status sensor no longer writes a new history row after nearly every report. Its `silent_since` attribute was the time of the last report while a device was in rhythm, so the state changed with every report, and Home Assistant's recorder stores a row for each change even for attributes it does not record. `silent_since` is now only set for a silence or an outage (not in rhythm and not for a low battery), and `typical_interval` is rounded to two significant digits. Use `sensor.<device>_pulse_last_report` for the time of the last report.
+- `pulse.ignore`, `pulse.send_test` and `pulse.send_summary` now need an admin, like the same switches in the panel. A read only user could ignore a device through the action. Automations and scripts are not affected. `pulse.mark_replaced` and `pulse.snooze` stay open to everyone, like the actions in the notification.
+- Overview: with devices that need you, "And N more" now counts the same devices as the headline (it said "6 devices need you", named two and then "And 7 more").
+- Overview: when a cloud does not answer, the headline no longer says all devices are in rhythm next to the cloud notice, and no longer adds "All report as usual".
+- Cloud names keep their spelling in the cloud notice (myStrom instead of MyStrom).
+- "Yesterday" means the previous calendar day: a report 30 hours ago at 5 am reads "2 days ago", and 59 minutes 50 seconds no longer read "60 min ago".
+- Lists keep each row with its device when a new state arrives. A device menu that was open while the list reordered could act on another device.
+- The Zigbee2MQTT base topic field under Settings, Advanced no longer jumps back while you type.
+- Turning off the last person for "When someone comes home" now turns the option off instead of leaving it on without anyone.
+- A partner that is no longer monitored shows its name in the device settings instead of its device ID.
+- Rooms in "In rhythm" fold from 12 devices on, as intended (it was 13).
+- Screen readers read the chosen value of a picker ("Partner: Hallway motion"), not only its name.
+
+### Changed
+- Less work in the background, noticeable with many devices: the rhythm of a device that reports often is relearned when enough changed (or 15 minutes later), not on every report; the "no data" spans of the first week after setup are no longer merged from all reports every minute; the rhythm bars in the panel only redraw when their windows change; cached panel states are limited to 8 languages.
+
 ## 26.11.11 – 2026-11-12
 
 ### Changed

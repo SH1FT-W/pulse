@@ -949,8 +949,12 @@ describe('Pulse 1.1', () => {
     expect(dueLine('de', [])).toBe('');
     expect(dueLine('de', undefined)).toBe('');
     expect(integrationName('tado_x')).toBe('Tado x');
-    expect(cloudLines('de', [{ integration: 'netatmo', count: 3, since: NOW }])).toEqual([
+    // The server sends the display name; it stays as written (myStrom, not MyStrom)
+    expect(cloudLines('de', [{ integration: 'Netatmo', count: 3, since: NOW }])).toEqual([
       'Netatmo-Cloud antwortet nicht – 3 Geräte betroffen',
+    ]);
+    expect(cloudLines('de', [{ integration: 'myStrom', count: 2, since: NOW }])).toEqual([
+      'myStrom-Cloud antwortet nicht – 2 Geräte betroffen',
     ]);
     expect(cloudLines('de', undefined)).toEqual([]);
   });
@@ -1166,5 +1170,40 @@ describe('snoozeChoice (#7)', () => {
         expect(t(lang, c.done)).not.toBe('');
       }
     expect(t('de', 'later_168')).toBe('In einer Woche erinnern');
+  });
+
+  it('November-Review: Schlagzeile, „weitere“, gestern', () => {
+    const NOW = Date.UTC(2026, 10, 13, 4, 0) / 1000; // Freitag, 05:00 in Berlin
+    const H = 3600;
+    const BERLIN = 'Europe/Berlin';
+    // Cloud outage: no alarm, but not "alle im Takt" and no "alle melden sich wie gewohnt"
+    const ok = Array.from({ length: 7 }, (_, i) => device(`ok${i}`));
+    const clouds = Array.from({ length: 3 }, (_, i) =>
+      device(`c${i}`, { status: 'failed', reason_key: 'cloud_outage', cloud: true })
+    );
+    const h = hero('de', [...ok, ...clouds]);
+    expect(h.tone).toBe('plain');
+    expect(h.line1).toBe('7 von 10 Geräten');
+    expect(heroSentences('de', [...ok, ...clouds], NOW).text).toBe('');
+    // "Und N weitere" counts the same devices as "N Geräte brauchen dich"
+    const need = Array.from({ length: 6 }, (_, i) =>
+      device(`n${i}`, { status: 'failed', reason_key: 'unavailable' })
+    );
+    const watch = Array.from({ length: 3 }, (_, i) =>
+      device(`w${i}`, { status: 'watch', reason_key: 'battery_soon' })
+    );
+    const said = heroSentences('de', [...need, ...watch], NOW);
+    expect(said.mentions).toHaveLength(2);
+    expect(said.text).toBe('Und 4 weitere.');
+    // Without anyone needing you, watched devices still count
+    expect(heroSentences('de', watch, NOW).more).toBe(1);
+    // From a day on: calendar days in the time zone
+    expect(ago('de', NOW - 30 * H, NOW, BERLIN)).toBe('vor 2 Tagen');
+    expect(ago('de', NOW - 26 * H, NOW, BERLIN)).toBe('gestern');
+    expect(ago('de', NOW - 20 * H, NOW, BERLIN)).toBe('vor 20 Std.');
+    expect(ago('de', NOW - 3590, NOW, BERLIN)).toBe('vor 1 Std.');
+    // 23:50, report at 00:20 the same day: hours, not "gestern"
+    const late = Date.UTC(2026, 10, 13, 22, 50) / 1000; // 23:50 in Berlin
+    expect(ago('de', late - 23.5 * H, late, BERLIN)).toBe('vor 24 Std.');
   });
 });

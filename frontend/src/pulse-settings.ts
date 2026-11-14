@@ -1,5 +1,4 @@
 import { css, html, LitElement, nothing } from 'lit';
-import { live } from 'lit/directives/live.js';
 import { defineOnce, showToast } from './ha';
 import {
   arrivePersons,
@@ -137,7 +136,8 @@ export class PulseSettings extends LitElement {
   private togglePerson(person: string, on: boolean): void {
     const current = arrivePersons(this.snapshot.settings);
     const next = on ? [...new Set([...current, person])] : current.filter((p) => p !== person);
-    this.save({ arrive_home: { persons: next } });
+    // Die letzte Person abwählen schaltet das Heimkommen aus – eingeschaltet ohne Person täte es nichts
+    this.save({ arrive_home: next.length ? { persons: next } : { enabled: false, persons: [] } });
   }
 
   private pickerRow(
@@ -286,7 +286,7 @@ export class PulseSettings extends LitElement {
               autocomplete="off"
               autocapitalize="off"
               placeholder="zigbee2mqtt"
-              .value=${live(s.z2m_base)}
+              .value=${s.z2m_base}
               @change=${(e: Event) => this.onZ2mBase(e)}
               @keydown=${(e: KeyboardEvent) => {
                 // Enter speichert (über change beim Verlassen des Feldes)

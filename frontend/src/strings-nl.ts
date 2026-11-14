@@ -81,6 +81,7 @@ export const NL: Record<keyof typeof EN, string> = {
   partner: 'Partnerapparaat',
   partner_hint:
     'Gaan meestal samen af, bijv. slot en deurcontact. Valt er een stil, dan merkt Pulse het eerder.',
+  partner_gone: 'Apparaat verwijderd',
   partner_none: 'Geen',
   open_device: 'Apparaatpagina openen',
   just_now: 'zojuist',
@@ -122,6 +123,12 @@ export const NL: Record<keyof typeof EN, string> = {
   show_welcome: 'Welkom tonen',
   open_integration: 'Integratie-instellingen',
   // Welcome
+  news_restore_title: 'Opnieuw gekoppeld? Alles blijft',
+  news_restore_text:
+    'Verwijder je een apparaat en koppel je het opnieuw, dan bewaart Pulse 30 dagen lang de instellingen: batterijtype, partner en ‘Niet bewaakt’.',
+  news_quiet_title: 'Stiller op de achtergrond',
+  news_quiet_text:
+    'Pulse rekent en schrijft veel minder vaak. De statussensor vult de geschiedenis niet meer bij elke melding, grote installaties draaien merkbaar lichter.',
   whats_new_title: 'Nieuw in Pulse {version}',
   welcome_rhythm_title: 'Kent elk ritme',
   welcome_rhythm_text:

@@ -486,7 +486,7 @@ export class PulseDeviceSheet extends LitElement {
                   .slice(0, 3)
                   .map(
                     (ts) =>
-                      html`<div class="row"><span class="label">${formatDate(lang, ts, this.timeZone)}</span><span class="value">${ago(lang, ts, this.now)}</span></div>`
+                      html`<div class="row"><span class="label">${formatDate(lang, ts, this.timeZone)}</span><span class="value">${ago(lang, ts, this.now, this.timeZone)}</span></div>`
                   )
               : html`<div class="row"><span class="label muted">${t(lang, 'never_replaced')}</span></div>`
           }
@@ -512,6 +512,9 @@ export class PulseDeviceSheet extends LitElement {
       { value: '', label: t(lang, 'partner_none') },
       ...partnerOptions(this.devices, d).map((p) => ({ value: p.id, label: p.name })),
     ];
+    // A partner that is no longer monitored still shows its name, not the raw device id
+    if (d.partner && !partners.some((p) => p.value === d.partner))
+      partners.push({ value: d.partner, label: d.partner_name ?? t(lang, 'partner_gone') });
     const mains = d.mains === true;
     return html`<div class="settings">
       ${mains ? nothing : this.renderBatterySettings(d, typeOptions, chemOptions)}

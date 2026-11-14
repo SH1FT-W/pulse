@@ -81,6 +81,7 @@ export const ES: Record<keyof typeof EN, string> = {
   partner: 'Dispositivo compañero',
   partner_hint:
     'Suelen activarse juntos, p. ej. cerradura y contacto de puerta. Si uno se queda en silencio, Pulse lo nota antes.',
+  partner_gone: 'Dispositivo eliminado',
   partner_none: 'Ninguno',
   open_device: 'Abrir página del dispositivo',
   just_now: 'ahora mismo',
@@ -124,6 +125,12 @@ export const ES: Record<keyof typeof EN, string> = {
   show_welcome: 'Mostrar bienvenida',
   open_integration: 'Ajustes de la integración',
   // Welcome
+  news_restore_title: '¿Emparejado de nuevo? Todo se queda',
+  news_restore_text:
+    'Si eliminas un dispositivo y lo vuelves a emparejar, Pulse conserva sus ajustes durante 30 días: tipo de pila, compañero y «No supervisado».',
+  news_quiet_title: 'Más discreto en segundo plano',
+  news_quiet_text:
+    'Pulse calcula y escribe con mucha menos frecuencia. El sensor de estado ya no llena el historial con cada mensaje y las instalaciones grandes van notablemente más ligeras.',
   whats_new_title: 'Novedades de Pulse {version}',
   welcome_rhythm_title: 'Conoce cada ritmo',
   welcome_rhythm_text:

@@ -49,6 +49,30 @@ async def async_setup_entry(
     entry.async_on_unload(async_dispatcher_connect(hass, SIGNAL_REMOVED_DEVICES, removed))
 
 
+# Reasons where `silent_since` is the start of a silence or outage (not just the last report)
+QUIET_REASONS = frozenset(
+    {
+        "silent",
+        "silent_new",
+        "partner",
+        "radio_only",
+        "unavailable",
+        "unavailable_usual",
+        "unavailable_often",
+        "cloud_outage",
+    }
+)
+
+
+def _rough(seconds: float) -> int:
+    """Two significant digits (312 → 310, 1834 → 1800, 45 → 45)."""
+    value = round(seconds)
+    if value < 100:
+        return value
+    step = int(10 ** (len(str(value)) - 2))
+    return int(round(value / step) * step)
+
+
 class StatusSensor(PulseDeviceEntity, SensorEntity):
     # Stabile Werte für Automationen (kein laufend wechselnder Satz); nicht in den Verlauf
     _unrecorded_attributes = frozenset(
@@ -71,7 +95,9 @@ class StatusSensor(PulseDeviceEntity, SensorEntity):
         device = self.device
         if device is None:
             return {}
-        since = self.monitor.silent_since(device)
+        # Only for silence or an outage: otherwise (in rhythm, battery soon/low) it is the last report, which changed
+        # the state row after nearly every report (a recorder row each time); `last_report` is the entity for that
+        since = self.monitor.silent_since(device) if device.reason.get("key") in QUIET_REASONS else None
         gone = device.unavailable_since
         reported = device.record.get("problem_since")
         snooze = device.record.get("snooze_until")
@@ -82,7 +108,8 @@ class StatusSensor(PulseDeviceEntity, SensorEntity):
             # Since when Pulse reports this problem (status + reason), None without a problem; dashboards use it
             # as the time of the notice (silent_since is the start of the silence, often long before)
             "problem_since": dt_util.utc_from_timestamp(reported).isoformat() if reported else None,
-            "typical_interval": round(device.rhythm.typical) if device.rhythm.typical else None,
+            # Two significant digits: relearning moves it a little on every report, the attribute stays put
+            "typical_interval": _rough(device.rhythm.typical) if device.rhythm.typical else None,
             "critical": device.critical,
             "snoozed_until": dt_util.utc_from_timestamp(snooze).isoformat() if snooze else None,
         }

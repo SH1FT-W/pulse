@@ -186,8 +186,19 @@ def learn(events: Sequence[float]) -> Rhythm:
     return Rhythm(typical, longest, len(gaps), quiet if quiet is not None and quiet > longest else None)
 
 
+# A learned rhythm is kept while only a few reports came in since: a chatty device (every 30 s, thousands of reports)
+# would otherwise be relearned on every minute tick; a few new gaps barely move a 90th percentile
+RELEARN_AFTER = 15 * 60
+RELEARN_SHARE = 0.05
+
+
 class RhythmCache:
-    """Learned rhythm per device; relearned only when the reports changed (not every minute)."""
+    """Learned rhythm per device; relearned when the reports changed noticeably (not on every report).
+
+    Relearned at once while still learning, when older reports came in (history read), when more than
+    `RELEARN_SHARE` of the reports are new or `RELEARN_AFTER` passed since the last learned report; a device that
+    reports every few hours is therefore relearned on each report, as before.
+    """
 
     def __init__(self) -> None:
         self._data: dict[str, tuple[tuple[int, float | None, float | None], Rhythm]] = {}
@@ -197,12 +208,29 @@ class RhythmCache:
         cached = self._data.get(key_id)
         if cached is not None and cached[0] == key:
             return cached[1]
+        if cached is not None and _still_fits(cached[0], key, cached[1]):
+            return cached[1]
         rhythm = learn(events)
         self._data[key_id] = (key, rhythm)
         return rhythm
 
     def forget(self, key_id: str) -> None:
         self._data.pop(key_id, None)
+
+
+def _still_fits(
+    learned: tuple[int, float | None, float | None], now: tuple[int, float | None, float | None], rhythm: Rhythm
+) -> bool:
+    """The rhythm learned at `learned` (count, first, last report) still describes the reports at `now`."""
+    count, first, last = learned
+    new_count, new_first, new_last = now
+    if rhythm.typical is None or first is None or last is None or new_first is None or new_last is None:
+        return False
+    if new_first < first or new_last < last:
+        return False  # older reports came in (history), or reports were replaced
+    if new_last - last >= RELEARN_AFTER:
+        return False
+    return abs(new_count - count) <= max(2, count * RELEARN_SHARE)
 
 
 # Cloud devices: the rhythm is the cloud's polling rhythm; individually "ausgefallen" (offline) only much later

@@ -78,6 +78,7 @@ export const EN = {
   partner: 'Partner device',
   partner_hint:
     'Usually trigger together, e.g. lock and door contact. If one goes quiet, Pulse notices sooner.',
+  partner_gone: 'Device removed',
   partner_none: 'None',
   open_device: 'Open device page',
   just_now: 'just now',
@@ -120,6 +121,12 @@ export const EN = {
   show_welcome: 'Show welcome',
   open_integration: 'Integration settings',
   // Welcome
+  news_restore_title: 'Paired again? Everything stays',
+  news_restore_text:
+    'If you delete a device and pair it again, Pulse keeps its settings for 30 days: battery type, partner and “Not monitored”.',
+  news_quiet_title: 'Quieter in the background',
+  news_quiet_text:
+    'Pulse calculates and writes far less often. The status sensor no longer fills the history with every report, and large setups run noticeably lighter.',
   whats_new_title: 'New in Pulse {version}',
   welcome_rhythm_title: 'Knows every rhythm',
   welcome_rhythm_text:

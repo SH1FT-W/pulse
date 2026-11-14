@@ -62,15 +62,16 @@ export class PulsePicker extends LitElement {
 
   private trigger(slot: boolean) {
     const current = this.options.find((o) => o.value === this.value);
+    const shown = current?.label ?? this.value;
     return html`<button
       slot=${slot ? 'trigger' : nothing}
       class="trigger"
       type="button"
-      aria-label=${this.label}
+      aria-label=${shown ? `${this.label}: ${shown}` : this.label}
       aria-haspopup=${slot ? 'menu' : 'dialog'}
       @click=${slot ? nothing : () => void this.openSheet()}
     >
-      <span>${current?.label ?? this.value}</span>
+      <span>${shown}</span>
       <ha-icon icon="mdi:unfold-more-horizontal"></ha-icon>
     </button>`;
   }

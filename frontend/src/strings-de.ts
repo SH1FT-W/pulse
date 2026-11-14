@@ -79,6 +79,7 @@ export const DE: Record<keyof typeof EN, string> = {
   partner: 'Partnergerät',
   partner_hint:
     'Lösen meist zusammen aus, z. B. Schloss und Türkontakt. Bleibt eins still, merkt Pulse es früher.',
+  partner_gone: 'Gerät entfernt',
   partner_none: 'Keine',
   open_device: 'Geräteseite öffnen',
   just_now: 'gerade eben',
@@ -118,6 +119,12 @@ export const DE: Record<keyof typeof EN, string> = {
   summary_empty: 'Gerade gibt es nichts zusammenzufassen',
   show_welcome: 'Willkommen zeigen',
   open_integration: 'Integration öffnen',
+  news_restore_title: 'Neu angelernt? Alles bleibt',
+  news_restore_text:
+    'Löschst du ein Gerät und lernst es wieder an, behält Pulse 30 Tage lang seine Einstellungen: Batterietyp, Partner und „Nicht überwacht“.',
+  news_quiet_title: 'Leiser im Hintergrund',
+  news_quiet_text:
+    'Pulse rechnet und schreibt deutlich seltener. Der Status-Sensor füllt den Verlauf nicht mehr bei jeder Meldung, große Installationen laufen spürbar ruhiger.',
   whats_new_title: 'Neu in Pulse {version}',
   welcome_rhythm_title: 'Kennt jeden Takt',
   welcome_rhythm_text:

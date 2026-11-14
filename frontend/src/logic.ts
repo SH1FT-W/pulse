@@ -106,13 +106,21 @@ export function groups(devices: Device[], noArea: string): Group[] {
     .map(([area, list]) => ({ area, devices: list.sort((a, b) => a.name.localeCompare(b.name)) }));
 }
 
-export function ago(language: string, ts: number | null, now: number): string {
+/**
+ * "vor 5 Min.", "vor 3 Std.", "gestern", "vor 4 Tagen". From a day on it counts calendar days in the
+ * time zone (30 h ago at 05:00 is the day before yesterday, not "gestern"); thresholds on the rounded
+ * value, so 59:50 min never reads "vor 60 Min.".
+ */
+export function ago(language: string, ts: number | null, now: number, timeZone?: string): string {
   if (ts === null) return t(language, 'unknown');
   const seconds = Math.max(0, now - ts);
   if (seconds < 60) return t(language, 'just_now');
-  if (seconds < 3600) return t(language, 'minutes_ago', { n: Math.round(seconds / 60) });
-  if (seconds < 86400) return t(language, 'hours_ago', { n: Math.round(seconds / 3600) });
-  const days = Math.round(seconds / 86400);
+  const minutes = Math.round(seconds / 60);
+  if (minutes < 60) return t(language, 'minutes_ago', { n: minutes });
+  const hours = Math.round(seconds / 3600);
+  const days = dayNumber(now, timeZone) - dayNumber(ts, timeZone);
+  // 23.5 h ago on the same calendar day (00:20 → 23:50) stays in hours, never "gestern"
+  if (hours < 24 || days < 1) return t(language, 'hours_ago', { n: hours });
   return days === 1 ? t(language, 'day_ago') : t(language, 'days_ago', { n: days });
 }
 
@@ -567,7 +575,7 @@ export function rowTime(
   if (gone !== null) return formatWhen(language, gone, now, timeZone, timeFormat);
   if (isSilent(device) && device.last_activity !== null)
     return formatWhen(language, device.last_activity, now, timeZone, timeFormat);
-  return ago(language, device.last_activity, now);
+  return ago(language, device.last_activity, now, timeZone);
 }
 
 /** Sporadic reports since the start of the silence (0 = real silence or older server). */
@@ -664,7 +672,8 @@ export function hero(language: string, devices: Device[]): Hero {
     return plainHero(t(language, 'hero_none1'), t(language, 'hero_none2'), 'accent');
   if (!rated.length)
     return plainHero(t(language, 'hero_learn1'), t(language, 'hero_learn2'), 'accent');
-  const off = rated.filter(offRhythm).length;
+  // Cloud outages are no alarm, but those devices are not "im Takt" either
+  const off = rated.filter((d) => offRhythm(d) || isCloudOutage(d)).length;
   const ok = rated.length - off;
   const need = attention(rated);
   const needTone = need.some((d) => d.status === 'failed') ? 'crit' : 'warn';
@@ -733,7 +742,10 @@ export function heroSentences(
   const list = monitored(devices)
     .filter((d) => SEVERITY[d.status] >= 1 && !isCloudOutage(d))
     .sort((a, b) => SEVERITY[b.status] - SEVERITY[a.status] || a.name.localeCompare(b.name));
+  // When devices need you, the headline counts only those – "Und N weitere" (and N more) must too
+  const need = attention(devices).length;
   const all = monitored(devices);
+  const clouds = all.some(isCloudOutage);
   const learning = all.filter((d) => d.status === 'learning').length;
   // Learning devices do not count as "im Takt" (in rhythm); they get their own sentence
   const learnText = learning ? learningLine(language, learning) : '';
@@ -744,7 +756,7 @@ export function heroSentences(
       more: 0,
       text: allLearning
         ? t(language, 'sent_learning')
-        : [learning < all.length ? t(language, 'sent_all_good') : '', learnText]
+        : [learning < all.length && !clouds ? t(language, 'sent_all_good') : '', learnText]
             .filter(Boolean)
             .join(' '),
     };
@@ -755,7 +767,7 @@ export function heroSentences(
     if (SILENT.has(key) && since !== null && strays(d) > 0) {
       // Dying sensor: hardly anything for days, a sporadic report now and then
       const day = sinceDay(language, since, now, timeZone);
-      const last = ago(language, d.last_activity, now).replace(/\.$/, '');
+      const last = ago(language, d.last_activity, now, timeZone).replace(/\.$/, '');
       return day
         ? mention(language, 'sent_strays_since', d, { day, last })
         : mention(language, 'sent_strays_for', d, { span: span(language, now - since), last });
@@ -779,7 +791,7 @@ export function heroSentences(
       return mention(language, 'sent_partner', d, { partner: d.partner_name ?? '' });
     return mention(language, 'sent_other', d, { reason: d.reason });
   });
-  const more = list.length - mentions.length;
+  const more = Math.max(0, (need || list.length) - mentions.length);
   return {
     mentions,
     more,
@@ -1281,7 +1293,7 @@ export function cloudLines(language: string, outages: CloudOutage[] | undefined)
     .filter((o) => o.count > 0)
     .map((o) =>
       t(language, o.count === 1 ? 'cloud_outage_one' : 'cloud_outage_many', {
-        name: integrationName(o.integration),
+        name: o.integration,
         count: o.count,
       })
     );

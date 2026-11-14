@@ -23,9 +23,12 @@ const WELCOME: Feature[] = [
 
 /**
  * After an update: what is new in this version, in the user's words. Replace on every release
- * (1 to 4 entries). As of 26.11.5.
+ * (1 to 4 entries). As of 26.11.12.
  */
-export const WHATS_NEW: Feature[] = [];
+export const WHATS_NEW: Feature[] = [
+  { icon: 'mdi:link-variant', title: 'news_restore_title', text: 'news_restore_text' },
+  { icon: 'mdi:leaf', title: 'news_quiet_title', text: 'news_quiet_text' },
+];
 
 const CHANGELOG_URL = 'https://github.com/SH1FT-W/pulse/blob/main/CHANGELOG.md';
 

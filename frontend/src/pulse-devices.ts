@@ -1,4 +1,5 @@
 import { css, html, LitElement, nothing } from 'lit';
+import { repeat } from 'lit/directives/repeat.js';
 import { defineOnce, dropdownValue, inputValue } from './ha';
 import {
   applyFilter,
@@ -238,7 +239,15 @@ export class PulseDevices extends LitElement {
               <span>${g.area}</span><span class="count">${g.devices.length}</span>
             </button>`
           : nothing
-      }${closed ? nothing : g.devices.map((d) => this.renderRow(d))}`;
+      }${
+        closed
+          ? nothing
+          : repeat(
+              g.devices,
+              (d) => d.id,
+              (d) => this.renderRow(d)
+            )
+      }`;
     };
     const classes = ['monitor', byArea ? 'by-area' : '', this.readonly ? 'readonly' : ''].join(' ');
     return html`<div class=${classes}>
@@ -282,7 +291,7 @@ export class PulseDevices extends LitElement {
         <div class="days mono" style=${`grid-template-columns: ${axisColumns(this.dayStarts)}`}>${days.map((d) => html`<span>${d.replace('.', '')}</span>`)}</div>
         <span class="right">${t(lang, 'col_last')}</span>
       </div>
-      ${found.length ? groups.map(group) : html`<p class="empty muted">${this.emptyText()}</p>`}
+      ${found.length ? repeat(groups, (g) => g.area, group) : html`<p class="empty muted">${this.emptyText()}</p>`}
     </div>`;
   }
 
