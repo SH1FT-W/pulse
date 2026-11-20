@@ -90,10 +90,12 @@ export interface Device {
   mains?: boolean;
   /** Added by hand in Settings (watched like a mains device, only whether it is reachable) */
   manual?: boolean;
-  /** Added by hand: the sensor chosen as its battery (#9); with one `mains` is false */
+  /** Added by hand: the sensor chosen as its battery (#9), only shown; it changes nothing else (`mains` stays) */
   battery_entity?: string | null;
   /** Added by hand: the sensors that can be chosen as its battery (voltage or percentage) */
   battery_choices?: BatteryChoice[];
+  /** Added by hand: value of the chosen sensor (percent, or voltage in mV); null without a valid choice */
+  manual_battery?: { level: number | null; voltage: number | null } | null;
   last_activity: number | null;
   /**
    * Ab hier zählt die Stille: letzte Meldung oder ein späterer manueller Wechsel. Fehlt bei älteren

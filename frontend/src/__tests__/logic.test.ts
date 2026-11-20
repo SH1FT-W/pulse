@@ -8,7 +8,6 @@ import {
   batteryDevices,
   batteryFirst,
   batteryLine,
-  batteryValue,
   candidateLine,
   canEdit,
   cleanZ2mBase,
@@ -42,7 +41,7 @@ import {
   isWaiting,
   lastReplaced,
   learningLine,
-  manualBattery,
+  manualBatteryText,
   manualDevices,
   matchCandidates,
   memoize,
@@ -1210,46 +1209,49 @@ describe('snoozeChoice (#7)', () => {
   });
 });
 
-describe('batteryValue', () => {
-  const b = device('x').battery;
-  it('shows the flag, the percentage, else the voltage (device added by hand, #9), else unknown', () => {
-    expect(batteryValue('en', { ...b, flag: true, low: true })).toBe(t('en', 'battery_flag_low'));
-    expect(batteryValue('en', { ...b, level: 63.6, voltage: 2950 })).toBe('64%');
-    expect(batteryValue('de', { ...b, voltage: 2950 })).toBe('2,95 V');
-    expect(batteryValue('en', b)).toBe(t('en', 'unknown'));
-  });
-});
-
-describe('manualBattery', () => {
+describe('manualBatteryText', () => {
   const choice = { entity_id: 'sensor.v', name: 'V' };
-  it('only for a device added by hand with a chosen sensor that is still offered', () => {
+  const manual = {
+    manual: true,
+    mains: true,
+    battery_entity: 'sensor.v',
+    battery_choices: [choice],
+  };
+  it('shows the chosen sensor of a device added by hand (#9), nothing else', () => {
     expect(
-      manualBattery(
-        device('a', {
-          manual: true,
-          mains: true,
-          battery_entity: 'sensor.v',
-          battery_choices: [choice],
-        })
+      manualBatteryText(
+        'de',
+        device('a', { ...manual, manual_battery: { level: null, voltage: 2950 } })
       )
-    ).toBe(true);
+    ).toBe('2,95 V');
     expect(
-      manualBattery(
-        device('a', { manual: true, mains: true, battery_entity: null, battery_choices: [choice] })
+      manualBatteryText(
+        'en',
+        device('a', { ...manual, manual_battery: { level: 63.6, voltage: null } })
       )
-    ).toBe(false);
+    ).toBe('64%');
     expect(
-      manualBattery(
+      manualBatteryText(
+        'en',
+        device('a', { ...manual, manual_battery: { level: null, voltage: null } })
+      )
+    ).toBe(t('en', 'unknown'));
+    expect(manualBatteryText('en', device('a', { ...manual, manual_battery: null }))).toBeNull();
+    expect(
+      manualBatteryText(
+        'en',
         device('a', {
-          manual: true,
-          mains: true,
-          battery_entity: 'sensor.v',
+          ...manual,
           battery_choices: [{ ...choice, gone: true }],
+          manual_battery: { level: 5, voltage: null },
         })
       )
-    ).toBe(false);
+    ).toBeNull();
     expect(
-      manualBattery(device('a', { battery_entity: 'sensor.v', battery_choices: [choice] }))
-    ).toBe(false);
+      manualBatteryText(
+        'en',
+        device('a', { battery_entity: 'sensor.v', manual_battery: { level: 5, voltage: null } })
+      )
+    ).toBeNull();
   });
 });

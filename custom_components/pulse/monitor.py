@@ -482,7 +482,7 @@ class PulseMonitor:
         moved = old if isinstance(old, str) else None
         self.store.remember_registry_change([data["entity_id"]], event.time_fired_timestamp, moved)
         if moved is not None:
-            # A battery sensor chosen by hand (#9) keeps being the battery under its new entity ID
+            # A battery sensor chosen by hand (#9) stays chosen under its new entity ID
             for record in self.store.devices.values():
                 if record.get("battery_entity") == moved:
                     record["battery_entity"] = data["entity_id"]
@@ -565,8 +565,7 @@ class PulseMonitor:
         self._entity_map = {e: d.device_id for d in self.devices.values() for e in d.spec.entities}
         self._alive = set(self._entity_map)
         for d in self.devices.values():
-            # The voltage of a device added by hand may come from a helper (template) outside `entities`
-            for extra in (d.spec.battery, d.spec.battery_low, d.spec.voltage, d.spec.connectivity):
+            for extra in (d.spec.battery, d.spec.battery_low, d.spec.connectivity):
                 if extra:
                     self._entity_map.setdefault(extra, d.device_id)
         self._ieee_map = {d.spec.ieee: d.device_id for d in self.devices.values() if d.spec.ieee}
@@ -692,12 +691,8 @@ class PulseMonitor:
         return _millivolts(self.hass.states.get(device.spec.voltage)) if device.spec.voltage else None
 
     def battery_percent(self, device: Device) -> float | None:
-        """Real percentage (warning sensors: None); added by hand: a percentage chosen as its battery, only shown
-        (#9: a mower or vacuum charges, its level is never a finding)."""
-        spec = device.spec
-        if spec.manual and spec.manual_battery and spec.manual_battery != spec.voltage:
-            return _float(self.hass.states.get(spec.manual_battery))
-        return self._battery_percent(spec)
+        """Real percentage (warning sensors: None)."""
+        return self._battery_percent(device.spec)
 
     def battery_flag(self, device: Device) -> bool:
         return self._battery_flag(device.spec)
@@ -1039,9 +1034,8 @@ class PulseMonitor:
     def _battery_kind(self, device: Device, entity_id: str) -> str | None:
         """Which battery quantity this entity reports (warning sensors without a percentage: none)."""
         spec = device.spec
-        if spec.mains and not (spec.manual and entity_id == spec.voltage):
-            # A plug's supply voltage is no battery. Added by hand: only a voltage chosen as its battery (#9)
-            return None
+        if spec.mains:
+            return None  # a plug's supply voltage is no battery
         if entity_id == spec.battery and not self._battery_flag(spec):
             return replacement.LEVEL
         if entity_id == spec.voltage:
@@ -1071,33 +1065,7 @@ class PulseMonitor:
                 self._battery_replaced(device, verdict)
 
     def _battery_replaced(self, device: Device, verdict: replacement.Verdict) -> None:
-        if device.spec.manual:
-            self._manual_replaced(device, verdict.at)
-            return
         self.mark_replaced(device.device_id, "auto", at=verdict.at, level_before=verdict.level_before)
-
-    def _manual_replaced(self, device: Device, at: float) -> None:
-        """New batteries in a device added by hand, seen in its chosen voltage (#9): only recorded (shown in the
-        panel, event `pulse_battery_replaced`). Its status, outages and notifications stay as they are: the
-        battery is never its problem, so `mark_replaced` (which ends silences and outages) is not for it."""
-        record = device.record
-        replaced: list[float] = record["replaced"]
-        at = min(at, time.time())
-        if any(abs(at - ts) < 6 * 3600 for ts in replaced):
-            return  # the same change seen again
-        sources: list[str] = record.setdefault("replaced_source", [])
-        while len(sources) < len(replaced):
-            sources.insert(0, "manual")
-        idx = bisect_right(replaced, at)
-        replaced.insert(idx, at)
-        sources.insert(idx, "auto")
-        del replaced[:-20]
-        del sources[:-20]
-        self.hass.bus.async_fire(
-            EVENT_BATTERY_REPLACED, {"device_id": device.device_id, "name": device.name, "source": "auto"}
-        )
-        self.store.async_delay_save()
-        self.async_update()
 
     # Zigbee2MQTT
     @callback
@@ -1543,9 +1511,7 @@ class PulseMonitor:
         """Record a battery change. `at`: when it happened (automatic: the step, which may lie hours back);
         `level_before`: the level before it (automatic: the robust low level before the step)."""
         device = self.devices.get(device_id)
-        if device is None or device.spec.manual:
-            # Added by hand: no battery to mark (panel, notification and action offer none); a change of a voltage
-            # chosen as its battery is recorded by `_manual_replaced` without touching its status
+        if device is None:
             return
         now = time.time()
         at = now if at is None else min(at, now)
@@ -1657,20 +1623,16 @@ class PulseMonitor:
             return False
         return entity_id is None or entity_id in device.spec.battery_choices
 
-    def _set_battery_entity(self, device: Device, entity_id: str | None) -> None:
-        """Battery sensor of a device added by hand chosen (or none again, #9)."""
-        record = device.record
-        if record.get("battery_entity") == entity_id or not self.battery_entity_allowed(device.device_id, entity_id):
-            return
-        record["battery_entity"] = entity_id
-        # Another sensor: its values are never compared with the previous one's (a jump would be a "change")
-        record["battery_history"] = {}
-        record["last_voltage"] = None
-        self._rediscover()
-        device = self.devices.get(device.device_id, device)
-        if device.spec.voltage:
-            record["last_voltage"] = _millivolts(self.hass.states.get(device.spec.voltage))
-            replacement.seed(record, replacement.VOLTAGE, time.time(), record["last_voltage"])
+    def manual_battery(self, device: Device) -> dict[str, float | None] | None:
+        """Value of the battery sensor chosen for a device added by hand (#9), only for the panel: percent, or
+        voltage in mV. It never decides anything."""
+        spec = device.spec
+        if not spec.manual_battery:
+            return None
+        state = self.hass.states.get(spec.manual_battery)
+        if spec.manual_battery_kind == "voltage":
+            return {"level": None, "voltage": _millivolts(state)}
+        return {"level": _float(state), "voltage": None}
 
     def candidates(self) -> list[DeviceSpec]:
         """Devices that can be added by hand (not watched yet)."""
@@ -1689,9 +1651,10 @@ class PulseMonitor:
         for key in ("critical", "battery_type", "battery_count", "chemistry", "partner"):
             if key in changes:
                 device.record[key] = changes[key]
-        if "battery_entity" in changes:
-            self._set_battery_entity(device, changes["battery_entity"])
-            device = self.devices.get(device_id, device)
+        if "battery_entity" in changes and self.battery_entity_allowed(device_id, changes["battery_entity"]):
+            # Battery sensor of a device added by hand (#9): only shown, so nothing else to reset
+            device.record["battery_entity"] = changes["battery_entity"]
+            self._rediscover()
         if "ignored" in changes:
             self.set_ignored(device_id, bool(changes["ignored"]))
             return

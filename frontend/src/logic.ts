@@ -3,7 +3,6 @@
 import type { HassUser } from './ha';
 import { type StringKey, t } from './strings';
 import type {
-  Battery,
   CloudOutage,
   Device,
   DueBattery,
@@ -356,27 +355,17 @@ export function formatWhen(
 }
 
 /**
- * The battery's value in the detail: the warning flag, the percentage, else the voltage (a device added by hand
- * whose battery sensor is a voltage, #9), else unknown.
+ * Value of the battery sensor chosen for a device added by hand (#9), only shown: percent or voltage; null without
+ * a choice that is still offered.
  */
-export function batteryValue(language: string, b: Battery): string {
-  if (b.flag) return t(language, b.low ? 'battery_flag_low' : 'battery_flag_ok');
-  if (b.level !== null) return t(language, 'unit_percent', { value: Math.round(b.level) });
-  if (b.voltage !== null) return formatVoltage(language, b.voltage);
-  return t(language, 'unknown');
-}
-
-/**
- * A device added by hand shows a battery: a sensor chosen as its battery that is still offered (#9). It stays a
- * device watched for being there (`mains`): no "Battery changed", only the values and detected changes.
- */
-export function manualBattery(device: Device): boolean {
+export function manualBatteryText(language: string, device: Device): string | null {
+  const value = device.manual_battery;
   const chosen = device.battery_entity;
-  return (
-    device.manual === true &&
-    !!chosen &&
-    (device.battery_choices ?? []).some((c) => c.entity_id === chosen && !c.gone)
-  );
+  if (!device.manual || !value || !chosen) return null;
+  if (!(device.battery_choices ?? []).some((c) => c.entity_id === chosen && !c.gone)) return null;
+  if (value.voltage !== null) return formatVoltage(language, value.voltage);
+  if (value.level !== null) return t(language, 'unit_percent', { value: Math.round(value.level) });
+  return t(language, 'unknown');
 }
 
 /** Voltage (mV): from 1000 on as volts with two decimals, otherwise as mV. */

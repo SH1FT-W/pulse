@@ -432,7 +432,7 @@ export const FR: Record<keyof typeof EN, string> = {
   battery_entity_none: 'Aucun',
   battery_entity_gone: '{name} (n’existe plus)',
   battery_entity_hint:
-    'Facultatif : un capteur de cet appareil qui indique sa batterie (tension ou pourcentage). Pulse l’affiche ; avec une tension, il détecte aussi les piles neuves (un pourcentage peut être une recharge). Seule sa joignabilité décide de son état.',
+    'Facultatif : un capteur de cet appareil qui indique sa batterie (tension ou pourcentage). Il est seulement affiché et ne change rien : pas d’état de batterie, pas de détection de changement de piles.',
   new_manual_title: 'Ajouter n’importe quel appareil',
   new_manual_text:
     'Caméras, enceintes Echo, robots aspirateurs ou tout appareil réseau : ajoutez-les dans Réglages, Pulse vous prévient quand l’un d’eux n’est plus joignable.',

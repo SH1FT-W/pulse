@@ -102,6 +102,7 @@ def serialize(
         # and the ones to choose from (#9)
         "battery_entity": record.get("battery_entity") if device.spec.manual else None,
         "battery_choices": _battery_choices(monitor, device),
+        "manual_battery": monitor.manual_battery(device),
         "last_activity": device.last_activity,
         "silence_from": monitor.silence_from(device),
         "silence_start": monitor.silence_start(device),

@@ -960,7 +960,7 @@ var Je = {
 	battery_entity: "Batteriesensor",
 	battery_entity_none: "Keiner",
 	battery_entity_gone: "{name} (nicht mehr da)",
-	battery_entity_hint: "Optional: ein Sensor des Geräts, der seine Batterie meldet (Spannung oder Prozent). Pulse zeigt ihn an; an einer Spannung erkennt es auch neue Batterien (Prozent kann Laden sein). Über den Status entscheidet nur, ob das Gerät erreichbar ist.",
+	battery_entity_hint: "Optional: ein Sensor des Geräts, der seine Batterie meldet (Spannung oder Prozent). Er wird nur angezeigt und beeinflusst nichts: kein Batteriestatus, keine Erkennung von Batteriewechseln.",
 	new_manual_title: "Jedes Gerät hinzufügen",
 	new_manual_text: "Kameras, Echo-Lautsprecher, Saugroboter oder beliebige Netzgeräte: unter Einstellungen hinzufügen, dann meldet Pulse, wenn eines nicht mehr erreichbar ist."
 }, Ye = {
@@ -1347,7 +1347,7 @@ var Je = {
 	battery_entity: "Battery sensor",
 	battery_entity_none: "None",
 	battery_entity_gone: "{name} (no longer there)",
-	battery_entity_hint: "Optional: a sensor of this device that reports its battery (voltage or percent). Pulse shows it; from a voltage it also sees new batteries (a percentage may be charging). Only whether the device is reachable decides its status.",
+	battery_entity_hint: "Optional: a sensor of this device that reports its battery (voltage or percent). It is only shown and changes nothing: no battery status, no battery change detection.",
 	new_manual_title: "Add any device",
 	new_manual_text: "Cameras, Echo speakers, robot vacuums or any network device: add them under Settings, Pulse then tells you when one is no longer reachable."
 }, Xe = {
@@ -1736,7 +1736,7 @@ var Je = {
 		battery_entity: "Capteur de batterie",
 		battery_entity_none: "Aucun",
 		battery_entity_gone: "{name} (n’existe plus)",
-		battery_entity_hint: "Facultatif : un capteur de cet appareil qui indique sa batterie (tension ou pourcentage). Pulse l’affiche ; avec une tension, il détecte aussi les piles neuves (un pourcentage peut être une recharge). Seule sa joignabilité décide de son état.",
+		battery_entity_hint: "Facultatif : un capteur de cet appareil qui indique sa batterie (tension ou pourcentage). Il est seulement affiché et ne change rien : pas d’état de batterie, pas de détection de changement de piles.",
 		new_manual_title: "Ajouter n’importe quel appareil",
 		new_manual_text: "Caméras, enceintes Echo, robots aspirateurs ou tout appareil réseau : ajoutez-les dans Réglages, Pulse vous prévient quand l’un d’eux n’est plus joignable."
 	},
@@ -2124,7 +2124,7 @@ var Je = {
 		battery_entity: "Sensor de batería",
 		battery_entity_none: "Ninguno",
 		battery_entity_gone: "{name} (ya no existe)",
-		battery_entity_hint: "Opcional: un sensor de este dispositivo que informa de su batería (tensión o porcentaje). Pulse lo muestra; con una tensión también detecta pilas nuevas (un porcentaje puede ser una carga). Su estado solo depende de si está accesible.",
+		battery_entity_hint: "Opcional: un sensor de este dispositivo que informa de su batería (tensión o porcentaje). Solo se muestra y no cambia nada: sin estado de batería ni detección de cambios de pilas.",
 		new_manual_title: "Añade cualquier dispositivo",
 		new_manual_text: "Cámaras, altavoces Echo, robots aspiradores o cualquier dispositivo de red: añádelos en Ajustes y Pulse avisará cuando uno deje de estar accesible."
 	},
@@ -2512,7 +2512,7 @@ var Je = {
 		battery_entity: "Batterijsensor",
 		battery_entity_none: "Geen",
 		battery_entity_gone: "{name} (niet meer aanwezig)",
-		battery_entity_hint: "Optioneel: een sensor van dit apparaat die de batterij meldt (spanning of procent). Pulse toont die; aan een spanning herkent het ook nieuwe batterijen (procent kan opladen zijn). Alleen bereikbaarheid bepaalt de status.",
+		battery_entity_hint: "Optioneel: een sensor van dit apparaat die de batterij meldt (spanning of procent). Die wordt alleen getoond en verandert niets: geen batterijstatus, geen herkenning van batterijwissels.",
 		new_manual_title: "Elk apparaat toevoegen",
 		new_manual_text: "Camera’s, Echo-speakers, robotstofzuigers of elk netwerkapparaat: voeg ze toe onder Instellingen, dan meldt Pulse wanneer er een niet meer bereikbaar is."
 	}
@@ -2724,26 +2724,23 @@ function vt(e, t, n, r, i) {
 	}).format(/* @__PURE__ */ new Date(t * 1e3));
 }
 function yt(e, t) {
-	return t.flag ? N(e, t.low ? "battery_flag_low" : "battery_flag_ok") : t.level === null ? t.voltage === null ? N(e, "unknown") : xt(e, t.voltage) : N(e, "unit_percent", { value: Math.round(t.level) });
+	let n = t.manual_battery, r = t.battery_entity;
+	return !t.manual || !n || !r || !(t.battery_choices ?? []).some((e) => e.entity_id === r && !e.gone) ? null : n.voltage === null ? n.level === null ? N(e, "unknown") : N(e, "unit_percent", { value: Math.round(n.level) }) : bt(e, n.voltage);
 }
-function bt(e) {
-	let t = e.battery_entity;
-	return e.manual === !0 && !!t && (e.battery_choices ?? []).some((e) => e.entity_id === t && !e.gone);
-}
-function xt(e, t) {
+function bt(e, t) {
 	return Math.abs(t) >= 1e3 ? N(e, "unit_volt", { value: new Intl.NumberFormat(e, {
 		minimumFractionDigits: 2,
 		maximumFractionDigits: 2
 	}).format(t / 1e3) }) : N(e, "unit_millivolt", { value: Math.round(t) });
 }
-function St(e) {
+function xt(e) {
 	let t = e.trim();
 	return !t || t.includes("#") || t.includes("+") || t.startsWith("/") || t.endsWith("/") ? null : t;
 }
-function Ct(e, t) {
+function St(e, t) {
 	return z(e).filter((e) => e.id !== t.id).sort((e, t) => e.name.localeCompare(t.name));
 }
-function wt(e, t) {
+function Ct(e, t) {
 	let n = t.trim().toLowerCase();
 	return n ? e.filter((e) => [
 		e.name,
@@ -2752,28 +2749,28 @@ function wt(e, t) {
 		e.model
 	].some((e) => e?.toLowerCase().includes(n))) : e;
 }
-var Tt = [
+var wt = [
 	"failed",
 	"check",
 	"watch",
 	"learning",
 	"ok"
 ];
-function Et(e, t, n, r) {
+function Tt(e, t, n, r) {
 	return t === "none" ? [{
 		area: "",
 		devices: [...e].sort((e, t) => e.name.localeCompare(t.name))
-	}] : t === "area" ? $e(e, r) : Tt.map((t) => ({
+	}] : t === "area" ? $e(e, r) : wt.map((t) => ({
 		area: N(n, Ze(t)),
 		devices: z(e).filter((e) => e.status === t).sort((e, t) => e.name.localeCompare(t.name))
 	})).filter((e) => e.devices.length > 0);
 }
-function Dt(e) {
+function Et(e) {
 	let t = [];
 	for (let e = 0; e < 1440; e += 30) t.push(`${String(Math.floor(e / 60)).padStart(2, "0")}:${String(e % 60).padStart(2, "0")}`);
 	return e && !t.includes(e) && t.push(e), t.sort();
 }
-function Ot(e) {
+function Dt(e) {
 	let t = null;
 	for (let n of e) {
 		let e = n.battery.replaced.at(-1);
@@ -2784,19 +2781,19 @@ function Ot(e) {
 	}
 	return t;
 }
-function kt(e, t) {
+function Ot(e, t) {
 	return e > 120 || e > 24 && t > .5;
 }
-function At(e, t = []) {
+function kt(e, t = []) {
 	return z(e).filter((e) => t.includes(e.id) || e.battery.flag && e.battery.low || F[e.status] >= 1 && (e.reason_key ?? "").startsWith("battery")).sort((e, t) => e.name.localeCompare(t.name));
 }
-function jt(e, t, n = []) {
-	return t === null ? e : t === "ignored" ? e.filter((e) => e.ignored) : t === "important" ? z(e).filter((e) => e.critical) : t === "battery" ? At(e, n) : t === "mains" ? z(e).filter((e) => e.mains && !e.manual) : z(e).filter((e) => e.status === t);
+function At(e, t, n = []) {
+	return t === null ? e : t === "ignored" ? e.filter((e) => e.ignored) : t === "important" ? z(e).filter((e) => e.critical) : t === "battery" ? kt(e, n) : t === "mains" ? z(e).filter((e) => e.mains && !e.manual) : z(e).filter((e) => e.status === t);
 }
-function Mt(e) {
+function jt(e) {
 	return z(e).filter((e) => e.critical).length;
 }
-function Nt(e, t, n, r) {
+function Mt(e, t, n, r) {
 	let i = V(n, r) - V(t, r);
 	if (i === 0) return N(e, "today_cap");
 	if (i === 1) return N(e, "yesterday_cap");
@@ -2808,10 +2805,10 @@ function Nt(e, t, n, r) {
 		...B(r)
 	}).format(/* @__PURE__ */ new Date(t * 1e3));
 }
-function Pt(e) {
+function Nt(e) {
 	return !e.ignored && F[e.status] >= 2;
 }
-var Ft = [
+var Pt = [
 	{
 		value: "later_24",
 		hours: 24,
@@ -2828,18 +2825,18 @@ var Ft = [
 		done: "later_done_720"
 	}
 ];
-function It(e) {
-	return Ft.find((t) => t.value === e) ?? null;
+function Ft(e) {
+	return Pt.find((t) => t.value === e) ?? null;
 }
-var Lt = /* @__PURE__ */ new Set(["battery_low", "battery_low_flag"]);
-function Rt(e) {
+var It = /* @__PURE__ */ new Set(["battery_low", "battery_low_flag"]);
+function Lt(e) {
 	let t = e.battery, n = t.flag && t.low || t.trusted && t.level !== null && t.level <= 20;
-	return Lt.has(e.reason_key ?? "") || n;
+	return It.has(e.reason_key ?? "") || n;
 }
-function zt(e, t) {
+function Rt(e, t) {
 	return t === e.critical_auto ? null : t;
 }
-function Bt(e, t) {
+function zt(e, t) {
 	return t.length ? {
 		label: N(e, t.length === 1 ? "battery_low_one" : "battery_low_many", { count: t.length }),
 		value: t.join(", "),
@@ -2850,29 +2847,29 @@ function Bt(e, t) {
 		tone: "ok"
 	};
 }
-function Vt(e) {
+function Bt(e) {
 	return e?.is_admin === !0;
 }
-function Ht(e) {
+function Vt(e) {
 	return e.silence_from === void 0 ? e.last_activity : e.silence_from;
 }
-function Ut(e) {
-	return typeof e.silence_start == "number" ? e.silence_start : Ht(e);
+function Ht(e) {
+	return typeof e.silence_start == "number" ? e.silence_start : Vt(e);
 }
-function Wt(e) {
+function Ut(e) {
 	return e.ignored || F[e.status] < 1 || e.reason_key !== "unavailable" && e.reason_key !== "unavailable_usual" ? null : typeof e.unavailable_since == "number" ? e.unavailable_since : null;
 }
-function Gt(e, t, n, r, i) {
-	let a = Wt(t);
+function Wt(e, t, n, r, i) {
+	let a = Ut(t);
 	return a === null ? U(t) && t.last_activity !== null ? vt(e, t.last_activity, n, r, i) : et(e, t.last_activity, n, r) : vt(e, a, n, r, i);
 }
-function Kt(e) {
+function Gt(e) {
 	return typeof e.strays == "number" && e.strays > 0 ? e.strays : 0;
 }
-function qt(e) {
+function Kt(e) {
 	return !e.ignored && e.reason_key === "waiting_first";
 }
-var Jt = /* @__PURE__ */ new Set([
+var qt = /* @__PURE__ */ new Set([
 	"silent",
 	"silent_new",
 	"unavailable",
@@ -2880,7 +2877,7 @@ var Jt = /* @__PURE__ */ new Set([
 	"unavailable_often",
 	"partner",
 	"radio_only"
-]), Yt = /* @__PURE__ */ new Set(["silent", "silent_new"]);
+]), Jt = /* @__PURE__ */ new Set(["silent", "silent_new"]);
 function H(e, t) {
 	let n = Math.max(0, t);
 	if (Math.round(n / 60) < 60) return N(e, "span_minutes", { n: Math.max(1, Math.round(n / 60)) });
@@ -2891,7 +2888,7 @@ function H(e, t) {
 	let r = Math.round(n / 86400);
 	return r <= 1 ? N(e, "span_day") : N(e, "span_days", { n: r });
 }
-function Xt(e, t, n, r) {
+function Yt(e, t, n, r) {
 	let i = V(n, r) - V(t, r);
 	return i === 1 ? N(e, "yesterday") : i >= 2 && i <= 6 ? new Intl.DateTimeFormat(e, {
 		weekday: "long",
@@ -2899,12 +2896,12 @@ function Xt(e, t, n, r) {
 	}).format(/* @__PURE__ */ new Date(t * 1e3)) : null;
 }
 function U(e) {
-	return !e.ignored && F[e.status] >= 1 && Ut(e) !== null && Yt.has(e.reason_key ?? "");
+	return !e.ignored && F[e.status] >= 1 && Ht(e) !== null && Jt.has(e.reason_key ?? "");
 }
-function Zt(e) {
-	return F[e.status] >= 1 && Jt.has(e.reason_key ?? "");
+function Xt(e) {
+	return F[e.status] >= 1 && qt.has(e.reason_key ?? "");
 }
-function Qt(e, t, n, r = "") {
+function Zt(e, t, n, r = "") {
 	return {
 		line1: e,
 		line1Short: e,
@@ -2914,14 +2911,14 @@ function Qt(e, t, n, r = "") {
 		sub: r
 	};
 }
-function $t(e, t) {
+function Qt(e, t) {
 	let n = z(t), r = n.filter((e) => e.status !== "learning");
-	if (!n.length) return Qt(N(e, "hero_none1"), N(e, "hero_none2"), "accent");
-	if (!r.length) return Qt(N(e, "hero_learn1"), N(e, "hero_learn2"), "accent");
-	let i = r.filter((e) => Zt(e) || R(e)).length, a = r.length - i, o = Qe(r), s = o.some((e) => e.status === "failed") ? "crit" : "warn";
+	if (!n.length) return Zt(N(e, "hero_none1"), N(e, "hero_none2"), "accent");
+	if (!r.length) return Zt(N(e, "hero_learn1"), N(e, "hero_learn2"), "accent");
+	let i = r.filter((e) => Xt(e) || R(e)).length, a = r.length - i, o = Qe(r), s = o.some((e) => e.status === "failed") ? "crit" : "warn";
 	if (r.length === 1) {
 		let t = N(e, "hero_one");
-		return o.length ? Qt(t, N(e, "hero_need_one"), s) : Qt(t, N(e, i ? "hero_beat_off" : "hero_beat_one"), i ? "plain" : "accent");
+		return o.length ? Zt(t, N(e, "hero_need_one"), s) : Zt(t, N(e, i ? "hero_beat_off" : "hero_beat_one"), i ? "plain" : "accent");
 	}
 	let c = N(e, "hero_sub", {
 		ok: a,
@@ -2929,7 +2926,7 @@ function $t(e, t) {
 	});
 	if (o.length) {
 		let t = o.length === 1;
-		return Qt(t ? N(e, "hero_need1_one") : N(e, "hero_need1", { count: o.length }), N(e, t ? "hero_need_one" : "hero_need"), s, c);
+		return Zt(t ? N(e, "hero_need1_one") : N(e, "hero_need1", { count: o.length }), N(e, t ? "hero_need_one" : "hero_need"), s, c);
 	}
 	let l = N(e, "hero_beat"), u = N(e, "hero_beat_short");
 	if (!i) {
@@ -2958,12 +2955,12 @@ function $t(e, t) {
 		sub: ""
 	};
 }
-var en = "\0";
+var $t = "\0";
 function W(e, t, n, r) {
 	let [i = "", a = ""] = N(e, t, {
 		...r,
-		name: en
-	}).split(en);
+		name: $t
+	}).split($t);
 	return {
 		before: i,
 		name: n.name,
@@ -2971,17 +2968,17 @@ function W(e, t, n, r) {
 		tone: I(n.status)
 	};
 }
-function tn(e, t, n, r) {
-	let i = z(t).filter((e) => F[e.status] >= 1 && !R(e)).sort((e, t) => F[t.status] - F[e.status] || e.name.localeCompare(t.name)), a = Qe(t).length, o = z(t), s = o.some(R), c = o.filter((e) => e.status === "learning").length, l = c ? nn(e, c) : "";
+function en(e, t, n, r) {
+	let i = z(t).filter((e) => F[e.status] >= 1 && !R(e)).sort((e, t) => F[t.status] - F[e.status] || e.name.localeCompare(t.name)), a = Qe(t).length, o = z(t), s = o.some(R), c = o.filter((e) => e.status === "learning").length, l = c ? tn(e, c) : "";
 	if (!i.length) return {
 		mentions: [],
 		more: 0,
 		text: c > 0 && c === o.length ? N(e, "sent_learning") : [c < o.length && !s ? N(e, "sent_all_good") : "", l].filter(Boolean).join(" ")
 	};
 	let u = i.slice(0, 2).map((t) => {
-		let i = t.reason_key ?? "", a = Ut(t);
-		if (Yt.has(i) && a !== null && Kt(t) > 0) {
-			let i = Xt(e, a, n, r), o = et(e, t.last_activity, n, r).replace(/\.$/, "");
+		let i = t.reason_key ?? "", a = Ht(t);
+		if (Jt.has(i) && a !== null && Gt(t) > 0) {
+			let i = Yt(e, a, n, r), o = et(e, t.last_activity, n, r).replace(/\.$/, "");
 			return i ? W(e, "sent_strays_since", t, {
 				day: i,
 				last: o
@@ -2990,8 +2987,8 @@ function tn(e, t, n, r) {
 				last: o
 			});
 		}
-		if (Yt.has(i) && a !== null) {
-			let i = Xt(e, a, n, r);
+		if (Jt.has(i) && a !== null) {
+			let i = Yt(e, a, n, r);
 			return i ? W(e, "sent_silent_since", t, { day: i }) : W(e, "sent_silent_for", t, { span: H(e, n - a) });
 		}
 		return i === "waiting_first" ? W(e, "sent_waiting", t, {}) : i === "battery_low" ? W(e, "sent_battery_low", t, {}) : i === "battery_soon" ? W(e, "sent_battery", t, {}) : i === "unavailable" || i === "unavailable_usual" ? W(e, "sent_unavailable", t, {}) : i === "unavailable_often" ? W(e, "sent_unavailable_often", t, {}) : i === "startup_waiting" ? W(e, "sent_startup", t, {}) : i === "radio_only" ? W(e, "sent_radio_only", t, {}) : i === "battery_missing" ? W(e, "sent_battery_missing", t, {}) : i === "partner" ? W(e, "sent_partner", t, { partner: t.partner_name ?? "" }) : W(e, "sent_other", t, { reason: t.reason });
@@ -3002,19 +2999,19 @@ function tn(e, t, n, r) {
 		text: [d ? N(e, "sent_more", { count: d }) : "", l].filter(Boolean).join(" ")
 	};
 }
-function nn(e, t) {
+function tn(e, t) {
 	return t === 1 ? N(e, "learning_one") : N(e, "learning_many", { count: t });
 }
-var rn = {
+var nn = {
 	need: "group_need",
 	watch: "group_watch",
 	rhythm: "group_rhythm",
 	learning: "group_learning"
 };
-function an(e) {
-	return rn[e];
+function rn(e) {
+	return nn[e];
 }
-function on(e) {
+function an(e) {
 	let t = z(e), n = (e, t) => e.name.localeCompare(t.name);
 	return [
 		{
@@ -3035,16 +3032,16 @@ function on(e) {
 		}
 	].filter((e) => e.devices.length > 0);
 }
-function sn(e, t, n) {
-	let r = Wt(t);
+function on(e, t, n) {
+	let r = Ut(t);
 	if (r !== null) return N(e, "flag_gone", { span: H(e, n - r) });
-	let i = Ut(t);
-	return !U(t) || i === null ? null : N(e, Kt(t) ? "flag_strays" : "flag_silent", { span: H(e, n - i) });
+	let i = Ht(t);
+	return !U(t) || i === null ? null : N(e, Gt(t) ? "flag_strays" : "flag_silent", { span: H(e, n - i) });
+}
+function sn(e, t, n) {
+	return t.ignored ? "" : on(e, t, n) || (Kt(t) ? N(e, "pill_waiting") : t.status === "learning" ? N(e, "pill_learning") : "");
 }
 function cn(e, t, n) {
-	return t.ignored ? "" : sn(e, t, n) || (qt(t) ? N(e, "pill_waiting") : t.status === "learning" ? N(e, "pill_learning") : "");
-}
-function ln(e, t, n) {
 	if (t.ignored) return {
 		text: N(e, "ignored"),
 		tone: "muted"
@@ -3053,7 +3050,7 @@ function ln(e, t, n) {
 		text: N(e, "status_cloud"),
 		tone: "muted"
 	};
-	if (qt(t)) return {
+	if (Kt(t)) return {
 		text: N(e, "status_waiting"),
 		tone: "warn"
 	};
@@ -3076,7 +3073,7 @@ function ln(e, t, n) {
 		tone: "ok"
 	} : null;
 }
-function un(e, t) {
+function ln(e, t) {
 	if (t <= 0 || e.length <= t) return e;
 	let n = Math.ceil(e.length / t), r = [];
 	for (let t = 0; t < e.length; t += n) {
@@ -3085,29 +3082,29 @@ function un(e, t) {
 	}
 	return r;
 }
-function dn(e) {
+function un(e) {
 	let [t = "0", n = "0"] = e.split(":");
 	return Number(t) + Number(n) / 60;
 }
-function fn(e, t) {
-	let n = dn(e), r = dn(t);
+function dn(e, t) {
+	let n = un(e), r = un(t);
 	return n === r ? [] : n < r ? [[n, r]] : [[0, r], [n, 24]];
 }
-function pn(e, t, n) {
+function fn(e, t, n) {
 	if (t.ignored) return {
 		text: N(e, "dh_ignored"),
 		tone: "muted"
 	};
-	let r = t.reason_key ?? "", i = Ut(t);
+	let r = t.reason_key ?? "", i = Ht(t);
 	if (U(t) && i !== null) return {
-		text: F[t.status] >= 2 ? N(e, Kt(t) ? "dh_strays" : "dh_silent", { span: H(e, n - i) }) : N(e, "dh_watch"),
+		text: F[t.status] >= 2 ? N(e, Gt(t) ? "dh_strays" : "dh_silent", { span: H(e, n - i) }) : N(e, "dh_watch"),
 		tone: I(t.status)
 	};
 	if (R(t)) return {
 		text: N(e, "dh_cloud"),
 		tone: "muted"
 	};
-	if (qt(t)) return {
+	if (Kt(t)) return {
 		text: N(e, "dh_waiting"),
 		tone: "warn"
 	};
@@ -3124,7 +3121,7 @@ function pn(e, t, n) {
 		tone: I(t.status)
 	};
 	if (r === "unavailable" || r === "unavailable_usual") {
-		let r = Wt(t);
+		let r = Ut(t);
 		return {
 			text: r === null ? N(e, "dh_unavailable") : N(e, "dh_unavailable_for", { span: H(e, n - r) }),
 			tone: I(t.status)
@@ -3147,49 +3144,49 @@ function pn(e, t, n) {
 		tone: "accent"
 	};
 }
-function mn(e, t, n, r, i) {
+function pn(e, t, n, r, i) {
 	return U(t) && t.typical !== null && t.last_activity !== null ? N(e, "detail_every", {
 		every: tt(e, t.typical).replace(/\.$/, ""),
 		when: vt(e, t.last_activity, n, r, i)
 	}) : t.status === "learning" && !t.ignored ? N(e, "learning_hint") : t.reason;
 }
-function hn(e, t, n) {
-	return U(t) && !Zt(n) ? N(e, "partner_quiet", {
+function mn(e, t, n) {
+	return U(t) && !Xt(n) ? N(e, "partner_quiet", {
 		partner: n.name,
 		name: t.name
-	}) : !Zt(t) && !Zt(n) ? N(e, "partner_both") : "";
+	}) : !Xt(t) && !Xt(n) ? N(e, "partner_both") : "";
 }
-function gn(e) {
+function hn(e) {
 	return Array.isArray(e) && e.length === 2 && typeof e[0] == "number" && typeof e[1] == "number";
 }
-function _n(e) {
-	return Array.isArray(e) ? e.filter(gn) : [];
+function gn(e) {
+	return Array.isArray(e) ? e.filter(hn) : [];
 }
-function vn(e, t) {
+function _n(e, t) {
 	return t.length < 2 ? [] : e.map(([e, n]) => [mt(e, t), mt(n, t)]).filter(([e, t]) => t > e);
 }
-function yn(e) {
+function vn(e) {
 	return Array.isArray(e) && e.every((e) => e === null || typeof e == "number");
 }
-function bn(e) {
-	return Array.isArray(e) && e.every(yn);
+function yn(e) {
+	return Array.isArray(e) && e.every(vn);
 }
-function xn(e) {
+function bn(e) {
 	if (typeof e != "object" || !e) return null;
 	let t = Reflect.get(e, "start"), n = Reflect.get(e, "days"), r = Reflect.get(e, "bin_minutes"), i = Reflect.get(e, "devices");
 	if (typeof t != "number" || typeof n != "number" || typeof r != "number" || r <= 0 || typeof i != "object" || !i) return null;
 	let a = {};
-	for (let [e, t] of Object.entries(i)) bn(t) && (a[e] = t);
+	for (let [e, t] of Object.entries(i)) yn(t) && (a[e] = t);
 	return {
 		start: t,
 		days: n,
 		binMinutes: r,
 		dayStarts: ut(Reflect.get(e, "day_starts"), t, n),
 		devices: a,
-		noData: _n(Reflect.get(e, "no_data"))
+		noData: gn(Reflect.get(e, "no_data"))
 	};
 }
-function Sn(e, t, n) {
+function xn(e, t, n) {
 	let r = n * 60, i = [];
 	return t <= 0 || e.forEach((e, n) => {
 		e && i.push({
@@ -3198,17 +3195,17 @@ function Sn(e, t, n) {
 		});
 	}), i;
 }
-function Cn(e) {
+function Sn(e) {
 	return e >= 3 ? 22 : e === 2 ? 18 : 12;
 }
-var wn = 2;
-function Tn(e, t) {
-	let n = Wt(e);
+var Cn = 2;
+function wn(e, t) {
+	let n = Ut(e);
 	if (n !== null && t.length >= 2) {
 		let e = pt(n, t);
 		return e < 0 ? 0 : e + 1;
 	}
-	let r = Ht(e);
+	let r = Vt(e);
 	if (!U(e) || r === null || t.length < 2) return -1;
 	if (typeof e.silence_start == "number") {
 		let n = pt(e.silence_start, t);
@@ -3221,15 +3218,15 @@ function Tn(e, t) {
 		e && t <= o && s.push(t);
 	});
 	let c = Math.max(3, Math.ceil(3 * (e.typical ?? 0) / a));
-	for (let e = s.length - 2; e >= 0 && s.length - 1 - e <= wn; e--) {
+	for (let e = s.length - 2; e >= 0 && s.length - 1 - e <= Cn; e--) {
 		let t = s[e], n = s[e + 1];
 		if (t === void 0 || n === void 0) break;
 		if (n - t - 1 >= c) return t + 1;
 	}
 	return o + 1;
 }
-function En(e, t, n, r) {
-	let i = Ht(e);
+function Tn(e, t, n, r) {
+	let i = Vt(e);
 	if (!U(e) || i === null) return -1;
 	let a = r * 60, o = -1;
 	return t.forEach((e, t) => {
@@ -3239,25 +3236,25 @@ function En(e, t, n, r) {
 		});
 	}), Math.max(i, o);
 }
-var Dn = {
+var En = {
 	now: "set_level_now",
 	daily: "set_level_daily",
 	off: "set_level_off"
 };
-function On(e, t) {
+function Dn(e, t) {
 	let n = t.quiet;
 	return [N(e, "day_line_summary", { time: t.summary_time }), n.enabled ? N(e, "day_line_quiet", {
 		start: n.start,
 		end: n.end
 	}) : N(e, "day_line_no_quiet")].join(" · ");
 }
-function kn(e) {
+function On(e) {
 	let t = Reflect.get(e.arrive_home, "persons");
 	if (Array.isArray(t)) return t.filter((e) => typeof e == "string");
 	let n = Reflect.get(e.arrive_home, "person");
 	return typeof n == "string" ? [n] : [];
 }
-function An(e, t) {
+function kn(e, t) {
 	let n = t.quiet, r = {
 		failed: "set_failed",
 		check: "set_check",
@@ -3273,7 +3270,7 @@ function An(e, t) {
 	}
 	let a = new Intl.ListFormat(e, { type: "conjunction" }), o = [...i].map(([t, n]) => N(e, "set_group", {
 		names: a.format(n),
-		level: N(e, Dn[t])
+		level: N(e, En[t])
 	})).join(", "), s = `${o.charAt(0).toUpperCase()}${o.slice(1)}.`;
 	return {
 		line1: N(e, "set_head", { time: t.summary_time }),
@@ -3284,7 +3281,7 @@ function An(e, t) {
 		sub: s
 	};
 }
-function jn(e, t, n) {
+function An(e, t, n) {
 	let r = t > e ? [[e, t]] : [];
 	for (let [e, t] of n) r = r.flatMap(([n, r]) => {
 		if (t <= n || e >= r) return [[n, r]];
@@ -3293,15 +3290,15 @@ function jn(e, t, n) {
 	});
 	return r;
 }
-var Mn = {
+var jn = {
 	too_short: "forecast_too_short",
 	flat: "forecast_flat",
 	coarse: "forecast_coarse",
 	untrusted: "forecast_untrusted",
 	noisy: "forecast_noisy"
 };
-function Nn(e, t, n) {
-	if (!t) return n && n in Mn ? N(e, Mn[n]) : "";
+function Mn(e, t, n) {
+	if (!t) return n && n in jn ? N(e, jn[n]) : "";
 	let r = Math.max(0, Math.min(t.days_min, t.days_max)), i = Math.max(t.days_min, t.days_max);
 	if (i <= 10) return N(e, "forecast_days");
 	let a = (e) => {
@@ -3313,7 +3310,7 @@ function Nn(e, t, n) {
 	};
 	return i <= 70 ? N(e, "forecast_weeks", a(7)) : i <= 540 ? N(e, "forecast_months", a(30.44)) : N(e, "forecast_years", a(365.25));
 }
-function Pn(e, t) {
+function Nn(e, t) {
 	if (!t?.length) return "";
 	let n = /* @__PURE__ */ new Map(), r = [];
 	for (let e of t) e.type ? n.set(e.type, (n.get(e.type) ?? 0) + Math.max(1, e.count ?? 1)) : r.push(e.name);
@@ -3323,28 +3320,28 @@ function Pn(e, t) {
 	}));
 	return r.length && i.push(N(e, "due_untyped", { names: r.join(", ") })), N(e, "due_line", { items: i.join(", ") });
 }
-function Fn(e) {
+function Pn(e) {
 	let t = e.replaceAll("_", " ").trim();
 	return t ? `${t.charAt(0).toUpperCase()}${t.slice(1)}` : e;
 }
-function In(e, t) {
+function Fn(e, t) {
 	return (t ?? []).filter((e) => e.count > 0).map((t) => N(e, t.count === 1 ? "cloud_outage_one" : "cloud_outage_many", {
 		name: t.integration,
 		count: t.count
 	}));
 }
-function Ln(e) {
+function In(e) {
 	return e.partner || e.ignored ? [] : (e.partner_suggestions ?? []).slice(0, 1);
 }
-var Rn = 2e3, zn = 6e4;
-function Bn(e) {
-	return Math.min(Math.max(e, Rn) * 2, zn);
+var Ln = 2e3, Rn = 6e4;
+function zn(e) {
+	return Math.min(Math.max(e, Ln) * 2, Rn);
 }
-var Vn = " · ";
-function Hn(e, t, n) {
-	return e.replace(/\{(\w+)\}/g, (e, r) => n.includes(r) ? t[r] ?? "" : e).split("\n").map((e) => e.split(Vn).filter((e) => e.trim()).join(Vn)).join("\n").trim();
+var Bn = " · ";
+function Vn(e, t, n) {
+	return e.replace(/\{(\w+)\}/g, (e, r) => n.includes(r) ? t[r] ?? "" : e).split("\n").map((e) => e.split(Bn).filter((e) => e.trim()).join(Bn)).join("\n").trim();
 }
-function Un(e) {
+function Hn(e) {
 	if (!e) return {};
 	let t = e.area && !e.name.toLocaleLowerCase().includes(e.area.toLocaleLowerCase()) ? e.area : null;
 	return {
@@ -3359,7 +3356,7 @@ function Un(e) {
 function G(e) {
 	return typeof e == "string" && e !== "" ? e : null;
 }
-function Wn(e) {
+function Un(e) {
 	if (typeof e != "object" || !e) return [];
 	let t = Reflect.get(e, "devices");
 	if (!Array.isArray(t)) return [];
@@ -3382,7 +3379,7 @@ function Wn(e) {
 	}
 	return n;
 }
-function Gn(e, t) {
+function Wn(e, t) {
 	let n = t.toLocaleLowerCase().split(/\s+/).filter(Boolean);
 	return n.length ? e.filter((e) => {
 		let t = [
@@ -3396,10 +3393,10 @@ function Gn(e, t) {
 		return n.every((e) => t.includes(e));
 	}) : e;
 }
-function Kn(e) {
-	return [e.area, e.integration_name ?? Fn(e.integration)].filter(Boolean).join(" · ");
+function Gn(e) {
+	return [e.area, e.integration_name ?? Pn(e.integration)].filter(Boolean).join(" · ");
 }
-function qn(e) {
+function Kn(e) {
 	return e.filter((e) => e.manual).sort((e, t) => e.name.localeCompare(t.name));
 }
 //#endregion
@@ -3674,7 +3671,7 @@ var K = o`
   .t-muted {
     color: var(--pu-muted);
   }
-`, Jn = o`
+`, qn = o`
   .axis,
   .rowgrid {
     display: grid;
@@ -3850,7 +3847,7 @@ var K = o`
       content: none;
     }
   }
-`, Yn = [
+`, Jn = [
 	{
 		icon: "mdi:chart-timeline-variant",
 		title: "welcome_rhythm_title",
@@ -3866,7 +3863,7 @@ var K = o`
 		title: "welcome_notify_title",
 		text: "welcome_notify_text"
 	}
-], Xn = [{
+], Yn = [{
 	icon: "mdi:link-variant",
 	title: "news_restore_title",
 	text: "news_restore_text"
@@ -3874,7 +3871,7 @@ var K = o`
 	icon: "mdi:leaf",
 	title: "news_quiet_title",
 	text: "news_quiet_text"
-}], Zn = "https://github.com/SH1FT-W/pulse/blob/main/CHANGELOG.md";
+}], Xn = "https://github.com/SH1FT-W/pulse/blob/main/CHANGELOG.md";
 M("pulse-welcome", class extends A {
 	static {
 		this.properties = {
@@ -3948,7 +3945,7 @@ M("pulse-welcome", class extends A {
 	}
 	render() {
 		if (!this.mode) return D;
-		let e = this.language, t = this.mode === "welcome", n = t ? Yn : Xn;
+		let e = this.language, t = this.mode === "welcome", n = t ? Jn : Yn;
 		return w`<ha-dialog open @closed=${() => this.close()}>
       <div class="sheet">
         <div class="glow" aria-hidden="true"></div>
@@ -3966,7 +3963,7 @@ M("pulse-welcome", class extends A {
       <div slot="footer" class="foot">
         ${t && this.zigbee !== "none" ? this.renderZigbee() : D}
         <button class="go" type="button" @click=${() => this.close()}>${N(e, "continue")}</button>
-        ${t ? D : w`<a class="all" href=${Zn} target="_blank" rel="noreferrer">${N(e, "whats_new_all")}</a>`}
+        ${t ? D : w`<a class="all" href=${Xn} target="_blank" rel="noreferrer">${N(e, "whats_new_all")}</a>`}
       </div>
     </ha-dialog>`;
 	}
@@ -4160,20 +4157,20 @@ M("pulse-welcome", class extends A {
 });
 //#endregion
 //#region src/welcome.ts
-var Qn = "pulse.seenVersion", $n = "", er = "pulse.welcome";
-function tr(e, t, n = !0) {
-	let r = e.getItem(Qn);
-	return r === t ? null : r === $n ? "welcome" : r !== null || e.getItem(er) !== null ? n ? "whatsNew" : (nr(e, t), null) : (e.setItem(Qn, $n), "welcome");
+var Zn = "pulse.seenVersion", Qn = "", $n = "pulse.welcome";
+function er(e, t, n = !0) {
+	let r = e.getItem(Zn);
+	return r === t ? null : r === Qn ? "welcome" : r !== null || e.getItem($n) !== null ? n ? "whatsNew" : (tr(e, t), null) : (e.setItem(Zn, Qn), "welcome");
 }
-function nr(e, t) {
-	e.setItem(Qn, t);
+function tr(e, t) {
+	e.setItem(Zn, t);
 }
 //#endregion
 //#region src/pulse-sheet.ts
-var rr = "(pointer: coarse), (max-width: 600px)", ir = 6, ar = 0, or = "";
-function sr(e) {
+var nr = "(pointer: coarse), (max-width: 600px)", rr = 6, ir = 0, ar = "";
+function or(e) {
 	let t = document.documentElement;
-	e ? (ar === 0 && (or = t.style.overflow, t.style.overflow = "hidden"), ar += 1) : ar > 0 && (--ar, ar === 0 && (t.style.overflow = or));
+	e ? (ir === 0 && (ar = t.style.overflow, t.style.overflow = "hidden"), ir += 1) : ir > 0 && (--ir, ir === 0 && (t.style.overflow = ar));
 }
 M("pulse-sheet", class extends A {
 	static {
@@ -4192,7 +4189,7 @@ M("pulse-sheet", class extends A {
 		};
 	}
 	setLocked(e) {
-		e !== this.locked && (this.locked = e, sr(e));
+		e !== this.locked && (this.locked = e, or(e));
 	}
 	disconnectedCallback() {
 		super.disconnectedCallback(), this.setLocked(!1);
@@ -4231,7 +4228,7 @@ M("pulse-sheet", class extends A {
 		t !== null && e.composedPath().includes(t) || e.preventDefault();
 	}
 	sheetMode() {
-		return window.matchMedia(rr).matches;
+		return window.matchMedia(nr).matches;
 	}
 	onPointerDown(e) {
 		this.sheetMode() && e.button === 0 && (this.drag = {
@@ -4247,7 +4244,7 @@ M("pulse-sheet", class extends A {
 		if (!t || t.id !== e.pointerId || !n) return;
 		let r = e.clientY - t.startY;
 		if (!t.active) {
-			if (Math.abs(r) < ir) return;
+			if (Math.abs(r) < rr) return;
 			t.active = !0;
 			let i = e.currentTarget;
 			i instanceof HTMLElement && i.setPointerCapture(e.pointerId), n.style.transition = "none";
@@ -4258,7 +4255,7 @@ M("pulse-sheet", class extends A {
 		let t = this.drag, n = this.dialog;
 		if (this.drag = null, !t || t.id !== e.pointerId || !n || !t.active) return;
 		let r = t.dy / Math.max(1, e.timeStamp - t.startT);
-		n.style.transition = "transform 260ms cubic-bezier(0.2, 0.8, 0.2, 1)", kt(t.dy, r) ? (n.style.transform = "translateY(100%)", window.setTimeout(() => n.close(), 220)) : n.style.transform = "";
+		n.style.transition = "transform 260ms cubic-bezier(0.2, 0.8, 0.2, 1)", Ot(t.dy, r) ? (n.style.transform = "translateY(100%)", window.setTimeout(() => n.close(), 220)) : n.style.transform = "";
 	}
 	render() {
 		return w`<dialog
@@ -4477,11 +4474,11 @@ M("pulse-sheet", class extends A {
 		let e = this.language;
 		if (this.candidates === null) return w`<p class="empty muted">${N(e, "manual_loading")}</p>`;
 		if (!this.candidates.length) return w`<p class="empty muted">${N(e, "manual_none")}</p>`;
-		let t = Gn(this.candidates, this.query);
+		let t = Wn(this.candidates, this.query);
 		return t.length ? w`<div class="list">
       ${t.map((e) => w`<button class="row has-icon" type="button" @click=${() => this.add(e.id)}>
           <ha-icon class="ico" icon=${e.icon}></ha-icon>
-          <span class="label">${e.name}<small>${Kn(e)}</small></span>
+          <span class="label">${e.name}<small>${Gn(e)}</small></span>
           <ha-icon class="plus" icon="mdi:plus-circle-outline"></ha-icon>
         </button>`)}
     </div>` : w`<p class="empty muted">${N(e, "manual_no_match")}</p>`;
@@ -4548,7 +4545,7 @@ M("pulse-sheet", class extends A {
 });
 //#endregion
 //#region src/pulse-heartbeat.ts
-var cr = 1e3, lr = 24, ur = [
+var sr = 1e3, cr = 24, lr = [
 	3,
 	6,
 	9,
@@ -4557,7 +4554,7 @@ var cr = 1e3, lr = 24, ur = [
 	18,
 	21
 ];
-function dr(e) {
+function ur(e) {
 	return e.reduce((e, t) => e + t.reduce((e, t) => e + (t ?? 0), 0), 0);
 }
 M("pulse-heartbeat", class extends A {
@@ -4591,15 +4588,15 @@ M("pulse-heartbeat", class extends A {
 	willUpdate(e) {
 		if (!e.has("bins")) return;
 		let t = e.get("bins");
-		Array.isArray(t) && t.length === this.bins.length && dr(this.bins) > dr(t) && (this.beating = !0);
+		Array.isArray(t) && t.length === this.bins.length && ur(this.bins) > ur(t) && (this.beating = !0);
 	}
 	row(e, t, n) {
-		let r = n - t, i = (e) => `${(e / r * 100).toFixed(2)}%`, a = (e) => (e / r * cr).toFixed(1), o = ht(t, n, ur, this.timeZone).map((e) => {
-			let t = (e * cr).toFixed(1);
+		let r = n - t, i = (e) => `${(e / r * 100).toFixed(2)}%`, a = (e) => (e / r * sr).toFixed(1), o = ht(t, n, lr, this.timeZone).map((e) => {
+			let t = (e * sr).toFixed(1);
 			return T`<line class="grid" x1=${t} x2=${t} y1="3" y2=${21}></line>`;
 		}), s = D;
-		this.silentSince > 0 && this.silentSince < n && this.now > t && (s = jn(Math.max(this.silentSince, t) - t, Math.min(this.now, n) - t, this.noData.map(([e, n]) => [e - t, n - t])).map(([e, t]) => T`<line class="silent" x1=${a(e)} x2=${a(t)} y1=${lr / 2} y2=${lr / 2}></line>`));
-		let c = Sn(this.bins[e] ?? [], r, this.binMinutes).map((e) => w`<i class="tk" style=${`left: ${(e.at * 100).toFixed(2)}%; height: ${Cn(e.count)}px`}></i>`), l = this.noData.map(([e, r]) => [Math.max(e, t), Math.min(r, n)]).filter(([e, t]) => t > e).map(([e, n]) => w`<span class="gap" style=${`left: ${i(e - t)}; width: ${i(n - e)}`}></span>`), u = this.now >= t && this.now < n, d = u ? w`<span
+		this.silentSince > 0 && this.silentSince < n && this.now > t && (s = An(Math.max(this.silentSince, t) - t, Math.min(this.now, n) - t, this.noData.map(([e, n]) => [e - t, n - t])).map(([e, t]) => T`<line class="silent" x1=${a(e)} x2=${a(t)} y1=${cr / 2} y2=${cr / 2}></line>`));
+		let c = xn(this.bins[e] ?? [], r, this.binMinutes).map((e) => w`<i class="tk" style=${`left: ${(e.at * 100).toFixed(2)}%; height: ${Sn(e.count)}px`}></i>`), l = this.noData.map(([e, r]) => [Math.max(e, t), Math.min(r, n)]).filter(([e, t]) => t > e).map(([e, n]) => w`<span class="gap" style=${`left: ${i(e - t)}; width: ${i(n - e)}`}></span>`), u = this.now >= t && this.now < n, d = u ? w`<span
           class=${[
 			"now",
 			this.silentSince > 0 ? "silent" : "",
@@ -4617,14 +4614,14 @@ M("pulse-heartbeat", class extends A {
       <span class=${u ? "mono today" : "mono"}>${f}</span>
       <div class="track">
         ${l}
-        <svg viewBox="0 0 ${cr} ${lr}" preserveAspectRatio="none" aria-hidden="true">${o}${s}</svg>
+        <svg viewBox="0 0 ${sr} ${cr}" preserveAspectRatio="none" aria-hidden="true">${o}${s}</svg>
         <div class="ticks">${c}</div>
         ${d}
       </div>
     </div>`;
 	}
 	render() {
-		let e = Math.max(0, this.dayStarts.length - 1), t = dr(this.bins), n = Array.from({ length: e }, (e, t) => this.row(t, this.dayStarts[t] ?? 0, this.dayStarts[t + 1] ?? 0));
+		let e = Math.max(0, this.dayStarts.length - 1), t = ur(this.bins), n = Array.from({ length: e }, (e, t) => this.row(t, this.dayStarts[t] ?? 0, this.dayStarts[t + 1] ?? 0));
 		return w`<div class="cal" role="img" aria-label=${N(this.language, "heartbeat_aria", {
 			count: t,
 			days: e
@@ -4763,7 +4760,7 @@ M("pulse-heartbeat", class extends A {
 });
 //#endregion
 //#region src/pulse-picker.ts
-var fr = 12;
+var dr = 12;
 M("pulse-picker", class extends A {
 	static {
 		this.properties = {
@@ -4824,7 +4821,7 @@ M("pulse-picker", class extends A {
       </pulse-sheet>`;
 	}
 	render() {
-		return this.options.length > fr ? this.renderSheet() : w`<ha-dropdown placement="bottom-end" @wa-select=${(e) => this.pick(He(e))}>
+		return this.options.length > dr ? this.renderSheet() : w`<ha-dropdown placement="bottom-end" @wa-select=${(e) => this.pick(He(e))}>
       ${this.trigger(!0)}
       ${this.options.map((e) => w`<ha-dropdown-item .value=${e.value}>
           <ha-icon
@@ -4902,14 +4899,14 @@ M("pulse-picker", class extends A {
 });
 //#endregion
 //#region src/pulse-rhythm.ts
-var pr = 480, Y = 1e3, X = 26;
-function mr(e, t) {
+var fr = 480, Y = 1e3, X = 26;
+function pr(e, t) {
 	return e === t ? !0 : !Array.isArray(e) || !Array.isArray(t) || e.length !== t.length ? !1 : e.every((e, n) => {
 		let r = t[n];
-		return Array.isArray(e) ? mr(e, r) : e === r;
+		return Array.isArray(e) ? pr(e, r) : e === r;
 	});
 }
-function hr(e) {
+function mr(e) {
 	return e.reduce((e, t) => e + (t ?? 0), 0);
 }
 M("pulse-rhythm", class extends A {
@@ -4917,7 +4914,7 @@ M("pulse-rhythm", class extends A {
 		this.properties = {
 			buckets: {
 				attribute: !1,
-				hasChanged: (e, t) => !mr(e, t)
+				hasChanged: (e, t) => !pr(e, t)
 			},
 			tone: {
 				type: String,
@@ -4934,7 +4931,7 @@ M("pulse-rhythm", class extends A {
 			flag: { type: String },
 			gaps: {
 				attribute: !1,
-				hasChanged: (e, t) => !mr(e, t)
+				hasChanged: (e, t) => !pr(e, t)
 			},
 			days: { type: Number },
 			narrow: { state: !0 },
@@ -4946,7 +4943,7 @@ M("pulse-rhythm", class extends A {
 	}
 	connectedCallback() {
 		super.connectedCallback(), this.observer = new ResizeObserver((e) => {
-			let t = e[0]?.contentRect.width ?? 0, n = t > 0 && t < pr;
+			let t = e[0]?.contentRect.width ?? 0, n = t > 0 && t < fr;
 			n !== this.narrow && (this.narrow = n), Math.abs(t - this.width) >= 8 && (this.width = t);
 		}), this.observer.observe(this);
 	}
@@ -4956,10 +4953,10 @@ M("pulse-rhythm", class extends A {
 	willUpdate(e) {
 		if (!e.has("buckets")) return;
 		let t = e.get("buckets");
-		Array.isArray(t) && t.length === this.buckets.length ? hr(this.buckets) > hr(t) && (this.growAt = this.buckets.findLastIndex((e) => (e ?? 0) > 0)) : this.growAt = -1;
+		Array.isArray(t) && t.length === this.buckets.length ? mr(this.buckets) > mr(t) && (this.growAt = this.buckets.findLastIndex((e) => (e ?? 0) > 0)) : this.growAt = -1;
 	}
 	render() {
-		let e = this.narrow && this.buckets.length > 48 ? 2 : 1, t = e > 1 ? un(this.buckets, Math.ceil(this.buckets.length / 2)) : this.buckets, n = t.length || 1, r = this.silentFrom >= 0 ? Math.ceil(this.silentFrom / e) : -1, i = nt(t), a = Y / n, o = a * .56, s = i.indexOf(null), c = s < 0 ? n : s, l = this.tone === "warn" || this.tone === "crit", u = this.growAt >= 0 ? Math.floor(this.growAt / e) : -1, d = -1;
+		let e = this.narrow && this.buckets.length > 48 ? 2 : 1, t = e > 1 ? ln(this.buckets, Math.ceil(this.buckets.length / 2)) : this.buckets, n = t.length || 1, r = this.silentFrom >= 0 ? Math.ceil(this.silentFrom / e) : -1, i = nt(t), a = Y / n, o = a * .56, s = i.indexOf(null), c = s < 0 ? n : s, l = this.tone === "warn" || this.tone === "crit", u = this.growAt >= 0 ? Math.floor(this.growAt / e) : -1, d = -1;
 		if (l && r >= 0) for (let e = 0; e < Math.min(r, n); e++) (i[e] ?? 0) > 0 && (d = e);
 		let f = l && r < 0 && c > 0 ? c - 1 : -1, p = (e) => {
 			let t = (e + .5) / n;
@@ -4978,7 +4975,7 @@ M("pulse-rhythm", class extends A {
 				t === u ? "grow" : ""
 			].join(" ")} x=${n} y=${((X - i) / 2).toFixed(1)} width=${o.toFixed(1)} height=${i.toFixed(1)} rx=${(o / 2).toFixed(1)}></rect>`;
 			(s ? h : m).push(c);
-		}), f >= 0 && h.push(T`<rect class="mark" x=${(f * a + (a - o) / 2).toFixed(1)} y="1" width=${o.toFixed(1)} height=${24} rx=${(o / 2).toFixed(1)}></rect>`), r >= 0 && r < c) for (let [e, t] of jn(r / n, c / n, this.gaps)) h.push(T`<line class="silent" x1=${(e * Y).toFixed(1)} x2=${(t * Y).toFixed(1)} y1=${X / 2} y2=${X / 2}></line>`);
+		}), f >= 0 && h.push(T`<rect class="mark" x=${(f * a + (a - o) / 2).toFixed(1)} y="1" width=${o.toFixed(1)} height=${24} rx=${(o / 2).toFixed(1)}></rect>`), r >= 0 && r < c) for (let [e, t] of An(r / n, c / n, this.gaps)) h.push(T`<line class="silent" x1=${(e * Y).toFixed(1)} x2=${(t * Y).toFixed(1)} y1=${X / 2} y2=${X / 2}></line>`);
 		let g = Array.from({ length: Math.max(0, this.days - 1) }, (e, t) => {
 			let n = ((t + 1) / this.days * Y).toFixed(1);
 			return T`<line class="day" x1=${n} x2=${n} y1="1" y2=${25}></line>`;
@@ -5115,17 +5112,17 @@ M("pulse-rhythm", class extends A {
 });
 //#endregion
 //#region src/pulse-device-sheet.ts
-var gr = 260;
-function _r(e) {
+var hr = 260;
+function gr(e) {
 	return I(e.status) === "warn" ? "warn" : "crit";
 }
-function vr(e) {
+function _r(e) {
 	return e.ignored ? "muted" : I(e.status) === "ok" ? "ok" : "neutral";
 }
-var yr = Array.from({ length: 12 }, (e, t) => ({
+var vr = Array.from({ length: 12 }, (e, t) => ({
 	value: String(t + 1),
 	label: String(t + 1)
-})), br = {
+})), yr = {
 	nimh: "chem_nimh",
 	alkaline: "chem_alkaline",
 	lithium: "chem_lithium"
@@ -5155,14 +5152,14 @@ M("pulse-device-sheet", class extends A {
 		};
 	}
 	constructor() {
-		super(), this.gapsOf = P(vn), this.beatKey = "", this.onSettingsToggle = (e) => {
+		super(), this.gapsOf = P(_n), this.beatKey = "", this.onSettingsToggle = (e) => {
 			let t = e.currentTarget;
 			if (!(t instanceof HTMLDetailsElement) || (this.settingsOpen = t.open, !t.open)) return;
 			let n = CSS.supports("interpolate-size", "allow-keywords");
 			window.setTimeout(() => t.scrollIntoView({
 				block: "nearest",
 				behavior: "smooth"
-			}), n ? gr : 0);
+			}), n ? hr : 0);
 		}, this.device = null, this.devices = [], this.language = "en", this.now = 0, this.stripStart = 0, this.stripDays = 7, this.dayStarts = [], this.timeZone = void 0, this.timeFormat = void 0, this.bucketHours = 2, this.fetchHeartbeat = null, this.beat = null, this.batteryTypes = [], this.chemistries = [], this.noData = [], this.open = !1, this.readonly = !1, this.settingsOpen = !1, this.beatError = !1;
 	}
 	willUpdate(e) {
@@ -5179,7 +5176,7 @@ M("pulse-device-sheet", class extends A {
 		if (!this.fetchHeartbeat) return;
 		let n = null;
 		try {
-			n = xn(await this.fetchHeartbeat([e]));
+			n = bn(await this.fetchHeartbeat([e]));
 		} catch {
 			n = null;
 		}
@@ -5240,16 +5237,16 @@ M("pulse-device-sheet", class extends A {
 	}
 	onLater(e, t) {
 		let n = He(t);
-		It(n) && this.fire("later", {
+		Ft(n) && this.fire("later", {
 			id: e.id,
 			choice: n
 		});
 	}
 	renderBody(e) {
-		let t = this.language, n = e.battery, r = e.snooze_until !== null && e.snooze_until > this.now, i = yt(t, n), a = n.type ? (n.count ?? 1) > 1 ? N(t, "battery_count_type", {
+		let t = this.language, n = e.battery, r = e.snooze_until !== null && e.snooze_until > this.now, i = n.flag ? N(t, n.low ? "battery_flag_low" : "battery_flag_ok") : n.level === null ? N(t, "unknown") : N(t, "unit_percent", { value: Math.round(n.level) }), a = n.type ? (n.count ?? 1) > 1 ? N(t, "battery_count_type", {
 			count: n.count ?? 1,
 			type: n.type
-		}) : n.type : N(t, "unknown"), o = this.timeZone, s = pn(t, e, this.now), c = e.partner ? this.devices.find((t) => t.id === e.partner) ?? null : null, l = n.replaced.at(-1), u = this.beat, d = u?.devices[e.id] ?? null, f = u?.noData ?? this.noData, p = this.gapsOf(f, this.dayStarts), m = Math.max(1, this.dayStarts.length - 1), h = (e) => w`<pulse-rhythm .buckets=${e.strip} tone=${L(e)} ?learning=${e.status === "learning" && !e.ignored} .gaps=${p} .days=${m} .silentFrom=${Tn(e, this.dayStarts)}></pulse-rhythm>`, g = c ? hn(t, e, c) : "", ee = [e.area, e.model].filter(Boolean).join(" · "), te = Nn(t, n.forecast, n.forecast_reason === "untrusted" && !n.trusted ? null : n.forecast_reason), _ = (n) => w`<button class=${n ? "pbtn primary" : "pbtn"} type="button" @click=${() => this.fire("replaced", { id: e.id })}>
+		}) : n.type : N(t, "unknown"), o = this.timeZone, s = fn(t, e, this.now), c = e.partner ? this.devices.find((t) => t.id === e.partner) ?? null : null, l = n.replaced.at(-1), u = this.beat, d = u?.devices[e.id] ?? null, f = u?.noData ?? this.noData, p = this.gapsOf(f, this.dayStarts), m = Math.max(1, this.dayStarts.length - 1), h = (e) => w`<pulse-rhythm .buckets=${e.strip} tone=${L(e)} ?learning=${e.status === "learning" && !e.ignored} .gaps=${p} .days=${m} .silentFrom=${wn(e, this.dayStarts)}></pulse-rhythm>`, g = c ? mn(t, e, c) : "", ee = [e.area, e.model].filter(Boolean).join(" · "), te = Mn(t, n.forecast, n.forecast_reason === "untrusted" && !n.trusted ? null : n.forecast_reason), _ = (n) => w`<button class=${n ? "pbtn primary" : "pbtn"} type="button" @click=${() => this.fire("replaced", { id: e.id })}>
         <ha-icon icon="mdi:battery-sync-outline"></ha-icon>${N(t, "replaced")}
       </button>`, v = (n) => r && e.snooze_until !== null ? w`<span class="snoozed">
             <span class="muted small">${N(t, "snoozed_until", { when: vt(t, e.snooze_until, this.now, o, this.timeFormat) })}</span>
@@ -5258,17 +5255,17 @@ M("pulse-device-sheet", class extends A {
             <button slot="trigger" class=${n ? "pbtn primary" : "pbtn"} type="button">
               <ha-icon icon="mdi:bell-sleep-outline"></ha-icon>${N(t, "later")}
             </button>
-            ${Ft.map((e) => w`<ha-dropdown-item value=${e.value}>${N(t, e.value)}</ha-dropdown-item>`)}
-          </ha-dropdown>`, ne = Rt(e), y = e.mains === !0;
+            ${Pt.map((e) => w`<ha-dropdown-item value=${e.value}>${N(t, e.value)}</ha-dropdown-item>`)}
+          </ha-dropdown>`, ne = Lt(e), y = e.mains === !0, b = yt(t, e);
 		return w`
       <header class="hero">
         ${ee || e.cloud || y ? w`<p class="dname"><ha-icon .icon=${e.icon}></ha-icon><span>${ee}</span>${e.cloud ? w`<span class="chip-cloud"><ha-icon icon="mdi:cloud-outline"></ha-icon>${N(t, "cloud_device")}</span>` : D}${e.manual ? w`<span class="chip-cloud"><ha-icon icon="mdi:plus-circle-outline"></ha-icon>${N(t, "manual_chip")}</span>` : y ? w`<span class="chip-cloud"><ha-icon icon="mdi:power-plug-outline"></ha-icon>${N(t, "mains_chip")}</span>` : D}</p>` : D}
         <h3 class=${`dhl ${s.tone === "accent" ? "grad" : `t-${s.tone}`}`}>${s.text}</h3>
-        <p class="dtx">${mn(t, e, this.now, o, this.timeFormat)}</p>
+        <p class="dtx">${pn(t, e, this.now, o, this.timeFormat)}</p>
       </header>
 
       ${this.readonly ? w`<p class="ro muted small"><ha-icon icon="mdi:lock-outline"></ha-icon>${N(t, "read_only")}</p>` : D}
-      ${Pt(e) && !this.readonly ? w`<div class="buttons">
+      ${Nt(e) && !this.readonly ? w`<div class="buttons">
               ${y ? v(!r) : ne ? w`${_(!0)}${v(!1)}` : w`${v(!r)}${_(!1)}`}
             </div>` : D}
 
@@ -5286,15 +5283,15 @@ M("pulse-device-sheet", class extends A {
                 .binMinutes=${u.binMinutes}
                 .timeZone=${o}
                 .now=${this.now}
-                .silentSince=${En(e, d, u.dayStarts, u.binMinutes)}
+                .silentSince=${Tn(e, d, u.dayStarts, u.binMinutes)}
                 .noData=${f}
-                silence=${_r(e)}
+                silence=${gr(e)}
                 .language=${t}
-                tone=${vr(e)}
+                tone=${_r(e)}
               ></pulse-heartbeat>` : this.beatError ? w`<div class="cal-err">
                   <span class="muted">${N(t, "heartbeat_failed")}</span>
                   <button class="pbtn" type="button" @click=${() => this.reloadBeat(e.id)}>${N(t, "reload")}</button>
-                </div>` : w`<div class="cal-wait"><pulse-rhythm .buckets=${e.strip} tone=${L(e)} ?learning=${e.status === "learning" && !e.ignored} .gaps=${p} .days=${m} .silentFrom=${Tn(e, this.dayStarts)} .flag=${cn(t, e, this.now)}></pulse-rhythm>
+                </div>` : w`<div class="cal-wait"><pulse-rhythm .buckets=${e.strip} tone=${L(e)} ?learning=${e.status === "learning" && !e.ignored} .gaps=${p} .days=${m} .silentFrom=${wn(e, this.dayStarts)} .flag=${sn(t, e, this.now)}></pulse-rhythm>
                 <div class="axis muted" aria-hidden="true" style=${`grid-template-columns: ${ft(this.dayStarts)}`}>${dt(t, this.dayStarts, o).map((e) => w`<span>${e}</span>`)}</div></div>`}
       </section>
 
@@ -5305,25 +5302,24 @@ M("pulse-device-sheet", class extends A {
               ${g ? w`<p>${g}</p>` : D}
             </section>` : D}
 
-      ${y ? w`<p class="fc muted"><ha-icon icon=${e.manual ? "mdi:plus-circle-outline" : "mdi:power-plug-outline"}></ha-icon><span>${N(t, e.manual ? "manual_note" : "mains_note")}</span></p>` : D}
-      ${y && !bt(e) ? D : w`<section class="stats">
+      ${y ? w`<p class="fc muted"><ha-icon icon=${e.manual ? "mdi:plus-circle-outline" : "mdi:power-plug-outline"}></ha-icon><span>${N(t, e.manual ? "manual_note" : "mains_note")}</span></p>${b === null ? D : w`<p class="fc"><ha-icon icon="mdi:battery-outline"></ha-icon><span>${N(t, "battery")}: ${b}</span></p>`}` : w`<section class="stats">
         <div>
           <span>${N(t, "battery")}</span>
           <b class=${n.trusted ? "" : "faint"}>${i}</b>
           ${n.trusted ? D : w`<small>${N(t, "stat_rechargeable")}</small>`}
         </div>
         <div><span>${N(t, "battery_type")}</span><b>${a}</b></div>
-        <div><span>${N(t, "stat_changed")}</span><b>${l === void 0 ? N(t, "unknown") : Nt(t, l, this.now, o)}</b></div>
+        <div><span>${N(t, "stat_changed")}</span><b>${l === void 0 ? N(t, "unknown") : Mt(t, l, this.now, o)}</b></div>
       </section>
       ${te ? w`<p class=${n.forecast ? "fc" : "fc muted"}><ha-icon icon=${n.forecast ? "mdi:battery-clock-outline" : "mdi:battery-unknown"}></ha-icon><span>${te}</span></p>` : D}`}
 
       ${this.renderSuggestions(e)}
 
       <div class="list quick">
-        ${Pt(e) || this.readonly || y ? D : w`<button class="row action" type="button" @click=${() => this.fire("replaced", { id: e.id })}>
+        ${Nt(e) || this.readonly || y ? D : w`<button class="row action" type="button" @click=${() => this.fire("replaced", { id: e.id })}>
                 <span class="label">${N(t, "replaced_now")}</span>
               </button>`}
-        ${this.switchRow(N(t, "important"), N(t, "important_hint"), e.critical, (t) => this.change({ critical: zt(e, t) }), e.label === "important" ? N(t, "label_set", { label: "pulse_important" }) : void 0)}
+        ${this.switchRow(N(t, "important"), N(t, "important_hint"), e.critical, (t) => this.change({ critical: Rt(e, t) }), e.label === "important" ? N(t, "label_set", { label: "pulse_important" }) : void 0)}
       </div>
 
       <details class="more" ?open=${this.settingsOpen} @toggle=${this.onSettingsToggle}>
@@ -5336,7 +5332,7 @@ M("pulse-device-sheet", class extends A {
     `;
 	}
 	renderSuggestions(e) {
-		let t = this.language, n = this.readonly ? [] : Ln(e);
+		let t = this.language, n = this.readonly ? [] : In(e);
 		return n.length ? w`<section class="suggest">
       <span class="cap">${N(t, "partner")}</span>
       ${n.map((n) => w`<div class="sg">
@@ -5351,7 +5347,7 @@ M("pulse-device-sheet", class extends A {
         </div>`)}
     </section>` : D;
 	}
-	batteryEntityRow(e) {
+	renderBatteryEntity(e) {
 		let t = e.battery_choices ?? [];
 		if (!e.manual || !t.length) return D;
 		let n = this.language, r = [{
@@ -5360,16 +5356,14 @@ M("pulse-device-sheet", class extends A {
 		}, ...t.map((e) => ({
 			value: e.entity_id,
 			label: e.gone ? N(n, "battery_entity_gone", { name: e.name }) : e.name
-		}))];
-		return this.picker(N(n, "battery_entity"), e.battery_entity ?? "", r, (e) => this.change({ battery_entity: e || null }));
-	}
-	renderBatteryEntity(e) {
-		if (!e.manual || !e.battery_choices?.length) return D;
-		let t = this.language;
+		}))], i = yt(n, e);
 		return w`<section class="section">
-      <h4 class="section-title">${N(t, "battery")}</h4>
-      <div class="list">${this.batteryEntityRow(e)}</div>
-      <p class="section-foot">${N(t, "battery_entity_hint")}</p>
+      <h4 class="section-title">${N(n, "battery")}</h4>
+      <div class="list">
+        ${this.picker(N(n, "battery_entity"), e.battery_entity ?? "", r, (e) => this.change({ battery_entity: e || null }))}
+        ${i === null ? D : w`<div class="row"><span class="label">${N(n, "battery")}</span><span class="value">${i}</span></div>`}
+      </div>
+      <p class="section-foot">${N(n, "battery_entity_hint")}</p>
     </section>`;
 	}
 	renderBatterySettings(e, t, n) {
@@ -5377,13 +5371,11 @@ M("pulse-device-sheet", class extends A {
 		return w`<section class="section">
         <h4 class="section-title">${N(r, "battery")}</h4>
         <div class="list">
-          ${this.batteryEntityRow(e)}
           ${this.picker(N(r, "battery_type"), i.type ?? "", t, (e) => this.change({ battery_type: e || null }))}
-          ${this.picker(N(r, "battery_count"), String(i.count ?? 1), yr, (e) => this.change({ battery_count: Number(e) }))}
+          ${this.picker(N(r, "battery_count"), String(i.count ?? 1), vr, (e) => this.change({ battery_count: Number(e) }))}
           ${this.picker(N(r, "chemistry"), i.chemistry ?? "", n, (e) => this.change({ chemistry: e || null }), i.trusted ? void 0 : N(r, "level_unreliable"))}
-          ${i.voltage === null ? D : w`<div class="row"><span class="label">${N(r, "voltage")}</span><span class="value">${xt(r, i.voltage)}</span></div>`}
+          ${i.voltage === null ? D : w`<div class="row"><span class="label">${N(r, "voltage")}</span><span class="value">${bt(r, i.voltage)}</span></div>`}
         </div>
-        ${e.manual && e.battery_choices?.length ? w`<p class="section-foot">${N(r, "battery_entity_hint")}</p>` : D}
       </section>
 
       <section class="section">
@@ -5405,11 +5397,11 @@ M("pulse-device-sheet", class extends A {
 			label: N(t, "chem_unknown")
 		}, ...this.chemistries.map((e) => ({
 			value: e,
-			label: N(t, br[e] ?? "chem_unknown")
+			label: N(t, yr[e] ?? "chem_unknown")
 		}))], i = [{
 			value: "",
 			label: N(t, "partner_none")
-		}, ...Ct(this.devices, e).map((e) => ({
+		}, ...St(this.devices, e).map((e) => ({
 			value: e.id,
 			label: e.name
 		}))];
@@ -5417,7 +5409,7 @@ M("pulse-device-sheet", class extends A {
 			value: e.partner,
 			label: e.partner_name ?? N(t, "partner_gone")
 		}), w`<div class="settings">
-      ${e.mains === !0 && !bt(e) ? this.renderBatteryEntity(e) : this.renderBatterySettings(e, n, r)}
+      ${e.mains === !0 ? this.renderBatteryEntity(e) : this.renderBatterySettings(e, n, r)}
       <section class="section">
         <h4 class="section-title">${N(t, "partner")}</h4>
         <div class="list">
@@ -5816,10 +5808,10 @@ var Z = {
 	BOOLEAN_ATTRIBUTE: 4,
 	EVENT: 5,
 	ELEMENT: 6
-}, xr = (e) => (...t) => ({
+}, br = (e) => (...t) => ({
 	_$litDirective$: e,
 	values: t
-}), Sr = class {
+}), xr = class {
 	constructor(e) {}
 	get _$AU() {
 		return this._$AM._$AU;
@@ -5833,9 +5825,9 @@ var Z = {
 	update(e, t) {
 		return this.render(...t);
 	}
-}, { I: Cr } = Ne, wr = (e) => e, Tr = (e) => e.strings === void 0, Er = () => document.createComment(""), Dr = (e, t, n) => {
+}, { I: Sr } = Ne, Cr = (e) => e, wr = (e) => e.strings === void 0, Tr = () => document.createComment(""), Er = (e, t, n) => {
 	let r = e._$AA.parentNode, i = t === void 0 ? e._$AB : t._$AA;
-	if (n === void 0) n = new Cr(r.insertBefore(Er(), i), r.insertBefore(Er(), i), e, e.options);
+	if (n === void 0) n = new Sr(r.insertBefore(Tr(), i), r.insertBefore(Tr(), i), e, e.options);
 	else {
 		let t = n._$AB.nextSibling, a = n._$AM, o = a !== e;
 		if (o) {
@@ -5845,19 +5837,19 @@ var Z = {
 		if (t !== i || o) {
 			let e = n._$AA;
 			for (; e !== t;) {
-				let t = wr(e).nextSibling;
-				wr(r).insertBefore(e, i), e = t;
+				let t = Cr(e).nextSibling;
+				Cr(r).insertBefore(e, i), e = t;
 			}
 		}
 	}
 	return n;
-}, Q = (e, t, n = e) => (e._$AI(t, n), e), Or = {}, kr = (e, t = Or) => e._$AH = t, Ar = (e) => e._$AH, jr = (e) => {
+}, Q = (e, t, n = e) => (e._$AI(t, n), e), Dr = {}, Or = (e, t = Dr) => e._$AH = t, kr = (e) => e._$AH, Ar = (e) => {
 	e._$AR(), e._$AA.remove();
-}, Mr = (e, t, n) => {
+}, jr = (e, t, n) => {
 	let r = /* @__PURE__ */ new Map();
 	for (let i = t; i <= n; i++) r.set(e[i], i);
 	return r;
-}, $ = xr(class extends Sr {
+}, $ = br(class extends xr {
 	constructor(e) {
 		if (super(e), e.type !== Z.CHILD) throw Error("repeat() can only be used in text expressions");
 	}
@@ -5875,36 +5867,36 @@ var Z = {
 		return this.dt(e, t, n).values;
 	}
 	update(e, [t, n, r]) {
-		let i = Ar(e), { values: a, keys: o } = this.dt(t, n, r);
+		let i = kr(e), { values: a, keys: o } = this.dt(t, n, r);
 		if (!Array.isArray(i)) return this.ut = o, a;
 		let s = this.ut ??= [], c = [], l, u, d = 0, f = i.length - 1, p = 0, m = a.length - 1;
 		for (; d <= f && p <= m;) if (i[d] === null) d++;
 		else if (i[f] === null) f--;
 		else if (s[d] === o[p]) c[p] = Q(i[d], a[p]), d++, p++;
 		else if (s[f] === o[m]) c[m] = Q(i[f], a[m]), f--, m--;
-		else if (s[d] === o[m]) c[m] = Q(i[d], a[m]), Dr(e, c[m + 1], i[d]), d++, m--;
-		else if (s[f] === o[p]) c[p] = Q(i[f], a[p]), Dr(e, i[d], i[f]), f--, p++;
-		else if (l === void 0 && (l = Mr(o, p, m), u = Mr(s, d, f)), l.has(s[d])) {
+		else if (s[d] === o[m]) c[m] = Q(i[d], a[m]), Er(e, c[m + 1], i[d]), d++, m--;
+		else if (s[f] === o[p]) c[p] = Q(i[f], a[p]), Er(e, i[d], i[f]), f--, p++;
+		else if (l === void 0 && (l = jr(o, p, m), u = jr(s, d, f)), l.has(s[d])) {
 			if (l.has(s[f])) {
 				let t = u.get(o[p]), n = t === void 0 ? null : i[t];
 				if (n === null) {
-					let t = Dr(e, i[d]);
+					let t = Er(e, i[d]);
 					Q(t, a[p]), c[p] = t;
-				} else c[p] = Q(n, a[p]), Dr(e, i[d], n), i[t] = null;
+				} else c[p] = Q(n, a[p]), Er(e, i[d], n), i[t] = null;
 				p++;
-			} else jr(i[f]), f--;
-		} else jr(i[d]), d++;
+			} else Ar(i[f]), f--;
+		} else Ar(i[d]), d++;
 		for (; p <= m;) {
-			let t = Dr(e, c[m + 1]);
+			let t = Er(e, c[m + 1]);
 			Q(t, a[p]), c[p++] = t;
 		}
 		for (; d <= f;) {
 			let e = i[d++];
-			e !== null && jr(e);
+			e !== null && Ar(e);
 		}
-		return this.ut = o, kr(e, c), E;
+		return this.ut = o, Or(e, c), E;
 	}
-}), Nr = {
+}), Mr = {
 	area: "group_area",
 	status: "group_status",
 	none: "group_none"
@@ -5931,7 +5923,7 @@ M("pulse-devices", class extends A {
 		};
 	}
 	constructor() {
-		super(), this.gapsOf = P(vn), this.gaps = [], this.devices = [], this.language = "en", this.now = 0, this.start = 0, this.days = 7, this.dayStarts = [], this.timeZone = void 0, this.timeFormat = void 0, this.bucketHours = 2, this.noData = [], this.groupBy = "area", this.filter = null, this.dueIds = [], this.readonly = !1, this.query = "", this.collapsed = /* @__PURE__ */ new Set();
+		super(), this.gapsOf = P(_n), this.gaps = [], this.devices = [], this.language = "en", this.now = 0, this.start = 0, this.days = 7, this.dayStarts = [], this.timeZone = void 0, this.timeFormat = void 0, this.bucketHours = 2, this.noData = [], this.groupBy = "area", this.filter = null, this.dueIds = [], this.readonly = !1, this.query = "", this.collapsed = /* @__PURE__ */ new Set();
 	}
 	fire(e, t) {
 		this.dispatchEvent(new CustomEvent(e, {
@@ -5949,12 +5941,12 @@ M("pulse-devices", class extends A {
 	}
 	onMenu(e, t) {
 		let n = He(t);
-		n === "details" ? this.fire("open", { id: e.id }) : n === "replaced" ? this.fire("replaced", { id: e.id }) : It(n) ? this.fire("later", {
+		n === "details" ? this.fire("open", { id: e.id }) : n === "replaced" ? this.fire("replaced", { id: e.id }) : Ft(n) ? this.fire("later", {
 			id: e.id,
 			choice: n
 		}) : n === "important" ? this.fire("device-change", {
 			id: e.id,
-			changes: { critical: zt(e, !e.critical) }
+			changes: { critical: Rt(e, !e.critical) }
 		}) : n === "ignore" && this.fire("device-change", {
 			id: e.id,
 			changes: { ignored: !e.ignored }
@@ -5969,13 +5961,13 @@ M("pulse-devices", class extends A {
 		return this.devices.length ? this.query.trim() ? N(e, "no_results", { query: this.query }) : N(e, "filter_empty") : N(e, "no_devices");
 	}
 	renderRow(e) {
-		let t = this.language, n = ln(t, e, this.now), r = Gt(t, e, this.now, this.timeZone, this.timeFormat), i = e.ignored ? "ok" : L(e), a = this.readonly ? D : w`<span class="menu"><ha-dropdown placement="bottom-end" @wa-select=${(t) => this.onMenu(e, t)}>
+		let t = this.language, n = cn(t, e, this.now), r = Wt(t, e, this.now, this.timeZone, this.timeFormat), i = e.ignored ? "ok" : L(e), a = this.readonly ? D : w`<span class="menu"><ha-dropdown placement="bottom-end" @wa-select=${(t) => this.onMenu(e, t)}>
           <ha-icon-button slot="trigger" .label=${N(t, "more_for", { name: e.name })}>
             <ha-icon icon="mdi:dots-vertical"></ha-icon>
           </ha-icon-button>
           <ha-dropdown-item value="details"><ha-icon slot="icon" icon="mdi:information-outline"></ha-icon>${N(t, "details")}</ha-dropdown-item>
           ${e.mains ? D : w`<ha-dropdown-item value="replaced"><ha-icon slot="icon" icon="mdi:battery-sync-outline"></ha-icon>${N(t, "replaced")}</ha-dropdown-item>`}
-          ${Pt(e) ? Ft.map((e) => w`<ha-dropdown-item value=${e.value}><ha-icon slot="icon" icon="mdi:bell-sleep-outline"></ha-icon>${N(t, e.value)}</ha-dropdown-item>`) : D}
+          ${Nt(e) ? Pt.map((e) => w`<ha-dropdown-item value=${e.value}><ha-icon slot="icon" icon="mdi:bell-sleep-outline"></ha-icon>${N(t, e.value)}</ha-dropdown-item>`) : D}
           ${e.ignored || e.label ? D : w`<ha-dropdown-item value="important"><ha-icon slot="icon" icon=${e.critical ? "mdi:star-off-outline" : "mdi:star-outline"}></ha-icon>${N(t, e.critical ? "unmark_important" : "mark_important")}</ha-dropdown-item>`}
           ${e.label === "ignore" ? D : w`<ha-dropdown-item value="ignore">
             <ha-icon slot="icon" icon=${e.ignored ? "mdi:eye-outline" : "mdi:eye-off-outline"}></ha-icon>${N(t, e.ignored ? "resume" : "ignore_action")}
@@ -5996,8 +5988,8 @@ M("pulse-devices", class extends A {
           ?learning=${e.status === "learning" && !e.ignored}
           .gaps=${this.gaps}
           .days=${Math.max(1, this.dayStarts.length - 1)}
-          .silentFrom=${Tn(e, this.dayStarts)}
-          .flag=${cn(t, e, this.now)}
+          .silentFrom=${wn(e, this.dayStarts)}
+          .flag=${sn(t, e, this.now)}
         ></pulse-rhythm>
         <span class="st">
           ${n ? w`<b class=${`t-${n.tone}`}>${n.text}</b><span class="sep"> · </span>` : D}<span class="num time">${r}</span>
@@ -6007,7 +5999,7 @@ M("pulse-devices", class extends A {
     </div>`;
 	}
 	render() {
-		let e = this.language, t = wt(jt(this.devices, this.filter, this.dueIds), this.query), n = this.groupBy === "area", r = t.filter((e) => !e.ignored), i = t.filter((e) => e.ignored), a = Et(r, this.groupBy, e, N(e, "no_area"));
+		let e = this.language, t = Ct(At(this.devices, this.filter, this.dueIds), this.query), n = this.groupBy === "area", r = t.filter((e) => !e.ignored), i = t.filter((e) => e.ignored), a = Tt(r, this.groupBy, e, N(e, "no_area"));
 		this.gaps = this.gapsOf(this.noData, this.dayStarts);
 		let o = dt(e, this.dayStarts, this.timeZone);
 		i.length && a.push({
@@ -6036,7 +6028,7 @@ M("pulse-devices", class extends A {
         </label>
         <ha-dropdown placement="bottom-end" @wa-select=${(e) => this.setGroup(He(e) ?? "")}>
           <button slot="trigger" class="chip" type="button">
-            ${N(e, "group_by", { what: N(e, Nr[this.groupBy]) })}
+            ${N(e, "group_by", { what: N(e, Mr[this.groupBy]) })}
             <ha-icon icon="mdi:menu-down"></ha-icon>
           </button>
           ${[
@@ -6045,7 +6037,7 @@ M("pulse-devices", class extends A {
 			"none"
 		].map((t) => w`<ha-dropdown-item value=${t}>
               <ha-icon slot="icon" class=${t === this.groupBy ? "check" : "check hidden"} icon="mdi:check"></ha-icon>
-              ${N(e, Nr[t])}
+              ${N(e, Mr[t])}
             </ha-dropdown-item>`)}
         </ha-dropdown>
         ${s ? w`<button class="chip filter" type="button" @click=${() => this.fire("filter-clear", {})} aria-label=${`${s}, ${N(e, "filter_clear")}`}>
@@ -6072,7 +6064,7 @@ M("pulse-devices", class extends A {
 			K,
 			q,
 			J,
-			Jn,
+			qn,
 			o`
       :host {
         display: block;
@@ -6264,7 +6256,7 @@ M("pulse-devices", class extends A {
 });
 //#endregion
 //#region src/pulse-dayband.ts
-var Pr = (e) => `${(e / 24 * 100).toFixed(2)}%`;
+var Nr = (e) => `${(e / 24 * 100).toFixed(2)}%`;
 M("pulse-dayband", class extends A {
 	static {
 		this.properties = {
@@ -6279,7 +6271,7 @@ M("pulse-dayband", class extends A {
 		super(), this.language = "en", this.now = 0, this.recipients = "", this.timeZone = void 0;
 	}
 	render() {
-		let e = this.language, t = this.settings, n = ct(this.now, this.timeZone), r = dn(t.summary_time), i = t.quiet.enabled ? fn(t.quiet.start, t.quiet.end) : [], a = On(e, t);
+		let e = this.language, t = this.settings, n = ct(this.now, this.timeZone), r = un(t.summary_time), i = t.quiet.enabled ? dn(t.quiet.start, t.quiet.end) : [], a = Dn(e, t);
 		return w`<div class="top">
         <span class="cap">${N(e, "day_title")}</span>
         <span class="to">${this.recipients}</span>
@@ -6287,9 +6279,9 @@ M("pulse-dayband", class extends A {
       <p class="line">${a}</p>
       <div class="band" role="img" aria-label=${`${N(e, "day_title")}: ${a}`}>
         <div class="track" aria-hidden="true">
-          ${i.map(([e, t]) => w`<span class="quiet" style=${`left: ${Pr(e)}; width: ${Pr(t - e)}`}></span>`)}
-          <span class="nowline" style=${`left: ${Pr(n)}`}></span>
-          <span class="dot" style=${`left: ${Pr(r)}`}></span>
+          ${i.map(([e, t]) => w`<span class="quiet" style=${`left: ${Nr(e)}; width: ${Nr(t - e)}`}></span>`)}
+          <span class="nowline" style=${`left: ${Nr(n)}`}></span>
+          <span class="dot" style=${`left: ${Nr(r)}`}></span>
         </div>
         <div class="hours mono" aria-hidden="true">
           ${[
@@ -6385,18 +6377,18 @@ M("pulse-dayband", class extends A {
 });
 //#endregion
 //#region src/pulse-overview.ts
-var Fr = "pulse.closedRooms";
-function Ir() {
+var Pr = "pulse.closedRooms";
+function Fr() {
 	try {
-		let e = JSON.parse(window.localStorage.getItem(Fr) ?? "[]");
+		let e = JSON.parse(window.localStorage.getItem(Pr) ?? "[]");
 		return new Set(Array.isArray(e) ? e.filter((e) => typeof e == "string") : []);
 	} catch {
 		return /* @__PURE__ */ new Set();
 	}
 }
-function Lr(e) {
+function Ir(e) {
 	try {
-		window.localStorage.setItem(Fr, JSON.stringify([...e]));
+		window.localStorage.setItem(Pr, JSON.stringify([...e]));
 	} catch {}
 }
 M("pulse-overview", class extends A {
@@ -6415,7 +6407,7 @@ M("pulse-overview", class extends A {
 		};
 	}
 	constructor() {
-		super(), this.gapsOf = P(vn), this.gaps = [], this.language = "en", this.now = 0, this.recipients = "", this.timeZone = void 0, this.timeFormat = void 0, this.dayStarts = [], this.noData = [], this.readonly = !1, this.closed = Ir();
+		super(), this.gapsOf = P(_n), this.gaps = [], this.language = "en", this.now = 0, this.recipients = "", this.timeZone = void 0, this.timeFormat = void 0, this.dayStarts = [], this.noData = [], this.readonly = !1, this.closed = Fr();
 	}
 	fire(e, t = {}) {
 		this.dispatchEvent(new CustomEvent(e, {
@@ -6429,10 +6421,10 @@ M("pulse-overview", class extends A {
 	}
 	toggleRoom(e) {
 		let t = new Set(this.closed);
-		t.has(e) ? t.delete(e) : t.add(e), this.closed = t, Lr(t);
+		t.has(e) ? t.delete(e) : t.add(e), this.closed = t, Ir(t);
 	}
 	renderRow(e, t = !0) {
-		let n = this.language, r = ln(n, e, this.now), i = Gt(n, e, this.now, this.timeZone, this.timeFormat);
+		let n = this.language, r = cn(n, e, this.now), i = Wt(n, e, this.now, this.timeZone, this.timeFormat);
 		return w`<button class="mrow rowgrid" type="button" @click=${() => this.fire("open", { id: e.id })}>
       <span class="nm">
         <ha-icon class=${`t-${e.ignored ? "ok" : L(e)}`} .icon=${e.icon}></ha-icon>
@@ -6447,8 +6439,8 @@ M("pulse-overview", class extends A {
         ?learning=${e.status === "learning" && !e.ignored}
         .gaps=${this.gaps}
         .days=${Math.max(1, this.dayStarts.length - 1)}
-        .silentFrom=${Tn(e, this.dayStarts)}
-        .flag=${cn(n, e, this.now)}
+        .silentFrom=${wn(e, this.dayStarts)}
+        .flag=${sn(n, e, this.now)}
       ></pulse-rhythm>
       <span class="st">
         ${r ? w`<b class=${`t-${r.tone}`}>${r.text}</b><span class="sep"> · </span>` : D}<span class="num time">${i}</span>
@@ -6457,7 +6449,7 @@ M("pulse-overview", class extends A {
 	}
 	renderSection(e, t) {
 		let n = this.language, r = w`<div class="grp">
-      <span>${N(n, an(e))}</span><span class="count">${t.length}</span>
+      <span>${N(n, rn(e))}</span><span class="count">${t.length}</span>
     </div>`;
 		return e !== "rhythm" || t.length < 12 ? w`${r}${$(t, (e) => e.id, (e) => this.renderRow(e))}` : w`${r}${$($e(t, N(n, "no_area")), (e) => e.area, (e) => {
 			let t = this.closed.has(e.area);
@@ -6492,7 +6484,7 @@ M("pulse-overview", class extends A {
     </div>`;
 	}
 	renderBattery() {
-		let e = this.language, t = this.snapshot, n = t.summary.due_batteries, r = Bt(e, t.summary.low_batteries ?? []), i = t.summary.low_batteries ?? [], a = n === void 0 ? t.summary.next_battery ?? "" : Pn(e, n.filter((e) => !i.includes(e.name))), o = r.tone === "ok" && n?.length ? N(e, n.length === 1 ? "battery_due_one" : "battery_due_many", { count: n.length }) : r.label, s = At(t.devices, (n ?? []).map((e) => e.id)), c = w`<span class="cap">${N(e, "batteries")}</span>
+		let e = this.language, t = this.snapshot, n = t.summary.due_batteries, r = zt(e, t.summary.low_batteries ?? []), i = t.summary.low_batteries ?? [], a = n === void 0 ? t.summary.next_battery ?? "" : Nn(e, n.filter((e) => !i.includes(e.name))), o = r.tone === "ok" && n?.length ? N(e, n.length === 1 ? "battery_due_one" : "battery_due_many", { count: n.length }) : r.label, s = kt(t.devices, (n ?? []).map((e) => e.id)), c = w`<span class="cap">${N(e, "batteries")}</span>
       <b class=${r.tone === "warn" ? "t-warn" : ""}>${o}</b>
       ${r.value ? w`<span class="sub">${r.value}</span>` : D}
       <span class="sub">${a || (r.value ? "" : N(e, "nothing_due"))}</span>`;
@@ -6502,12 +6494,12 @@ M("pulse-overview", class extends A {
 		}}>${c}</button>` : w`<div class="fact">${c}</div>`;
 	}
 	renderFacts() {
-		let e = this.language, t = this.snapshot, n = Ot(t.devices), r = t.devices.filter((e) => e.ignored).length;
+		let e = this.language, t = this.snapshot, n = Dt(t.devices), r = t.devices.filter((e) => e.ignored).length;
 		return w`<section class="facts">
       ${this.renderBattery()}
       ${n ? w`<button class="fact tappable" type="button" @click=${() => this.fire("open", { id: n.device.id })}>
               <span class="cap">${N(e, "last_change")}</span>
-              <b>${Nt(e, n.at, this.now, this.timeZone)}</b>
+              <b>${Mt(e, n.at, this.now, this.timeZone)}</b>
               <span class="sub">${n.device.name}</span>
             </button>` : w`<div class="fact"><span class="cap">${N(e, "last_change")}</span><b>${N(e, "unknown")}</b><span class="sub">${N(e, "never_replaced")}</span></div>`}
       ${this.renderZigbee()}
@@ -6519,12 +6511,12 @@ M("pulse-overview", class extends A {
     </section>`;
 	}
 	render() {
-		let e = this.language, t = this.snapshot, n = $t(e, t.devices), r = In(e, t.summary.cloud_outages), i = {
+		let e = this.language, t = this.snapshot, n = Qt(e, t.devices), r = Fn(e, t.summary.cloud_outages), i = {
 			accent: "grad",
 			warn: "t-warn",
 			crit: "t-crit",
 			plain: ""
-		}[n.tone], a = tn(e, t.devices, this.now, this.timeZone), o = on(t.devices);
+		}[n.tone], a = en(e, t.devices, this.now, this.timeZone), o = an(t.devices);
 		this.gaps = this.gapsOf(this.noData, this.dayStarts);
 		let s = t.devices.filter((e) => !e.ignored).length, c = s === 1 ? N(e, "monitor_head_one") : N(e, "monitor_head", { count: s }), l = dt(e, this.dayStarts, this.timeZone);
 		return w`<div class="page">
@@ -6579,7 +6571,7 @@ M("pulse-overview", class extends A {
 			K,
 			q,
 			J,
-			Jn,
+			qn,
 			o`
       :host {
         display: block;
@@ -6968,10 +6960,10 @@ M("pulse-overview", class extends A {
 });
 //#endregion
 //#region node_modules/lit-html/directives/live.js
-var Rr = xr(class extends Sr {
+var Lr = br(class extends xr {
 	constructor(e) {
 		if (super(e), e.type !== Z.PROPERTY && e.type !== Z.ATTRIBUTE && e.type !== Z.BOOLEAN_ATTRIBUTE) throw Error("The `live` directive is not allowed on child or event bindings");
-		if (!Tr(e)) throw Error("`live` bindings can only contain a single expression");
+		if (!wr(e)) throw Error("`live` bindings can only contain a single expression");
 	}
 	render(e) {
 		return e;
@@ -6984,14 +6976,14 @@ var Rr = xr(class extends Sr {
 		} else if (e.type === Z.BOOLEAN_ATTRIBUTE) {
 			if (!!t === n.hasAttribute(r)) return E;
 		} else if (e.type === Z.ATTRIBUTE && n.getAttribute(r) === t + "") return E;
-		return kr(e), t;
+		return Or(e), t;
 	}
-}), zr = [
+}), Rr = [
 	"failed",
 	"check",
 	"battery",
 	"recovered"
-], Br = {
+], zr = {
 	failed: "tpl_failed",
 	check: "tpl_check",
 	battery: "tpl_battery",
@@ -7048,11 +7040,11 @@ M("pulse-template-sheet", class extends A {
 		}));
 	}
 	render() {
-		let e = this.language, t = (e) => Hn(e, this.example, this.vars), n = this.current[`${this.kind}_title`] != null || this.current[`${this.kind}_message`] != null;
+		let e = this.language, t = (e) => Vn(e, this.example, this.vars), n = this.current[`${this.kind}_title`] != null || this.current[`${this.kind}_message`] != null;
 		return w`<pulse-sheet
       no-close
       .open=${this.open}
-      .heading=${N(e, Br[this.kind])}
+      .heading=${N(e, zr[this.kind])}
       .language=${e}
       @closed=${() => this.close()}
     >
@@ -7062,7 +7054,7 @@ M("pulse-template-sheet", class extends A {
           <input
             type="text"
             maxlength="300"
-            .value=${Rr(this.draftTitle)}
+            .value=${Lr(this.draftTitle)}
             @focus=${() => {
 			this.focused = "title";
 		}}
@@ -7076,7 +7068,7 @@ M("pulse-template-sheet", class extends A {
           <textarea
             rows="3"
             maxlength="300"
-            .value=${Rr(this.draftMessage)}
+            .value=${Lr(this.draftMessage)}
             @focus=${() => {
 			this.focused = "message";
 		}}
@@ -7179,7 +7171,7 @@ M("pulse-template-sheet", class extends A {
 });
 //#endregion
 //#region src/pulse-settings.ts
-var Vr = [
+var Br = [
 	2,
 	5,
 	10,
@@ -7229,7 +7221,7 @@ M("pulse-settings", class extends A {
 	onZ2mBase(e) {
 		let t = e.target;
 		if (!(t instanceof HTMLInputElement)) return;
-		let n = this.snapshot.settings.z2m_base, r = St(t.value);
+		let n = this.snapshot.settings.z2m_base, r = xt(t.value);
 		if (r === null) {
 			j(this, N(this.language, "z2m_base_invalid")), t.value = n;
 			return;
@@ -7244,13 +7236,13 @@ M("pulse-settings", class extends A {
 		this.save({ targets: r });
 	}
 	times(e) {
-		return Dt(e).map((e) => ({
+		return Et(e).map((e) => ({
 			value: e,
 			label: e
 		}));
 	}
 	togglePerson(e, t) {
-		let n = kn(this.snapshot.settings), r = t ? [.../* @__PURE__ */ new Set([...n, e])] : n.filter((t) => t !== e);
+		let n = On(this.snapshot.settings), r = t ? [.../* @__PURE__ */ new Set([...n, e])] : n.filter((t) => t !== e);
 		this.save({ arrive_home: r.length ? { persons: r } : {
 			enabled: !1,
 			persons: []
@@ -7290,14 +7282,14 @@ M("pulse-settings", class extends A {
 		return this.toggleRow(w`<span class="label">${N(i, e)}${r ? w`<small>${N(i, r)}</small>` : D}</span>`, t, n);
 	}
 	renderManual() {
-		let e = this.language, t = qn(this.snapshot.devices);
+		let e = this.language, t = Kn(this.snapshot.devices);
 		return w`<section class="section">
       <h3 class="section-title">${N(e, "manual_title")}</h3>
       <div class="list">
         ${t.map((t) => w`<div class="row has-icon manual">
             <button class="open" type="button" @click=${() => this.fire("open", { id: t.id })}>
               <ha-icon class="ico" icon=${t.icon}></ha-icon>
-              <span class="label">${t.name}<small>${Kn(t)}</small></span>
+              <span class="label">${t.name}<small>${Gn(t)}</small></span>
             </button>
             <button
               class="remove"
@@ -7391,7 +7383,7 @@ M("pulse-settings", class extends A {
 		], a = (e, t, r, a) => this.pickerRow(t, n.levels[e], i, (t) => this.save({ levels: { [e]: t } }), {
 			icon: r,
 			tone: a
-		}), o = kn(n), s = An(e, n), c = Mt(t.devices), l = n.templates ?? {}, u = z(t.devices), d = u.filter((e) => e.mains && !e.manual).length, f = u.find((e) => e.area && !e.mains) ?? u[0];
+		}), o = On(n), s = kn(e, n), c = jt(t.devices), l = n.templates ?? {}, u = z(t.devices), d = u.filter((e) => e.mains && !e.manual).length, f = u.find((e) => e.area && !e.mains) ?? u[0];
 		return this.page === "options" ? this.renderOptionsPage(u.length, d) : w`
       <section class="hero">
         <div class="words">
@@ -7444,7 +7436,7 @@ M("pulse-settings", class extends A {
         <div class="list">
           ${this.switchRow("critical", n.critical_alerts, (e) => this.save({ critical_alerts: e }), "critical_hint")}
           ${this.linkRow(N(e, "important_devices"), String(c), () => this.fire("show-devices", { filter: "important" }))}
-          ${this.pickerRow("important_unreachable", String(n.important_unreachable_minutes ?? 10), Vr.map((t) => ({
+          ${this.pickerRow("important_unreachable", String(n.important_unreachable_minutes ?? 10), Br.map((t) => ({
 			value: String(t),
 			label: N(e, "after_minutes", { n: t })
 		})), (e) => this.save({ important_unreachable_minutes: Number(e) }))}
@@ -7461,7 +7453,7 @@ M("pulse-settings", class extends A {
       <section class="section">
         <h3 class="section-title">${N(e, "texts")}</h3>
         <div class="list">
-          ${zr.map((t) => this.linkRow(N(e, Br[t]), N(e, l[`${t}_title`] != null || l[`${t}_message`] != null ? "tpl_custom" : "tpl_default"), () => {
+          ${Rr.map((t) => this.linkRow(N(e, zr[t]), N(e, l[`${t}_title`] != null || l[`${t}_message`] != null ? "tpl_custom" : "tpl_default"), () => {
 			this.editing = t;
 		}))}
         </div>
@@ -7483,7 +7475,7 @@ M("pulse-settings", class extends A {
         .current=${l}
         .defaults=${t.template_defaults ?? {}}
         .vars=${t.template_vars ?? []}
-        .example=${Un(f)}
+        .example=${Hn(f)}
         @template-save=${(e) => this.save({ templates: e.detail.templates })}
         @closed=${() => {
 			this.editing = null;
@@ -7681,23 +7673,23 @@ M("pulse-settings", class extends A {
 });
 //#endregion
 //#region src/pulse-panel.ts
-function Hr() {
+function Vr() {
 	try {
 		return window.localStorage;
 	} catch {
 		return null;
 	}
 }
-function Ur() {
-	let e = Hr();
+function Hr() {
+	let e = Vr();
 	if (!e) return null;
 	try {
-		return tr(e, "26.11.12", Xn.length > 0);
+		return er(e, "26.11.12", Yn.length > 0);
 	} catch {
 		return null;
 	}
 }
-function Wr(e) {
+function Ur(e) {
 	return [
 		e.language,
 		e.themes?.darkMode,
@@ -7708,7 +7700,7 @@ function Wr(e) {
 		e.user?.is_admin
 	].join("|");
 }
-var Gr = class extends A {
+var Wr = class extends A {
 	static {
 		this.properties = {
 			hass: { attribute: !1 },
@@ -7728,16 +7720,16 @@ var Gr = class extends A {
 		};
 	}
 	constructor() {
-		super(), this.unsub = null, this.retryDelay = Rn, this.namesCache = {
+		super(), this.unsub = null, this.retryDelay = Ln, this.namesCache = {
 			key: "{}",
 			value: {}
-		}, this.spans = P((e) => _n(e)), this.watched = P((e) => z(e)), this.dayStarts = P((e) => lt(e)), this.onMenuHidden = (e) => {
+		}, this.spans = P((e) => gn(e)), this.watched = P((e) => z(e)), this.dayStarts = P((e) => lt(e)), this.onMenuHidden = (e) => {
 			let t = e.composedPath()[0];
 			t instanceof HTMLElement && t.localName.endsWith("dropdown") && qe();
 		}, this.deepLink = "", this.subscribedLanguage = "", this.fetchHeartbeat = async (e) => this.hass ? await this.hass.callWS({
 			type: "pulse/heartbeat",
 			device_ids: e
-		}) : null, this.dueIds = P((e) => (e.summary.due_batteries ?? []).map((e) => e.id)), this.narrow = !1, this.snapshot = null, this.now = Date.now() / 1e3, this.openId = null, this.welcome = Ur(), this.error = null, this.groupBy = "area", this.filter = null, this.confirmZigbee = !1, this.confirmHealth = !1, this.addOpen = !1, this.candidates = null;
+		}) : null, this.dueIds = P((e) => (e.summary.due_batteries ?? []).map((e) => e.id)), this.narrow = !1, this.snapshot = null, this.now = Date.now() / 1e3, this.openId = null, this.welcome = Hr(), this.error = null, this.groupBy = "area", this.filter = null, this.confirmZigbee = !1, this.confirmHealth = !1, this.addOpen = !1, this.candidates = null;
 	}
 	get language() {
 		return this.hass?.language ?? "en";
@@ -7749,7 +7741,7 @@ var Gr = class extends A {
 		return _t(this.hass?.locale?.time_format);
 	}
 	get readonly() {
-		return !Vt(this.hass?.user);
+		return !Bt(this.hass?.user);
 	}
 	get view() {
 		let e = this.route?.path ?? "";
@@ -7779,7 +7771,7 @@ var Gr = class extends A {
 		let t = e.get("hass");
 		if (!t || !this.hass) return !0;
 		let n = this.namesCache.value;
-		return Wr(t) !== Wr(this.hass) || this.names() !== n;
+		return Ur(t) !== Ur(this.hass) || this.names() !== n;
 	}
 	updated() {
 		this.toggleAttribute("dark", this.hass?.themes?.darkMode === !0);
@@ -7791,7 +7783,7 @@ var Gr = class extends A {
 		if (!this.hass) return;
 		this.subscribedLanguage = this.hass.language;
 		let e = this.hass.connection.subscribeMessage((e) => {
-			this.snapshot = e, this.now = Date.now() / 1e3, this.error = null, this.retryDelay = Rn;
+			this.snapshot = e, this.now = Date.now() / 1e3, this.error = null, this.retryDelay = Ln;
 		}, {
 			type: "pulse/subscribe",
 			language: this.hass.language
@@ -7799,7 +7791,7 @@ var Gr = class extends A {
 		this.unsub = e, e.catch((t) => {
 			if (this.unsub !== e || (this.unsub = null, this.error = Be(t), !this.isConnected)) return;
 			let n = this.retryDelay;
-			this.retryDelay = Bn(n), this.retryTimer = window.setTimeout(() => {
+			this.retryDelay = zn(n), this.retryTimer = window.setTimeout(() => {
 				this.retryTimer = void 0, this.ensureSubscribed();
 			}, n);
 		});
@@ -7864,7 +7856,7 @@ var Gr = class extends A {
 		if (this.readonly) return;
 		this.candidates = null, this.addOpen = !0;
 		let e = await this.call({ type: "pulse/manual_candidates" });
-		this.candidates = Wn(e);
+		this.candidates = Un(e);
 	}
 	async onManualAdd(e) {
 		let t = this.candidates?.find((t) => t.id === e)?.name ?? "";
@@ -7904,9 +7896,9 @@ var Gr = class extends A {
 	}
 	welcomeDone() {
 		this.welcome = null;
-		let e = Hr();
+		let e = Vr();
 		try {
-			e && nr(e, "26.11.12");
+			e && tr(e, "26.11.12");
 		} catch {}
 	}
 	zigbeeOffer(e) {
@@ -8053,7 +8045,7 @@ var Gr = class extends A {
 		}}
         @replaced=${(e) => void this.onReplaced(e.detail.id)}
         @later=${(e) => {
-			let n = It(e.detail.choice);
+			let n = Ft(e.detail.choice);
 			n && this.call({
 				type: "pulse/snooze",
 				device_id: e.detail.id,
@@ -8293,6 +8285,6 @@ var Gr = class extends A {
 		];
 	}
 };
-M("pulse-panel", Gr);
+M("pulse-panel", Wr);
 //#endregion
-export { Gr as PulsePanel };
+export { Wr as PulsePanel };

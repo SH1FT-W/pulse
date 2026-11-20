@@ -1,4 +1,4 @@
-"""Battery sensor chosen by hand for a device added by hand (#9).
+"""Battery sensor chosen by hand for a device added by hand (#9): only shown, it changes nothing else.
 
 The case of the report: a Tibber Pulse (custom integration `tibber_local`, Wi-Fi, 2× AA) whose battery is only a
 voltage sensor, so Pulse does not find it as a battery device and it was added by hand. Its voltage sensor may
@@ -7,9 +7,9 @@ come with the device class `voltage` or without one; both are tested.
 
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import timedelta
 import time
-from unittest.mock import AsyncMock, patch
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -19,7 +19,7 @@ from common import TestDevice as Device, tick
 from custom_components.pulse.const import EVENT_BATTERY_REPLACED
 from custom_components.pulse.discovery import battery_choices, discover
 from custom_components.pulse.monitor import GONE_KEEP_SETTINGS
-from custom_components.pulse.store import PulseStore, default_record
+from custom_components.pulse.store import PulseStore
 
 # (domain, key, device class, unit in the registry)
 Entity = tuple[str, str, str | None, str | None]
@@ -119,25 +119,23 @@ async def test_what_is_offered_and_what_not(hass: HomeAssistant):
 # ── Discovery ────────────────────────────────────────────────────────────
 
 
-async def test_chosen_voltage_makes_it_a_battery_device_added_by_hand(hass: HomeAssistant):
+async def test_chosen_voltage_is_only_shown(hass: HomeAssistant):
     tibber = _tibber(hass, None)
     voltage = tibber.entities["battery_voltage"]
     # The automatic way does not find it, with or without a choice (it never reads one)
     assert tibber.device_id not in discover(hass, mains=True)
     assert tibber.device_id not in discover(hass, mains=True, batteries={tibber.device_id: voltage})
     plain = discover(hass, mains=True, manual={tibber.device_id})[tibber.device_id]
-    assert plain.manual and plain.mains and plain.voltage is None and plain.battery is None
-    assert plain.battery_choices == [voltage]
-    chosen = discover(hass, mains=True, manual={tibber.device_id}, batteries={tibber.device_id: voltage})
-    spec = chosen[tibber.device_id]
-    # Only shown and its changes detected; everything else as without it (still a device watched for being there)
-    assert spec.manual and spec.mains and spec.manual_battery == voltage
-    assert spec.voltage == voltage and spec.battery is None
-    # Everything else as without a battery
-    assert spec.entities == plain.entities and spec.icon == plain.icon and spec.connectivity == plain.connectivity
+    assert plain.manual and plain.mains and plain.manual_battery is None and plain.battery_choices == [voltage]
+    spec = discover(hass, mains=True, manual={tibber.device_id}, batteries={tibber.device_id: voltage})[
+        tibber.device_id
+    ]
+    assert spec.manual_battery == voltage and spec.manual_battery_kind == "voltage"
+    # Nothing else changes: still watched for being there, no battery, no voltage for change detection
+    assert replace(spec, manual_battery=None, manual_battery_kind=None) == plain
     # A sensor that is not offered (or no longer there) counts as no choice
     other = discover(hass, manual={tibber.device_id}, batteries={tibber.device_id: tibber.entities["power"]})
-    assert other[tibber.device_id].mains and other[tibber.device_id].voltage is None
+    assert other[tibber.device_id].manual_battery is None
 
 
 async def test_automatic_devices_ignore_a_chosen_battery(hass: HomeAssistant, setup):
@@ -148,19 +146,17 @@ async def test_automatic_devices_ignore_a_chosen_battery(hass: HomeAssistant, se
     assert after == before
 
 
-# ── Monitor, panel, battery change ───────────────────────────────────────
+# ── Monitor and panel ────────────────────────────────────────────────────
 
 
-async def test_tibber_pulse_voltage_end_to_end(hass: HomeAssistant, setup, hass_ws_client):
+async def test_tibber_pulse_voltage_shown_through_the_panel(hass: HomeAssistant, setup, hass_ws_client):
     monitor = setup["monitor"]
     tibber = _tibber(hass, "voltage")
     voltage = tibber.entities["battery_voltage"]
     monitor.set_manual(tibber.device_id, True)
     await hass.async_block_till_done()
-    device = monitor.devices[tibber.device_id]
-    assert device.spec.mains and device.spec.voltage is None
     snap = {d["id"]: d for d in monitor.snapshot()["devices"]}[tibber.device_id]
-    assert snap["battery_entity"] is None
+    assert snap["battery_entity"] is None and snap["manual_battery"] is None
     assert snap["battery_choices"] == [{"entity_id": voltage, "name": "Tibber Pulse Battery voltage"}]
 
     client = await hass_ws_client(hass)
@@ -173,54 +169,26 @@ async def test_tibber_pulse_voltage_end_to_end(hass: HomeAssistant, setup, hass_
     reply = await _send(
         client, {"type": "pulse/device", "device_id": door.device_id, "battery_entity": door.entities["battery"]}
     )
-    assert not reply["success"]
-    assert monitor.devices[door.device_id].record["battery_entity"] is None
+    assert not reply["success"] and "battery_entity" not in monitor.devices[door.device_id].record
 
-    # Chosen when the batteries are already low (the reason one cares)
-    hass.states.async_set(voltage, "2.24", {"unit_of_measurement": "V", "device_class": "voltage"})
     reply = await _send(client, {"type": "pulse/device", "device_id": tibber.device_id, "battery_entity": voltage})
     assert reply["success"]
     await hass.async_block_till_done()
+    await client.close()
     device = monitor.devices[tibber.device_id]
-    assert device.record["battery_entity"] == voltage
-    assert device.spec.mains and device.spec.voltage == voltage and device.spec.manual_battery == voltage
-    assert device.record["last_voltage"] == 2240
+    assert device.record["battery_entity"] == voltage and device.spec.manual_battery == voltage
     snap = {d["id"]: d for d in monitor.snapshot()["devices"]}[tibber.device_id]
     assert snap["battery_entity"] == voltage and snap["mains"] and snap["manual"]
-    assert snap["battery"]["voltage"] == 2240 and snap["battery"]["level"] is None
-    await client.close()  # days pass below (the test client would time out)
-    await tick(hass, setup["freezer"], timedelta(minutes=1))
-    assert device.reason["key"] == "ok_manual"
+    assert snap["manual_battery"] == {"level": None, "voltage": 2950}
+    # The battery fields of a battery device stay empty: nothing to mark, forecast or warn about
+    assert snap["battery"]["voltage"] is None and snap["battery"]["level"] is None
 
-    # Batteries run down over days (it reports every few hours), then new ones go in: a battery change
-    replaced = async_capture_events(hass, EVENT_BATTERY_REPLACED)
-    for value in ("2.24", "2.22", "2.23", "2.22") * 4:
-        await _report(hass, setup, voltage, value, wait=timedelta(hours=6))
-    await _report(hass, setup, voltage, "2.21")
-    step = await _report(hass, setup, voltage, "3.02")
-    for value in ("3.01", "3.01", "3.00"):
-        await _report(hass, setup, voltage, value, wait=timedelta(minutes=20))
-    await tick(hass, setup["freezer"], timedelta(hours=6))  # held long enough (`replacement.HOLD_SECONDS`)
-    assert len(replaced) == 1 and replaced[0].data["source"] == "auto"
-    assert device.record["replaced"] and abs(device.record["replaced"][-1] - step) < 60
-    assert device.record["last_voltage"] == 3000
-
-    # Reachability stays as for devices added by hand: hours without a report are no finding ...
-    await tick(hass, setup["freezer"], timedelta(days=3))
-    assert device.status == "ok" and device.reason["key"] == "ok_manual"
-    # ... only all of its entities unavailable
-    for entity_id in tibber.entities.values():
-        hass.states.async_set(entity_id, "unavailable")
-    await tick(hass, setup["freezer"], timedelta(hours=2, minutes=1))
-    assert device.status == "failed" and device.reason["key"] == "unavailable"
-
-    # No battery again: back to a device without battery
     monitor.update_device(tibber.device_id, {"battery_entity": None})
     await hass.async_block_till_done()
-    assert device.record["battery_entity"] is None and device.spec.mains and device.spec.voltage is None
+    assert device.record["battery_entity"] is None and device.spec.manual_battery is None
 
 
-async def test_voltage_without_device_class_end_to_end(hass: HomeAssistant, setup):
+async def test_voltage_without_device_class_is_shown(hass: HomeAssistant, setup):
     """The other variant of the report: no device class, only the unit V."""
     monitor = setup["monitor"]
     tibber = _tibber(hass, None)
@@ -230,10 +198,16 @@ async def test_voltage_without_device_class_end_to_end(hass: HomeAssistant, setu
     monitor.update_device(tibber.device_id, {"battery_entity": voltage})
     await hass.async_block_till_done()
     device = monitor.devices[tibber.device_id]
-    assert device.spec.voltage == voltage and monitor.voltage(device) == 2950
     hass.states.async_set(voltage, "2.91", {"unit_of_measurement": "V"})
     await hass.async_block_till_done()
-    assert device.record["last_voltage"] == 2910
+    assert monitor.manual_battery(device) == {"level": None, "voltage": 2910}
+
+
+async def test_percentage_is_only_shown(hass: HomeAssistant, setup):
+    monitor, device, _mower_entity, _level = await _mower_with_battery(hass, setup)
+    assert device.spec.manual_battery_kind == "battery" and device.spec.battery is None
+    assert monitor.manual_battery(device) == {"level": 64, "voltage": None}
+    assert monitor.battery_level(device) is None
 
 
 async def test_choice_follows_a_new_entity_id_and_survives_a_restart(hass: HomeAssistant, setup):
@@ -248,57 +222,14 @@ async def test_choice_follows_a_new_entity_id_and_survives_a_restart(hass: HomeA
     await tick(hass, setup["freezer"], timedelta(seconds=30))
     device = monitor.devices[tibber.device_id]
     assert device.record["battery_entity"] == "sensor.tibber_akku"
-    assert device.spec.voltage == "sensor.tibber_akku" and device.spec.manual_battery == "sensor.tibber_akku"
+    assert device.spec.manual_battery == "sensor.tibber_akku"
 
-    # Stored and read back (no new minor version: a new key with a default)
+    # Stored and read back (no new minor version: a new key, read with `get`)
     await monitor.store.async_save()
     store = PulseStore(hass)
     await store.async_load()
     assert store.devices[tibber.device_id]["battery_entity"] == "sensor.tibber_akku"
-
-
-async def test_store_default_and_records_from_before(hass: HomeAssistant):
-    assert default_record()["battery_entity"] is None
     assert "battery_entity" in GONE_KEEP_SETTINGS  # a device paired again keeps its choice like its other settings
-    store = PulseStore(hass)
-    await store._store.async_save({"devices": {"old": {"events": [1.0]}}})
-    await store.async_load()
-    assert store.devices["old"]["battery_entity"] is None
-
-
-async def test_percentage_chosen_on_a_device_left_out_automatically(hass: HomeAssistant, setup):
-    """A device automatic discovery leaves out (a lawn mower: its own domain) with a battery percentage: chosen
-    by hand, the percentage is its battery; not chosen, it stays ignored (a mower charges)."""
-    monitor = setup["monitor"]
-    entry = MockConfigEntry(domain="husqvarna", title="Mower")
-    entry.add_to_hass(hass)
-    dev = dr.async_get(hass).async_get_or_create(
-        config_entry_id=entry.entry_id, identifiers={("husqvarna", "m1")}, name="Mäher"
-    )
-    reg = er.async_get(hass)
-    mower = reg.async_get_or_create("lawn_mower", "husqvarna", "m1", device_id=dev.id, config_entry=entry)
-    level = reg.async_get_or_create(
-        "sensor", "husqvarna", "m1_battery", device_id=dev.id, config_entry=entry, original_device_class="battery"
-    )
-    hass.states.async_set(mower.entity_id, "docked")
-    hass.states.async_set(level.entity_id, "64", {"unit_of_measurement": "%", "device_class": "battery"})
-    monitor.set_manual(dev.id, True)
-    await hass.async_block_till_done()
-    device = monitor.devices[dev.id]
-    assert device.spec.battery is None and device.spec.battery_choices == [level.entity_id]
-    monitor.update_device(dev.id, {"battery_entity": level.entity_id})
-    await hass.async_block_till_done()
-    # Only shown: no `battery` (no level finding, no shopping list, no forecast), no change detection
-    assert device.spec.manual_battery == level.entity_id and device.spec.battery is None and device.spec.mains
-    assert device.spec.voltage is None and monitor.battery_level(device) is None
-    assert monitor.battery_percent(device) == 64
-    # Nothing to do when nothing changes; a device that is not watched is left alone
-    monitor.update_device(dev.id, {"battery_entity": level.entity_id})
-    monitor.update_device("unknown", {"battery_entity": level.entity_id})
-    assert not monitor.battery_entity_allowed("unknown", None)
-
-
-# ── Review findings: the battery of a device added by hand never decides its status ──
 
 
 def _mower(hass: HomeAssistant):
@@ -317,70 +248,6 @@ def _mower(hass: HomeAssistant):
     return dev, mower, level
 
 
-async def test_removed_battery_sensor_leaves_no_battery_missing(hass: HomeAssistant, setup):
-    """The chosen sensor goes unavailable and then away for good: no "battery missing" stays behind, and the
-    panel still offers the stored choice so "None" can be picked."""
-    monitor = setup["monitor"]
-    dev, mower, level = _mower(hass)
-    monitor.set_manual(dev.id, True)
-    await hass.async_block_till_done()
-    monitor.update_device(dev.id, {"battery_entity": level.entity_id})
-    await hass.async_block_till_done()
-    hass.states.async_set(level.entity_id, "unavailable", {"unit_of_measurement": "%", "device_class": "battery"})
-    await tick(hass, setup["freezer"], timedelta(minutes=2))
-    er.async_get(hass).async_remove(level.entity_id)
-    hass.states.async_remove(level.entity_id)
-    await tick(hass, setup["freezer"], timedelta(seconds=30))
-    device = monitor.devices[dev.id]
-    assert device.spec.battery is None and device.spec.mains
-    for i in range(30):
-        hass.states.async_set(mower.entity_id, "mowing" if i % 2 else "docked")
-        await tick(hass, setup["freezer"], timedelta(hours=1))
-    assert device.reason["key"] != "battery_missing" and device.status == "ok"
-    assert device.record["battery_missing_since"] is None
-    snap = {d["id"]: d for d in monitor.snapshot()["devices"]}[dev.id]
-    assert snap["battery_entity"] == level.entity_id
-    assert snap["battery_choices"] == [{"entity_id": level.entity_id, "name": level.entity_id, "gone": True}]
-    monitor.update_device(dev.id, {"battery_entity": None})
-    await hass.async_block_till_done()
-    assert device.record["battery_entity"] is None
-
-
-async def test_low_percentage_of_a_device_added_by_hand_is_no_finding(hass: HomeAssistant, setup):
-    """A mower at 8 % is charging, not due: shown, but no low battery status, shopping list or forecast."""
-    monitor = setup["monitor"]
-    dev, _mower_entity, level = _mower(hass)
-    monitor.set_manual(dev.id, True)
-    await hass.async_block_till_done()
-    monitor.update_device(dev.id, {"battery_entity": level.entity_id})
-    await hass.async_block_till_done()
-    hass.states.async_set(level.entity_id, "8", {"unit_of_measurement": "%", "device_class": "battery"})
-    await tick(hass, setup["freezer"], timedelta(hours=2))
-    device = monitor.devices[dev.id]
-    assert device.status == "ok" and device.reason["key"] == "ok_manual"
-    assert monitor.battery_percent(device) == 8 and monitor.battery_level(device) is None
-    snap = {d["id"]: d for d in monitor.snapshot()["devices"]}[dev.id]
-    assert snap["battery"]["level"] == 8 and snap["mains"]
-    assert device not in monitor.notifier.due_batteries()
-    hass.states.async_set(level.entity_id, "unavailable", {"unit_of_measurement": "%", "device_class": "battery"})
-    await tick(hass, setup["freezer"], timedelta(days=3))
-    assert device.reason["key"] != "battery_missing" and device.record["battery_missing_since"] is None
-    # No forecast: the daily run leaves it out, a new battery sets no reason
-    device.forecast, device.forecast_reason = None, "too_short"
-    with patch("custom_components.pulse.monitor.load_forecasts", return_value={}) as load:
-        hass.config.components.add("recorder")
-        with patch("homeassistant.components.recorder.get_instance") as instance:
-            instance.return_value.async_add_executor_job = AsyncMock(return_value={})
-            await monitor._async_forecasts()
-    assert device.forecast is None and device.forecast_reason is None
-    load.assert_not_called()
-    snap = {d["id"]: d for d in monitor.snapshot()["devices"]}[dev.id]
-    assert snap["battery"]["forecast"] is None and snap["battery"]["forecast_reason"] is None
-
-
-# ── Review round 2: a battery chosen by hand changes nothing but what is shown and detected ──
-
-
 async def _mower_with_battery(hass: HomeAssistant, setup):
     monitor = setup["monitor"]
     dev, mower, level = _mower(hass)
@@ -391,84 +258,126 @@ async def _mower_with_battery(hass: HomeAssistant, setup):
     return monitor, monitor.devices[dev.id], mower, level
 
 
-async def test_no_battery_changed_for_a_device_added_by_hand(hass: HomeAssistant, setup):
-    """No "Battery changed" button, menu entry or notification action (all follow `mains`), and the action itself
-    leaves the device alone: it stays "added by hand" instead of waiting for a first report."""
-    monitor, device, _mower_entity, _level = await _mower_with_battery(hass, setup)
-    await tick(hass, setup["freezer"], timedelta(minutes=5))
-    snap = {d["id"]: d for d in monitor.snapshot()["devices"]}[device.device_id]
-    assert snap["mains"] and snap["manual"]
-    monitor.mark_replaced(device.device_id)
-    await tick(hass, setup["freezer"], timedelta(days=2))
-    assert device.record["replaced"] == []
-    assert device.status == "ok" and device.reason["key"] == "ok_manual"
-
-
-async def test_battery_changed_during_an_outage_keeps_the_outage(hass: HomeAssistant, setup):
+async def test_removed_battery_sensor_can_be_set_to_none(hass: HomeAssistant, setup):
+    """A chosen sensor removed for good: nothing hangs on it, the panel still lists it so "None" can be picked."""
     monitor, device, mower, level = await _mower_with_battery(hass, setup)
-    await tick(hass, setup["freezer"], timedelta(hours=1))
-    hass.states.async_set(mower.entity_id, "unavailable")
     hass.states.async_set(level.entity_id, "unavailable", {"unit_of_measurement": "%", "device_class": "battery"})
-    await tick(hass, setup["freezer"], timedelta(hours=3))
-    assert device.status == "failed"
-    monitor.mark_replaced(device.device_id)
-    await tick(hass, setup["freezer"], timedelta(minutes=1))
-    assert device.status == "failed" and device.unavailable_since is not None
-    await tick(hass, setup["freezer"], timedelta(minutes=30))
-    hass.states.async_set(mower.entity_id, "docked")
-    hass.states.async_set(level.entity_id, "100", {"unit_of_measurement": "%", "device_class": "battery"})
-    await tick(hass, setup["freezer"], timedelta(minutes=5))
-    assert device.record["outages"]
-
-
-async def test_device_added_by_hand_without_choice_keeps_its_record(hass: HomeAssistant, setup):
-    """Without a choice nothing about the battery is touched (a value from before stays as it is)."""
-    monitor = setup["monitor"]
-    dev, _mower_entity, level = _mower(hass)
-    monitor.set_manual(dev.id, True)
-    await hass.async_block_till_done()
-    device = monitor.devices[dev.id]
-    device.record["battery_missing_since"] = 123.0
-    hass.states.async_set(level.entity_id, "unavailable", {"unit_of_measurement": "%", "device_class": "battery"})
-    await tick(hass, setup["freezer"], timedelta(hours=1))
-    assert device.record["battery_missing_since"] == 123.0
-    assert device.reason["key"] == "ok_manual"
-
-
-async def test_percentage_chosen_by_hand_detects_no_change(hass: HomeAssistant, setup):
-    """A mower charging from 15 % to 100 % is no new battery: a percentage chosen by hand is only shown."""
-    monitor, device, _mower_entity, level = await _mower_with_battery(hass, setup)
-    replaced = async_capture_events(hass, EVENT_BATTERY_REPLACED)
-    attrs = {"unit_of_measurement": "%", "device_class": "battery"}
-    for _ in range(16):
-        await tick(hass, setup["freezer"], timedelta(hours=6))
-        hass.states.async_set(level.entity_id, "15", attrs)
-    for value in ("100", "100", "99"):
+    await tick(hass, setup["freezer"], timedelta(minutes=2))
+    er.async_get(hass).async_remove(level.entity_id)
+    hass.states.async_remove(level.entity_id)
+    await tick(hass, setup["freezer"], timedelta(seconds=30))
+    for i in range(30):
+        hass.states.async_set(mower.entity_id, "mowing" if i % 2 else "docked")
         await tick(hass, setup["freezer"], timedelta(hours=1))
-        hass.states.async_set(level.entity_id, value, attrs)
-    await tick(hass, setup["freezer"], timedelta(hours=8))
-    assert replaced == [] and device.record["replaced"] == []
-    assert monitor.battery_percent(device) == 99 and len(setup["pushes"]) == 0
+    assert device.spec.manual_battery is None and device.status == "ok"
+    assert not str(device.reason["key"]).startswith("battery")
+    snap = {d["id"]: d for d in monitor.snapshot()["devices"]}[device.device_id]
+    assert snap["battery_entity"] == level.entity_id and snap["manual_battery"] is None
+    assert snap["battery_choices"] == [{"entity_id": level.entity_id, "name": level.entity_id, "gone": True}]
+    monitor.update_device(device.device_id, {"battery_entity": None})
+    await hass.async_block_till_done()
+    assert device.record["battery_entity"] is None
 
 
-async def test_voltage_change_of_a_device_added_by_hand_sends_nothing(hass: HomeAssistant, setup):
-    """New batteries in the Tibber Pulse: recorded and the event fired, no notification, status untouched."""
+# ── Regressions (review rounds 1-3): the chosen battery changes nothing ──
+
+
+async def _flat_then_new(hass: HomeAssistant, setup, entity_id: str, attrs: dict) -> None:
+    """Days of a flat battery, then a clear step up that holds (what Pulse would take for new batteries)."""
+    for value in ("2.22", "2.21") * 8:
+        await tick(hass, setup["freezer"], timedelta(hours=6))
+        hass.states.async_set(entity_id, value, attrs)
+    await tick(hass, setup["freezer"], timedelta(hours=1))
+    hass.states.async_set(entity_id, "3.02", attrs)
+    for value in ("3.01", "3.00"):
+        await tick(hass, setup["freezer"], timedelta(minutes=20))
+        hass.states.async_set(entity_id, value, attrs)
+    await tick(hass, setup["freezer"], timedelta(hours=7))
+
+
+async def test_voltage_step_is_no_battery_change(hass: HomeAssistant, setup):
+    """2.2 V → 3.0 V on the chosen voltage: only shown, no change recorded, no event, status untouched."""
     monitor = setup["monitor"]
     tibber = _tibber(hass, "voltage")
     voltage = tibber.entities["battery_voltage"]
-    hass.states.async_set(voltage, "2.22", {"unit_of_measurement": "V"})
     monitor.set_manual(tibber.device_id, True)
     await hass.async_block_till_done()
     monitor.update_device(tibber.device_id, {"battery_entity": voltage})
     await hass.async_block_till_done()
     device = monitor.devices[tibber.device_id]
-    for value in ("2.22", "2.21") * 8:
-        await _report(hass, setup, voltage, value, wait=timedelta(hours=6))
-    await _report(hass, setup, voltage, "3.02")
-    for value in ("3.01", "3.00"):
-        await _report(hass, setup, voltage, value, wait=timedelta(minutes=20))
+    replaced = async_capture_events(hass, EVENT_BATTERY_REPLACED)
     pushes = len(setup["pushes"])
-    await tick(hass, setup["freezer"], timedelta(hours=7))
-    assert len(device.record["replaced"]) == 1 and device.record["replaced_source"] == ["auto"]
+    await _flat_then_new(hass, setup, voltage, {"unit_of_measurement": "V", "device_class": "voltage"})
+    assert replaced == [] and device.record["replaced"] == []
+    history = device.record["battery_history"].get("voltage") or {}
+    assert not history.get("samples") and not history.get("candidate") and device.record["last_voltage"] is None
     assert len(setup["pushes"]) == pushes
-    assert device.reason["key"] == "ok_manual"
+    assert device.status == "ok" and device.reason["key"] == "ok_manual"
+    assert monitor.manual_battery(device) == {"level": None, "voltage": 3000}
+
+
+async def test_voltage_of_a_template_helper_keeps_the_status(hass: HomeAssistant, setup):
+    """The voltage may come from a template helper on the device (not a sign of life): the status stays."""
+    monitor = setup["monitor"]
+    entry = MockConfigEntry(domain="tibber_local", title="Tibber Pulse")
+    entry.add_to_hass(hass)
+    helper = MockConfigEntry(domain="template", title="volt")
+    helper.add_to_hass(hass)
+    dev = dr.async_get(hass).async_get_or_create(
+        config_entry_id=entry.entry_id, identifiers={("tibber_local", "p")}, name="Tibber Pulse"
+    )
+    reg = er.async_get(hass)
+    power = reg.async_get_or_create(
+        "sensor", "tibber_local", "p_power", device_id=dev.id, config_entry=entry, original_device_class="power"
+    )
+    volt = reg.async_get_or_create(
+        "sensor",
+        "template",
+        "p_volt",
+        device_id=dev.id,
+        config_entry=helper,
+        original_device_class="voltage",
+        unit_of_measurement="V",
+    )
+    hass.states.async_set(power.entity_id, "412", {"unit_of_measurement": "W"})
+    attrs = {"unit_of_measurement": "V", "device_class": "voltage"}
+    hass.states.async_set(volt.entity_id, "2.22", attrs)
+    monitor.set_manual(dev.id, True)
+    await hass.async_block_till_done()
+    monitor.update_device(dev.id, {"battery_entity": volt.entity_id})
+    await hass.async_block_till_done()
+    device = monitor.devices[dev.id]
+    await tick(hass, setup["freezer"], timedelta(minutes=1))
+    before = (device.status, device.reason["key"])
+    await _flat_then_new(hass, setup, volt.entity_id, attrs)
+    assert device.record["replaced"] == []
+    assert (device.status, device.reason["key"]) == before
+
+
+async def test_low_percentage_is_no_finding(hass: HomeAssistant, setup):
+    """A mower at 8 % is charging, not due: no low battery status, shopping list or missing battery."""
+    monitor, device, _mower_entity, level = await _mower_with_battery(hass, setup)
+    attrs = {"unit_of_measurement": "%", "device_class": "battery"}
+    hass.states.async_set(level.entity_id, "8", attrs)
+    await tick(hass, setup["freezer"], timedelta(hours=2))
+    assert device.status == "ok" and device.reason["key"] == "ok_manual"
+    assert device not in monitor.notifier.due_batteries()
+    hass.states.async_set(level.entity_id, "unavailable", attrs)
+    await tick(hass, setup["freezer"], timedelta(days=3))
+    assert device.reason["key"] == "ok_manual" and device.record["battery_missing_since"] is None
+
+
+async def test_mark_replaced_works_as_before(hass: HomeAssistant, setup):
+    """Marking a change by hand (service, Casora, Zigbee2MQTT announce) on a device added by hand without a
+    choice does what it always did."""
+    monitor = setup["monitor"]
+    dev, _mower_entity, _level = _mower(hass)
+    monitor.set_manual(dev.id, True)
+    await hass.async_block_till_done()
+    device = monitor.devices[dev.id]
+    replaced = async_capture_events(hass, EVENT_BATTERY_REPLACED)
+    monitor.mark_replaced(dev.id)
+    await hass.async_block_till_done()
+    assert len(device.record["replaced"]) == 1 and device.record["replaced_source"] == ["manual"]
+    assert len(replaced) == 1
+    assert monitor.undo_replaced(dev.id) and device.record["replaced"] == []

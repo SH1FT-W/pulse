@@ -424,7 +424,7 @@ export const DE: Record<keyof typeof EN, string> = {
   battery_entity_none: 'Keiner',
   battery_entity_gone: '{name} (nicht mehr da)',
   battery_entity_hint:
-    'Optional: ein Sensor des Geräts, der seine Batterie meldet (Spannung oder Prozent). Pulse zeigt ihn an; an einer Spannung erkennt es auch neue Batterien (Prozent kann Laden sein). Über den Status entscheidet nur, ob das Gerät erreichbar ist.',
+    'Optional: ein Sensor des Geräts, der seine Batterie meldet (Spannung oder Prozent). Er wird nur angezeigt und beeinflusst nichts: kein Batteriestatus, keine Erkennung von Batteriewechseln.',
   new_manual_title: 'Jedes Gerät hinzufügen',
   new_manual_text:
     'Kameras, Echo-Lautsprecher, Saugroboter oder beliebige Netzgeräte: unter Einstellungen hinzufügen, dann meldet Pulse, wenn eines nicht mehr erreichbar ist.',

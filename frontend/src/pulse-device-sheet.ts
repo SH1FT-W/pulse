@@ -4,7 +4,6 @@ import {
   ago,
   axisColumns,
   batteryFirst,
-  batteryValue,
   criticalChange,
   dayLabels,
   detailHeadline,
@@ -16,7 +15,7 @@ import {
   gapFractions,
   type HeartbeatData,
   heartbeatSilence,
-  manualBattery,
+  manualBatteryText,
   memoize,
   needsAction,
   parseHeartbeat,
@@ -259,7 +258,11 @@ export class PulseDeviceSheet extends LitElement {
     const lang = this.language;
     const b = d.battery;
     const snoozed = d.snooze_until !== null && d.snooze_until > this.now;
-    const level = batteryValue(lang, b);
+    const level = b.flag
+      ? t(lang, b.low ? 'battery_flag_low' : 'battery_flag_ok')
+      : b.level === null
+        ? t(lang, 'unknown')
+        : t(lang, 'unit_percent', { value: Math.round(b.level) });
     const typeText = b.type
       ? (b.count ?? 1) > 1
         ? t(lang, 'battery_count_type', { count: b.count ?? 1, type: b.type })
@@ -303,6 +306,7 @@ export class PulseDeviceSheet extends LitElement {
     // Battery reason: "Batterie gewechselt" (battery changed) first; otherwise remind is the sensible main action
     const battery = batteryFirst(d);
     const mains = d.mains === true;
+    const manualText = manualBatteryText(lang, d);
     return html`
       <header class="hero">
         ${
@@ -384,12 +388,11 @@ export class PulseDeviceSheet extends LitElement {
 
       ${
         mains
-          ? html`<p class="fc muted"><ha-icon icon=${d.manual ? 'mdi:plus-circle-outline' : 'mdi:power-plug-outline'}></ha-icon><span>${t(lang, d.manual ? 'manual_note' : 'mains_note')}</span></p>`
-          : nothing
-      }
-      ${
-        mains && !manualBattery(d)
-          ? nothing
+          ? html`<p class="fc muted"><ha-icon icon=${d.manual ? 'mdi:plus-circle-outline' : 'mdi:power-plug-outline'}></ha-icon><span>${t(lang, d.manual ? 'manual_note' : 'mains_note')}</span></p>${
+              manualText !== null
+                ? html`<p class="fc"><ha-icon icon="mdi:battery-outline"></ha-icon><span>${t(lang, 'battery')}: ${manualText}</span></p>`
+                : nothing
+            }`
           : html`<section class="stats">
         <div>
           <span>${t(lang, 'battery')}</span>
@@ -467,10 +470,10 @@ export class PulseDeviceSheet extends LitElement {
   }
 
   /**
-   * Device added by hand: which of its sensors is its battery (#9). None = watched without a battery (as before);
-   * a voltage or percentage = shown and battery changes detected. Nothing to choose: no row.
+   * Device added by hand: which of its sensors to show as its battery (#9). Only shown, it changes nothing else.
+   * A choice no longer offered stays in the list, so "None" can be picked.
    */
-  private batteryEntityRow(d: Device) {
+  private renderBatteryEntity(d: Device) {
     const choices = d.battery_choices ?? [];
     if (!d.manual || !choices.length) return nothing;
     const lang = this.language;
@@ -481,18 +484,13 @@ export class PulseDeviceSheet extends LitElement {
         label: c.gone ? t(lang, 'battery_entity_gone', { name: c.name }) : c.name,
       })),
     ];
-    return this.picker(t(lang, 'battery_entity'), d.battery_entity ?? '', options, (v) =>
-      this.change({ battery_entity: v || null })
-    );
-  }
-
-  /** Device added by hand without a battery: only the choice of its battery sensor. */
-  private renderBatteryEntity(d: Device) {
-    if (!d.manual || !d.battery_choices?.length) return nothing;
-    const lang = this.language;
+    const value = manualBatteryText(lang, d);
     return html`<section class="section">
       <h4 class="section-title">${t(lang, 'battery')}</h4>
-      <div class="list">${this.batteryEntityRow(d)}</div>
+      <div class="list">
+        ${this.picker(t(lang, 'battery_entity'), d.battery_entity ?? '', options, (v) => this.change({ battery_entity: v || null }))}
+        ${value !== null ? html`<div class="row"><span class="label">${t(lang, 'battery')}</span><span class="value">${value}</span></div>` : nothing}
+      </div>
       <p class="section-foot">${t(lang, 'battery_entity_hint')}</p>
     </section>`;
   }
@@ -503,13 +501,11 @@ export class PulseDeviceSheet extends LitElement {
     return html`<section class="section">
         <h4 class="section-title">${t(lang, 'battery')}</h4>
         <div class="list">
-          ${this.batteryEntityRow(d)}
           ${this.picker(t(lang, 'battery_type'), b.type ?? '', typeOptions, (v) => this.change({ battery_type: v || null }))}
           ${this.picker(t(lang, 'battery_count'), String(b.count ?? 1), COUNT_OPTIONS, (v) => this.change({ battery_count: Number(v) }))}
           ${this.picker(t(lang, 'chemistry'), b.chemistry ?? '', chemOptions, (v) => this.change({ chemistry: v || null }), b.trusted ? undefined : t(lang, 'level_unreliable'))}
           ${b.voltage !== null ? html`<div class="row"><span class="label">${t(lang, 'voltage')}</span><span class="value">${formatVoltage(lang, b.voltage)}</span></div>` : nothing}
         </div>
-        ${d.manual && d.battery_choices?.length ? html`<p class="section-foot">${t(lang, 'battery_entity_hint')}</p>` : nothing}
       </section>
 
       <section class="section">
@@ -553,7 +549,7 @@ export class PulseDeviceSheet extends LitElement {
       partners.push({ value: d.partner, label: d.partner_name ?? t(lang, 'partner_gone') });
     const mains = d.mains === true;
     return html`<div class="settings">
-      ${mains && !manualBattery(d) ? this.renderBatteryEntity(d) : this.renderBatterySettings(d, typeOptions, chemOptions)}
+      ${mains ? this.renderBatteryEntity(d) : this.renderBatterySettings(d, typeOptions, chemOptions)}
       <section class="section">
         <h4 class="section-title">${t(lang, 'partner')}</h4>
         <div class="list">
