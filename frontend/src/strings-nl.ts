@@ -427,7 +427,7 @@ export const NL: Record<keyof typeof EN, string> = {
   battery_entity_none: 'Geen',
   battery_entity_gone: '{name} (niet meer aanwezig)',
   battery_entity_hint:
-    'Optioneel: een sensor van dit apparaat die de batterij meldt (spanning of procent). Pulse toont die dan en herkent batterijwissels; alleen bereikbaarheid bepaalt de status, een zwakke batterij is geen probleem.',
+    'Optioneel: een sensor van dit apparaat die de batterij meldt (spanning of procent). Pulse toont die; aan een spanning herkent het ook nieuwe batterijen (procent kan opladen zijn). Alleen bereikbaarheid bepaalt de status.',
   new_manual_title: 'Elk apparaat toevoegen',
   new_manual_text:
     'Camera’s, Echo-speakers, robotstofzuigers of elk netwerkapparaat: voeg ze toe onder Instellingen, dan meldt Pulse wanneer er een niet meer bereikbaar is.',

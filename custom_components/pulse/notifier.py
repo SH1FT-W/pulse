@@ -375,8 +375,6 @@ class Notifier:
         """Batterie jetzt fällig: Prozentwert (nur wo er etwas sagt) oder das Gerät meldet selbst „schwach“."""
         due: list[Device] = []
         for device in self.monitor.monitored():
-            if device.spec.manual:
-                continue  # added by hand: its battery is only shown (#9), a charging mower is not due
             level = self.monitor.battery_level(device)
             if (
                 level is not None and level <= batt.LEVEL_SOON and batt.level_trusted(device.record.get("chemistry"))

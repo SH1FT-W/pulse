@@ -427,7 +427,7 @@ export const ES: Record<keyof typeof EN, string> = {
   battery_entity_none: 'Ninguno',
   battery_entity_gone: '{name} (ya no existe)',
   battery_entity_hint:
-    'Opcional: un sensor de este dispositivo que informa de su batería (tensión o porcentaje). Pulse la muestra y detecta los cambios de pilas; su estado solo depende de si está accesible, una batería baja no es un problema.',
+    'Opcional: un sensor de este dispositivo que informa de su batería (tensión o porcentaje). Pulse lo muestra; con una tensión también detecta pilas nuevas (un porcentaje puede ser una carga). Su estado solo depende de si está accesible.',
   new_manual_title: 'Añade cualquier dispositivo',
   new_manual_text:
     'Cámaras, altavoces Echo, robots aspiradores o cualquier dispositivo de red: añádelos en Ajustes y Pulse avisará cuando uno deje de estar accesible.',

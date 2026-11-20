@@ -70,12 +70,9 @@ class DeviceSpec:
     manual: bool = False
     # Devices added by hand: the sensors that can be chosen as their battery (`battery_choices`)
     battery_choices: list[str] = field(default_factory=list)
-
-    @property
-    def reachability_only(self) -> bool:
-        """Judged by being reachable (only "unavailable" counts as gone), not by its rhythm: mains devices and
-        devices added by hand, also those whose battery sensor was chosen by hand (`mains` False then)."""
-        return self.mains or self.manual
+    # Added by hand: the sensor chosen as its battery (#9), only shown; a voltage is also `voltage` (battery changes
+    # are detected from it). It changes nothing else: `mains` stays True, `battery` None
+    manual_battery: str | None = None
 
     @property
     def connectivity(self) -> str | None:
@@ -335,10 +332,10 @@ def _manual(
 ) -> DeviceSpec | None:
     """A device added by hand: watched like a mains device, from all of its (non-helper) integrations.
 
-    Its battery is ignored (a robot vacuum charges, that is no battery change), unless a battery sensor was chosen
-    for it by hand (`battery_entity`, one of `battery_choices`): then that voltage or percentage is its battery
-    (`mains` False: shown, battery changes detected), reachability still decides as for any device added by hand
-    (`DeviceSpec.reachability_only`). Reachable or not decides: a
+    Its battery is ignored (a robot vacuum charges, that is no battery change). A battery sensor chosen for it by
+    hand (`battery_entity`, one of `battery_choices`, #9) is only shown (`manual_battery`); a voltage also detects
+    battery changes (`voltage`), a percentage never (it charges). Everything else stays as without it (`mains`
+    True, no `battery`): its battery is never its status. Reachable or not decides: a
     connectivity sensor (preferably of its own integration) or a router's device tracker, else its main entities
     (lamp, camera, media player, vacuum …), else all of them. A media player that is idle or off is there.
     """
@@ -371,10 +368,10 @@ def _manual(
         critical=_critical(own),
         icon=icon_for(own, mains=True, manual=True),
         reachable_via="matter" if integration == "matter" else connectivity,
-        mains=kind is None,
+        mains=True,
         main_entities=_main_of_manual(mine),
         manual=True,
-        battery=battery_entity if kind == "battery" else None,
+        manual_battery=battery_entity if kind is not None else None,
         voltage=battery_entity if kind == "voltage" else None,
         battery_choices=list(choices),
     )

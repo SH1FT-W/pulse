@@ -422,7 +422,7 @@ export const EN = {
   battery_entity_none: 'None',
   battery_entity_gone: '{name} (no longer there)',
   battery_entity_hint:
-    'Optional: a sensor of this device that reports its battery (voltage or percent). Pulse then shows it and detects battery changes; only whether it is reachable decides its status, a low battery is no finding.',
+    'Optional: a sensor of this device that reports its battery (voltage or percent). Pulse shows it; from a voltage it also sees new batteries (a percentage may be charging). Only whether the device is reachable decides its status.',
   new_manual_title: 'Add any device',
   new_manual_text:
     'Cameras, Echo speakers, robot vacuums or any network device: add them under Settings, Pulse then tells you when one is no longer reachable.',

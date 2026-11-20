@@ -692,8 +692,12 @@ class PulseMonitor:
         return _millivolts(self.hass.states.get(device.spec.voltage)) if device.spec.voltage else None
 
     def battery_percent(self, device: Device) -> float | None:
-        """Real percentage (warning sensors: None)."""
-        return self._battery_percent(device.spec)
+        """Real percentage (warning sensors: None); added by hand: a percentage chosen as its battery, only shown
+        (#9: a mower or vacuum charges, its level is never a finding)."""
+        spec = device.spec
+        if spec.manual and spec.manual_battery and spec.manual_battery != spec.voltage:
+            return _float(self.hass.states.get(spec.manual_battery))
+        return self._battery_percent(spec)
 
     def battery_flag(self, device: Device) -> bool:
         return self._battery_flag(device.spec)
@@ -709,13 +713,6 @@ class PulseMonitor:
 
     def _track_battery_missing(self, device: Device, now: float) -> None:
         """Since when the battery entity has had no value (stored, also across restarts)."""
-        if device.spec.manual:
-            # Added by hand: its battery is only shown, never a finding (#9); a sensor chosen earlier that went
-            # missing and then away (no longer offered) must not leave its "missing since" behind
-            if device.record.get("battery_missing_since") is not None:
-                device.record["battery_missing_since"] = None
-                self.store.async_delay_save()
-            return
         if not device.spec.battery:
             return
         state = self.hass.states.get(device.spec.battery)
@@ -815,9 +812,9 @@ class PulseMonitor:
             spec = device.spec
             if only is not None and spec.device_id not in only:
                 continue
-            if not spec.reachability_only and not self._gone_now(device):
+            if not spec.mains and not self._gone_now(device):
                 continue
-            if spec.reachability_only and spec.main_entities:
+            if spec.mains and spec.main_entities:
                 entity_ids = list(spec.main_entities)
             elif spec.connectivity:
                 entity_ids = [spec.connectivity]
@@ -843,7 +840,7 @@ class PulseMonitor:
             if running is not None and near_start(running, starts):
                 running = None  # only gone since the integration was loading at this start
             gone_now = owner.unavailable_since is not None
-            if owner.spec.reachability_only:
+            if owner.spec.mains:
                 if spans:
                     owner.record["outages"] = merge_outages(owner.record.get("outages", []), spans, keep_from)
                 # Reports stored while the device itself was gone were only its other entities being rewritten
@@ -978,7 +975,7 @@ class PulseMonitor:
 
     def _activity(self, device: Device, ts: float, action: bool, source: tuple[str, str]) -> None:
         """One sign of life; `source` (kind of entity, trigger) is only kept for the diagnostics download."""
-        if device.spec.reachability_only and device.unavailable_since is not None:
+        if device.spec.mains and device.unavailable_since is not None:
             # The lamp/plug itself is gone: what its other entities still report (a diagnostic sensor rewritten on
             # every poll of the integration) is no sign of life of the device
             return
@@ -991,7 +988,7 @@ class PulseMonitor:
             device.signs.append((ts, *source))
         if action:
             merge_event(device.record["actions"], ts, keep_from, MAX_EVENTS)
-        if not device.spec.reachability_only:
+        if not device.spec.mains:
             # Mains devices: `_check_availability` decides from the lamp/plug itself
             self._reachable_again(device, ts)
         if added or action:
@@ -1005,7 +1002,7 @@ class PulseMonitor:
             return  # Zigbee2MQTT reports availability itself
         states = [self.hass.states.get(e) for e in device.spec.entities]
         known = [s for s in states if s is not None]
-        if device.spec.reachability_only:
+        if device.spec.mains:
             # The lamp/plug itself counts, not its diagnostic sensors or config switches (they stay available while
             # the lamp is gone)
             known = [s for s in known if s.entity_id in device.spec.main_entities] or known
@@ -1030,7 +1027,7 @@ class PulseMonitor:
         device.unavailable_since = None
         # Not when it was gone since an HA start: then the integration was loading (or the outage was already
         # running before the restart, which the recorder knows with its real start)
-        if device.spec.reachability_only and now - since >= OUTAGE_MIN and not near_start(since, self._starts()):
+        if device.spec.mains and now - since >= OUTAGE_MIN and not near_start(since, self._starts()):
             outages = device.record.get("outages", [])
             device.record["outages"] = merge_outages(outages, [(since, now)], now - KEEP_DAYS * DAY)
             self.store.async_delay_save(SAVE_DELAY_EVENTS)
@@ -1042,8 +1039,9 @@ class PulseMonitor:
     def _battery_kind(self, device: Device, entity_id: str) -> str | None:
         """Which battery quantity this entity reports (warning sensors without a percentage: none)."""
         spec = device.spec
-        if spec.mains:
-            return None  # a plug's supply voltage is no battery
+        if spec.mains and not (spec.manual and entity_id == spec.voltage):
+            # A plug's supply voltage is no battery. Added by hand: only a voltage chosen as its battery (#9)
+            return None
         if entity_id == spec.battery and not self._battery_flag(spec):
             return replacement.LEVEL
         if entity_id == spec.voltage:
@@ -1073,7 +1071,33 @@ class PulseMonitor:
                 self._battery_replaced(device, verdict)
 
     def _battery_replaced(self, device: Device, verdict: replacement.Verdict) -> None:
+        if device.spec.manual:
+            self._manual_replaced(device, verdict.at)
+            return
         self.mark_replaced(device.device_id, "auto", at=verdict.at, level_before=verdict.level_before)
+
+    def _manual_replaced(self, device: Device, at: float) -> None:
+        """New batteries in a device added by hand, seen in its chosen voltage (#9): only recorded (shown in the
+        panel, event `pulse_battery_replaced`). Its status, outages and notifications stay as they are: the
+        battery is never its problem, so `mark_replaced` (which ends silences and outages) is not for it."""
+        record = device.record
+        replaced: list[float] = record["replaced"]
+        at = min(at, time.time())
+        if any(abs(at - ts) < 6 * 3600 for ts in replaced):
+            return  # the same change seen again
+        sources: list[str] = record.setdefault("replaced_source", [])
+        while len(sources) < len(replaced):
+            sources.insert(0, "manual")
+        idx = bisect_right(replaced, at)
+        replaced.insert(idx, at)
+        sources.insert(idx, "auto")
+        del replaced[:-20]
+        del sources[:-20]
+        self.hass.bus.async_fire(
+            EVENT_BATTERY_REPLACED, {"device_id": device.device_id, "name": device.name, "source": "auto"}
+        )
+        self.store.async_delay_save()
+        self.async_update()
 
     # Zigbee2MQTT
     @callback
@@ -1229,10 +1253,7 @@ class PulseMonitor:
             since = own_last_action or (now - 2 * DAY)
             actions = partner.record["actions"]
             partner_actions = len(actions) - bisect_right(actions, since)
-        # Added by hand: a battery chosen by hand is only shown and its changes detected (#9); its level, a
-        # missing value or a forecast never decide the status (a mower at 8 % is charging, not due)
-        manual = device.spec.manual
-        level = None if manual else self._battery_level(device.spec)
+        level = self._battery_level(device.spec)
         silence_from = self.silence_from(device)
         replaced = record["replaced"]
         gaps = self.downtime_gaps()
@@ -1263,16 +1284,16 @@ class PulseMonitor:
             radio_last=device.radio_last,
             radio_rises=self._radio_rises(device),
             flag_on=bool(device.spec.battery_low) and self.flag_on(device),
-            battery_missing_since=None if manual else record.get("battery_missing_since"),
+            battery_missing_since=record.get("battery_missing_since"),
             reachable=self._reachable(device),
-            mains=device.spec.reachability_only,
+            mains=device.spec.mains,
             manual=device.spec.manual,
             critical_unreachable=self.critical_unreachable(),
             usual_outage=usual_outage(record.get("outages", ()), now, gaps, KEEP_DAYS, self._starts())
-            if device.spec.reachability_only
+            if device.spec.mains
             else None,
             worsening=outages_worsening(record.get("outages", ()), now, gaps, self._starts(), record.get("first_seen"))
-            if device.spec.reachability_only
+            if device.spec.mains
             else None,
         )
 
@@ -1471,7 +1492,7 @@ class PulseMonitor:
         jobs: list[tuple[str, str, float, bool]] = []
         for device in self.monitored():
             spec = device.spec
-            if not spec.battery or self._battery_flag(spec) or spec.manual:
+            if not spec.battery or self._battery_flag(spec):
                 device.forecast, device.forecast_reason = None, None
                 continue
             replaced = device.record["replaced"]
@@ -1522,7 +1543,9 @@ class PulseMonitor:
         """Record a battery change. `at`: when it happened (automatic: the step, which may lie hours back);
         `level_before`: the level before it (automatic: the robust low level before the step)."""
         device = self.devices.get(device_id)
-        if device is None:
+        if device is None or device.spec.manual:
+            # Added by hand: no battery to mark (panel, notification and action offer none); a change of a voltage
+            # chosen as its battery is recorded by `_manual_replaced` without touching its status
             return
         now = time.time()
         at = now if at is None else min(at, now)
@@ -1642,18 +1665,12 @@ class PulseMonitor:
         record["battery_entity"] = entity_id
         # Another sensor: its values are never compared with the previous one's (a jump would be a "change")
         record["battery_history"] = {}
-        record["last_level"] = None
         record["last_voltage"] = None
-        record["battery_missing_since"] = None
         self._rediscover()
         device = self.devices.get(device.device_id, device)
-        spec, now = device.spec, time.time()
-        if spec.battery:
-            record["last_level"] = self._battery_percent(spec)
-        if spec.voltage:
-            record["last_voltage"] = _millivolts(self.hass.states.get(spec.voltage))
-        replacement.seed(record, replacement.LEVEL, now, record.get("last_level"))
-        replacement.seed(record, replacement.VOLTAGE, now, record.get("last_voltage"))
+        if device.spec.voltage:
+            record["last_voltage"] = _millivolts(self.hass.states.get(device.spec.voltage))
+            replacement.seed(record, replacement.VOLTAGE, time.time(), record["last_voltage"])
 
     def candidates(self) -> list[DeviceSpec]:
         """Devices that can be added by hand (not watched yet)."""

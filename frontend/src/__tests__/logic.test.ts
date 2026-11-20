@@ -42,6 +42,7 @@ import {
   isWaiting,
   lastReplaced,
   learningLine,
+  manualBattery,
   manualDevices,
   matchCandidates,
   memoize,
@@ -1216,5 +1217,39 @@ describe('batteryValue', () => {
     expect(batteryValue('en', { ...b, level: 63.6, voltage: 2950 })).toBe('64%');
     expect(batteryValue('de', { ...b, voltage: 2950 })).toBe('2,95 V');
     expect(batteryValue('en', b)).toBe(t('en', 'unknown'));
+  });
+});
+
+describe('manualBattery', () => {
+  const choice = { entity_id: 'sensor.v', name: 'V' };
+  it('only for a device added by hand with a chosen sensor that is still offered', () => {
+    expect(
+      manualBattery(
+        device('a', {
+          manual: true,
+          mains: true,
+          battery_entity: 'sensor.v',
+          battery_choices: [choice],
+        })
+      )
+    ).toBe(true);
+    expect(
+      manualBattery(
+        device('a', { manual: true, mains: true, battery_entity: null, battery_choices: [choice] })
+      )
+    ).toBe(false);
+    expect(
+      manualBattery(
+        device('a', {
+          manual: true,
+          mains: true,
+          battery_entity: 'sensor.v',
+          battery_choices: [{ ...choice, gone: true }],
+        })
+      )
+    ).toBe(false);
+    expect(
+      manualBattery(device('a', { battery_entity: 'sensor.v', battery_choices: [choice] }))
+    ).toBe(false);
   });
 });

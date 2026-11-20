@@ -33,9 +33,7 @@ def _battery(monitor: PulseMonitor, device: Device, now: float) -> dict[str, Any
         "replaced": list(record["replaced"]),
         "entity": device.spec.battery,
         "forecast": forecast.as_dict() if forecast else None,
-        "forecast_reason": device.forecast_reason
-        if forecast is None and percent is not None and not device.spec.manual
-        else None,
+        "forecast_reason": device.forecast_reason if forecast is None and percent is not None else None,
         "missing_since": missing if missing is not None and now - missing >= BATTERY_MISSING_AFTER else None,
         # Das Gerät meldet „schwach“, der Prozentwert sagt etwas anderes
         "flag_conflict": bool(device.spec.battery_low)

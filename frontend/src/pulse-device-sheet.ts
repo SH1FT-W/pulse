@@ -16,6 +16,7 @@ import {
   gapFractions,
   type HeartbeatData,
   heartbeatSilence,
+  manualBattery,
   memoize,
   needsAction,
   parseHeartbeat,
@@ -305,7 +306,7 @@ export class PulseDeviceSheet extends LitElement {
     return html`
       <header class="hero">
         ${
-          meta || d.cloud || mains || d.manual
+          meta || d.cloud || mains
             ? html`<p class="dname"><ha-icon .icon=${d.icon}></ha-icon><span>${meta}</span>${
                 d.cloud
                   ? html`<span class="chip-cloud"><ha-icon icon="mdi:cloud-outline"></ha-icon>${t(lang, 'cloud_device')}</span>`
@@ -382,12 +383,12 @@ export class PulseDeviceSheet extends LitElement {
       }
 
       ${
-        mains || d.manual
+        mains
           ? html`<p class="fc muted"><ha-icon icon=${d.manual ? 'mdi:plus-circle-outline' : 'mdi:power-plug-outline'}></ha-icon><span>${t(lang, d.manual ? 'manual_note' : 'mains_note')}</span></p>`
           : nothing
       }
       ${
-        mains
+        mains && !manualBattery(d)
           ? nothing
           : html`<section class="stats">
         <div>
@@ -552,7 +553,7 @@ export class PulseDeviceSheet extends LitElement {
       partners.push({ value: d.partner, label: d.partner_name ?? t(lang, 'partner_gone') });
     const mains = d.mains === true;
     return html`<div class="settings">
-      ${mains ? this.renderBatteryEntity(d) : this.renderBatterySettings(d, typeOptions, chemOptions)}
+      ${mains && !manualBattery(d) ? this.renderBatteryEntity(d) : this.renderBatterySettings(d, typeOptions, chemOptions)}
       <section class="section">
         <h4 class="section-title">${t(lang, 'partner')}</h4>
         <div class="list">

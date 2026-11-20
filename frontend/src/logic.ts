@@ -366,6 +366,19 @@ export function batteryValue(language: string, b: Battery): string {
   return t(language, 'unknown');
 }
 
+/**
+ * A device added by hand shows a battery: a sensor chosen as its battery that is still offered (#9). It stays a
+ * device watched for being there (`mains`): no "Battery changed", only the values and detected changes.
+ */
+export function manualBattery(device: Device): boolean {
+  const chosen = device.battery_entity;
+  return (
+    device.manual === true &&
+    !!chosen &&
+    (device.battery_choices ?? []).some((c) => c.entity_id === chosen && !c.gone)
+  );
+}
+
 /** Voltage (mV): from 1000 on as volts with two decimals, otherwise as mV. */
 export function formatVoltage(language: string, mv: number): string {
   if (Math.abs(mv) >= 1000) {
