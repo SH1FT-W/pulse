@@ -85,11 +85,17 @@ def _device(monitor: PulseMonitor, device: Device) -> dict[str, Any]:
         "entity_kinds": _kinds(monitor.hass, spec.entities),
         "battery_state": _battery_entity(monitor.hass, spec.battery),
         "actions": len(record["actions"]),
-        # Partner und verworfene Vorschläge sind Geräte-IDs: nur ob/wie viele
+        # Partner und verworfene Vorschläge sind Geräte-IDs, der von Hand gewählte Batteriesensor eine Entity-ID
+        # (#9, mit dem Gerätenamen darin): nur ob/wie viele
         "record": {
-            **{k: v for k, v in record.items() if k not in ("events", "actions", "partner", "partner_dismissed")},
+            **{
+                k: v
+                for k, v in record.items()
+                if k not in ("events", "actions", "partner", "partner_dismissed", "battery_entity")
+            },
             "partner": record.get("partner") is not None,
             "partner_dismissed": len(record.get("partner_dismissed") or ()),
+            **({"battery_entity": record["battery_entity"] is not None} if "battery_entity" in record else {}),
         },
     }
 

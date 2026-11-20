@@ -393,7 +393,9 @@ def battery_choices(hass: HomeAssistant, own: list[er.RegistryEntry]) -> dict[st
 
     Offered are sensors with the device class `voltage` or `battery`, and sensors without a device class whose unit
     is V or mV: some integrations give a battery voltage no device class (the Tibber Pulse of #9 may be one of
-    them), a unit of V or mV still says what it is. Sensors without a device class and without such a unit are
+    them), a unit of V or mV still says what it is. A voltage in any other unit (kV, µV) is not offered, its value
+    would be read wrongly (`monitor._millivolts` knows V and mV, without a unit below 100 = V); a percentage only
+    in % or without a unit. Sensors without a device class and without such a unit are
     not offered: nothing tells they measure a battery, a temperature would pass as a battery voltage. A battery
     device class in V or mV is read as a voltage (HA allows only % for it, a custom integration may not care).
     """
@@ -402,10 +404,17 @@ def battery_choices(hass: HomeAssistant, own: list[er.RegistryEntry]) -> dict[st
         if e.domain != "sensor":
             continue
         device_class, unit = _device_class(e), _unit(hass, e)
-        if (unit in VOLT_UNITS and device_class in (None, "voltage", "battery")) or device_class == "voltage":
+        if (unit in VOLT_UNITS and device_class in (None, "voltage", "battery")) or (
+            device_class == "voltage" and unit in (None, "")
+        ):
             found[e.entity_id] = "voltage"
     for e in sorted(own, key=lambda e: e.entity_id):
-        if e.domain == "sensor" and e.entity_id not in found and _device_class(e) == "battery":
+        if (
+            e.domain == "sensor"
+            and e.entity_id not in found
+            and _device_class(e) == "battery"
+            and _unit(hass, e) in (None, "", "%")
+        ):
             found[e.entity_id] = "battery"
     return found
 

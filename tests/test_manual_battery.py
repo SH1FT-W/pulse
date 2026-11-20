@@ -101,6 +101,8 @@ async def test_what_is_offered_and_what_not(hass: HomeAssistant):
             ("sensor", "temperature", "temperature", "°C"),
             ("binary_sensor", "low", "battery", None),  # a warning flag is no value to watch
             ("sensor", "supply", "voltage", None),  # device class voltage, unit unknown: still a voltage
+            ("sensor", "line", "voltage", "kV"),  # another unit: `_millivolts` would read it wrongly
+            ("sensor", "odd", "battery", "Wh"),  # a battery class in neither % nor V/mV
         ],
     )
     hass.states.async_set(device.entities["millivolt"], "2950", {"unit_of_measurement": "mV"})
@@ -381,3 +383,20 @@ async def test_mark_replaced_works_as_before(hass: HomeAssistant, setup):
     assert len(device.record["replaced"]) == 1 and device.record["replaced_source"] == ["manual"]
     assert len(replaced) == 1
     assert monitor.undo_replaced(dev.id) and device.record["replaced"] == []
+
+
+async def test_diagnostics_hide_the_chosen_sensor(hass: HomeAssistant, setup):
+    """The chosen sensor is an entity ID (with the device name in it): diagnostics only say whether there is one."""
+    from custom_components.pulse.diagnostics import async_get_config_entry_diagnostics
+
+    monitor = setup["monitor"]
+    tibber = _tibber(hass, "voltage")
+    voltage = tibber.entities["battery_voltage"]
+    monitor.set_manual(tibber.device_id, True)
+    await hass.async_block_till_done()
+    monitor.update_device(tibber.device_id, {"battery_entity": voltage})
+    await hass.async_block_till_done()
+    data = await async_get_config_entry_diagnostics(hass, setup["entry"])
+    assert voltage not in str(data)
+    records = [d["record"] for d in data["devices"]]
+    assert [r["battery_entity"] for r in records if "battery_entity" in r] == [True]
