@@ -87,11 +87,8 @@ sobald Claude dort arbeitet).
   Release-Nummer; das stabile Release danach heißt `YY.M.N`. Alte `-beta.K`-Tags bleiben. (`b` ist PEP 440, HA und
   HACS sortieren es richtig; `frontend/package.json` ist privat und wird nur als Text gelesen.)
 - CHANGELOG: neue Einträge oben unter `## Unreleased`, beim Release wird daraus die Versionsüberschrift.
-- **Erst Prod, dann Release:** Änderung ins Prod-HA kopieren (`/Volumes/config/custom_components/pulse`, HA-Neustart
-  nur nach Rücksprache), warten bis Pulse den Verlauf gelesen hat (1–2 Min.), Status, Log und betroffene Geräte
-  prüfen, erst dann releasen; danach die Workflows bis grün beobachten. Die Versionsdatei steht dabei schon auf der
-  nächsten Release-Nummer. Ausnahme nur auf Nachfrage: ein kleiner Fix, der nur einen Absturz verhindert (kein neues
-  Verhalten), darf direkt raus (so bei 26.11.2, #6).
+- Nach dem Release die Workflows bis grün beobachten. Neue Funktionen und Fixes gehen wie in allen Repos erst als
+  Beta raus (Daniel 20.11.2026: Regel „erst Prod, dann Release“ abgeschafft).
 - **Trockenlauf:** Code, der gespeicherte Daten beim Start löscht, kürzt oder umdeutet (Store-Bereinigung, Migration,
   Zurückdatieren), vor dem Release gegen Daniels echte Prod-Daten trocken laufen lassen (Kopie im Scratchpad, echten
   Repo-Code importieren, ausgeben, was gelöscht würde; DB-Kopie mit `pragma quick_check` prüfen) und das Ergebnis
