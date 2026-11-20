@@ -3,6 +3,7 @@
 import type { HassUser } from './ha';
 import { type StringKey, t } from './strings';
 import type {
+  Battery,
   CloudOutage,
   Device,
   DueBattery,
@@ -352,6 +353,17 @@ export function formatWhen(
     ...cycle,
     ...zoneOption(timeZone),
   }).format(new Date(ts * 1000));
+}
+
+/**
+ * The battery's value in the detail: the warning flag, the percentage, else the voltage (a device added by hand
+ * whose battery sensor is a voltage, #9), else unknown.
+ */
+export function batteryValue(language: string, b: Battery): string {
+  if (b.flag) return t(language, b.low ? 'battery_flag_low' : 'battery_flag_ok');
+  if (b.level !== null) return t(language, 'unit_percent', { value: Math.round(b.level) });
+  if (b.voltage !== null) return formatVoltage(language, b.voltage);
+  return t(language, 'unknown');
 }
 
 /** Voltage (mV): from 1000 on as volts with two decimals, otherwise as mV. */

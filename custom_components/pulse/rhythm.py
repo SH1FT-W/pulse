@@ -441,7 +441,9 @@ class Facts:
     flag_on: bool = False  # "battery low" warning sensor on (in addition to the percentage)
     battery_missing_since: float | None = None  # battery entity permanently without a value
     reachable: str | None = None  # integration currently reports the device reachable (its name), otherwise None
-    mains: bool = False  # beta: mains-powered, an unused lamp is not broken
+    # Beta: mains-powered, an unused lamp is not broken; also every device added by hand, with a battery sensor
+    # chosen or not (`DeviceSpec.reachability_only`): only being reachable counts
+    mains: bool = False
     critical_unreachable: float = 10 * 60.0  # important device unreachable → "prüfen" (check) after (seconds)
     manual: bool = False  # added by hand: watched like a mains device, but maybe not on the mains (camera, vacuum)
     usual_outage: float | None = None  # often unavailable by itself: its longest such outage (`usual_outage`)

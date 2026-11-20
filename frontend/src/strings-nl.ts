@@ -423,6 +423,10 @@ export const NL: Record<keyof typeof EN, string> = {
   manual_chip: 'Met de hand toegevoegd',
   manual_note:
     'Met de hand toegevoegd. Pulse let erop of het bereikbaar is en, als het zich regelmatig meldt, of het stil wordt.',
+  battery_entity: 'Batterijsensor',
+  battery_entity_none: 'Geen',
+  battery_entity_hint:
+    'Optioneel: een sensor van dit apparaat die de batterij meldt (spanning of procent). Pulse toont die dan en herkent batterijwissels; de status hangt nog steeds af van of het bereikbaar is.',
   new_manual_title: 'Elk apparaat toevoegen',
   new_manual_text:
     'Camera’s, Echo-speakers, robotstofzuigers of elk netwerkapparaat: voeg ze toe onder Instellingen, dan meldt Pulse wanneer er een niet meer bereikbaar is.',

@@ -43,6 +43,17 @@ def _battery(monitor: PulseMonitor, device: Device, now: float) -> dict[str, Any
     }
 
 
+def _battery_choices(monitor: PulseMonitor, device: Device) -> list[dict[str, Any]]:
+    """Sensors that can be chosen as the battery of a device added by hand, with their name and current value."""
+    if not device.spec.manual:
+        return []
+    result: list[dict[str, Any]] = []
+    for entity_id in device.spec.battery_choices:
+        state = monitor.hass.states.get(entity_id)
+        result.append({"entity_id": entity_id, "name": state.name if state is not None else entity_id})
+    return result
+
+
 def _suggestions(monitor: PulseMonitor, device: Device) -> list[dict[str, Any]]:
     if device.record.get("partner"):
         return []
@@ -83,6 +94,9 @@ def serialize(
         "label": device.spec.label,
         "mains": device.spec.mains,
         "manual": device.spec.manual,
+        # Devices added by hand: the battery sensor in use and the ones to choose from (#9)
+        "battery_entity": (device.spec.voltage or device.spec.battery) if device.spec.manual else None,
+        "battery_choices": _battery_choices(monitor, device),
         "last_activity": device.last_activity,
         "silence_from": monitor.silence_from(device),
         "silence_start": monitor.silence_start(device),

@@ -6,7 +6,7 @@
 
 Worauf sich dieses Repo bei Home Assistant verlässt. Bei jeder Änderung am Code mitpflegen.
 
-**Getestet mit:** HA 2026.10, 2026.11.0b1 · **Mindestversion:** siehe `hacs.json` / `manifest.json`
+**Getestet mit:** HA 2026.10, 2026.11.0b1, 2026.11.2 · **Mindestversion:** siehe `hacs.json` / `manifest.json`
 
 ## Annahmen
 
@@ -22,6 +22,7 @@ Worauf sich dieses Repo bei Home Assistant verlässt. Bei jeder Änderung am Cod
 | Hauptintegration eines Geräts = `platform` mit den meisten Entitäten (Fremde wie powercalc/template zählen nicht) | `discovery.py` `discover` | `tests/test_mains_templates.py` |
 | Netzgeräte: `DeviceEntry.entry_type` (Dienst) und `RegistryEntry.entity_category`; Lampen/Steckdosen gehen bei Ausfall auf `unavailable` | `discovery.py`, `monitor.py` `_check_availability` | `tests/test_mains_learned.py` |
 | Von Hand hinzugefügte Geräte: „nicht erreichbar“ = alle entscheidenden Entitäten `unavailable` (Media-Player `idle`/`off`/`playing` ist da); Router-`device_tracker` meldet offline als `not_home` mit `source_type` ≠ `gps`; `DeviceEntry.entry_type` kennzeichnet Dienste | `discovery.py` `_manual`, `monitor.py` `_offline` | `tests/test_manual_devices.py` |
+| Batteriesensor von Hand (#9): Spannungen kommen in V oder mV, ohne Einheit ist ein Wert < 100 V (`monitor._millivolts`, immer in mV gerechnet). Angeboten werden `sensor` mit `device_class` `voltage`/`battery` und ohne Geräteklasse nur mit Einheit V/mV (aus dem Zustand, solange HA startet aus `RegistryEntry.unit_of_measurement`); `battery` in V/mV gilt als Spannung. Eine neue Entity-ID kommt als `old_entity_id` im Registry-Ereignis, die Auswahl wandert mit | `discovery.py` `battery_choices`, `_manual`; `monitor.py` `_millivolts`, `_remember_entity_change` | `tests/test_manual_battery.py` |
 | `DeviceEntry.identifiers` sind Tupel beliebiger Länge (nicht immer Paare: `hvv_departures` legt 4-Tupel an); Pulse liest nur Element 0 und 1 | `discovery.py` `ieee_of` | `tests/test_identifiers.py` |
 | Labels hängen an `DeviceEntry.labels` und `RegistryEntry.labels` | `discovery.py` | `tests/test_labels.py` |
 | Kind-Geräte (`DeviceRegistry.child_devices`, `ChildDeviceEntry.parent_device_id`, ab 2026.11 von Tuya, Z-Wave, ESPHome, MQTT, Reolink genutzt) sind Teile ihres Elterngeräts: ihre Entitäten liefert `async_entries_for_device(parent)` nicht, Pulse rechnet sie dem Elterngerät zu | `discovery.py` `discover` | `tests/test_child_devices.py` |

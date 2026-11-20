@@ -2,6 +2,11 @@
 
 After 1.1.0, releases use calendar versions `YY.M.N` (year, month, number of the release in that month), e.g. `26.10.4`. They count as newer than every 1.x version, so updates through HACS work as before.
 
+## Unreleased
+
+### Added
+- Devices added by hand can use one of their sensors as their battery (#9). A Tibber Pulse on two AA cells, for example, reports its battery only as a voltage, so Pulse did not find it as a battery device, and added by hand only its presence counted. Under **Device settings > Battery > Battery sensor** you can now choose a sensor of the device with the device class `voltage` or `battery`, or one without a device class whose unit is V or mV. Pulse then shows the voltage, detects new batteries from it (with a notification and "Battery changed" in the device) and keeps the battery type and count. Whether the device is reachable still decides its status, as before. A percentage or forecast from a voltage is not part of this yet. The choice follows the sensor when its entity ID changes. Choose "None" to go back.
+
 ## 26.11.12 – 2026-11-14
 
 ### Fixed

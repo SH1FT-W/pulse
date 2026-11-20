@@ -122,6 +122,7 @@ async def ws_subscribe(hass: HomeAssistant, connection: websocket_api.ActiveConn
         vol.Optional("battery_count"): vol.Any(None, vol.All(int, vol.Range(min=1, max=12))),
         vol.Optional("chemistry"): vol.Any(None, vol.In(CHEMISTRIES)),
         vol.Optional("partner"): vol.Any(None, str),
+        vol.Optional("battery_entity"): vol.Any(None, str),
     }
 )
 @websocket_api.require_admin
@@ -132,6 +133,10 @@ def ws_device_update(hass: HomeAssistant, connection: websocket_api.ActiveConnec
     device_id = msg["device_id"]
     if msg.get("partner") == device_id:
         connection.send_error(msg["id"], "invalid_partner", "A device cannot be its own partner")
+        return
+    if "battery_entity" in msg and not monitor.battery_entity_allowed(device_id, msg["battery_entity"]):
+        # Only devices added by hand, only one of their battery sensors (#9)
+        connection.send_error(msg["id"], "invalid_battery_entity", "Not a battery sensor of a device added by hand")
         return
     changes = {k: v for k, v in msg.items() if k not in ("id", "type", "device_id")}
     monitor.update_device(device_id, changes)

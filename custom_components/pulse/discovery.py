@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Collection
+from collections.abc import Collection, Mapping
 from dataclasses import dataclass, field, replace
 import re
 from typing import Any
@@ -68,6 +68,14 @@ class DeviceSpec:
     # Added by hand in the panel (`settings.manual_devices`) and only watched because of that: watched like a mains
     # device (reachable or not), whatever Pulse would otherwise think of it
     manual: bool = False
+    # Devices added by hand: the sensors that can be chosen as their battery (`battery_choices`)
+    battery_choices: list[str] = field(default_factory=list)
+
+    @property
+    def reachability_only(self) -> bool:
+        """Judged by being reachable (only "unavailable" counts as gone), not by its rhythm: mains devices and
+        devices added by hand, also those whose battery sensor was chosen by hand (`mains` False then)."""
+        return self.mains or self.manual
 
     @property
     def connectivity(self) -> str | None:
@@ -158,12 +166,20 @@ def ieee_of(device: dr.DeviceEntry) -> str | None:
     return None
 
 
-def discover(hass: HomeAssistant, mains: bool = False, manual: Collection[str] = ()) -> dict[str, DeviceSpec]:
+def discover(
+    hass: HomeAssistant,
+    mains: bool = False,
+    manual: Collection[str] = (),
+    batteries: Mapping[str, str | None] | None = None,
+) -> dict[str, DeviceSpec]:
     """Battery devices; with `mains` (beta) also mains-powered devices (lamps, plugs, covers … see MAINS_DOMAINS).
 
     Devices in `manual` (added by hand in the panel) are always watched, also when automatic discovery leaves them
     out (camera, media player, robot vacuum, any network device): like a mains device, whether it is reachable.
+    `batteries`: the battery sensor chosen by hand for such a device (device ID → entity ID, #9); it only ever
+    applies to devices added by hand, the automatic way never reads it.
     """
+    chosen = batteries or {}
     devices = dr.async_get(hass)
     entities = er.async_get(hass)
     areas = ar.async_get(hass)
@@ -217,7 +233,7 @@ def discover(hass: HomeAssistant, mains: bool = False, manual: Collection[str] =
         media = device.via_device_id in media_devices or bool(_entry_ids(device) & media_entries)
         spec = None if media else _automatic(base, device, own, mains)
         if spec is None and device.id in manual:
-            spec = _manual(hass, base, device, own)
+            spec = _manual(hass, base, device, own, chosen.get(device.id))
         if spec is not None:
             found[device.id] = spec
     return found
@@ -311,11 +327,18 @@ def _gps(hass: HomeAssistant, entity_id: str) -> bool:
 
 
 def _manual(
-    hass: HomeAssistant, base: DeviceSpec, device: dr.DeviceEntry, own: list[er.RegistryEntry]
+    hass: HomeAssistant,
+    base: DeviceSpec,
+    device: dr.DeviceEntry,
+    own: list[er.RegistryEntry],
+    battery_entity: str | None = None,
 ) -> DeviceSpec | None:
     """A device added by hand: watched like a mains device, from all of its (non-helper) integrations.
 
-    Its battery is ignored (a robot vacuum charges, that is no battery change). Reachable or not decides: a
+    Its battery is ignored (a robot vacuum charges, that is no battery change), unless a battery sensor was chosen
+    for it by hand (`battery_entity`, one of `battery_choices`): then that voltage or percentage is its battery
+    (`mains` False: shown, battery changes detected), reachability still decides as for any device added by hand
+    (`DeviceSpec.reachability_only`). Reachable or not decides: a
     connectivity sensor (preferably of its own integration) or a router's device tracker, else its main entities
     (lamp, camera, media player, vacuum …), else all of them. A media player that is idle or off is there.
     """
@@ -338,6 +361,8 @@ def _manual(
     mine = [e for e in mine if e.entity_id != connectivity]
     if not mine and connectivity is None:
         return None  # nothing that could tell whether it is there
+    choices = battery_choices(hass, own)
+    kind = choices.get(battery_entity) if battery_entity else None  # a sensor no longer offered: none
     return replace(
         base,
         integration=integration,
@@ -346,10 +371,46 @@ def _manual(
         critical=_critical(own),
         icon=icon_for(own, mains=True, manual=True),
         reachable_via="matter" if integration == "matter" else connectivity,
-        mains=True,
+        mains=kind is None,
         main_entities=_main_of_manual(mine),
         manual=True,
+        battery=battery_entity if kind == "battery" else None,
+        voltage=battery_entity if kind == "voltage" else None,
+        battery_choices=list(choices),
     )
+
+
+VOLT_UNITS = ("V", "mV")
+
+
+def _unit(hass: HomeAssistant, entry: er.RegistryEntry) -> str | None:
+    """The sensor's unit: from its state, while HA starts from the registry (what the entity last registered)."""
+    state = hass.states.get(entry.entity_id)
+    unit = state.attributes.get("unit_of_measurement") if state is not None else None
+    return unit if isinstance(unit, str) else entry.unit_of_measurement
+
+
+def battery_choices(hass: HomeAssistant, own: list[er.RegistryEntry]) -> dict[str, str]:
+    """Sensors of a device added by hand that can be chosen as its battery (#9): entity ID → "voltage" or
+    "battery" (percentage), voltages first.
+
+    Offered are sensors with the device class `voltage` or `battery`, and sensors without a device class whose unit
+    is V or mV: some integrations give a battery voltage no device class (the Tibber Pulse of #9 may be one of
+    them), a unit of V or mV still says what it is. Sensors without a device class and without such a unit are
+    not offered: nothing tells they measure a battery, a temperature would pass as a battery voltage. A battery
+    device class in V or mV is read as a voltage (HA allows only % for it, a custom integration may not care).
+    """
+    found: dict[str, str] = {}
+    for e in sorted(own, key=lambda e: e.entity_id):
+        if e.domain != "sensor":
+            continue
+        device_class, unit = _device_class(e), _unit(hass, e)
+        if (unit in VOLT_UNITS and device_class in (None, "voltage", "battery")) or device_class == "voltage":
+            found[e.entity_id] = "voltage"
+    for e in sorted(own, key=lambda e: e.entity_id):
+        if e.domain == "sensor" and e.entity_id not in found and _device_class(e) == "battery":
+            found[e.entity_id] = "battery"
+    return found
 
 
 def _main_of_manual(mine: list[er.RegistryEntry]) -> list[str]:

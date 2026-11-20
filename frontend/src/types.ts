@@ -26,6 +26,11 @@ export interface Battery {
   flag_conflict?: boolean;
 }
 
+export interface BatteryChoice {
+  entity_id: string;
+  name: string;
+}
+
 export interface Forecast {
   days_min: number;
   days_max: number;
@@ -83,6 +88,10 @@ export interface Device {
   mains?: boolean;
   /** Added by hand in Settings (watched like a mains device, only whether it is reachable) */
   manual?: boolean;
+  /** Added by hand: the sensor chosen as its battery (#9); with one `mains` is false */
+  battery_entity?: string | null;
+  /** Added by hand: the sensors that can be chosen as its battery (voltage or percentage) */
+  battery_choices?: BatteryChoice[];
   last_activity: number | null;
   /**
    * Ab hier zählt die Stille: letzte Meldung oder ein späterer manueller Wechsel. Fehlt bei älteren

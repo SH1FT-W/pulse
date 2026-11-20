@@ -37,6 +37,9 @@ def default_record() -> dict[str, Any]:
         "battery_count": None,
         "chemistry": None,
         "partner": None,
+        # Devices added by hand: the sensor chosen as their battery (#9); None = no battery. A new key with a
+        # default needs no new minor version: `async_load` fills it in, older versions keep it untouched
+        "battery_entity": None,
         "replaced": [],
         "replaced_source": [],  # per change: manual / auto / announce
         # Battery change detection (`replacement.py`): samples, candidate, provisional value per quantity

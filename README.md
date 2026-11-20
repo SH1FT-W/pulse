@@ -57,6 +57,7 @@ Which devices Pulse watches:
 - **Battery devices:** every device with a battery sensor (`device_class: battery`), also one that only reports "battery low". Phones, tablets, vacuums, mowers and devices with power or energy sensors are skipped on purpose.
 - **Mains-powered devices** (beta, on by default, **Settings > Watch mains-powered devices**): every device of a local integration (ZHA, Zigbee2MQTT, Z-Wave, Matter, ESPHome, Shelly, Hue, TP-Link, WLED and a few more), and from any other integration every device with a lamp, plug, switch, cover, fan, thermostat, valve or lock. Pulse reports one that is no longer reachable, or one that usually reports regularly and goes silent. A device that is often gone by itself (a console in standby) learns that as its habit: *Watch* without a notification, until it stays away for more than twice its longest outage.
 - **Anything else by hand** under **Settings > Added by hand > Add device**: cameras, speakers, TVs, robot vacuums, a NAS. A connectivity sensor or a router's device tracker (UniFi, FRITZ!Box, Nmap) decides whether it is there, otherwise its main entities, and it is gone only while all of them are unavailable.
+  - **Its battery:** a device added by hand that reports its battery only as a voltage (a Tibber Pulse on two AA cells) or as a percentage Pulse skips on purpose: open it, **Device settings > Battery > Battery sensor**. Offered are its sensors with the device class `voltage` or `battery`, and sensors without a device class whose unit is V or mV. Pulse then shows the voltage and detects new batteries. Whether the device is reachable still decides its status. There is no percentage or forecast from a voltage yet.
 
 Pulse speaks English, German, French, Spanish and Dutch.
 
@@ -149,6 +150,7 @@ actions:
 
 - A device that only reports when something happens has no rhythm. It becomes *Watch* after two days without a report (no notification) and *Check* after a week.
 - Devices added by hand only show whether they are there. A camera streaming a frozen picture looks fine.
+- A voltage sensor without a device class and without a unit (V or mV) is not offered as a battery sensor: nothing tells it measures a battery. Its integration can usually be told the unit, or a template sensor with `device_class: voltage` on the same device works too.
 - Notifications go only to the Companion app. For anything else, use the `pulse_device_status_changed` event.
 - Forecasts need a battery level that falls in fine steps over at least two weeks. Coarse levels, NiMH rechargeables and "battery low" only devices get none, and the panel says why.
 - Cloud integrations come from a fixed list (Netatmo, Ring, Nest, tado and others). One that is not on it is treated like a local one.

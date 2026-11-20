@@ -8,6 +8,7 @@ import {
   batteryDevices,
   batteryFirst,
   batteryLine,
+  batteryValue,
   candidateLine,
   canEdit,
   cleanZ2mBase,
@@ -1205,5 +1206,15 @@ describe('snoozeChoice (#7)', () => {
     // 23:50, report at 00:20 the same day: hours, not "gestern"
     const late = Date.UTC(2026, 10, 13, 22, 50) / 1000; // 23:50 in Berlin
     expect(ago('de', late - 23.5 * H, late, BERLIN)).toBe('vor 24 Std.');
+  });
+});
+
+describe('batteryValue', () => {
+  const b = device('x').battery;
+  it('shows the flag, the percentage, else the voltage (device added by hand, #9), else unknown', () => {
+    expect(batteryValue('en', { ...b, flag: true, low: true })).toBe(t('en', 'battery_flag_low'));
+    expect(batteryValue('en', { ...b, level: 63.6, voltage: 2950 })).toBe('64%');
+    expect(batteryValue('de', { ...b, voltage: 2950 })).toBe('2,95 V');
+    expect(batteryValue('en', b)).toBe(t('en', 'unknown'));
   });
 });
