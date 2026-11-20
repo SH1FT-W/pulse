@@ -959,7 +959,8 @@ var Je = {
 	manual_note: "Von Hand hinzugefügt. Pulse achtet darauf, ob es erreichbar ist und, wenn es sich regelmäßig meldet, ob es still wird.",
 	battery_entity: "Batteriesensor",
 	battery_entity_none: "Keiner",
-	battery_entity_hint: "Optional: ein Sensor des Geräts, der seine Batterie meldet (Spannung oder Prozent). Pulse zeigt sie dann an und erkennt Batteriewechsel; über den Status entscheidet weiter, ob es erreichbar ist.",
+	battery_entity_gone: "{name} (nicht mehr da)",
+	battery_entity_hint: "Optional: ein Sensor des Geräts, der seine Batterie meldet (Spannung oder Prozent). Pulse zeigt sie dann an und erkennt Batteriewechsel; über den Status entscheidet nur, ob es erreichbar ist, eine schwache Batterie ist kein Befund.",
 	new_manual_title: "Jedes Gerät hinzufügen",
 	new_manual_text: "Kameras, Echo-Lautsprecher, Saugroboter oder beliebige Netzgeräte: unter Einstellungen hinzufügen, dann meldet Pulse, wenn eines nicht mehr erreichbar ist."
 }, Ye = {
@@ -1345,7 +1346,8 @@ var Je = {
 	manual_note: "Added by hand. Pulse watches whether it is reachable and, if it reports regularly, whether it goes silent.",
 	battery_entity: "Battery sensor",
 	battery_entity_none: "None",
-	battery_entity_hint: "Optional: a sensor of this device that reports its battery (voltage or percent). Pulse then shows it and detects battery changes; its status still depends on whether it is reachable.",
+	battery_entity_gone: "{name} (no longer there)",
+	battery_entity_hint: "Optional: a sensor of this device that reports its battery (voltage or percent). Pulse then shows it and detects battery changes; only whether it is reachable decides its status, a low battery is no finding.",
 	new_manual_title: "Add any device",
 	new_manual_text: "Cameras, Echo speakers, robot vacuums or any network device: add them under Settings, Pulse then tells you when one is no longer reachable."
 }, Xe = {
@@ -1733,7 +1735,8 @@ var Je = {
 		manual_note: "Ajouté à la main. Pulse vérifie qu’il est joignable et, s’il se signale régulièrement, qu’il ne se tait pas.",
 		battery_entity: "Capteur de batterie",
 		battery_entity_none: "Aucun",
-		battery_entity_hint: "Facultatif : un capteur de cet appareil qui indique sa batterie (tension ou pourcentage). Pulse l’affiche alors et détecte les changements de piles ; son état dépend toujours de sa joignabilité.",
+		battery_entity_gone: "{name} (n’existe plus)",
+		battery_entity_hint: "Facultatif : un capteur de cet appareil qui indique sa batterie (tension ou pourcentage). Pulse l’affiche alors et détecte les changements de piles ; seule sa joignabilité décide de son état, une batterie faible n’est pas un problème.",
 		new_manual_title: "Ajouter n’importe quel appareil",
 		new_manual_text: "Caméras, enceintes Echo, robots aspirateurs ou tout appareil réseau : ajoutez-les dans Réglages, Pulse vous prévient quand l’un d’eux n’est plus joignable."
 	},
@@ -2120,7 +2123,8 @@ var Je = {
 		manual_note: "Añadido a mano. Pulse vigila que esté accesible y, si da señales con regularidad, que no se quede en silencio.",
 		battery_entity: "Sensor de batería",
 		battery_entity_none: "Ninguno",
-		battery_entity_hint: "Opcional: un sensor de este dispositivo que informa de su batería (tensión o porcentaje). Pulse la muestra y detecta los cambios de pilas; su estado sigue dependiendo de si está accesible.",
+		battery_entity_gone: "{name} (ya no existe)",
+		battery_entity_hint: "Opcional: un sensor de este dispositivo que informa de su batería (tensión o porcentaje). Pulse la muestra y detecta los cambios de pilas; su estado solo depende de si está accesible, una batería baja no es un problema.",
 		new_manual_title: "Añade cualquier dispositivo",
 		new_manual_text: "Cámaras, altavoces Echo, robots aspiradores o cualquier dispositivo de red: añádelos en Ajustes y Pulse avisará cuando uno deje de estar accesible."
 	},
@@ -2507,7 +2511,8 @@ var Je = {
 		manual_note: "Met de hand toegevoegd. Pulse let erop of het bereikbaar is en, als het zich regelmatig meldt, of het stil wordt.",
 		battery_entity: "Batterijsensor",
 		battery_entity_none: "Geen",
-		battery_entity_hint: "Optioneel: een sensor van dit apparaat die de batterij meldt (spanning of procent). Pulse toont die dan en herkent batterijwissels; de status hangt nog steeds af van of het bereikbaar is.",
+		battery_entity_gone: "{name} (niet meer aanwezig)",
+		battery_entity_hint: "Optioneel: een sensor van dit apparaat die de batterij meldt (spanning of procent). Pulse toont die dan en herkent batterijwissels; alleen bereikbaarheid bepaalt de status, een zwakke batterij is geen probleem.",
 		new_manual_title: "Elk apparaat toevoegen",
 		new_manual_text: "Camera’s, Echo-speakers, robotstofzuigers of elk netwerkapparaat: voeg ze toe onder Instellingen, dan meldt Pulse wanneer er een niet meer bereikbaar is."
 	}
@@ -5253,7 +5258,7 @@ M("pulse-device-sheet", class extends A {
           </ha-dropdown>`, ne = Lt(e), y = e.mains === !0;
 		return w`
       <header class="hero">
-        ${ee || e.cloud || y ? w`<p class="dname"><ha-icon .icon=${e.icon}></ha-icon><span>${ee}</span>${e.cloud ? w`<span class="chip-cloud"><ha-icon icon="mdi:cloud-outline"></ha-icon>${N(t, "cloud_device")}</span>` : D}${e.manual ? w`<span class="chip-cloud"><ha-icon icon="mdi:plus-circle-outline"></ha-icon>${N(t, "manual_chip")}</span>` : y ? w`<span class="chip-cloud"><ha-icon icon="mdi:power-plug-outline"></ha-icon>${N(t, "mains_chip")}</span>` : D}</p>` : D}
+        ${ee || e.cloud || y || e.manual ? w`<p class="dname"><ha-icon .icon=${e.icon}></ha-icon><span>${ee}</span>${e.cloud ? w`<span class="chip-cloud"><ha-icon icon="mdi:cloud-outline"></ha-icon>${N(t, "cloud_device")}</span>` : D}${e.manual ? w`<span class="chip-cloud"><ha-icon icon="mdi:plus-circle-outline"></ha-icon>${N(t, "manual_chip")}</span>` : y ? w`<span class="chip-cloud"><ha-icon icon="mdi:power-plug-outline"></ha-icon>${N(t, "mains_chip")}</span>` : D}</p>` : D}
         <h3 class=${`dhl ${s.tone === "accent" ? "grad" : `t-${s.tone}`}`}>${s.text}</h3>
         <p class="dtx">${pn(t, e, this.now, o, this.timeFormat)}</p>
       </header>
@@ -5350,7 +5355,7 @@ M("pulse-device-sheet", class extends A {
 			label: N(n, "battery_entity_none")
 		}, ...t.map((e) => ({
 			value: e.entity_id,
-			label: e.name
+			label: e.gone ? N(n, "battery_entity_gone", { name: e.name }) : e.name
 		}))];
 		return this.picker(N(n, "battery_entity"), e.battery_entity ?? "", r, (e) => this.change({ battery_entity: e || null }));
 	}

@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import time
+from unittest.mock import AsyncMock, patch
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -292,3 +293,81 @@ async def test_percentage_chosen_on_a_device_left_out_automatically(hass: HomeAs
     monitor.update_device(dev.id, {"battery_entity": level.entity_id})
     monitor.update_device("unknown", {"battery_entity": level.entity_id})
     assert not monitor.battery_entity_allowed("unknown", None)
+
+
+# ── Review findings: the battery of a device added by hand never decides its status ──
+
+
+def _mower(hass: HomeAssistant):
+    entry = MockConfigEntry(domain="husqvarna", title="Mower")
+    entry.add_to_hass(hass)
+    dev = dr.async_get(hass).async_get_or_create(
+        config_entry_id=entry.entry_id, identifiers={("husqvarna", "m2")}, name="Mäher 2"
+    )
+    reg = er.async_get(hass)
+    mower = reg.async_get_or_create("lawn_mower", "husqvarna", "m2", device_id=dev.id, config_entry=entry)
+    level = reg.async_get_or_create(
+        "sensor", "husqvarna", "m2_battery", device_id=dev.id, config_entry=entry, original_device_class="battery"
+    )
+    hass.states.async_set(mower.entity_id, "docked")
+    hass.states.async_set(level.entity_id, "64", {"unit_of_measurement": "%", "device_class": "battery"})
+    return dev, mower, level
+
+
+async def test_removed_battery_sensor_leaves_no_battery_missing(hass: HomeAssistant, setup):
+    """The chosen sensor goes unavailable and then away for good: no "battery missing" stays behind, and the
+    panel still offers the stored choice so "None" can be picked."""
+    monitor = setup["monitor"]
+    dev, mower, level = _mower(hass)
+    monitor.set_manual(dev.id, True)
+    await hass.async_block_till_done()
+    monitor.update_device(dev.id, {"battery_entity": level.entity_id})
+    await hass.async_block_till_done()
+    hass.states.async_set(level.entity_id, "unavailable", {"unit_of_measurement": "%", "device_class": "battery"})
+    await tick(hass, setup["freezer"], timedelta(minutes=2))
+    er.async_get(hass).async_remove(level.entity_id)
+    hass.states.async_remove(level.entity_id)
+    await tick(hass, setup["freezer"], timedelta(seconds=30))
+    device = monitor.devices[dev.id]
+    assert device.spec.battery is None and device.spec.mains
+    for i in range(30):
+        hass.states.async_set(mower.entity_id, "mowing" if i % 2 else "docked")
+        await tick(hass, setup["freezer"], timedelta(hours=1))
+    assert device.reason["key"] != "battery_missing" and device.status == "ok"
+    assert device.record["battery_missing_since"] is None
+    snap = {d["id"]: d for d in monitor.snapshot()["devices"]}[dev.id]
+    assert snap["battery_entity"] == level.entity_id
+    assert snap["battery_choices"] == [{"entity_id": level.entity_id, "name": level.entity_id, "gone": True}]
+    monitor.update_device(dev.id, {"battery_entity": None})
+    await hass.async_block_till_done()
+    assert device.record["battery_entity"] is None
+
+
+async def test_low_percentage_of_a_device_added_by_hand_is_no_finding(hass: HomeAssistant, setup):
+    """A mower at 8 % is charging, not due: shown, but no low battery status, shopping list or forecast."""
+    monitor = setup["monitor"]
+    dev, _mower_entity, level = _mower(hass)
+    monitor.set_manual(dev.id, True)
+    await hass.async_block_till_done()
+    monitor.update_device(dev.id, {"battery_entity": level.entity_id})
+    await hass.async_block_till_done()
+    hass.states.async_set(level.entity_id, "8", {"unit_of_measurement": "%", "device_class": "battery"})
+    await tick(hass, setup["freezer"], timedelta(hours=2))
+    device = monitor.devices[dev.id]
+    assert device.status == "ok" and device.reason["key"] == "ok_manual"
+    assert monitor.battery_level(device) == 8
+    assert device not in monitor.notifier.due_batteries()
+    hass.states.async_set(level.entity_id, "unavailable", {"unit_of_measurement": "%", "device_class": "battery"})
+    await tick(hass, setup["freezer"], timedelta(days=3))
+    assert device.reason["key"] != "battery_missing" and device.record["battery_missing_since"] is None
+    # No forecast: the daily run leaves it out, a new battery sets no reason
+    device.forecast, device.forecast_reason = None, "too_short"
+    with patch("custom_components.pulse.monitor.load_forecasts", return_value={}) as load:
+        hass.config.components.add("recorder")
+        with patch("homeassistant.components.recorder.get_instance") as instance:
+            instance.return_value.async_add_executor_job = AsyncMock(return_value={})
+            await monitor._async_forecasts()
+    assert device.forecast is None and device.forecast_reason is None
+    load.assert_not_called()
+    snap = {d["id"]: d for d in monitor.snapshot()["devices"]}[dev.id]
+    assert snap["battery"]["forecast"] is None and snap["battery"]["forecast_reason"] is None

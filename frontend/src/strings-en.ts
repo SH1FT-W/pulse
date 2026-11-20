@@ -420,8 +420,9 @@ export const EN = {
     'Added by hand. Pulse watches whether it is reachable and, if it reports regularly, whether it goes silent.',
   battery_entity: 'Battery sensor',
   battery_entity_none: 'None',
+  battery_entity_gone: '{name} (no longer there)',
   battery_entity_hint:
-    'Optional: a sensor of this device that reports its battery (voltage or percent). Pulse then shows it and detects battery changes; its status still depends on whether it is reachable.',
+    'Optional: a sensor of this device that reports its battery (voltage or percent). Pulse then shows it and detects battery changes; only whether it is reachable decides its status, a low battery is no finding.',
   new_manual_title: 'Add any device',
   new_manual_text:
     'Cameras, Echo speakers, robot vacuums or any network device: add them under Settings, Pulse then tells you when one is no longer reachable.',

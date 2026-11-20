@@ -422,8 +422,9 @@ export const DE: Record<keyof typeof EN, string> = {
     'Von Hand hinzugefügt. Pulse achtet darauf, ob es erreichbar ist und, wenn es sich regelmäßig meldet, ob es still wird.',
   battery_entity: 'Batteriesensor',
   battery_entity_none: 'Keiner',
+  battery_entity_gone: '{name} (nicht mehr da)',
   battery_entity_hint:
-    'Optional: ein Sensor des Geräts, der seine Batterie meldet (Spannung oder Prozent). Pulse zeigt sie dann an und erkennt Batteriewechsel; über den Status entscheidet weiter, ob es erreichbar ist.',
+    'Optional: ein Sensor des Geräts, der seine Batterie meldet (Spannung oder Prozent). Pulse zeigt sie dann an und erkennt Batteriewechsel; über den Status entscheidet nur, ob es erreichbar ist, eine schwache Batterie ist kein Befund.',
   new_manual_title: 'Jedes Gerät hinzufügen',
   new_manual_text:
     'Kameras, Echo-Lautsprecher, Saugroboter oder beliebige Netzgeräte: unter Einstellungen hinzufügen, dann meldet Pulse, wenn eines nicht mehr erreichbar ist.',

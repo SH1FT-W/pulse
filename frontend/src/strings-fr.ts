@@ -430,8 +430,9 @@ export const FR: Record<keyof typeof EN, string> = {
     'Ajouté à la main. Pulse vérifie qu’il est joignable et, s’il se signale régulièrement, qu’il ne se tait pas.',
   battery_entity: 'Capteur de batterie',
   battery_entity_none: 'Aucun',
+  battery_entity_gone: '{name} (n’existe plus)',
   battery_entity_hint:
-    'Facultatif : un capteur de cet appareil qui indique sa batterie (tension ou pourcentage). Pulse l’affiche alors et détecte les changements de piles ; son état dépend toujours de sa joignabilité.',
+    'Facultatif : un capteur de cet appareil qui indique sa batterie (tension ou pourcentage). Pulse l’affiche alors et détecte les changements de piles ; seule sa joignabilité décide de son état, une batterie faible n’est pas un problème.',
   new_manual_title: 'Ajouter n’importe quel appareil',
   new_manual_text:
     'Caméras, enceintes Echo, robots aspirateurs ou tout appareil réseau : ajoutez-les dans Réglages, Pulse vous prévient quand l’un d’eux n’est plus joignable.',

@@ -709,6 +709,13 @@ class PulseMonitor:
 
     def _track_battery_missing(self, device: Device, now: float) -> None:
         """Since when the battery entity has had no value (stored, also across restarts)."""
+        if device.spec.manual:
+            # Added by hand: its battery is only shown, never a finding (#9); a sensor chosen earlier that went
+            # missing and then away (no longer offered) must not leave its "missing since" behind
+            if device.record.get("battery_missing_since") is not None:
+                device.record["battery_missing_since"] = None
+                self.store.async_delay_save()
+            return
         if not device.spec.battery:
             return
         state = self.hass.states.get(device.spec.battery)
@@ -1222,7 +1229,10 @@ class PulseMonitor:
             since = own_last_action or (now - 2 * DAY)
             actions = partner.record["actions"]
             partner_actions = len(actions) - bisect_right(actions, since)
-        level = self._battery_level(device.spec)
+        # Added by hand: a battery chosen by hand is only shown and its changes detected (#9); its level, a
+        # missing value or a forecast never decide the status (a mower at 8 % is charging, not due)
+        manual = device.spec.manual
+        level = None if manual else self._battery_level(device.spec)
         silence_from = self.silence_from(device)
         replaced = record["replaced"]
         gaps = self.downtime_gaps()
@@ -1253,7 +1263,7 @@ class PulseMonitor:
             radio_last=device.radio_last,
             radio_rises=self._radio_rises(device),
             flag_on=bool(device.spec.battery_low) and self.flag_on(device),
-            battery_missing_since=record.get("battery_missing_since"),
+            battery_missing_since=None if manual else record.get("battery_missing_since"),
             reachable=self._reachable(device),
             mains=device.spec.reachability_only,
             manual=device.spec.manual,
@@ -1461,7 +1471,7 @@ class PulseMonitor:
         jobs: list[tuple[str, str, float, bool]] = []
         for device in self.monitored():
             spec = device.spec
-            if not spec.battery or self._battery_flag(spec):
+            if not spec.battery or self._battery_flag(spec) or spec.manual:
                 device.forecast, device.forecast_reason = None, None
                 continue
             replaced = device.record["replaced"]

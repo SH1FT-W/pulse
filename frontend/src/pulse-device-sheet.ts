@@ -305,7 +305,7 @@ export class PulseDeviceSheet extends LitElement {
     return html`
       <header class="hero">
         ${
-          meta || d.cloud || mains
+          meta || d.cloud || mains || d.manual
             ? html`<p class="dname"><ha-icon .icon=${d.icon}></ha-icon><span>${meta}</span>${
                 d.cloud
                   ? html`<span class="chip-cloud"><ha-icon icon="mdi:cloud-outline"></ha-icon>${t(lang, 'cloud_device')}</span>`
@@ -475,7 +475,10 @@ export class PulseDeviceSheet extends LitElement {
     const lang = this.language;
     const options: Choice[] = [
       { value: '', label: t(lang, 'battery_entity_none') },
-      ...choices.map((c) => ({ value: c.entity_id, label: c.name })),
+      ...choices.map((c) => ({
+        value: c.entity_id,
+        label: c.gone ? t(lang, 'battery_entity_gone', { name: c.name }) : c.name,
+      })),
     ];
     return this.picker(t(lang, 'battery_entity'), d.battery_entity ?? '', options, (v) =>
       this.change({ battery_entity: v || null })

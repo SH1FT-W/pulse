@@ -425,8 +425,9 @@ export const ES: Record<keyof typeof EN, string> = {
     'Añadido a mano. Pulse vigila que esté accesible y, si da señales con regularidad, que no se quede en silencio.',
   battery_entity: 'Sensor de batería',
   battery_entity_none: 'Ninguno',
+  battery_entity_gone: '{name} (ya no existe)',
   battery_entity_hint:
-    'Opcional: un sensor de este dispositivo que informa de su batería (tensión o porcentaje). Pulse la muestra y detecta los cambios de pilas; su estado sigue dependiendo de si está accesible.',
+    'Opcional: un sensor de este dispositivo que informa de su batería (tensión o porcentaje). Pulse la muestra y detecta los cambios de pilas; su estado solo depende de si está accesible, una batería baja no es un problema.',
   new_manual_title: 'Añade cualquier dispositivo',
   new_manual_text:
     'Cámaras, altavoces Echo, robots aspiradores o cualquier dispositivo de red: añádelos en Ajustes y Pulse avisará cuando uno deje de estar accesible.',

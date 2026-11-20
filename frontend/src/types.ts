@@ -29,6 +29,8 @@ export interface Battery {
 export interface BatteryChoice {
   entity_id: string;
   name: string;
+  /** Chosen earlier, no longer offered (removed): shown so "None" can be picked */
+  gone?: boolean;
 }
 
 export interface Forecast {

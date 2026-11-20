@@ -33,7 +33,9 @@ def _battery(monitor: PulseMonitor, device: Device, now: float) -> dict[str, Any
         "replaced": list(record["replaced"]),
         "entity": device.spec.battery,
         "forecast": forecast.as_dict() if forecast else None,
-        "forecast_reason": device.forecast_reason if forecast is None and percent is not None else None,
+        "forecast_reason": device.forecast_reason
+        if forecast is None and percent is not None and not device.spec.manual
+        else None,
         "missing_since": missing if missing is not None and now - missing >= BATTERY_MISSING_AFTER else None,
         # Das Gerät meldet „schwach“, der Prozentwert sagt etwas anderes
         "flag_conflict": bool(device.spec.battery_low)
@@ -51,6 +53,10 @@ def _battery_choices(monitor: PulseMonitor, device: Device) -> list[dict[str, An
     for entity_id in device.spec.battery_choices:
         state = monitor.hass.states.get(entity_id)
         result.append({"entity_id": entity_id, "name": state.name if state is not None else entity_id})
+    chosen = device.record.get("battery_entity")
+    if isinstance(chosen, str) and chosen not in device.spec.battery_choices:
+        # Chosen, but no longer offered (removed, other device class): still shown, so it can be set to "None"
+        result.append({"entity_id": chosen, "name": chosen, "gone": True})
     return result
 
 
@@ -94,8 +100,9 @@ def serialize(
         "label": device.spec.label,
         "mains": device.spec.mains,
         "manual": device.spec.manual,
-        # Devices added by hand: the battery sensor in use and the ones to choose from (#9)
-        "battery_entity": (device.spec.voltage or device.spec.battery) if device.spec.manual else None,
+        # Devices added by hand: the battery sensor chosen (also one no longer offered, so "None" can be picked)
+        # and the ones to choose from (#9)
+        "battery_entity": record.get("battery_entity") if device.spec.manual else None,
         "battery_choices": _battery_choices(monitor, device),
         "last_activity": device.last_activity,
         "silence_from": monitor.silence_from(device),
