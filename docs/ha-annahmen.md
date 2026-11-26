@@ -6,7 +6,7 @@
 
 Worauf sich dieses Repo bei Home Assistant verlässt. Bei jeder Änderung am Code mitpflegen.
 
-**Getestet mit:** HA 2026.10, 2026.11.0b1, 2026.11.2 · **Mindestversion:** siehe `hacs.json` / `manifest.json`
+**Getestet mit:** HA 2026.10, 2026.11.0b1, 2026.11.2, 2026.12.0b0 (Tests, 26.11.2026) · **Mindestversion:** siehe `hacs.json` / `manifest.json`
 
 ## Annahmen
 
@@ -24,7 +24,7 @@ Worauf sich dieses Repo bei Home Assistant verlässt. Bei jeder Änderung am Cod
 | Von Hand hinzugefügte Geräte: „nicht erreichbar“ = alle entscheidenden Entitäten `unavailable` (Media-Player `idle`/`off`/`playing` ist da); Router-`device_tracker` meldet offline als `not_home` mit `source_type` ≠ `gps`; `DeviceEntry.entry_type` kennzeichnet Dienste | `discovery.py` `_manual`, `monitor.py` `_offline` | `tests/test_manual_devices.py` |
 | Batteriesensor von Hand (#9, nur Anzeige): Spannungen kommen in V oder mV, ohne Einheit ist ein Wert < 100 V (`monitor._millivolts`, immer in mV gerechnet). Angeboten werden `sensor` mit `device_class` `voltage` (nur V, mV oder ohne Einheit; kV/µV würde `_millivolts` falsch rechnen) oder `battery` (nur % oder ohne Einheit) und ohne Geräteklasse nur mit Einheit V/mV (aus dem Zustand, solange HA startet aus `RegistryEntry.unit_of_measurement`); `battery` in V/mV gilt als Spannung. Eine neue Entity-ID kommt als `old_entity_id` im Registry-Ereignis, die Auswahl wandert mit | `discovery.py` `battery_choices`, `_manual`; `monitor.py` `_millivolts`, `manual_battery`, `_remember_entity_change` | `tests/test_manual_battery.py` |
 | `DeviceEntry.identifiers` sind Tupel beliebiger Länge (nicht immer Paare: `hvv_departures` legt 4-Tupel an); Pulse liest nur Element 0 und 1 | `discovery.py` `ieee_of` | `tests/test_identifiers.py` |
-| Labels hängen an `DeviceEntry.labels` und `RegistryEntry.labels` | `discovery.py` | `tests/test_labels.py` |
+| Labels hängen an `DeviceEntry.labels` und `RegistryEntry.labels` (Label-IDs `pulse_important`/`pulse_ignore`, vom Nutzer angelegt; Pulse legt keine an und schreibt keine). Seit HA 2026.12 (Core #194231) lehnen die Registries unbekannte Labels ab, darum legen die Tests sie vorher an | `discovery.py` | `tests/test_labels.py`, `tests/conftest.py` `setup` |
 | Kind-Geräte (`DeviceRegistry.child_devices`, `ChildDeviceEntry.parent_device_id`, ab 2026.11 von Tuya, Z-Wave, ESPHome, MQTT, Reolink genutzt) sind Teile ihres Elterngeräts: ihre Entitäten liefert `async_entries_for_device(parent)` nicht, Pulse rechnet sie dem Elterngerät zu | `discovery.py` `discover` | `tests/test_child_devices.py` |
 | Recorder: `history.get_significant_states` und `statistics_during_period` (Executor) | `history.py` | `tests/test_z2m_history.py` (Verlauf), `tests/test_v11.py` (Statistik) |
 | Push nur über `notify.mobile_app_*`, Aktionen über Ereignis `mobile_app_notification_action`; höchstens 3 Aktionen je Mitteilung (Android zeigt nicht mehr) | `notifier.py` | `tests/test_integration.py`, `tests/test_mains_templates.py` |

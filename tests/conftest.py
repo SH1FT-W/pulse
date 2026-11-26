@@ -3,11 +3,12 @@
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import label_registry as lr
 import pytest
 from pytest_homeassistant_custom_component.common import async_mock_service
 
 from common import set_states, standard_devices
-from custom_components.pulse.const import DOMAIN
+from custom_components.pulse.const import DOMAIN, LABEL_IGNORE, LABEL_IMPORTANT
 from custom_components.pulse.monitor import PulseMonitor
 
 
@@ -33,6 +34,9 @@ async def setup(hass: HomeAssistant, freezer):
     freezer.move_to(START)
     devices = standard_devices(hass)
     set_states(hass, devices)
+    # The labels exist as a user would create them: since HA 2026.12 (core #194231) the registries reject unknown ones
+    for label in (LABEL_IMPORTANT, LABEL_IGNORE):
+        assert lr.async_get(hass).async_create(label).label_id == label
     pushes = async_mock_service(hass, "notify", "mobile_app_alex")
     result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": config_entries.SOURCE_USER})
     assert result["type"] is FlowResultType.FORM
